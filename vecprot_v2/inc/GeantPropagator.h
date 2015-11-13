@@ -13,16 +13,26 @@
 #ifndef GEANT_PROPAGATOR
 #define GEANT_PROPAGATOR
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef GEANTV_MIC
+ #ifndef ROOT_TObject
+ #include "TObject.h"
+ #endif
+ #ifndef ROOT_TMutex
+ #include "TMutex.h"
+ #endif
+#else
+ #ifndef GEANT_MICVARS_H
+ #include "Geant/MicVars.h"
+ #endif
+ #include <mutex>
+ typedef std::mutex TMutex; 
+ typedef long Long64_t;
+ typedef bool Bool_t;
+  
 #endif
 
 #ifndef GEANT_TRACK
 #include "GeantTrack.h"
-#endif
-
-#ifndef ROOT_TMutex
-#include "TMutex.h"
 #endif
 
 #include <vector>
@@ -44,7 +54,12 @@ class TaskBroker;
 
 #include "GeantFwd.h"
 
+
+#ifndef GEANTV_MIC
 class GeantPropagator : public TObject {
+#else 
+class GeantPropagator {
+#endif
 public:
   /**
    * @brief Monitoring type
@@ -300,7 +315,8 @@ private:
 
   /** @brief Assignment operator not implemented */
   GeantPropagator &operator=(const GeantPropagator &);
-
+#ifndef GEANTV_MIC
   ClassDef(GeantPropagator, 1)
+#endif
 };
 #endif

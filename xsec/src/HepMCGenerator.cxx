@@ -8,9 +8,11 @@ using vecgeom::kPi;
 #include "HepMC/GenParticle.h"
 #include "HepMC/GenVertex.h"
 #include "HepMC/ReaderAscii.h"
+#ifndef GEANTV_MIC
 #include "HepMC/ReaderRoot.h"
 
 ClassImp(HepMCGenerator)
+#endif
 
     //______________________________________________________________________________
     HepMCGenerator::HepMCGenerator()
@@ -20,9 +22,13 @@ ClassImp(HepMCGenerator)
 HepMCGenerator::HepMCGenerator(std::string &filename) : input_file(0), search(0) {
   if (filename.substr(filename.find_last_of(".") + 1) == "hepmc3") {
     input_file = new HepMC::ReaderAscii(filename);
-  } else if (filename.substr(filename.find_last_of(".") + 1) == "root") {
+  }
+#ifndef GEANTV_MIC 
+  else if (filename.substr(filename.find_last_of(".") + 1) == "root") {
     input_file = new HepMC::ReaderRoot(filename);
-  } else {
+  } 
+#endif
+  else {
     std::cout << "Unrecognized filename extension (must be .hepmc3 or .root)" << std::endl;
   }
 #ifdef USE_VECGEOM_NAVIGATOR
@@ -48,8 +54,11 @@ GeantEventInfo HepMCGenerator::NextEvent() {
   HepMC::GenEvent evt(HepMC::Units::GEV, HepMC::Units::MM);
 
   if (!(input_file->read_event(evt)))
+  #ifndef GEANTV_MIC
     Fatal("ImportTracks", "No more particles to read!");
-
+  #else
+    std::cerr<<"ImportTracks - No more particles to read!\n";
+  #endif
   //  std::cout << std::endl
   //            << "Find all stable particles: " << std::endl;
 

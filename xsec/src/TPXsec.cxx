@@ -5,11 +5,13 @@
 #include "base/RNG.h"
 using vecgeom::RNG;
 #endif
+#ifndef GEANTV_MIC
 #include "TFile.h"
-
 // For Fatal and Error, to be changed
 #include "TMath.h"
-
+#else
+#include "Geant/MicVars.h"
+#endif
 using std::max;
 
 int TPXsec::fVerbose = 0;
@@ -210,7 +212,11 @@ bool TPXsec::SetPartXS(const float xsec[], const int dict[]) {
   // consistency
   for (int i = 0; i < fNXsec; ++i)
     if (fRdict[fRmap[i]] != i)
+     #ifndef GEANTV_MIC
       Fatal("SetPartXS", "Dictionary mismatch for!");
+     #else 
+      std::cerr<<"SetPartXS error\n";
+     #endif
 
   delete[] fTotXs;
   fTotXs = new float[fNTotXs];
@@ -402,8 +408,12 @@ bool TPXsec::XS_v(int npart, int rindex, const double en[], double lam[]) const 
     if (rindex < TPartIndex::I()->NProc() - 1) {
       int rnumber = fRdict[rindex];
       if (rnumber < 0) {
+       #ifndef GEANTV_MIC
         Error("XS", "No %s for %s\n", TPartIndex::I()->ProcName(rindex),
               TPartIndex::I()->PartName(TPartIndex::I()->PartIndex(fPDG)));
+       #else 
+        std::cerr<<"XS error\n";
+       #endif
         return -1;
       }
       xsec = xrat * fXSecs[ibin * fNXsec + rnumber] + (1 - xrat) * fXSecs[(ibin + 1) * fNXsec + rnumber];
@@ -436,8 +446,12 @@ float TPXsec::XS(int rindex, double en) const {
   if (rindex < TPartIndex::I()->NProc() - 1) {
     int rnumber = fRdict[rindex];
     if (rnumber < 0) {
+     #ifndef GEANTV_MIC
       Error("XS", "No %s for %s\n", TPartIndex::I()->ProcName(rindex),
             TPartIndex::I()->PartName(TPartIndex::I()->PartIndex(fPDG)));
+     #else
+      std::cerr<<"XS error\n";
+     #endif
       return -1;
     }
     xsec = xrat * fXSecs[ibin * fNXsec + rnumber] + (1 - xrat) * fXSecs[(ibin + 1) * fNXsec + rnumber];

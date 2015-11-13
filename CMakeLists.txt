@@ -62,6 +62,8 @@ endif()
 #----------------------------------------------------------------------------
 # Additional options
 
+option(MIC "Enable compilation for MIC." OFF)
+
 option(CUDA "Enable compilation for CUDA." OFF)
 
 option(DATA_DOWNLOAD "Enable data download" OFF)
@@ -132,7 +134,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/modules)
 #----------------------------------------------------------------------------
 # Find VecGeom geometry headers library
 #
+message(STATUS "COMPILATION FLAGS START ARE -${CMAKE_CXX_FLAGS}")
 find_package(VecGeom REQUIRED)
+message(STATUS "COMPILATION FLAGS POST ARE -${CMAKE_CXX_FLAGS}")
 if( VECGEOM_FOUND )
    find_package(Vc)
    if ( Vc_FOUND )
@@ -158,6 +162,11 @@ endif()
 #----------------------------------------------------------------------------
 # Find ROOT and setup the libraries
 #
+
+if (MIC)
+add_definitions(-DGEANTV_MIC)
+set (USE_ROOT FALSE)
+else()
 find_package(ROOT REQUIRED)
 
 include_directories(AFTER SYSTEM ${ROOT_INCLUDE_DIR})
@@ -165,6 +174,8 @@ include_directories(AFTER SYSTEM ${ROOT_INCLUDE_DIR})
 if( USE_ROOT )
    add_definitions("-DUSE_ROOT")
 endif()
+endif()
+
 
 #----------------------------------------------------------------------------
 # Load macros
@@ -306,7 +317,8 @@ if (NOT DISABLE_WEFFC)
    set(WEFFC_FLAG -Weffc++)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -W -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 if (CMAKE_BUILD_TYPE MATCHES Debug)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WEFFC_FLAG} -ggdb")
   if(APPLE)
@@ -320,6 +332,15 @@ else()
 endif()
 
 # set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+
+if (MIC)
+#if (Intel)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mmic")
+#  else()
+#    message(FATAL_ERROR "MIC native or offload compilation requires Intel Compiler.")
+#  endif()
+endif()
+
 
 get_property(GEANTV_COMPILE_DEFINITIONS GLOBAL PROPERTY COMPILE_DEFINITIONS)
 get_property(GEANTV_COMPILE_FLAGS_NOW GLOBAL PROPERTY COMPILE_FLAGS)
@@ -427,6 +448,7 @@ string(REPLACE " -DVECGEOM_ROOT" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 #
 add_custom_target(_headers ALL)
 
+message(STATUS "COMPILATION FLAGS ARE -${GEANTV_CXX_FLAGS} - ${GEANTV_COMPILATION_FLAGS}")
 add_subdirectory (base)
 add_subdirectory (xsec)
 add_subdirectory (vecprot_v2)

@@ -16,6 +16,9 @@
 #include "GeantFwd.h"
 class TTabPhysMgr;
 
+#ifdef GEANTV_MIC
+typedef const char* TString;
+#endif 
 //______________________________________________________________________________
 class TTabPhysProcess : public PhysicsProcess {
 private:
@@ -55,8 +58,9 @@ public:
 private:
   TTabPhysProcess(const TTabPhysProcess &);            // no imp.
   TTabPhysProcess &operator=(const TTabPhysProcess &); // no imp.
-
+#ifndef GEANTV_MIC
   ClassDef(TTabPhysProcess, 1) // Generic tabulated physics process
+#endif
 };
 
 #endif

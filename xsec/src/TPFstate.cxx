@@ -1,15 +1,21 @@
 #include "TPFstate.h"
 #include "TFinState.h"
+#ifndef GEANTV_MIC
 #include <TFile.h>
 #include <TMath.h>
 #include <TRandom.h>
-
+#else
+#include "base/RNG.h"
+using vecgeom::RNG;
+#endif
 using std::max;
 
 int TPFstate::fVerbose = 0;
-
+#ifndef GEANTV_MIC
 ClassImp(TPFstate)
-
+#else
+#include "Geant/MicVars.h"
+#endif
     //_________________________________________________________________________
     TPFstate::TPFstate()
     : fPDG(0), fNEbins(0), fNReac(0), fNEFstat(0), fNFstat(0), fEmin(0), fEmax(0), fEilDelta(0),
@@ -32,7 +38,11 @@ TPFstate::TPFstate(int pdg, int nfstat, int nreac, const int dict[])
   // consistency
   for (int i = 0; i < fNReac; ++i)
     if (fRdict[fRmap[i]] != i)
+     #ifndef GEANTV_MIC
       Fatal("SetPartXS", "Dictionary mismatch for!");
+     #else
+     std::cerr<<"SetPartXS\n";
+     #endif
 }
 
 //_________________________________________________________________________
@@ -73,7 +83,11 @@ bool TPFstate::SetPart(int pdg, int nfstat, int nreac, const int dict[]) {
   // consistency
   for (int i = 0; i < fNReac; ++i)
     if (fRdict[fRmap[i]] != i)
+     #ifndef GEANTV_MIC
       Fatal("SetPart", "Dictionary mismatch for!");
+     #else
+     std::cerr<<"SetPart\n";
+     #endif
   return kTRUE;
 }
 
@@ -97,7 +111,11 @@ bool TPFstate::SetPart(int pdg, int nfstat, int nreac, const int dict[], TFinSta
   // consistency
   for (int i = 0; i < fNReac; ++i)
     if (fRdict[fRmap[i]] != i)
+     #ifndef GEANTV_MIC
       Fatal("SetPart", "Dictionary mismatch for!");
+     #else
+     std::cerr<<"SetPartXS\n";
+     #endif
   return kTRUE;
 }
 
@@ -123,7 +141,11 @@ bool TPFstate::SampleReac(int preac, float en, int &npart, float &weight, float 
     return kFALSE;
   } else {
     kerma = en;
+   #ifndef GEANTV_MIC
     double eta = gRandom->Rndm();
+   #else
+    double eta = RNG::Instance().uniform();
+   #endif
     en = en < fEGrid[fNEbins - 1] ? en : fEGrid[fNEbins - 1] * 0.999;
     en = max<double>(en, fEGrid[0]);
     int ibin = log(en / fEGrid[0]) * fEilDelta;
