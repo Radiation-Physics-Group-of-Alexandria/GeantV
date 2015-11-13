@@ -45,6 +45,10 @@
 #endif
 #include <cassert>
 
+#ifdef GEANTV_MIC
+ GeantPropagator *gPropagator;
+ typedef std::string TString;
+#endif
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
@@ -317,8 +321,7 @@ void GeantTrack::SetNextPath(VolumePath_t const *const path) {
 void GeantTrack::Print(const char *location) const {
 //  TString spath;
   //   if (path) path->GetPath(spath);
-  Geant::Print(location, "=== Track %d (ev=%d): Process=%d, pstep=%g Charge=%d  Position:(%f,%f,%f) Dir:(%f,%f,%f) "
-         "P:%g E:%g snext=%g safety=%g nsteps=%d",
+  Geant::Print(location, "=== Track %d (ev=%d): Process=%d, pstep=%g Charge=%d  Position:(%f,%f,%f) Dir:(%f,%f,%f) P:%g E:%g snext=%g safety=%g nsteps=%d",
          fParticle, fEvent, fProcess, fPstep, fCharge, fXpos, fYpos, fZpos, fXdir, fYdir, fZdir, P(), fE, fSnext,
          fSafety, fNsteps);
 }

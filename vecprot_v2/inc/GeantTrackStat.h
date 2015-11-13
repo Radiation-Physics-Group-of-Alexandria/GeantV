@@ -13,6 +13,8 @@
 #ifndef GEANT_TRACK_STAT
 #define GEANT_TRACK_STAT
 
+#ifndef GEANTV_MIC
+
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -124,4 +126,5 @@ public:
 
   ClassDef(GeantTrackStat, 1) // Track statistics
 };
+#endif
 #endif

@@ -4,4 +4,6 @@
 // - generic interaction as discrete process, producing secondaries
 
 #include "PhysicsProcess.h"
+#ifndef GEANTV_MIC
 ClassImp(PhysicsProcess)
+#endif

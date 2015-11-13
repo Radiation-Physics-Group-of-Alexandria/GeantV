@@ -17,9 +17,15 @@
 #if __cplusplus >= 201103L
 #include <atomic>
 #endif
+#ifndef GEANTV_MIC
 #include "TCondition.h"
 #include "TMutex.h"
-
+#else
+#include <condition_variable>
+#include <mutex>
+typedef std::condition_variable TCondition;
+typedef std::mutex TMutex;
+#endif 
 /**
  * @brief Templated class dcqueue
  * @details 

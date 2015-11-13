@@ -1,9 +1,13 @@
 #include "GeantVApplication.h"
-
+#ifndef GEANTV_MIC
 ClassImp(GeantVApplication)
-
+#endif
     //______________________________________________________________________________
     GeantVApplication::GeantVApplication()
-    : TObject() {
+#ifndef GEANTV_MIC
+    : TObject() 
+#endif
+    {
   // Ctor..
+
 }

@@ -18,15 +18,20 @@
 //
 #include "GeantPropagator.h"
 
+#ifndef GEANTV_MIC
 #include "TTimer.h"
 #include "TError.h"
 #include "TStopwatch.h"
 #include "TCanvas.h"
 #include <fenv.h>
+#endif
+
 
 #if USE_VECGEOM_NAVIGATOR == 1
 #include "navigation/SimpleNavigator.h"
+#ifndef GEANTV_MIC
 #include "management/RootGeoManager.h"
+#endif
 #include "volumes/PlacedVolume.h"
 #else
 #include "TGeoVolume.h"
@@ -65,15 +70,20 @@
 using namespace Geant;
 
 GeantPropagator *gPropagator = 0;
-
+#ifndef GEANTV_MIC
 ClassImp(GeantPropagator)
+#endif
 
     GeantPropagator *GeantPropagator::fgInstance = 0;
 
 //______________________________________________________________________________
 GeantPropagator::GeantPropagator()
+#ifndef GEANTV_MIC
     : TObject(), fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0), fNprimaries(0), fNsteps(0),
-      fNsnext(0), fNphys(0), fNmag(0), fNsmall(0), fFeederLock(ATOMIC_FLAG_INIT), fPriorityEvents(0), fDoneEvents(0),
+#else
+    : fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0), fNprimaries(0), fNsteps(0),
+#endif
+      fNsteps(0), fNphysSteps(0), fFeederLock(ATOMIC_FLAG_INIT), fPriorityEvents(0), fDoneEvents(0),
       fNprocesses(3), fNstart(0), fMaxTracks(0), fMaxThreads(100), fNminThreshold(10), fDebugEvt(-1), fDebugTrk(-1),
       fDebugStp(-1), fDebugRep(-1), fMaxSteps(10000), fNperBasket(16), fMaxPerBasket(256), fMaxPerEvent(0),
       fMaxDepth(0), fLearnSteps(0), fLastEvent(0), fPriorityThr(0), fMaxRes(0), fMaxVirt(0), fNaverage(0), fVertex(),
@@ -146,7 +156,11 @@ GeantTrack &GeantPropagator::GetTempTrack(int tid) {
   if (tid < 0)
     tid = WorkloadManager::Instance()->ThreadId();
   if (tid > fNthreads)
+   #ifndef GEANTV_MIC
     Fatal("GetTempTrack", "Thread id %d is too large (max %d)", tid, fNthreads);
+   #else
+    std:;cerr<<"GetTempTrack: Thread is too large\n";
+   #endif
   GeantTrack &track = fThreadData[tid]->fTrack;
   track.Clear();
   return track;
@@ -175,11 +189,19 @@ int GeantPropagator::Feeder(GeantTaskData *td) {
       evt->Print();
       // Digitizer (todo)
       int ntracks = fNtracks[islot];
+   #ifndef GEANTV_MIC
       Printf("= digitizing event %d with %d tracks pri=%d", evt->GetEvent(), ntracks, fPriorityEvents.load());
+   #else
+      printf("= digitizing event %d with %d tracks pri=%d", evt->GetEvent(), ntracks, fPriorityEvents.load());
+   #endif
       //            propagator->fApplication->Digitize(evt->GetEvent());
       fDoneEvents->SetBitNumber(evt->GetEvent());
       if (fLastEvent < fNtotal) {
+      #ifndef GEANTV_MIC
         Printf("=> Importing event %d", fLastEvent);
+      #else
+        printf("=> Importing event %d", fLastEvent);
+      #endif
         nbaskets += ImportTracks(1, fLastEvent, islot, td);
         fLastEvent++;
       }
@@ -314,7 +336,11 @@ void GeantPropagator::Initialize() {
   gPropagator = GeantPropagator::Instance();
   fDoneEvents = BitSet::MakeInstance(fNtotal);
   if (!fProcess) {
+   #ifndef GEANTV_MIC
     Fatal("Initialize", "The physics process has to be initialized before this");
+   #else
+    std::cerr<<"Initialize: The physics process has to be initialized before this\n";
+   #endif
     return;
   }
   // Initialize the process(es)
@@ -565,11 +591,11 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
     geomname = geomfile + strlen("http://root.cern.ch/files/");
 #endif
 //  int nsteps = fWMgr->GetScheduler()->GetNsteps();
-  Printf("=== Transported: %ld primaries/%ld tracks,  total steps: %ld, snext calls: %ld, "
+  printf("=== Transported: %ld primaries/%ld tracks,  total steps: %ld, snext calls: %ld, "
          "phys steps: %ld, mag. field steps: %ld, small steps: %ld  RT=%gs, CP=%gs",
          fNprimaries.load(), fNtransported.load(), fNsteps.load(), fNsnext.load(), fNphys.load(),
          fNmag.load(), fNsmall.load(), rtime, ctime);
-  Printf("   nthreads=%d speed-up=%f  efficiency=%f", nthreads, speedup, efficiency);
+  printf("   nthreads=%d speed-up=%f  efficiency=%f", nthreads, speedup, efficiency);
   //  Printf("Queue throughput: %g transactions/sec", double(fWMgr->FeederQueue()->n_ops()) / rtime);
   fApplication->FinishRun();
   if (fStdApplication)

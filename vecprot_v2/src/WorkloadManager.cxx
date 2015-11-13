@@ -1,6 +1,6 @@
 #include "WorkloadManager.h"
 #include "Geant/Error.h"
-
+#ifndef GEANTV_MIC
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TStopwatch.h"
@@ -11,6 +11,8 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TMath.h"
+#endif
+
 #include "GeantTrack.h"
 #include "GeantBasket.h"
 #include "GeantOutput.h"
