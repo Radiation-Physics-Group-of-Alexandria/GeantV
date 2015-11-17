@@ -46,7 +46,6 @@
 #include <cassert>
 
 #ifdef GEANTV_MIC
- GeantPropagator *gPropagator;
  typedef std::string TString;
 #endif
 namespace Geant {

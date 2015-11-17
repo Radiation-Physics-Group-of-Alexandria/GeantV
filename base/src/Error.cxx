@@ -1,8 +1,9 @@
 #include "Geant/Error.h"
+#ifndef GEANTV_MIC
 #include "TError.h"
 #include <stdarg.h>
-#include "Varargs.h"
 
+#include "Varargs.h"
 namespace Geant {
 inline namespace cxx {
 
@@ -20,3 +21,4 @@ void ErrorHandlerImpl(EMsgLevel level, const char *location, const char *va_(fmt
 
 } // cxx
 } // Geant
+#endif

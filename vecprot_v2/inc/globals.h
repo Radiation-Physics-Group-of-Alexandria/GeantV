@@ -18,6 +18,8 @@
 /** @brief Propagator class */
 #ifndef GEANTV_MIC
 R__EXTERN GeantPropagator *gPropagator; /** Propagator class */
+#else
+extern GeantPropagator *gPropagator; /** Propagator class */
 #endif
 #ifdef GEANT_NVCC
 __constant__ double gPropagator_fBmag;

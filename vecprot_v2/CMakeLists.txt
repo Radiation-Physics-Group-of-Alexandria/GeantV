@@ -166,7 +166,7 @@ install(TARGETS CMSApp runApp DESTINATION bin)
 add_dependencies(runApp Geant_v Xsec GeantExamples)
 else()  # ---- MIC
   add_library(Geant_v SHARED ${sources})
-target_link_libraries(Geant_v -lEG -lGeom)
+#target_link_libraries(Geant_v -lEG -lGeom)
 if( VECGEOM_FOUND )
   target_link_libraries(Geant_v ${VECGEOM_LIBRARIES} ${VC_LIBRARIES})
 endif()

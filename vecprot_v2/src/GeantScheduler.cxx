@@ -23,8 +23,6 @@ using vecgeom::GeoManager;
 
 #ifndef GEANTV_MIC
 #include "TMath.h"
-#else
-GeantPropagator *gPropagator;
 #endif
 //______________________________________________________________________________
 GeantScheduler::GeantScheduler()

@@ -41,8 +41,6 @@ using vecgeom::kTwoPi;
 
 #ifndef GEANTV_MIC
 ClassImp(TTabPhysMgr)
-#else
-GeantPropagator *gPropagator;
 #endif
     TTabPhysMgr *TTabPhysMgr::fgInstance = 0;
 

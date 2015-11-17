@@ -3,6 +3,7 @@
 #include "GeantPropagator.h"
 #include "GeantTaskData.h"
 #include "globals.h"
+#ifndef GEANTV_MIC
 #include "TProfile.h"
 #include "TH1.h"
 #include "TCanvas.h"
@@ -10,7 +11,6 @@
 #include "TFile.h"
 
 ClassImp(StdApplication)
-
     //______________________________________________________________________________
     StdApplication::StdApplication()
     : GeantVApplication(), fInitialized(kFALSE), fHeta(0), fHpt(0), fHStep(0), fStepSize(0), fStepCnt(0), fMHist(),
@@ -122,3 +122,4 @@ void StdApplication::FinishRun() {
   pad->SetLogy();
   fStepCnt->Draw();
 }
+#endif

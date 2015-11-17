@@ -307,7 +307,11 @@ GeantPropagator *GeantPropagator::Instance(int ntotal, int nbuffered, int nthrea
   if (fgInstance)
     return fgInstance;
   if (ntotal <= 0 || nbuffered <= 0) {
+#ifndef GEANTV_MIC
     Printf("GeantPropagator::Instance: Number of transported/buffered events should be positive");
+#else
+    printf("GeantPropagator::Instance: Number of transported/buffered events should be positive");
+#endif
     return 0;
   }
   fgInstance = new GeantPropagator();
@@ -315,7 +319,11 @@ GeantPropagator *GeantPropagator::Instance(int ntotal, int nbuffered, int nthrea
   fgInstance->fNevents = nbuffered;
   fgInstance->fNthreads = nthreads;
   if (nbuffered > ntotal) {
+#ifndef GEANTV_MIC
     Printf("GeantPropagator::Instance: Number of buffered events changed to %d", ntotal);
+#else
+    printf("GeantPropagator::Instance: Number of buffered events changed to %d", ntotal);
+#endif
     fgInstance->fNevents = ntotal;
   }
   // Initialize workload manager
@@ -423,6 +431,7 @@ void GeantPropagator::PrepareRkIntegration() {
   }   
 }
 
+#ifndef GEANTV_MIC
 #if USE_VECGEOM_NAVIGATOR == 1
 /**
  * function to setup the VecGeom geometry from a TGeo geometry ( if gGeoManager ) exists
@@ -430,33 +439,36 @@ void GeantPropagator::PrepareRkIntegration() {
 //______________________________________________________________________________
 bool GeantPropagator::LoadVecGeomGeometry() {
   if (vecgeom::GeoManager::Instance().GetWorld() == NULL) {
-    Printf("Now loading VecGeom geometry\n");
+    printf("Now loading VecGeom geometry\n");
     vecgeom::RootGeoManager::Instance().LoadRootGeometry();
-    Printf("Loading VecGeom geometry done\n");
-    Printf("Have depth %d\n", vecgeom::GeoManager::Instance().getMaxDepth());
+    printf("Loading VecGeom geometry done\n");
+    printf("Have depth %d\n", vecgeom::GeoManager::Instance().getMaxDepth());
     std::vector<vecgeom::LogicalVolume *> v1;
     vecgeom::GeoManager::Instance().GetAllLogicalVolumes(v1);
-    Printf("Have logical volumes %ld\n", v1.size());
+    printf("Have logical volumes %ld\n", v1.size());
     std::vector<vecgeom::VPlacedVolume *> v2;
     vecgeom::GeoManager::Instance().getAllPlacedVolumes(v2);
-    Printf("Have placed volumes %ld\n", v2.size());
+    printf("Have placed volumes %ld\n", v2.size());
     //    vecgeom::RootGeoManager::Instance().world()->PrintContent();
 
-    if (fWMgr->GetTaskBroker()) Printf("Now upload VecGeom geometry to Coprocessor(s)\n");
+    if (fWMgr->GetTaskBroker()) printf("Now upload VecGeom geometry to Coprocessor(s)\n");
     return fWMgr->LoadGeometry();
   }
   if (fWMgr && fWMgr->GetTaskBroker()) {
-    Printf("Now upload VecGeom geometry to Coprocessor(s)\n");
+    printf("Now upload VecGeom geometry to Coprocessor(s)\n");
     return fWMgr->LoadGeometry();
   } else
     return true;
 }
+#endif
 #endif
 
 #ifndef USE_VECGEOM_GEOMETRY
 //______________________________________________________________________________
 bool GeantPropagator::LoadGeometry(const char *filename) {
 // Load the detector geometry from file, unless already loaded.
+
+#ifndef GEANTV_MIC
 #ifdef USE_VECGEOM_NAVIGATOR
   vecgeom::GeoManager *geom = &vecgeom::GeoManager::Instance();
 #else
@@ -471,8 +483,19 @@ bool GeantPropagator::LoadGeometry(const char *filename) {
 #endif
     return kTRUE;
   }
+
   ::Error("LoadGeometry", "Cannot load geometry from file %s", filename);
   return kFALSE;
+#else
+
+  vecgeom::GeoManager *geom = &vecgeom::GeoManager::Instance();
+  if (geom) {
+     geom->LoadGeometryFromSharedLib(filename);
+     fMaxDepth = vecgeom::GeoManager::Instance().getMaxDepth();
+     return kTRUE;
+  }
+  return kFALSE;
+#endif
 }
 #endif
 
@@ -518,7 +541,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   fSingleTrack = single;
   std::cout << " GeantPropagator::PropagatorGeom called with app= " << fApplication << std::endl;
   if (!fApplication) {
-    Printf("No user application attached - aborting");
+    printf("No user application attached - aborting");
     return;
   }
   Initialize();
@@ -529,7 +552,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   // Initialize application
   fApplication->Initialize();
   if (called) {
-    Printf("Sorry, you can call this only once per session.");
+    printf("Sorry, you can call this only once per session.");
     return;
   }
   called = kTRUE;
@@ -538,17 +561,17 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   //   int itrack;
 
   if (fSingleTrack)
-    Printf("==== Executing in single track loop mode using %d threads ====", fNthreads);
+    printf("==== Executing in single track loop mode using %d threads ====", fNthreads);
   else
-    Printf("==== Executing in vectorized mode using %d threads ====", fNthreads);
+    printf("==== Executing in vectorized mode using %d threads ====", fNthreads);
   if (fUsePhysics)
-    Printf("  Physics ON with %d processes", fNprocesses);
+    printf("  Physics ON with %d processes", fNprocesses);
   else
-    Printf("  Physics OFF");
+    printf("  Physics OFF");
   if (fUseRungeKutta)
-     Printf("  Runge-Kutta integration ON with epsilon= %g", fEpsilonRK ); 
+     printf("  Runge-Kutta integration ON with epsilon= %g", fEpsilonRK ); 
   else
-    Printf("  Runge-Kutta integration OFF");
+    printf("  Runge-Kutta integration OFF");
 
   // Import the input events. This will start also populating the main queue
   if (!fEvents) {
@@ -561,6 +584,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   // Loop baskets and transport particles until there is nothing to transport anymore
   fTransportOngoing = kTRUE;
   WorkloadManager::Instance()->SetMaxThreads(nthreads);
+#ifndef GEANTV_MIC
   if (fUseMonitoring) {
     TCanvas *cmon = new TCanvas("cscheduler", "Scheduler monitor", 900, 600);
     cmon->Update();
@@ -569,7 +593,12 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
     TCanvas *capp = new TCanvas("capp", "Application canvas", 700, 800);
     capp->Update();
   }
+
   fTimer = new TStopwatch();
+#else
+  fTimer = new vecgeom::Stopwatch();
+#endif
+
   fWMgr->StartThreads();
   fTimer->Start();
   // Wake up the main scheduler once to avoid blocking the system
@@ -578,8 +607,13 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   fWMgr->WaitWorkers();
   fWMgr->JoinThreads();
   fTimer->Stop();
+#ifndef GEANTV_MIC
   double rtime = fTimer->RealTime();
   double ctime = fTimer->CpuTime();
+#else
+  double rtime = fTimer->Elapsed();
+  double ctime = fTimer->Elapsed();  // TO FIX 
+#endif
   //   fTimer->Print();
   double speedup = ctime / rtime;
   double efficiency = speedup / nthreads;
@@ -601,9 +635,9 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   if (fStdApplication)
     fStdApplication->FinishRun();
 #ifdef USE_VECGEOM_NAVIGATOR
-  Printf("=== Navigation done using VecGeom ====");
+  printf("=== Navigation done using VecGeom ====");
 #else
-  Printf("=== Navigation done using TGeo    ====");
+  printf("=== Navigation done using TGeo    ====");
 #endif
   //  Printf("Navstate pool usage statistics:");
   //   fWMgr->NavStates()->statistics();
