@@ -3,22 +3,25 @@
 #include "management/GeoManager.h"
 using vecgeom::GeoManager;
 #endif
-#include "TGeoNode.h"
 #include "GeantFactoryStore.h"
 #include "GeantTrack.h"
 #include "GeantPropagator.h"
 #include "GeantTaskData.h"
 #include "globals.h"
+#ifndef GEANTV_MIC
+#include "TGeoNode.h"
 #include "TH1.h"
 #include "TCanvas.h"
 #include "TROOT.h"
+#endif
 #include <cassert>
 
 using std::min;
 using std::max;
 
+#ifndef GEANTV_MIC
 ClassImp(ExN03Application)
-
+#endif
     //______________________________________________________________________________
     ExN03Application::ExN03Application()
     : GeantVApplication(), fInitialized(kFALSE), fIdGap(0), fIdAbs(0), fFactory(0) {
@@ -41,7 +44,11 @@ bool ExN03Application::Initialize() {
 #else
   if (!GeoManager::Instance().GetWorld()) {
 #endif
+#ifndef GEANTV_MIC
     Error("Initialize", "Geometry not loaded");
+#else
+    std::cout<<"Initialize: Geometry not loaded\n";
+#endif
     return kFALSE;
   }
 #ifndef USE_VECGEOM_NAVIGATOR
@@ -53,7 +60,11 @@ bool ExN03Application::Initialize() {
 #endif
 
   if (!lvGap || !lvAbs) {
+#ifndef GEANTV_MIC
     Error("Initialize", "Logical volumes for gap and absorber not found - do you use the right geometry");
+#else
+    std::cout<<"Initialize: Logical volumes for gap and absorber not found - do you use the right geometry\n";
+#endif
     return kFALSE;
   }
 #ifndef USE_VECGEOM_NAVIGATOR
@@ -114,8 +125,11 @@ void ExN03Application::StepManager(int npart, const GeantTrack_v &tracks, GeantT
       fLengthAbs[idnode][tid] += tracks.fStepV[i];
     }
   }
-
+#ifndef GEANTV_MIC
   if (gPropagator->fFillTree) {
+#else
+  if (GeantPropagator::Instance()->fFillTree) {
+#endif
     MyHit *hit;
     //    int nhits = 0;
     for (int i = 0; i < npart; i++) {
@@ -153,9 +167,13 @@ void ExN03Application::StepManager(int npart, const GeantTrack_v &tracks, GeantT
 void ExN03Application::Digitize(int /* event */) {
   // User method to digitize a full event, which is at this stage fully transported
   //   printf("======= Statistics for event %d:\n", event);
-  Printf("Energy deposit [MeV/primary] and cumulated track length [cm/primary] per layer");
-  Printf("================================================================================");
+  printf("Energy deposit [MeV/primary] and cumulated track length [cm/primary] per layer");
+  printf("================================================================================");
+#ifndef GEANTV_MIC
   double nprim = (double)gPropagator->fNprimaries;
+#else
+  double nprim = (double)GeantPropagator::Instance()->fNprimaries;
+#endif
   for (int i = 0; i < kNlayers; ++i) {
     for (int tid = 1; tid < kMaxThreads; ++tid) {
       fEdepGap[i][0] += fEdepGap[i][tid];
@@ -163,11 +181,12 @@ void ExN03Application::Digitize(int /* event */) {
       fEdepAbs[i][0] += fEdepAbs[i][tid];
       fLengthAbs[i][0] += fLengthAbs[i][tid];
     }
-    Printf("Layer %d: Egap=%f   Lgap=%f   Eabs=%f   Labs=%f", i + 3, fEdepGap[i][0] * 1000. / nprim,
+    printf("Layer %d: Egap=%f   Lgap=%f   Eabs=%f   Labs=%f", i + 3, fEdepGap[i][0] * 1000. / nprim,
            fLengthGap[i][0] / nprim, fEdepAbs[i][0] * 1000. / nprim, fLengthAbs[i][0] / nprim);
   }
-  Printf("================================================================================");
+  printf("================================================================================");
   //   TCanvas *c1 = new TCanvas("Edep", "Energy deposition for ExN03", 700, 800);
+  #ifndef GEANTV_MIC
   TCanvas *c1 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("capp");
   if (!c1)
     return;
@@ -223,4 +242,5 @@ void ExN03Application::Digitize(int /* event */) {
   histlg->GetYaxis()->SetRangeUser(minval - 0.1 * minval, maxval + 0.1 * maxval);
   histlg->Draw("P");
   histla->Draw("SAMEP");
+  #endif
 }
