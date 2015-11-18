@@ -1,14 +1,16 @@
 #include "Geant/Error.h"
 #ifndef GEANTV_MIC
 #include "TError.h"
+#include "Varargs.h"
+#endif
 #include <stdarg.h>
 
-#include "Varargs.h"
 namespace Geant {
 inline namespace cxx {
 
 // Code to be compiled only by gcc (i.e. not nvcc).
 
+#ifndef GEANTV_MIC
 void ErrorHandlerImpl(EMsgLevel level, const char *location, const char *va_(fmt), ...)
 {
     // Currently we use the ROOT message handler on the host/gcc code.
@@ -18,7 +20,12 @@ void ErrorHandlerImpl(EMsgLevel level, const char *location, const char *va_(fmt
    ::ErrorHandler((int)level,location, va_(fmt), ap);
    va_end(ap);
 }
+#else
+void ErrorHandlerImpl(EMsgLevel level, const char *location, const char *msgfmt, ...)
+{
+// NOT IMLPEMENTED
+}
+#endif
 
 } // cxx
 } // Geant
-#endif

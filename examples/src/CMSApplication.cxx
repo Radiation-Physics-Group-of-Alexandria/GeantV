@@ -10,6 +10,7 @@ using vecgeom::GeoManager;
 #include "GeantScheduler.h"
 #include "GeantTaskData.h"
 #include "globals.h"
+#ifndef GEANTV_MIC
 #include "TProfile.h"
 #include "TH1.h"
 #include "TCanvas.h"
@@ -23,6 +24,10 @@ ClassImp(CMSApplication)
     CMSApplication::CMSApplication()
     : GeantVApplication(), fInitialized(kFALSE), fECALMap(), fHCALMap(), fMHist(), fScore(kNoScore), fFluxElec(0),
   fFluxGamma(0), fFluxP(0), fFluxPi(0), fFluxK(0), fEdepElec(0), fEdepGamma(0), fEdepP(0), fEdepPi(0), fEdepK(0), fFactory(0) {
+#else
+    CMSApplication::CMSApplication()
+    : GeantVApplication(), fInitialized(kFALSE), fECALMap(), fHCALMap(), fMHist(), fScore(kNoScore), fFactory(0) {
+#endif
   // Ctor..
   GeantFactoryStore *store = GeantFactoryStore::Instance();
   fFactory = store->GetFactory<MyHit>(16);
@@ -32,6 +37,7 @@ ClassImp(CMSApplication)
   memset(fEdepHCAL, 0, kNHCALModules * kMaxThreads * sizeof(float));
   memset(fECALid, 0, kNECALModules * sizeof(int));
   memset(fHCALid, 0, kNHCALModules * sizeof(int));
+  #ifndef GEANTV_MIC
   TH1::AddDirectory(false);
   fFluxElec = new TH1F("hFluxElec", "e+/e- flux/primary in ECAL", 50, 0., 2500.);
   fFluxElec->GetXaxis()->SetTitle("Momentum [MeV/c]");
@@ -64,6 +70,7 @@ ClassImp(CMSApplication)
   fEdepK->GetXaxis()->SetTitle("Momentum [MeV/c]");
   fEdepK->GetYaxis()->SetTitle("Energy deposit density[MeV/cm^3/primary]");
   TH1::AddDirectory(true);
+  #endif
 }
 
 //______________________________________________________________________________
@@ -75,9 +82,13 @@ bool CMSApplication::Initialize() {
   GeantScheduler *sch = WorkloadManager::Instance()->GetScheduler();
   int nvolumes = sch->GetNvolumes();
   std::vector<Volume_t const *> &lvolumes = sch->GetVolumes();
-  Printf("Found %d logical volumes", nvolumes);
+  printf("Found %d logical volumes", nvolumes);
   const Volume_t *vol;
+#ifndef GEANTV_MIC
   TString svol, smat;
+#else
+  std::string svol, smat;
+#endif  
   int necal = 0;
   int nhcal = 0;
   for (int ivol = 0; ivol < nvolumes; ++ivol) {
@@ -90,10 +101,17 @@ bool CMSApplication::Initialize() {
 #endif
     svol = vol->GetName();
     // ECAL cells
+#ifndef GEANTV_MIC
     if (svol.BeginsWith("EBRY") || svol.BeginsWith("EFRY")) {
-      fSensFlags[idvol] = true;
-      fECALMap[idvol] = necal;
-      fECALid[necal] = idvol;
+#else
+    std::string ebry("EBRY");
+    std::string efry("EFRY");
+  
+    if (svol.compare(0,ebry.length(),ebry) == 1  || svol.compare(0,efry.length(),efry) == 1) {
+#endif
+      fSensFlags[ivol] = true;
+      fECALMap[ivol] = necal;
+      fECALid[necal] = ivol;
       necal++;
     }
     
@@ -115,7 +133,7 @@ bool CMSApplication::Initialize() {
     }
   }
   
-  Printf("=== CMSApplication::Initialize: necal=%d  nhcal=%d", necal, nhcal);
+  printf("=== CMSApplication::Initialize: necal=%d  nhcal=%d", necal, nhcal);
   fInitialized = kTRUE;  
   return kTRUE;
 }
@@ -230,7 +248,7 @@ void CMSApplication::StepManager(int npart, const GeantTrack_v &tracks, GeantTas
 #else
 //      capacity = vol->GetShape()->Capacity();
 #endif
-    
+#ifndef GEANTV_MIC       
       if (fabs(tracks.fPDGV[itr]) == 11) {
         fFluxElec->Fill(1000. * tracks.fPV[itr], tracks.fStepV[itr] / capacity);
         fEdepElec->Fill(1000. * tracks.fPV[itr], 1000. * tracks.fEdepV[itr] / capacity);
@@ -248,6 +266,7 @@ void CMSApplication::StepManager(int npart, const GeantTrack_v &tracks, GeantTas
         fFluxK->Fill(1000. * tracks.fPV[itr], tracks.fStepV[itr] / capacity);
         fEdepK->Fill(1000. * tracks.fPV[itr], 1000. * tracks.fEdepV[itr] / capacity);
       }
+#endif
       if (propagator->fNthreads > 1)
         fMHist.unlock();      
     }
@@ -258,38 +277,39 @@ void CMSApplication::StepManager(int npart, const GeantTrack_v &tracks, GeantTas
 void CMSApplication::Digitize(int /* event */) {
   // User method to digitize a full event, which is at this stage fully transported
   //   printf("======= Statistics for event %d:\n", event);
-  Printf("Energy deposit in ECAL [MeV/primary] ");
-  Printf("================================================================================");
+  printf("Energy deposit in ECAL [MeV/primary] ");
+  printf("================================================================================");
   double nprim = (double)gPropagator->fNprimaries;
   for (int i = 0; i < kNECALModules; ++i) {
     for (int tid = 1; tid < kMaxThreads; ++tid) {
       fEdepECAL[i][0] += fEdepECAL[i][tid];
     }
 #ifdef USE_VECGEOM_NAVIGATOR
-    Printf("   volume %s: edep=%f", GeoManager::Instance().FindLogicalVolume(fECALid[i])->GetName(),
+    printf("   volume %s: edep=%f", GeoManager::Instance().FindLogicalVolume(fECALid[i])->GetName(),
            fEdepECAL[i][0] * 1000. / nprim);
 #else
-    Printf("   volume %s: edep=%f", gGeoManager->GetVolume(fECALid[i])->GetName(), fEdepECAL[i][0] * 1000. / nprim);
+    printf("   volume %s: edep=%f", gGeoManager->GetVolume(fECALid[i])->GetName(), fEdepECAL[i][0] * 1000. / nprim);
 #endif
   }
-  Printf("Energy deposit in HCAL [MeV/primary] ");
-  Printf("================================================================================");
+  printf("Energy deposit in HCAL [MeV/primary] ");
+  printf("================================================================================");
   for (int i = 0; i < kNHCALModules; ++i) {
     for (int tid = 1; tid < kMaxThreads; ++tid) {
       fEdepHCAL[i][0] += fEdepHCAL[i][tid];
     }
 #ifdef USE_VECGEOM_NAVIGATOR
-    Printf("   volume %s: edep=%f", GeoManager::Instance().FindLogicalVolume(fHCALid[i])->GetName(),
+    printf("   volume %s: edep=%f", GeoManager::Instance().FindLogicalVolume(fHCALid[i])->GetName(),
            fEdepHCAL[i][0] * 1000. / nprim);
 #else
-    Printf("   volume %s: edep=%f", gGeoManager->GetVolume(fHCALid[i])->GetName(), fEdepHCAL[i][0] * 1000. / nprim);
+    printf("   volume %s: edep=%f", gGeoManager->GetVolume(fHCALid[i])->GetName(), fEdepHCAL[i][0] * 1000. / nprim);
 #endif
   }
-  Printf("================================================================================");
+  printf("================================================================================");
 }
 
 //______________________________________________________________________________
 void CMSApplication::FinishRun() {
+#ifndef GEANTV_MIC
   if (fScore == kNoScore)
     return;
   TCanvas *c1 = new TCanvas("CMS test flux", "Simple scoring in CMS geometry", 700, 1200);
@@ -373,4 +393,5 @@ void CMSApplication::FinishRun() {
 
   // Close file
   f->Close();
+#endif
 }
