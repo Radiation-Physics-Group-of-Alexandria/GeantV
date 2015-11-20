@@ -67,6 +67,7 @@ void GunGenerator::InitPrimaryGenerator() {
 #ifndef USE_VECGEOM_NAVIGATOR
   fCharge /= 3.;
 #endif
+
   if ((int)fCharge != fCharge)
      Geant::Error("TPrimaryGenerator::InitPrimaryGenerator()","Unsupported charge: %f\n",fCharge);
 
