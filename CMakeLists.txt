@@ -461,14 +461,15 @@ add_subdirectory (base)
 add_subdirectory (xsec)
 add_subdirectory (vecprot_v2)
 add_subdirectory (examples)
+if (NOT MIC)
 add_subdirectory (tabxsec)
 add_subdirectory (magneticfield)
-
 add_subdirectory (test-small)
 add_subdirectory (test-complex)
 
 add_subdirectory (cmstrack)
 add_subdirectory (Nudy)
+endif()
 
 if(USE_VECPHYS)
  add_subdirectory (vectphysproc)
