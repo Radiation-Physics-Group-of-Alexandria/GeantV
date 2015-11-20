@@ -238,6 +238,7 @@ TTabPhysMgr::TTabPhysMgr(const char *xsecfilename, const char *finalsfilename)
       Fatal("TTabPhysMgr", "The material (%s) seems to have no elements", mat->GetName());
     }
     // Construct the TMXsec object that corresponds to the current material
+    cout << mat->GetName() << endl;
     TMXsec *mxs = new TMXsec(mat->GetName(), mat->GetName(), z, a, w, nelem, mat->GetDensity(), kTRUE, fDecay);
     fMatXsec[fNmaterials++] = mxs;
 // Connect to Material
