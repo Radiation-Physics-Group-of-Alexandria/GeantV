@@ -649,6 +649,7 @@ void TEXsec::RebuildClass() {
 	 exit(1);
       }
 #endif
+      ((TPXsec *) start)->RebuildClass();
       fPXsecP[i] = (TPXsec *) start;
       start += ((TPXsec*) start)->SizeOf();
    }
@@ -719,14 +720,6 @@ bool TEXsec::Lambda_v(int npart, int pindex, const double en[], double lam[]) co
 //___________________________________________________________________
 int TEXsec::SampleReac(int pindex, double en) const { 
    return fPXsecP[pindex]->SampleReac(en); }
-
-//___________________________________________________________________
-void TEXsec::GetPartSize() const { 
-   for(auto i=0; i<fNRpart; ++i) {
-      printf("Part %s sizeof %ld SizeOf %d\n",TPartIndex::I()->PartName(i),
-	     sizeof(*fPXsecP[i]), fPXsecP[i]->SizeOf()); 
-   }
-}
 
 //___________________________________________________________________
 int TEXsec::SampleReac(int pindex, double en, double randn) const { 

@@ -262,13 +262,13 @@ void TEFstate::Compact() {
 void TEFstate::RebuildClass() {
    char *start = (char*) fStore;
    for(auto i=0; i<fNRpart; ++i) {
-      cout << "fPFstateP[" << i <<"] = " << fPFstateP[i] << " pointer = " << start << endl;
 #ifdef MAGIC_DEBUG
       if(((TPFstate*) start)->GetMagic() != -777777) {
 	 cout << "TPFstate::Broken magic " << ((TPFstate*) start)->GetMagic() << endl;
 	 exit(1);
       }
 #endif
+      ((TPFstate *) start)->RebuildClass();
       fPFstateP[i] = (TPFstate *) start;
       start += ((TPFstate*) start)->SizeOf();
    }
