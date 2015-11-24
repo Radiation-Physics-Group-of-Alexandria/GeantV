@@ -297,12 +297,14 @@ void TEFstate::RebuildStore(size_t size, int nelem, char *b) {
    char *start = b;
    for(auto i=0; i<nelem; ++i) {
       TEFstate *current = (TEFstate *) start;
-      if(current->GetMagic() == -777777) {
-	 fElements[fNLdElems++] = current;
-      } else {
+#ifdef MAGIC_DEBUG
+      if(current->GetMagic() != -777777) {
 	 cout << "TEFstate::Broken Magic " << current->GetMagic() << endl;
 	 exit(1);
       }
+#endif
+      current->RebuildClass();
+      fElements[fNLdElems++] = current;
       start += current->SizeOf();     
    }
    if((size_t)(start - b) != size) {
