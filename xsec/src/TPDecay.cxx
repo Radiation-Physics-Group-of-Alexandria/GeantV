@@ -35,7 +35,7 @@ TPDecay::TPDecay(const TPDecay& other) :
 TPDecay::~TPDecay() {
    //   delete [] fCTauPerMass;
    //   delete [] fDecay;
-   //   if(fDecayP) 
+   //   if(fDecayP)
    //for(auto i=0; i<fNPart; ++i) delete fDecayP[i];
    delete [] fDecayP;
 }
@@ -141,8 +141,10 @@ void TPDecay::RebuildClass() {
 size_t TPDecay::MakeCompactBuffer(char* &b) {
    // First calculate how much we need
    size_t totsize = SizeOf();
-   b = (char*) malloc(totsize);
-   memset(b,0,totsize);
+   if(b == nullptr) {
+      b = (char*) malloc(totsize);
+      memset(b,0,totsize);
+   }
    TPDecay* dc = new(b) TPDecay(*this);
    dc->Compact();
    return totsize;
