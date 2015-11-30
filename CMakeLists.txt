@@ -154,7 +154,7 @@ if( VECGEOM_FOUND )
    else()
       message(STATUS "Vc NOT found")
    endif()
-   if( USE_VECGEOM_NAVIGATOR )
+    if( USE_VECGEOM_NAVIGATOR )
      add_definitions( "-DUSE_VECGEOM_NAVIGATOR" )
    endif()
    # temporary fix for VecGeom include dir

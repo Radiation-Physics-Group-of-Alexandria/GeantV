@@ -138,7 +138,7 @@ void TPDecay::RebuildClass() {
 }
 
 //___________________________________________________________________
-size_t TPDecay::MakeCompactBuffer(char* &b) {
+unsigned long TPDecay::MakeCompactBuffer(char* &b) {
    // First calculate how much we need
    size_t totsize = SizeOf();
    if(b == nullptr) {

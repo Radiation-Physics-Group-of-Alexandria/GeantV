@@ -43,7 +43,7 @@ public:
   int SizeOf() const;
   void Compact();
   void RebuildClass();
-  size_t MakeCompactBuffer(char* &b);
+  unsigned long MakeCompactBuffer(char* &b);
 #ifdef MAGIC_DEBUG
   int GetMagic() const {return fMagic;}
 #endif

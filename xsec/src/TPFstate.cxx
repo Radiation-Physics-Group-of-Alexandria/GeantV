@@ -61,7 +61,11 @@ TPFstate::TPFstate(int pdg, int nfstat, int nreac, const int dict[]) :
    // consistency
    for (int i = 0; i < fNReac; ++i)
       if (fRdict[fRmap[i]] != i)
+#ifndef GEANTV_MIC
 	 Fatal("SetPartXS", "Dictionary mismatch for!");
+#else
+	 std::cerr<<"SetPartXS: dictionary mismatch for"<<std::endl;
+#endif
 }
 
 //_________________________________________________________________________
