@@ -19,18 +19,18 @@ ClassImp(TPFstate)
 
 //_________________________________________________________________________
 TPFstate::TPFstate()
-: fNEbins(0), 
-   fNEFstat(0), 
+: fNEbins(0),
+   fNEFstat(0),
    fNFstat(0),
-   fNReac(0), 
-   fFstat(nullptr), 
-   fFstatP(nullptr), 
+   fNReac(0),
+   fFstat(nullptr),
+   fFstatP(nullptr),
    fRestCaptFstat(nullptr),
-   fEGrid(TPartIndex::I()->EGrid()), 
-   fEmin(0), 
-   fEmax(0), 
+   fEGrid(TPartIndex::I()->EGrid()),
+   fEmin(0),
+   fEmax(0),
    fEilDelta(0),
-   fPDG(0) 
+   fPDG(0)
 {
   int np = TPartIndex::I()->NProc();
   while (np--)
@@ -38,17 +38,17 @@ TPFstate::TPFstate()
 }
 
 //_________________________________________________________________________
-TPFstate::TPFstate(int pdg, int nfstat, int nreac, const int dict[]) : 
-   fNEbins(TPartIndex::I()->NEbins()), 
-   fNEFstat(nfstat), 
+TPFstate::TPFstate(int pdg, int nfstat, int nreac, const int dict[]) :
+   fNEbins(TPartIndex::I()->NEbins()),
+   fNEFstat(nfstat),
    fNFstat(fNEbins * fNEFstat),
-   fNReac(nreac), 
-   fFstat(new TFinState[fNFstat]), 
-   fFstatP(new TFinState*[fNFstat]), 
+   fNReac(nreac),
+   fFstat(new TFinState[fNFstat]),
+   fFstatP(new TFinState*[fNFstat]),
    fRestCaptFstat(nullptr),
-   fEGrid(TPartIndex::I()->EGrid()), 
-   fEmin(TPartIndex::I()->Emin()), 
-   fEmax(TPartIndex::I()->Emax()), 
+   fEGrid(TPartIndex::I()->EGrid()),
+   fEmin(TPartIndex::I()->Emin()),
+   fEmax(TPartIndex::I()->Emax()),
    fEilDelta((fNEbins - 1) / log(fEmax / fEmin)),
    fPDG(pdg)
 {
@@ -69,7 +69,7 @@ TPFstate::TPFstate(int pdg, int nfstat, int nreac, const int dict[]) :
 }
 
 //_________________________________________________________________________
-TPFstate::TPFstate(const TPFstate& other) : 
+TPFstate::TPFstate(const TPFstate& other) :
    fNEbins(other.fNEbins),
    fNEFstat(other.fNEFstat),
    fNFstat(other.fNFstat),
@@ -77,7 +77,7 @@ TPFstate::TPFstate(const TPFstate& other) :
    fFstat(other.fFstat),
    fFstatP(other.fFstatP),
    fRestCaptFstat(other.fRestCaptFstat),
-   fEGrid(TPartIndex::I()->EGrid()), 
+   fEGrid(TPartIndex::I()->EGrid()),
    fEmin(other.fEmin),
    fEmax(other.fEmax),
    fEilDelta(other.fEilDelta),
@@ -399,7 +399,9 @@ int TPFstate::SizeOf() const {
    if(fRestCaptFstat != nullptr) size += fRestCaptFstat->SizeOf();
    for(auto i=0; i<fNFstat; ++i)
       size += fFstatP[i]->SizeOf();
-   return (int) size - sizeof(TFinState); // fStore already holds one TPXsec
+    size -= sizeof(TFinState); // fStore already holds one TPXsec
+    size = sizeof(double)*((size-1)/sizeof(double)+1);
+    return (int) size;
 }
 
 //___________________________________________________________________
@@ -412,7 +414,7 @@ void TPFstate::Compact() {
       start += px->SizeOf();
       fRestCaptFstat=px;
    }
-      
+
    for(auto i=0; i<fNFstat; ++i) {
       TFinState *px = new(start) TFinState(*fFstatP[i]);
       px->Compact();
