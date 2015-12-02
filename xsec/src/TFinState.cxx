@@ -230,6 +230,7 @@ bool TFinState::SampleReac(int &npart, float &weight, float &kerma, float &en, c
 #else
   double eta = RNG::Instance().uniform();
 #endif
+  //eta = (((double) rand())/RAND_MAX); 
   int finstat = fNFstates - 1;
   for (int i = 0; i < fNFstates - 1; ++i)
     if (eta < fWeight[i]) {

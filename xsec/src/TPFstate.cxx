@@ -1,17 +1,19 @@
 #include "TPFstate.h"
 #include "TFinState.h"
-#ifndef GEANTV_MIC
-#include <TFile.h>
+#ifdef USE_ROOT
 #include <TMath.h>
-#include <TRandom.h>
-#else
+#include <TFile.h>
+#endif
+#ifdef USE_VECGEOM_NAVIGATOR
 #include "base/RNG.h"
 using vecgeom::RNG;
+#else
+#include <TRandom.h>
 #endif
 using std::max;
 
 int TPFstate::fVerbose = 0;
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 ClassImp(TPFstate)
 #else
 #include "Geant/MicVars.h"
@@ -61,7 +63,7 @@ TPFstate::TPFstate(int pdg, int nfstat, int nreac, const int dict[]) :
    // consistency
    for (int i = 0; i < fNReac; ++i)
       if (fRdict[fRmap[i]] != i)
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 	 Fatal("SetPartXS", "Dictionary mismatch for!");
 #else
 	 std::cerr<<"SetPartXS: dictionary mismatch for"<<std::endl;
@@ -126,7 +128,7 @@ bool TPFstate::SetPart(int pdg, int nfstat, int nreac, const int dict[]) {
   // consistency
   for (int i = 0; i < fNReac; ++i)
     if (fRdict[fRmap[i]] != i)
-     #ifndef GEANTV_MIC
+     #ifdef USE_ROOT
       Fatal("SetPart", "Dictionary mismatch for!");
      #else
      std::cerr<<"SetPart\n";
@@ -154,7 +156,7 @@ bool TPFstate::SetPart(int pdg, int nfstat, int nreac, const int dict[], TFinSta
   // consistency
   for (int i = 0; i < fNReac; ++i)
     if (fRdict[fRmap[i]] != i)
-     #ifndef GEANTV_MIC
+     #ifdef USE_ROOT
       Fatal("SetPart", "Dictionary mismatch for!");
      #else
      std::cerr<<"SetPartXS\n";
@@ -184,11 +186,12 @@ bool TPFstate::SampleReac(int preac, float en, int &npart, float &weight, float 
     return kFALSE;
   } else {
     kerma = en;
-   #ifndef GEANTV_MIC
+   #ifdef USE_ROOT
     double eta = gRandom->Rndm();
    #else
     double eta = RNG::Instance().uniform();
    #endif
+   // eta = ((double) rand())/RAND_MAX; 
     en = en < fEGrid[fNEbins - 1] ? en : fEGrid[fNEbins - 1] * 0.999;
     en = max<double>(en, fEGrid[0]);
     int ibin = log(en / fEGrid[0]) * fEilDelta;
