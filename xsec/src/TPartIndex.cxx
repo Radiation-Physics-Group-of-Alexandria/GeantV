@@ -8,7 +8,7 @@
 
 using std::transform;
 using std::string;
-#ifndef USE_VECGEOM_NAVIGATOR
+#ifndef GEANT_NVCC
 using std::map;
 #endif
 
@@ -204,7 +204,7 @@ void TPartIndex::Print(const char *option) const {
 }
 
 //______________________________________________________________________________
-#ifdef USE_VECGEOM_NAVIGATOR
+#ifdef GEANT_NVCC
 void TPartIndex::SetPDGToGVMap(vecgeom::map<int, int> &theMap) {
   fPDGToGVMap = theMap;
 #else
@@ -261,8 +261,11 @@ void TPartIndex::Streamer(TBuffer &R__b) {
 void TPartIndex::CreateReferenceVector() {
     // create the particle reference vector
     fGVParticle.resize(fPDGToGVMap.size(), 0);
-#ifdef USE_VECGEOM_NAVIGATOR
+#ifdef GEANT_NVCC
     for (vecgeom::map<int, int>::iterator p = fPDGToGVMap.begin(); p != fPDGToGVMap.end(); ++p) {
+#else
+#ifdef USE_VECGEOM_NAVIGATOR
+    for (map<int, int>::iterator p = fPDGToGVMap.begin(); p != fPDGToGVMap.end(); ++p) {
 // std::cout << " gv index " << p->second << " corresponds to " << p->first << std::endl;
 // create direct access vector with GeantV code
       const Particle_t *pp = &Particle_t::GetParticle(p->first);
@@ -434,6 +437,7 @@ void TPartIndex::CreateReferenceVector() {
           }
         }
       }
+#endif
 #endif
 #endif
     }

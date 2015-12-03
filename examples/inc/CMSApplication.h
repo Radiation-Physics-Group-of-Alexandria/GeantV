@@ -12,7 +12,7 @@
 
 #ifndef GEANT_CMSApplication
 #define GEANT_CMSApplication
-#ifdef USE_VECGEOM_NAVIGATOR
+#ifdef GEANT_NVCC
 #include "base/Map.h"
 #else
 #include <map>
@@ -60,7 +60,7 @@ private:
   float fEdepHCAL[kNHCALModules][kMaxThreads];  /** Energy deposition in HCAL */
   int fECALid[kNECALModules];                   /** ECAL volume id's */
   int fHCALid[kNHCALModules];                   /** HCAL volume id's */
-#ifdef USE_VECGEOM_NAVIGATOR 
+#ifdef GEANT_NVCC
   vecgeom::map<int,int> fECALMap;                     /** Map of ECAL modules */
   vecgeom::map<int,int> fHCALMap;                     /** Map of ECAL modules */
 #else 
