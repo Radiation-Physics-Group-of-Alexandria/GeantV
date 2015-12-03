@@ -8,7 +8,9 @@
 #ifdef USE_ROOT
 #include "TMath.h"
 #include "TRandom.h"
-#else
+#endif
+ 
+#ifdef USE_VECGEOM_NAVIGATOR
 #include "base/RNG.h"
 using vecgeom::RNG;
 #endif
@@ -326,10 +328,10 @@ void TMXsec::ProposeStep(int ntracks, GeantTrack_v &tracks, GeantTaskData *td) {
 
   // tid-based rng: need $\{ R_i\}_i^{ntracks} \in \mathcal{U} \in [0,1]$
   double *rndArray = td->fDblArray;
-#ifdef USE_ROOT
-  td->fRndm->RndmArray(ntracks, rndArray);
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
   td->fRndm->uniform_array(ntracks, rndArray);
+#elif USE_ROOT
+  td->fRndm->RndmArray(ntracks, rndArray);
 #endif
 
   for (int i = 0; i < ntracks; ++i) {
@@ -389,10 +391,10 @@ void TMXsec::ProposeStepSingle(int i, GeantTrack_v &tracks, GeantTaskData *td) {
 
   // tid-based rng: need $\{ R_i\}_i^{ntracks} \in \mathcal{U} \in [0,1]$
   double *rndArray = td->fDblArray;
-#ifdef USE_ROOT
-  td->fRndm->RndmArray(1, rndArray);
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
   td->fRndm->uniform_array(1, rndArray);
+#elif USE_ROOT
+  td->fRndm->RndmArray(1, rndArray);
 #endif
 
   int ipart = tracks.fGVcodeV[i];                   // GV particle index/code
@@ -741,10 +743,10 @@ TEXsec *TMXsec::SampleInt(int part, double en, int &reac, double ptot) {
       double lambdaDecay = ptot * fDecayTable->GetCTauPerMass(part);
       double lambdaTotal = Xlength(part, en, ptot); // ptotal is not used now there
                                                     // $P(decay) =\lambda_{Total}/\lambda_{decay}$
-#ifdef USE_ROOT
-      if (gRandom->Rndm() < lambdaTotal / lambdaDecay)
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
       if (RNG::Instance().uniform() < lambdaTotal / lambdaDecay)
+#elif USE_ROOT
+      if (gRandom->Rndm() < lambdaTotal / lambdaDecay)
 #endif
         isDecay = true;
     }
@@ -773,10 +775,10 @@ TEXsec *TMXsec::SampleInt(int part, double en, int &reac, double ptot) {
         double xrat = (en2 - en) / (en2 - en1);
         double xnorm = 1.;
         while (iel < 0) {
-#ifdef USE_ROOT
-          double ran = xnorm * gRandom->Rndm();
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
           double ran = xnorm * RNG::Instance().uniform();
+#elif USE_ROOT
+          double ran = xnorm * gRandom->Rndm();
 #endif
 
           double xsum = 0;
@@ -810,10 +812,10 @@ void TMXsec::SampleInt(int ntracks, GeantTrack_v &tracksin, GeantTaskData *td) {
 
   // tid-based rng
   double *rndArray = td->fDblArray;
-#ifdef USE_ROOT
-  td->fRndm->RndmArray(2 * ntracks, rndArray);
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
   td->fRndm->uniform_array(2 * ntracks, rndArray);
+#elif USE_ROOT
+  td->fRndm->RndmArray(2 * ntracks, rndArray);
 #endif
 
   for (int t = 0; t < ntracks; ++t) {
@@ -862,10 +864,10 @@ void TMXsec::SampleInt(int ntracks, GeantTrack_v &tracksin, GeantTaskData *td) {
           double xrat = (en2 - energy) / (en2 - en1);
           double xnorm = 1.;
           while (iel < 0) {
-#ifdef USE_ROOT
-            double ran = xnorm * td->fRndm->Rndm();
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
             double ran = xnorm * td->fRndm->uniform();
+#elif USE_ROOT
+            double ran = xnorm * td->fRndm->Rndm();
 #endif
             double xsum = 0;
             int ibase = ipart * (fNEbins * fNElems);
@@ -907,10 +909,10 @@ void TMXsec::SampleSingleInt(int t, GeantTrack_v &tracksin, GeantTaskData *td) {
 
   // tid-based rng
   double *rndArray = td->fDblArray;
-#ifdef USE_ROOT
-  td->fRndm->RndmArray(2, rndArray);
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
   td->fRndm->uniform_array(2, rndArray);
+#elif USE_ROOT
+  td->fRndm->RndmArray(2, rndArray);
 #endif
   /*
      if(tracksin.fEindexV[t] < 0){ // continous step limited this step
@@ -956,10 +958,10 @@ void TMXsec::SampleSingleInt(int t, GeantTrack_v &tracksin, GeantTaskData *td) {
         double xrat = (en2 - energy) / (en2 - en1);
         double xnorm = 1.;
         while (iel < 0) {
-#ifdef USE_ROOT
-          double ran = xnorm * td->fRndm->Rndm();
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
           double ran = xnorm * td->fRndm->uniform();
+#elif USE_ROOT
+          double ran = xnorm * td->fRndm->Rndm();
 #endif
           double xsum = 0;
           int ibase = ipart * (fNEbins * fNElems);
@@ -997,10 +999,10 @@ void TMXsec::SampleSingleInt(int t, GeantTrack_v &tracksin, GeantTaskData *td) {
 //______________________________________________________________________________
 int TMXsec::SampleElement(GeantTaskData *td) {
   if (fNElems > 1) {
-#ifdef USE_ROOT
-    double randn = td->fRndm->Rndm();
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
     double randn = td->fRndm->uniform();
+#elif USE_ROOT
+    double randn = td->fRndm->Rndm();
 #endif
     for (int itr = 0; itr < fNElems; ++itr)
       if (fRatios[itr] > randn)
@@ -1015,10 +1017,10 @@ int TMXsec::SampleElement(GeantTaskData *td) {
 //______________________________________________________________________________
 int TMXsec::SampleElement() {
   if (fNElems > 1) {
-#ifdef USE_ROOT
-    double randn = gRandom->Rndm();
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
     double randn = RNG::Instance().uniform();
+#elif USE_ROOT
+    double randn = gRandom->Rndm();
 #endif
     for (int itr = 0; itr < fNElems; ++itr)
       if (fRatios[itr] > randn)
@@ -1044,10 +1046,10 @@ int TMXsec::SelectElement(int pindex, int rindex, double energy) {
       totalxs += fElems[i]->XS(pindex, rindex, energy) * fRatios[i];
     }
 
-#ifdef USE_ROOT
-    double ranxs = totalxs * gRandom->Rndm();
-#else
+#ifdef USE_VECGEOM_NAVIGATOR
     double ranxs = totalxs * RNG::Instance().uniform();
+#elif USE_ROOT
+    double ranxs = totalxs * gRandom->Rndm();
 #endif
     double cross = 0.;
 
