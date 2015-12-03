@@ -17,7 +17,6 @@
 #include "TObject.h"
 #include "TGeoExtension.h"
 #else
-#include "Geant/MicVars.h"
 #define MIC_BIT(n) (1ULL<<(n))
 #endif
 
@@ -247,7 +246,7 @@ public:
    * @param itr Track id.
    * @param input Refer to input or output track (default input)
    */
-  void PrintTrack(int itr, bool input = kTRUE) const;
+  void PrintTrack(int itr, bool input = true) const;
 
   /** @brief Recycle this basket */
   void Recycle(GeantTaskData *td);
@@ -422,7 +421,7 @@ public:
    * @brief Function adding a track to basket up to the basket threshold
    *
    * @param track  Track that should be added to basket
-   * @param priority Set priority (by default kFALSE)
+   * @param priority Set priority (by default false)
    */
   int AddTrack(GeantTrack &track, bool priority, GeantTaskData *td);
 
@@ -431,7 +430,7 @@ public:
    *
    * @param trackv Array of tracks containing the track to be added
    * @param itr Track id
-   * @param priority Set priority (by default kFALSE)
+   * @param priority Set priority (by default false)
    */
   int AddTrack(GeantTrack_v &trackv, int itr, bool priority, GeantTaskData *td);
 
@@ -440,7 +439,7 @@ public:
    *
    * @param trackv Array of tracks containing the track to be added
    * @param itr Track id
-   * @param priority Set priority (by default kFALSE)
+   * @param priority Set priority (by default false)
    */
   int AddTrackSingleThread(GeantTrack_v &trackv, int itr, bool priority, GeantTaskData *td);
 

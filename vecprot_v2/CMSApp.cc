@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
   }
   propagator->fApplication = CMSApp;
   if (debug) {
-    propagator->fUseDebug = kTRUE;
+    propagator->fUseDebug = true;
     propagator->fDebugTrk = 1;
   }
   propagator->fUseMonitoring = monitor;

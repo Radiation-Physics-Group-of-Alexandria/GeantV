@@ -25,7 +25,7 @@ ClassImp(ExN03Application)
 #endif
     //______________________________________________________________________________
     ExN03Application::ExN03Application()
-    : GeantVApplication(), fInitialized(kFALSE), fIdGap(0), fIdAbs(0), fFactory(0) {
+    : GeantVApplication(), fInitialized(false), fIdGap(0), fIdAbs(0), fFactory(0) {
   // Ctor..
   GeantFactoryStore *store = GeantFactoryStore::Instance();
   fFactory = store->GetFactory<MyHit>(16);
@@ -39,7 +39,7 @@ ClassImp(ExN03Application)
 bool ExN03Application::Initialize() {
   // Initialize application. Geometry must be loaded.
   if (fInitialized)
-    return kTRUE;
+    return true;
 #ifndef USE_VECGEOM_NAVIGATOR
   if (!gGeoManager) {
 #else
@@ -50,7 +50,7 @@ bool ExN03Application::Initialize() {
 #else
     std::cout<<"Initialize: Geometry not loaded\n";
 #endif
-    return kFALSE;
+    return false;
   }
 #ifndef USE_VECGEOM_NAVIGATOR
   Volume_t *lvGap = gGeoManager->GetVolume("liquidArgon");
@@ -66,7 +66,7 @@ bool ExN03Application::Initialize() {
 #else
     std::cout<<"Initialize: Logical volumes for gap and absorber not found - do you use the right geometry\n";
 #endif
-    return kFALSE;
+    return false;
   }
 #ifndef USE_VECGEOM_NAVIGATOR
   fIdGap = lvGap->GetNumber();
@@ -75,8 +75,8 @@ bool ExN03Application::Initialize() {
   fIdGap = lvGap->id();
   fIdAbs = lvAbs->id();
 #endif
-  fInitialized = kTRUE;
-  return kTRUE;
+  fInitialized = true;
+  return true;
 }
 
 //______________________________________________________________________________
@@ -199,11 +199,11 @@ void ExN03Application::Digitize(int /* event */) {
   TH1F *histeg = new TH1F("Edep_gap", "Primary track energy deposition per layer", kNlayers, 0.5, kNlayers+0.5);
   histeg->SetMarkerColor(kRed);
   histeg->SetMarkerStyle(2);
-  histeg->SetStats(kFALSE);
+  histeg->SetStats(false);
   TH1F *histea = new TH1F("Edep_abs", "Primary track energy deposition per layer in absorber", kNlayers, 0.5, kNlayers+0.5);
   histea->SetMarkerColor(kBlue);
   histea->SetMarkerStyle(4);
-  histea->SetStats(kFALSE);
+  histea->SetStats(false);
   for (int i = 0; i < kNlayers; i++) {
     histeg->SetBinContent(i+1, fEdepGap[i][0] * 1000. / nprim);
     histea->SetBinContent(i+1, fEdepAbs[i][0] * 1000. / nprim);
@@ -226,11 +226,11 @@ void ExN03Application::Digitize(int /* event */) {
   TH1F *histlg = new TH1F("Len_gap", "Length per layer normalized per primary", kNlayers, 0.5, kNlayers+0.5);
   histlg->SetMarkerColor(kRed);
   histlg->SetMarkerStyle(2);
-  histlg->SetStats(kFALSE);
+  histlg->SetStats(false);
   TH1F *histla = new TH1F("Len_abs", "Length per layer normalized per primary", kNlayers, 0.5, kNlayers+0.5);
   histla->SetMarkerColor(kBlue);
   histla->SetMarkerStyle(4);
-  histla->SetStats(kFALSE);
+  histla->SetStats(false);
   for (int i = 0; i < 10; i++) {
     histlg->SetBinContent(i+1, fLengthGap[i][0] / nprim);
     histla->SetBinContent(i+1, fLengthAbs[i][0] / nprim);

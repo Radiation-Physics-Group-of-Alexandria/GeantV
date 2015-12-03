@@ -91,8 +91,8 @@ GeantPropagator::GeantPropagator()
       fEmax(10),    // 10 Gev
       fBmag(1.),
       fEpsilonRK(0.0003), 
-      fUsePhysics(kTRUE), fUseRungeKutta(kFALSE), fUseDebug(kFALSE), fUseGraphics(kFALSE), fUseStdScoring(kFALSE),
-      fTransportOngoing(kFALSE), fSingleTrack(kFALSE), fFillTree(kFALSE), fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(kFALSE), fUseAppMonitoring(kFALSE), fTracksLock(),  
+      fUsePhysics(true), fUseRungeKutta(false), fUseDebug(false), fUseGraphics(false), fUseStdScoring(false),
+      fTransportOngoing(false), fSingleTrack(false), fFillTree(false), fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(false), fUseAppMonitoring(false), fTracksLock(),  
       fWMgr(0), fApplication(0), fStdApplication(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0), fStoredTracks(0),
       fPrimaryGenerator(0), fNtracks(0), fEvents(0), fThreadData(0) {
   // Constructor
@@ -243,9 +243,9 @@ int GeantPropagator::ImportTracks(int nevents, int startevent, int startslot, Ge
     nav = gGeoManager->AddNavigator();
 #endif
 
-  static bool init = kTRUE;
+  static bool init = true;
   if (init)
-    init = kFALSE;
+    init = false;
   int event = startevent;
   GeantEventInfo eventinfo;
   for (int slot = startslot; slot < startslot + nevents; slot++) {
@@ -286,7 +286,7 @@ int GeantPropagator::ImportTracks(int nevents, int startevent, int startslot, Ge
       fPrimaryGenerator->GetTrack(i, track);
       if (!track.IsNormalized())
         track.Print("Not normalized");
-      track.fBoundary = kFALSE;
+      track.fBoundary = false;
       track.fStatus = kAlive;
       track.fVindex = basket_mgr->GetNumber();
       AddTrack(track);
@@ -481,20 +481,20 @@ bool GeantPropagator::LoadGeometry(const char *filename) {
 #else
     fMaxDepth = TGeoManager::GetMaxLevels();
 #endif
-    return kTRUE;
+    return true;
   }
 
   ::Error("LoadGeometry", "Cannot load geometry from file %s", filename);
-  return kFALSE;
+  return false;
 #else
 
   vecgeom::GeoManager *geom = &vecgeom::GeoManager::Instance();
   if (geom) {
      geom->LoadGeometryFromSharedLib(filename);
      fMaxDepth = vecgeom::GeoManager::Instance().getMaxDepth();
-     return kTRUE;
+     return true;
   }
-  return kFALSE;
+  return false;
 #endif
 }
 #endif
@@ -535,7 +535,7 @@ void GeantPropagator::ProposeStep(int ntracks, GeantTrack_v &tracks, GeantTaskDa
 void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool graphics, bool single) {
   // Propagate fNevents in the volume containing the vertex.
   // Simulate 2 physics processes up to exiting the current volume.
-  static bool called = kFALSE;
+  static bool called = false;
   fUseGraphics = graphics;
   fNthreads = nthreads;
   fSingleTrack = single;
@@ -555,7 +555,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
     printf("Sorry, you can call this only once per session.");
     return;
   }
-  called = kTRUE;
+  called = true;
 
   fPrimaryGenerator->InitPrimaryGenerator();
   //   int itrack;
@@ -582,7 +582,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   //  Feeder(fThreadData[0]);
 
   // Loop baskets and transport particles until there is nothing to transport anymore
-  fTransportOngoing = kTRUE;
+  fTransportOngoing = true;
   WorkloadManager::Instance()->SetMaxThreads(nthreads);
 #ifdef USE_ROOT
   if (fUseMonitoring) {
