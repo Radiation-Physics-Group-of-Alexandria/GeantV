@@ -16,7 +16,7 @@
 #include "GeantFwd.h"
 class TTabPhysMgr;
 
-#ifdef GEANTV_MIC
+#ifndef USE_ROOT
 typedef const char* TString;
 #endif 
 //______________________________________________________________________________
@@ -58,7 +58,7 @@ public:
 private:
   TTabPhysProcess(const TTabPhysProcess &);            // no imp.
   TTabPhysProcess &operator=(const TTabPhysProcess &); // no imp.
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   ClassDef(TTabPhysProcess, 1) // Generic tabulated physics process
 #endif
 };

@@ -18,7 +18,7 @@
 //
 #include "GeantPropagator.h"
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #include "TTimer.h"
 #include "TError.h"
 #include "TStopwatch.h"
@@ -29,7 +29,7 @@
 
 #if USE_VECGEOM_NAVIGATOR == 1
 #include "navigation/SimpleNavigator.h"
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #include "management/RootGeoManager.h"
 #endif
 #include "volumes/PlacedVolume.h"
@@ -70,7 +70,7 @@
 using namespace Geant;
 
 GeantPropagator *gPropagator = 0;
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 ClassImp(GeantPropagator)
 #endif
 
@@ -78,7 +78,7 @@ ClassImp(GeantPropagator)
 
 //______________________________________________________________________________
 GeantPropagator::GeantPropagator()
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
     : TObject(), fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0), fNprimaries(0), fNsteps(0),
 #else
     : fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0), fNprimaries(0), fNsteps(0),
@@ -156,7 +156,7 @@ GeantTrack &GeantPropagator::GetTempTrack(int tid) {
   if (tid < 0)
     tid = WorkloadManager::Instance()->ThreadId();
   if (tid > fNthreads)
-   #ifndef GEANTV_MIC
+   #ifdef USE_ROOT
     Fatal("GetTempTrack", "Thread id %d is too large (max %d)", tid, fNthreads);
    #else
     std:;cerr<<"GetTempTrack: Thread is too large\n";
@@ -189,7 +189,7 @@ int GeantPropagator::Feeder(GeantTaskData *td) {
       evt->Print();
       // Digitizer (todo)
       int ntracks = fNtracks[islot];
-   #ifndef GEANTV_MIC
+   #ifdef USE_ROOT
       Printf("= digitizing event %d with %d tracks pri=%d", evt->GetEvent(), ntracks, fPriorityEvents.load());
    #else
       printf("= digitizing event %d with %d tracks pri=%d", evt->GetEvent(), ntracks, fPriorityEvents.load());
@@ -197,7 +197,7 @@ int GeantPropagator::Feeder(GeantTaskData *td) {
       //            propagator->fApplication->Digitize(evt->GetEvent());
       fDoneEvents->SetBitNumber(evt->GetEvent());
       if (fLastEvent < fNtotal) {
-      #ifndef GEANTV_MIC
+      #ifdef USE_ROOT
         Printf("=> Importing event %d", fLastEvent);
       #else
         printf("=> Importing event %d", fLastEvent);
@@ -307,7 +307,7 @@ GeantPropagator *GeantPropagator::Instance(int ntotal, int nbuffered, int nthrea
   if (fgInstance)
     return fgInstance;
   if (ntotal <= 0 || nbuffered <= 0) {
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
     Printf("GeantPropagator::Instance: Number of transported/buffered events should be positive");
 #else
     printf("GeantPropagator::Instance: Number of transported/buffered events should be positive");
@@ -319,7 +319,7 @@ GeantPropagator *GeantPropagator::Instance(int ntotal, int nbuffered, int nthrea
   fgInstance->fNevents = nbuffered;
   fgInstance->fNthreads = nthreads;
   if (nbuffered > ntotal) {
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
     Printf("GeantPropagator::Instance: Number of buffered events changed to %d", ntotal);
 #else
     printf("GeantPropagator::Instance: Number of buffered events changed to %d", ntotal);
@@ -344,7 +344,7 @@ void GeantPropagator::Initialize() {
   gPropagator = GeantPropagator::Instance();
   fDoneEvents = BitSet::MakeInstance(fNtotal);
   if (!fProcess) {
-   #ifndef GEANTV_MIC
+   #ifdef USE_ROOT
     Fatal("Initialize", "The physics process has to be initialized before this");
    #else
     std::cerr<<"Initialize: The physics process has to be initialized before this\n";
@@ -431,7 +431,7 @@ void GeantPropagator::PrepareRkIntegration() {
   }   
 }
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #if USE_VECGEOM_NAVIGATOR == 1
 /**
  * function to setup the VecGeom geometry from a TGeo geometry ( if gGeoManager ) exists
@@ -468,7 +468,7 @@ bool GeantPropagator::LoadVecGeomGeometry() {
 bool GeantPropagator::LoadGeometry(const char *filename) {
 // Load the detector geometry from file, unless already loaded.
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #ifdef USE_VECGEOM_NAVIGATOR
   vecgeom::GeoManager *geom = &vecgeom::GeoManager::Instance();
 #else
@@ -584,7 +584,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   // Loop baskets and transport particles until there is nothing to transport anymore
   fTransportOngoing = kTRUE;
   WorkloadManager::Instance()->SetMaxThreads(nthreads);
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   if (fUseMonitoring) {
     TCanvas *cmon = new TCanvas("cscheduler", "Scheduler monitor", 900, 600);
     cmon->Update();
@@ -607,7 +607,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   fWMgr->WaitWorkers();
   fWMgr->JoinThreads();
   fTimer->Stop();
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   double rtime = fTimer->RealTime();
   double ctime = fTimer->CpuTime();
 #else

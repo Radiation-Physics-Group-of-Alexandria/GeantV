@@ -13,7 +13,7 @@
 #ifndef GEANT_PROPAGATOR
 #define GEANT_PROPAGATOR
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
  #ifndef ROOT_TObject
  #include "TObject.h"
  #endif
@@ -27,7 +27,6 @@
  typedef std::mutex TMutex; 
  typedef long Long64_t;
  typedef bool Bool_t;
-  
 #endif
 
 #ifndef GEANT_TRACK
@@ -38,7 +37,7 @@
 #include <atomic>
 
 #include "Geant/Typedefs.h"
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 class TTree;
 class TFile;
 class TStopwatch;
@@ -55,7 +54,7 @@ class TaskBroker;
 #include "GeantFwd.h"
 
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 class GeantPropagator : public TObject {
 #else 
 class GeantPropagator {
@@ -135,7 +134,7 @@ public:
   GeantVApplication *fApplication;    /** User application */
   GeantVApplication *fStdApplication; /** Standard application */
 
-  #ifndef GEANTV_MIC
+  #ifdef USE_ROOT
   TStopwatch *fTimer; /** Timer */
   #else
   vecgeom::Stopwatch *fTimer; /** Timer */
@@ -319,7 +318,7 @@ private:
 
   /** @brief Assignment operator not implemented */
   GeantPropagator &operator=(const GeantPropagator &);
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   ClassDef(GeantPropagator, 1)
 #endif
 };

@@ -1,6 +1,6 @@
 #include "MyHit.h"
 #include "GeantFactoryStore.h"
-#ifdef GEANTV_MIC
+#ifndef USE_ROOT
 #include "base/Stopwatch.h"
 #else
 #include "TStopwatch.h"

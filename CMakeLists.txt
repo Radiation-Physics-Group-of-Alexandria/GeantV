@@ -170,7 +170,7 @@ endif()
 #
 
 if (MIC)
-add_definitions(-DGEANTV_MIC)
+#add_definitions(-DGEANTV_MIC)
 set (USE_ROOT FALSE)
 else()
 find_package(ROOT REQUIRED)

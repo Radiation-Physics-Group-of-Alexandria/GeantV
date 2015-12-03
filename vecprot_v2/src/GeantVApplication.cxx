@@ -1,10 +1,10 @@
 #include "GeantVApplication.h"
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 ClassImp(GeantVApplication)
 #endif
     //______________________________________________________________________________
     GeantVApplication::GeantVApplication()
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
     : TObject() 
 #endif
     {

@@ -39,7 +39,7 @@ using vecgeom::kPi;
 using vecgeom::kTwoPi;
 #include "base/MessageLogger.h"
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 ClassImp(TTabPhysMgr)
 #endif
     TTabPhysMgr *TTabPhysMgr::fgInstance = 0;

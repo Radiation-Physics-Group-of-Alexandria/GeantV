@@ -13,7 +13,7 @@
 #ifndef GEANT_VAPPLICATION
 #define GEANT_VAPPLICATION
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
@@ -23,7 +23,7 @@ class GeantHitBlock;
 #include "GeantFwd.h"
 
 /** @brief GeantVApplication class */
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 class GeantVApplication : public TObject {
 #else
 class GeantVApplication {
@@ -62,7 +62,7 @@ public:
   /** @brief User FinishRun function */
   virtual void FinishRun() = 0;
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   ClassDef(GeantVApplication, 1) // User application
 #endif
 };

@@ -56,7 +56,7 @@ public:
 private:
   GunGenerator(const GunGenerator &);            // no imp.
   GunGenerator &operator=(const GunGenerator &); // no imp.
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   ClassDef(GunGenerator, 1)
 #endif
 };

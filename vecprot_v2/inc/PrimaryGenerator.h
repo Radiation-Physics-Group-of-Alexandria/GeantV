@@ -14,7 +14,7 @@
 #define GEANTV_PrimaryGenerator_h
 
 #include "base/Global.h"
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #include "TNamed.h"
 #endif
 
@@ -36,7 +36,7 @@ struct GeantEventInfo {
 /**
  * @brief Class of primary generators
  */
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 class PrimaryGenerator : public TNamed {
 #else
 class PrimaryGenerator {
@@ -53,7 +53,7 @@ protected:
   double fPMax;   // maximum momentum
   GeantEventInfo fCurrentEvent; // current event
 public:
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   PrimaryGenerator()
       : TNamed(), fEtaCut(false), fPhiCut(false), fMomCut(false), fEtaMin(0), fEtaMax(0), fPhiMin(0), fPhiMax(0),
         fPMin(0), fPMax(0) {}

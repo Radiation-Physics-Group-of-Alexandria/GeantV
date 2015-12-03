@@ -45,7 +45,7 @@
 #endif
 #include <cassert>
 
-#ifdef GEANTV_MIC
+#ifndef USE_ROOT
  typedef std::string TString;
 #endif
 namespace Geant {

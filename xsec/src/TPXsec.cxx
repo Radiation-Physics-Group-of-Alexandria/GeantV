@@ -1,16 +1,14 @@
 #include "TPXsec.h"
 #ifdef USE_ROOT
 #include "TRandom.h"
-#else
-#include "base/RNG.h"
-using vecgeom::RNG;
-#endif
-#ifndef GEANTV_MIC
 #include "TFile.h"
-// For Fatal and Error, to be changed
 #include "TMath.h"
 #else
 #include "Geant/MicVars.h"
+#endif
+#ifdef USE_VECGEOM_NAVIGATOR
+#include "base/RNG.h"
+using vecgeom::RNG;
 #endif
 using std::max;
 
@@ -342,7 +340,7 @@ bool TPXsec::SetPartXS(const float xsec[], const int dict[]) {
   // consistency
   for (int i = 0; i < fNXsec; ++i)
     if (fRdict[fRmap[i]] != i)
-     #ifndef GEANTV_MIC
+     #ifdef USE_ROOT
       Fatal("SetPartXS", "Dictionary mismatch for!");
      #else 
       std::cerr<<"SetPartXS error\n";
@@ -538,7 +536,7 @@ bool TPXsec::XS_v(int npart, int rindex, const double en[], double lam[]) const 
     if (rindex < TPartIndex::I()->NProc() - 1) {
       int rnumber = fRdict[rindex];
       if (rnumber < 0) {
-       #ifndef GEANTV_MIC
+       #ifdef USE_ROOT
         Error("XS", "No %s for %s\n", TPartIndex::I()->ProcName(rindex),
               TPartIndex::I()->PartName(TPartIndex::I()->PartIndex(fPDG)));
        #else 
@@ -576,7 +574,7 @@ float TPXsec::XS(int rindex, double en, bool verbose) const {
   if (rindex < TPartIndex::I()->NProc() - 1) {
     int rnumber = fRdict[rindex];
     if (rnumber < 0 && verbose) {
-     #ifndef GEANTV_MIC
+     #ifdef USE_ROOT
       Error("XS", "No %s for %s\n", TPartIndex::I()->ProcName(rindex),
             TPartIndex::I()->PartName(TPartIndex::I()->PartIndex(fPDG)));
      #else

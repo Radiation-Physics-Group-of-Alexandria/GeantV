@@ -10,7 +10,7 @@ using vecgeom::GeoManager;
 #include "GeantScheduler.h"
 #include "GeantTaskData.h"
 #include "globals.h"
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #include "TProfile.h"
 #include "TH1.h"
 #include "TCanvas.h"
@@ -37,7 +37,7 @@ ClassImp(CMSApplication)
   memset(fEdepHCAL, 0, kNHCALModules * kMaxThreads * sizeof(float));
   memset(fECALid, 0, kNECALModules * sizeof(int));
   memset(fHCALid, 0, kNHCALModules * sizeof(int));
-  #ifndef GEANTV_MIC
+  #ifdef USE_ROOT
   TH1::AddDirectory(false);
   fFluxElec = new TH1F("hFluxElec", "e+/e- flux/primary in ECAL", 50, 0., 2500.);
   fFluxElec->GetXaxis()->SetTitle("Momentum [MeV/c]");
@@ -84,7 +84,7 @@ bool CMSApplication::Initialize() {
   std::vector<Volume_t const *> &lvolumes = sch->GetVolumes();
   printf("Found %d logical volumes", nvolumes);
   const Volume_t *vol;
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   TString svol, smat;
 #else
   std::string svol, smat;
@@ -101,7 +101,7 @@ bool CMSApplication::Initialize() {
 #endif
     svol = vol->GetName();
     // ECAL cells
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
     if (svol.BeginsWith("EBRY") || svol.BeginsWith("EFRY")) {
 #else
     std::string ebry("EBRY");
@@ -248,7 +248,7 @@ void CMSApplication::StepManager(int npart, const GeantTrack_v &tracks, GeantTas
 #else
 //      capacity = vol->GetShape()->Capacity();
 #endif
-#ifndef GEANTV_MIC       
+#ifdef USE_ROOT      
       if (fabs(tracks.fPDGV[itr]) == 11) {
         fFluxElec->Fill(1000. * tracks.fPV[itr], tracks.fStepV[itr] / capacity);
         fEdepElec->Fill(1000. * tracks.fPV[itr], 1000. * tracks.fEdepV[itr] / capacity);
@@ -269,6 +269,30 @@ void CMSApplication::StepManager(int npart, const GeantTrack_v &tracks, GeantTas
 #endif
       if (propagator->fNthreads > 1)
         fMHist.unlock();      
+#ifdef USE_ROOT
+      
+      if (gPropagator->fFillTree) {
+	MyHit *hit;
+	
+	// Deposit hits
+	if (tracks.fEdepV[itr]>0.00002)
+	  {
+	    //	    Printf("hit with energy %f", tracks.fEdepV[itr]);
+	    
+	    hit = fFactory->NextFree(tracks.fEvslotV[itr], tid);
+	    
+	    hit->fX = tracks.fXposV[itr];
+	    hit->fY = tracks.fYposV[itr];
+	    hit->fZ = tracks.fZposV[itr];
+	    hit->fEdep = 1000*tracks.fEdepV[itr];
+       hit->fTime = tracks.fTimeV[itr];
+       hit->fEvent = tracks.fEventV[itr];
+       hit->fTrack = tracks.fParticleV[itr];
+	    hit->fVolId = ivol;
+	    hit->fDetId = idtype; 
+	  }
+      }
+#endif
     }
   }
 }
@@ -309,7 +333,7 @@ void CMSApplication::Digitize(int /* event */) {
 
 //______________________________________________________________________________
 void CMSApplication::FinishRun() {
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   if (fScore == kNoScore)
     return;
   TCanvas *c1 = new TCanvas("CMS test flux", "Simple scoring in CMS geometry", 700, 1200);

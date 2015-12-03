@@ -16,7 +16,7 @@
 #include "GeantPropagator.h"
 
 /** @brief Propagator class */
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 R__EXTERN GeantPropagator *gPropagator; /** Propagator class */
 #else
 extern GeantPropagator *gPropagator; /** Propagator class */

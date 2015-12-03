@@ -1,5 +1,5 @@
 #include "Geant/Error.h"
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #include "TError.h"
 #include "Varargs.h"
 #endif
@@ -10,7 +10,7 @@ inline namespace cxx {
 
 // Code to be compiled only by gcc (i.e. not nvcc).
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 void ErrorHandlerImpl(EMsgLevel level, const char *location, const char *va_(fmt), ...)
 {
     // Currently we use the ROOT message handler on the host/gcc code.

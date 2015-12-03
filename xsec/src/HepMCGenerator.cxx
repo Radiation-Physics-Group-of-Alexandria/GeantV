@@ -8,7 +8,7 @@ using vecgeom::kPi;
 #include "HepMC/GenParticle.h"
 #include "HepMC/GenVertex.h"
 #include "HepMC/ReaderAscii.h"
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #include "HepMC/ReaderRoot.h"
 
 ClassImp(HepMCGenerator)
@@ -23,7 +23,7 @@ HepMCGenerator::HepMCGenerator(std::string &filename) : input_file(0), search(0)
   if (filename.substr(filename.find_last_of(".") + 1) == "hepmc3") {
     input_file = new HepMC::ReaderAscii(filename);
   }
-#ifndef GEANTV_MIC 
+#ifdef USE_ROOT 
   else if (filename.substr(filename.find_last_of(".") + 1) == "root") {
     input_file = new HepMC::ReaderRoot(filename);
   } 
@@ -54,7 +54,7 @@ GeantEventInfo HepMCGenerator::NextEvent() {
   HepMC::GenEvent evt(HepMC::Units::GEV, HepMC::Units::MM);
 
   if (!(input_file->read_event(evt)))
-  #ifndef GEANTV_MIC
+  #ifdef USE_ROOT
     Fatal("ImportTracks", "No more particles to read!");
   #else
     std::cerr<<"ImportTracks - No more particles to read!\n";

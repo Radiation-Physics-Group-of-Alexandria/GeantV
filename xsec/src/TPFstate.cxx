@@ -3,12 +3,11 @@
 #ifdef USE_ROOT
 #include <TMath.h>
 #include <TFile.h>
+#include <TRandom.h>
 #endif
 #ifdef USE_VECGEOM_NAVIGATOR
 #include "base/RNG.h"
 using vecgeom::RNG;
-#else
-#include <TRandom.h>
 #endif
 using std::max;
 
@@ -191,7 +190,7 @@ bool TPFstate::SampleReac(int preac, float en, int &npart, float &weight, float 
    #else
     double eta = RNG::Instance().uniform();
    #endif
-   // eta = ((double) rand())/RAND_MAX; 
+    eta = ((double) rand())/RAND_MAX;  // temp -- for testing 
     en = en < fEGrid[fNEbins - 1] ? en : fEGrid[fNEbins - 1] * 0.999;
     en = max<double>(en, fEGrid[0]);
     int ibin = log(en / fEGrid[0]) * fEilDelta;

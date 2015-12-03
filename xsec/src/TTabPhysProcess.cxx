@@ -27,7 +27,7 @@ ClassImp(TTabPhysProcess)
     TTabPhysProcess::TTabPhysProcess()
     : PhysicsProcess(), fMgr(0), fXsecFileName(), fFinalSFileName() {
   // I/O ctor
-  #ifndef GEANTV_MIC
+  #ifdef USE_ROOT
   TObject::SetBit(kDiscrete);
   #else
   PhysicsProcess::SetBit(kDiscrete);
@@ -38,7 +38,7 @@ ClassImp(TTabPhysProcess)
 TTabPhysProcess::TTabPhysProcess(const char *name, const char *fxsec, const char *ffstate)
     : PhysicsProcess(name), fMgr(0), fXsecFileName(fxsec), fFinalSFileName(ffstate) {
   // Normal ctor
-  #ifndef GEANTV_MIC
+  #ifdef USE_ROOT
   TObject::SetBit(kDiscrete);
   #else
   PhysicsProcess::SetBit(kDiscrete);

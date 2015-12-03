@@ -9,7 +9,7 @@ using vecgeom::GeoManager;
 #include "GeantPropagator.h"
 #include "GeantTaskData.h"
 #include "globals.h"
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #include "TGeoNode.h"
 #include "TH1.h"
 #include "TCanvas.h"
@@ -20,7 +20,7 @@ using vecgeom::GeoManager;
 using std::min;
 using std::max;
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 ClassImp(ExN03Application)
 #endif
     //______________________________________________________________________________
@@ -45,7 +45,7 @@ bool ExN03Application::Initialize() {
 #else
   if (!GeoManager::Instance().GetWorld()) {
 #endif
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
     Error("Initialize", "Geometry not loaded");
 #else
     std::cout<<"Initialize: Geometry not loaded\n";
@@ -61,7 +61,7 @@ bool ExN03Application::Initialize() {
 #endif
 
   if (!lvGap || !lvAbs) {
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
     Error("Initialize", "Logical volumes for gap and absorber not found - do you use the right geometry");
 #else
     std::cout<<"Initialize: Logical volumes for gap and absorber not found - do you use the right geometry\n";
@@ -126,7 +126,7 @@ void ExN03Application::StepManager(int npart, const GeantTrack_v &tracks, GeantT
       fLengthAbs[idnode][tid] += tracks.fStepV[i];
     }
   }
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   if (gPropagator->fFillTree) {
 #else
   if (GeantPropagator::Instance()->fFillTree) {
@@ -170,7 +170,7 @@ void ExN03Application::Digitize(int /* event */) {
   //   printf("======= Statistics for event %d:\n", event);
   printf("Energy deposit [MeV/primary] and cumulated track length [cm/primary] per layer");
   printf("================================================================================");
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   double nprim = (double)gPropagator->fNprimaries;
 #else
   double nprim = (double)GeantPropagator::Instance()->fNprimaries;
@@ -187,7 +187,7 @@ void ExN03Application::Digitize(int /* event */) {
   }
   printf("================================================================================");
   //   TCanvas *c1 = new TCanvas("Edep", "Energy deposition for ExN03", 700, 800);
-  #ifndef GEANTV_MIC
+  #ifdef USE_ROOT
   TCanvas *c1 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("capp");
   if (!c1)
     return;

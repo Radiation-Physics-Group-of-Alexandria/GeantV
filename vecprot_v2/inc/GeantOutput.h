@@ -16,7 +16,7 @@
 #include "globals.h"
 
 /** @brief GeantOutput class */
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 class GeantOutput : public TObject {
 #else
 class GeantOutput {
@@ -64,7 +64,7 @@ public:
 
   /** @brief GeantOutput constructor */
   GeantOutput()
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
       : TObject(), fCpuTime(0), fVolId(-1), fBasketGeneration(0), fGeneration(0), fNtracks(0),
 #else
       : fCpuTime(0), fVolId(-1), fBasketGeneration(0), fGeneration(0), fNtracks(0),
@@ -135,7 +135,7 @@ public:
    * @param track Track to be setted
    */
   void SetTrack(int ntrack, GeantTrack *track);
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   ClassDef(GeantOutput, 1) // The transport output per generation
 #endif
 };

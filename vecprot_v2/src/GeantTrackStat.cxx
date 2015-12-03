@@ -1,12 +1,12 @@
 #include "GeantTrackStat.h"
 #include "GeantTrack.h"
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 ClassImp(GeantTrackStat)
 #endif
     //______________________________________________________________________________
     GeantTrackStat::GeantTrackStat(int nslots)
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
     : TObject(), fNslots(nslots), fNtracks(0), fNsteps(0), fMutex() {
 #else
     : fNslots(nslots), fNtracks(0), fNsteps(0), fMutex() {
@@ -39,7 +39,7 @@ void GeantTrackStat::AddTrack(const GeantTrack_v &trackv, int itr) {
 //______________________________________________________________________________
 void GeantTrackStat::AddTracks(const GeantTrack_v &trackv) {
   // Remove statistics for tracks
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   fMutex.Lock();
 #else
   fMutex.lock();
@@ -49,7 +49,7 @@ void GeantTrackStat::AddTracks(const GeantTrack_v &trackv) {
     fNtracks[trackv.fEvslotV[i]]++;
     fNsteps[trackv.fEvslotV[i]] += trackv.fNstepsV[i];
   }
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   fMutex.UnLock();
 #else
   fMutex.unlock();
@@ -59,7 +59,7 @@ void GeantTrackStat::AddTracks(const GeantTrack_v &trackv) {
 //______________________________________________________________________________
 void GeantTrackStat::RemoveTracks(const GeantTrack_v &trackv) {
   // Remove statistics for tracks
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   fMutex.Lock();
 #else
   fMutex.lock();
@@ -72,7 +72,7 @@ void GeantTrackStat::RemoveTracks(const GeantTrack_v &trackv) {
     fNtracks[trackv.fEvslotV[i]]--;
     fNsteps[trackv.fEvslotV[i]] -= trackv.fNstepsV[i];
   }
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   fMutex.UnLock();
 #else
   fMutex.unlock();
@@ -83,7 +83,7 @@ void GeantTrackStat::RemoveTracks(const GeantTrack_v &trackv) {
 GeantTrackStat &GeantTrackStat::operator+=(const GeantTrackStat &other) {
   // Compound addition.
   if (fNslots != other.fNslots) {
-   #ifndef GEANTV_MIC
+   #ifdef USE_ROOT
     Error("operator+=", "Different number of slots");
    #else
     std::cerr<<"operator+= Different number of slots\n";
@@ -101,7 +101,7 @@ GeantTrackStat &GeantTrackStat::operator+=(const GeantTrackStat &other) {
 GeantTrackStat &GeantTrackStat::operator-=(const GeantTrackStat &other) {
   // Compound addition.
   if (fNslots != other.fNslots) {
-   #ifndef GEANTV_MIC
+   #ifdef USE_ROOT
     Error("operator-=", "Different number of slots");
    #else
     std::cerr<<"operator-= Different number of slots\n";

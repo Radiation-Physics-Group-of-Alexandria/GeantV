@@ -5,7 +5,7 @@
 #include <err.h>
 #include <getopt.h>
 #include <unistd.h>
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #include "Rtypes.h"
 #include "TGeoManager.h"
 #endif
@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
 
   bool performance = true;
   TaskBroker *broker = nullptr;
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
   TGeoManager::Import(cms_geometry_filename.c_str());
 #else
 
@@ -197,12 +197,12 @@ int main(int argc, char *argv[]) {
   propagator->fEmin = 0.001; // [10 MeV] energy cut
   propagator->fEmax = 0.01;  // 10 MeV
 
-#ifndef GEANTV_MIC
 #ifdef USE_VECGEOM_NAVIGATOR
+#ifdef USE_ROOT
   propagator->LoadVecGeomGeometry();
-#endif
 #else
   propagator->LoadGeometry(cms_geometry_filename.c_str());
+#endif
 #endif
 
   propagator->fProcess = new TTabPhysProcess("tab_phys", xsec_filename.c_str(), fstate_filename.c_str());

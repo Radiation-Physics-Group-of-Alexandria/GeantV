@@ -20,7 +20,7 @@
 #include "Geant/Config.h"
 #include "Geant/Typedefs.h"
 
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
@@ -35,7 +35,7 @@
 /**
  * @brief Class describing physics processes
  */
-#ifndef GEANTV_MIC
+#ifdef USE_ROOT
 class PhysicsProcess : public TNamed {
 public:
   using GeantTrack_v = Geant::GeantTrack_v;
