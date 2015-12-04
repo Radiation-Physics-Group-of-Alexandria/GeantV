@@ -47,6 +47,8 @@
 
 #ifndef USE_ROOT
  typedef std::string TString;
+#else
+#include "TString.h"
 #endif
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
