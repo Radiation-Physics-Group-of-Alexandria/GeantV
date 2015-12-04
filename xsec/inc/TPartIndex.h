@@ -191,7 +191,7 @@ private:
   TDatabasePDG *fDBPdg; // Pointer to the augmented pdg database
 #endif
 
-#ifdef GEANT_NVCC 
+#ifdef GEANT_NVCC
   vecgeom::map<int, int> fPDGToGVMap;              // PDG->GV code map
 #else
   std::map<int, int> fPDGToGVMap;              // PDG->GV code map
@@ -201,7 +201,7 @@ private:
 
 #ifdef USE_ROOT
 #ifdef USE_VECGEOM_NAVIGATOR
-  ClassDef(TPartIndex, 101) // Particle Index
+  ClassDef(TPartIndex, 102) // Particle Index
 #else
   ClassDef(TPartIndex, 3)   // Particle Index
 #endif
