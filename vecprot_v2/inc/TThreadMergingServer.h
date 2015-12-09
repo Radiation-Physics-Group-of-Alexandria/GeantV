@@ -1,6 +1,6 @@
 #ifndef GEANT_TTHREADMERGINGSERVER
 #define GEANT_TTHREADMERGINGSERVER
-
+#ifdef USE_ROOT
 #include "TBufferFile.h"
 #include "TBenchmark.h"
 #include "TSocket.h"
@@ -122,4 +122,5 @@ struct TThreadMergingServer : public TObject
 
 } // namespace Geant
 
+#endif
 #endif
