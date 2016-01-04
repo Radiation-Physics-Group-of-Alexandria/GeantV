@@ -413,16 +413,17 @@ void GeantPropagator::PrepareRkIntegration() {
   using GUFieldPropagator = ::GUFieldPropagator;
 
   // Initialise the classes required for tracking in field
-  const unsigned int Nvar = 6; // Integration will occur over 3-position & 3-momentum coord.
-  using Field_t = TUniformMagField;
-  using Equation_t = TMagFieldEquation<Field_t, Nvar>;
+  const unsigned int  Nvar= 6; // Integration will occur over 3-position & 3-momentum coord.
+  using Field_t    =  TUniformMagField;
+  using Equation_t =  TMagFieldEquation<Field_t,Nvar>;
 
-  auto gvField = new Field_t(fieldUnits::kilogauss * ThreeVector(0.0, 0.0, fBmag));
+  auto gvField= new Field_t( fieldUnits::kilogauss * ThreeVector(0.0, 0.0, fBmag) );
   auto gvEquation = FieldEquationFactory::CreateMagEquation<Field_t>(gvField);
 
-  GUVIntegrationStepper *aStepper = StepperFactory::CreateStepper<Equation_t>(gvEquation); // Default stepper
+  GUVIntegrationStepper*
+     aStepper= StepperFactory::CreateStepper<Equation_t>(gvEquation); // Default stepper
 
-  const double hminimum = 1.0e-5; // * centimeter; =  0.0001 * millimeter;  // Minimum step = 0.1 microns
+  constexpr double hminimum  = 1.0e-5; // * centimeter; =  0.0001 * millimeter;  // Minimum step = 0.1 microns
   // const double epsTol = 3.0e-4;               // Relative error tolerance of integration
   int statisticsVerbosity = 0;
   cout << "Parameters for RK integration in magnetic field: " << endl;
@@ -430,14 +431,15 @@ void GeantPropagator::PrepareRkIntegration() {
 
   auto integrDriver = new GUIntegrationDriver(hminimum, aStepper, Nvar, statisticsVerbosity);
   // GUFieldPropagator *
-  auto fieldPropagator = new GUFieldPropagator(integrDriver, fEpsilonRK); // epsTol);
-
-  static GUFieldPropagatorPool *fpPool = GUFieldPropagatorPool::Instance();
-  assert(fpPool); // Cannot be zero
-  if (fpPool) {
-    fpPool->RegisterPrototype(fieldPropagator);
-    // Create clones for other threads
-    fpPool->Initialize(fNthreads);
+  auto fieldPropagator=
+     new GUFieldPropagator(integrDriver, fEpsilonRK);  // epsTol);
+  
+  static GUFieldPropagatorPool* fpPool= GUFieldPropagatorPool::Instance();
+  assert( fpPool );  // Cannot be zero
+  if( fpPool ) {
+     fpPool->RegisterPrototype( fieldPropagator );
+     // Create clones for other threads
+     fpPool->Initialize(fNthreads);
   } else {
     Geant::Error("PrepareRkIntegration", "Cannot find GUFieldPropagatorPool Instance.");
   }
@@ -601,7 +603,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   else
     Printf("  Physics OFF");
   if (fUseRungeKutta)
-    Printf("  Runge-Kutta integration ON with epsilon= %g", fEpsilonRK);
+    Printf("  Runge-Kutta integration ON with epsilon= %g", fEpsilonRK );
   else
     Printf("  Runge-Kutta integration OFF");
 
