@@ -213,8 +213,8 @@ int main(int argc, char *args[])
     g4Equation->SetChargeMomentumMass( chargeState,
                                        G4ThreeVector(x_mom, y_mom, z_mom).mag(), //momentum magnitude
                                        mass);  // unused
-//  auto g4exactStepper= = new G4ExactHelixStepper(g4Equation);
-    auto g4exactStepper= = new G4ClassicalRK4(g4Equation);
+//  auto g4exactStepper = new G4ExactHelixStepper(g4Equation);
+    auto g4exactStepper = new G4ClassicalRK4(g4Equation);
     
     auto exactStepper = g4ExactStepperGV;
 #else
