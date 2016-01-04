@@ -123,6 +123,7 @@ public:
   int fMaxDepth;         /** Maximum geometry depth */
   int fStage;            /** Simulation stage */
   int fGeneration;       /** Track generation: 0=primary */
+  int fParentId;         /** Id of parent particle */
   Species_t fSpecies;    /** Particle species */
   TrackStatus_t fStatus; /** Track status */
   double fMass;          /** Particle mass */
@@ -147,6 +148,9 @@ public:
   bool fOwnPath;         /** Marker for path ownership */
   VolumePath_t *fPath;   /** Paths for the particle in the geometry */
   VolumePath_t *fNextpath; /** Path for next volume */
+
+  static constexpr double kB2C = -0.299792458e-3;
+  static constexpr double kTiny = 1.E-50;
 
   /**
   * @brief GeantTrack in place constructor
@@ -199,8 +203,6 @@ public:
   GEANT_FORCE_INLINE
   double Curvature(double Bz) const {
     // Curvature
-    constexpr double kB2C = -0.299792458e-3;
-    constexpr double kTiny = 1.E-50;
     double qB = fCharge * Bz;
     if (fabs(qB) < kTiny) return kTiny;
     return fabs(kB2C * qB / (Pt() + kTiny));
@@ -309,6 +311,9 @@ public:
   VECCORE_ATT_HOST_DEVICE
   GEANT_FORCE_INLINE
   int GetNsteps() const { return fNsteps; }
+
+  /** @brief Function that the id of the parent particle (if any - primary = -1) */
+  int GetParentId() const { return fParentId; }
 
   /** @brief Function that return physical step */
   VECCORE_ATT_HOST_DEVICE
@@ -603,6 +608,13 @@ public:
   VECCORE_ATT_HOST_DEVICE
   GEANT_FORCE_INLINE
   void SetNsteps(int nsteps) { fNsteps = nsteps; }
+
+  /**
+   * @brief Function that set parent id
+   *
+   * @param parent    id-number of parent particle
+   */
+  void SetParentId(int parent) { fParentId = parent; }
 
   /**
    * @brief Function that set current species

@@ -11,6 +11,9 @@
 #include "SimulationStage.h"
 #include "TrackStat.h"
 
+#include "GUFieldPropagator.h"
+#include "GUVField.h"
+
 #ifdef USE_ROOT
 #include "TRandom.h"
 #endif
@@ -22,7 +25,7 @@ inline namespace GEANT_IMPL_NAMESPACE {
 
 //______________________________________________________________________________
 GeantTaskData::GeantTaskData(size_t nthreads, int maxDepth, int maxPerBasket)
-    : fTrack(0, maxDepth)
+   : fTrack(0, maxDepth)
 {
   // Constructor
   fNthreads = nthreads;

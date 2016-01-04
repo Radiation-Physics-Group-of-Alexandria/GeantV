@@ -149,6 +149,7 @@ void GeantTrack::Clear(const char *) {
   fCharge = 0;
   fProcess = -1;
   fNsteps = 0;
+  fParentId = -1;
   fSpecies = kHadron;
   fStatus = kAlive;
   fMass = 0.;
@@ -230,6 +231,8 @@ void GeantTrack::SetNextPath(VolumePath_t const *const path) {
 
 //______________________________________________________________________________
 void GeantTrack::Print(const char *msg) const {
+  //  TString spath;
+  //   if (path) path->GetPath(spath);
   const char *status[8] = {"alive", "killed", "inflight", "boundary", "exitSetup", "physics", "postponed", "new"};
 #ifdef USE_VECGEOM_NAVIGATOR
   Geant::Print(msg,
