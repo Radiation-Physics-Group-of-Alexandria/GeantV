@@ -73,7 +73,7 @@ void GXPropagatorInField_Constructor( GXPropagatorInField *This,
     GXMultiLevelLocator_Constructor(&mLocator,theNavigator);
     This->fIntersectionLocator = &mLocator;
     This->fAllocatedLocator=true;
-  }else{
+  } else {
     This->fIntersectionLocator=vLocator;
     This->fAllocatedLocator=false;
   }

@@ -401,7 +401,7 @@ void GUBenchmarker::PrepareTargetElements(int *targetElements, int ntracks)
       }
       // lastIndex= indEl; 
       
-   }else{
+   } else {
       // Cycle through different numbers of elements
       int numElements = fElementMode;
       if( report )      

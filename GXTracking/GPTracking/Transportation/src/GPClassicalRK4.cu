@@ -294,7 +294,7 @@ G4double GPClassicalRK4_DistChord(GPClassicalRK4 *This)
      //  from the Chord between the Initial and Final points.
 
      distChord = distLine;
-  }else{
+  } else {
     distChord = GPThreeVector_mag(GPThreeVector_sub(This->fMidPoint,
 						    This->fInitialPoint));
   }
