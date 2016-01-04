@@ -223,7 +223,7 @@ inline VECCORE_ATT_HOST_DEVICE typename Backend::Double_v ComptonKleinNishina::S
   using Double_v = typename Backend::Double_v;
 
   Mask_v<Double_v> done(false), condition;
-  Double_v epsilon;
+  Double_v epsilon; // , stheta;
 
   do {
     // generate random numbers

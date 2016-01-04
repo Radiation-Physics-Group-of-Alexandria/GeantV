@@ -11,6 +11,9 @@
 #include "SimulationStage.h"
 #include "TrackStat.h"
 
+#include "GUFieldPropagator.h"
+#include "GUVField.h"
+
 #ifdef USE_ROOT
 #include "TRandom.h"
 #endif
