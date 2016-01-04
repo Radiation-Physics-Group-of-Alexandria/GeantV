@@ -1625,9 +1625,9 @@ void GeantTrack_v::NavFindNextBoundaryAndStep(int ntracks, const double *pstep, 
     }
 #endif
 
-    //    	a->Clear();
-    //    	nav.LocatePoint( GeoManager::Instance().GetWorld(),
-    //    			Vector3D_t( x[i], y[i], z[i] ), *a, true );
+    //      a->Clear();
+    //      nav.LocatePoint( GeoManager::Instance().GetWorld(),
+    //          Vector3D_t( x[i], y[i], z[i] ), *a, true );
     //        if( a->Top() != NULL && a->Top() != pathin[i]->Top() )
     //         {
     //             Printf("INCONSISTENT PATH TRACK %d, boundary state %d", i, isonbdr[i] );

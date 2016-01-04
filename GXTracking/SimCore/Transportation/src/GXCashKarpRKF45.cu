@@ -159,7 +159,7 @@ G4double GXCashKarpRKF45_DistChord(GXCashKarpRKF45 *This)
     distLine= GPLineSection_Distline( midPoint,initialPoint, 
 				      finalPoint );
     distChord = distLine;
-  }else{
+  } else {
     distChord = GPThreeVector_mag(GPThreeVector_sub(midPoint,
 						    initialPoint));
   }

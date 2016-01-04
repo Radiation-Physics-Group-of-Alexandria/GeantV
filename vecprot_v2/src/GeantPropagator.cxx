@@ -325,7 +325,7 @@ void GeantPropagator::Initialize() {
 #endif
 
   if( fUseRungeKutta ) {
-     PrepareRkIntegration();
+    PrepareRkIntegration();
   }
 
   if (!fNtracks) {
@@ -373,7 +373,7 @@ void GeantPropagator::PrepareRkIntegration() {
   GUVIntegrationStepper*
      aStepper= StepperFactory::CreateStepper<Equation_t>(gvEquation); // Default stepper
 
-  const double hminimum  = 1.0e-5; // * centimeter; =  0.0001 * millimeter;  // Minimum step = 0.1 microns
+  constexpr double hminimum  = 1.0e-5; // * centimeter; =  0.0001 * millimeter;  // Minimum step = 0.1 microns
   // const double epsTol = 3.0e-4;               // Relative error tolerance of integration
   int   statisticsVerbosity= 0;
   cout << "Parameters for RK integration in magnetic field: "  << endl;
@@ -393,7 +393,7 @@ void GeantPropagator::PrepareRkIntegration() {
      fpPool->RegisterPrototype( fieldPropagator );
      // Create clones for other threads
      fpPool->Initialize(fNthreads);
-  }else{
+  } else {
      ::Error("PrepareRkIntegration","Cannot find GUFieldPropagatorPool Instance.");
   }   
 }
@@ -521,7 +521,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   else
     Printf("  Physics OFF");
   if (fUseRungeKutta)
-     Printf("  Runge-Kutta integration ON with epsilon= %g", fEpsilonRK ); 
+    Printf("  Runge-Kutta integration ON with epsilon= %g", fEpsilonRK ); 
   else
     Printf("  Runge-Kutta integration OFF");
 

@@ -124,7 +124,7 @@ void GPPropagatorInField_Constructor( GPPropagatorInField *This,
     GPMultiLevelLocator_Constructor(&mLocator,theNavigator);
     This->fIntersectionLocator = &mLocator;
     This->fAllocatedLocator=true;
-  }else{
+  } else {
     This->fIntersectionLocator=vLocator;
     This->fAllocatedLocator=false;
   }

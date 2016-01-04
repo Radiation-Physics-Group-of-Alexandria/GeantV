@@ -111,7 +111,7 @@ G4double GXJamesonRK4_DistChord(GXJamesonRK4 *This)
       This->fInitialPoint[2] != This->fFinalPoint[2] ) {
 
     distChord = GXJamesonRK4_DistLine( This );
-  }else{
+  } else {
     GPThreeVector VecMF = 
       GPThreeVector_create (This->fMidPoint[0] - This->fInitialPoint[0],
 			    This->fMidPoint[1] - This->fInitialPoint[1],
