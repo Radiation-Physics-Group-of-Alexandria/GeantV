@@ -502,6 +502,7 @@ if (ROOT_mathmore_FOUND)
   add_subdirectory (Nudy)
 endif()
 
+add_subdirectory (VecMagFieldRoutine)
 if(USE_VECPHYS)
   add_subdirectory(vecphys)
   add_subdirectory(vectphysproc)
