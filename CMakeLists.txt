@@ -414,10 +414,12 @@ add_subdirectory (tabxsec)
 add_subdirectory (magneticfield)
 
 add_subdirectory (test-small)
-add_subdirectory (test-complex)
+#add_subdirectory (test-complex)
 
 add_subdirectory (cmstrack)
 add_subdirectory (Nudy)
+add_subdirectory (VecMagFieldRoutine)
+
 
 if(USE_VECPHYS)
  add_subdirectory (vectphysproc)
