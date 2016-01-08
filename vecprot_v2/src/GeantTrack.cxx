@@ -1520,35 +1520,36 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   // - safety step (bdr=0)
   // - snext step (bdr=1)
 
-   // Double_t c = 0.;
-   // const Double_t *point = 0;
-   // const Double_t *newdir = 0;
+  // Double_t c = 0.;
 
-   bool useRungeKutta;
+  bool useRungeKutta;
+  GUFieldPropagator *fieldPropagator = nullptr;
+
 #ifdef GEANT_CUDA_DEVICE_BUILD
-   const double bmag = gPropagator_fBmag;
-   constexpr auto gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
-   useRungeKutta= gPropagator_fUseRK;   //  Something like this is needed - TBD
+  const double bmag = gPropagator_fBmag;
+  constexpr auto gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
+  useRungeKutta= gPropagator_fUseRK;   //  Something like this is needed - TBD
 #else
-   const double bmag = gPropagator->fBmag;
-   useRungeKutta= gPropagator->fUseRungeKutta;
+  const double bmag = gPropagator->fBmag;
+  useRungeKutta= gPropagator->fUseRungeKutta;
+  if( useRungeKutta ){
+    fieldPropagator = td->fFieldPropagator;
+    assert( fieldPropagator );
+  }
 #endif
 
-   // static unsigned long icount= 0;
-   // if( icount++ < 2 )  std::cout << " PropagateInVolumeSingle: useRungeKutta= " << useRungeKutta << std::endl;
+  // static unsigned long icount= 0;
+  // if( icount++ < 2 )  std::cout << " PropagateInVolumeSingle: useRungeKutta= " << useRungeKutta << std::endl;
 
-// #ifdef RUNGE_KUTTA
-#ifndef GEANT_CUDA_DEVICE_BUILD
-   GUFieldPropagator *fieldPropagator = nullptr;
-   if( useRungeKutta ){
-      // Initialize for the current thread -- move to GeantPropagator::Initialize()
-      static GUFieldPropagatorPool* fieldPropPool= GUFieldPropagatorPool::Instance();
-      assert( fieldPropPool );
+  double curvaturePlus= fabs(kB2C * fChargeV[i] * bmag) / (fPV[i] + 1.0e-30);  // norm for step
+  // 'Curvature' along the full track - not just in the plane perpendicular to the B-field vector
 
-      fieldPropagator = fieldPropPool->GetPropagator(td->fTid);
-      assert( fieldPropagator );
-   }
-#endif
+  // printf("Curvature= %8.6f   CurvPlus= %8.6f   step= %f Bmag=%f   momentum mag=%f\n",
+  //        Curvature(i), curvaturePlus, crtstep, bmag, fPV[i] );
+
+  constexpr double numRadiansMax= 10.0;  //  A track turning more than 10 radians will be treated approximately
+  bool longStep= crtstep * curvaturePlus > numRadiansMax;
+  useRungeKutta = useRungeKutta && (!longStep);
 
   // Reset relevant variables
   fStatusV[i] = kInFlight;
@@ -1575,7 +1576,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
 // ( stepper header has to be included )
 
   using ThreeVector = vecgeom::Vector3D<double>;
-  // typedef vecgeom::Vector3D<double>  ThreeVector;   
+  // typedef vecgeom::Vector3D<double>  ThreeVector;
   ThreeVector Position(fXposV[i], fYposV[i], fZposV[i]);
   ThreeVector Direction(fXdirV[i], fYdirV[i], fZdirV[i]);
   ThreeVector PositionNew(0.,0.,0.);
@@ -1598,7 +1599,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   fZposV[i] = PositionNew.z();
 
   //  maybe normalize direction here  // Math::Normalize(dirnew);
-  DirectionNew = DirectionNew.Unit();   
+  DirectionNew = DirectionNew.Unit();
   fXdirV[i] = DirectionNew.x();
   fYdirV[i] = DirectionNew.y();
   fZdirV[i] = DirectionNew.z();
@@ -1607,7 +1608,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   ThreeVector SimplePosition = Position + crtstep * Direction;
   // double diffpos2 = (PositionNew - Position).Mag2();
   double diffpos2 = (PositionNew - SimplePosition).Mag2();
-  //   -- if (Math::Sqrt(diffpos)>0.01*crtstep) {     
+  //   -- if (Math::Sqrt(diffpos)>0.01*crtstep) {
   const double drift= 0.01*crtstep;
   if ( diffpos2>drift*drift ){
       double diffpos= Math::Sqrt(diffpos2);
@@ -2162,7 +2163,7 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
     // int stepNum= fNstepsV[itr];
     // Printf("track %d: Step #=%3d len=%g proposed=%g (safelen=%9.3g) bndrFlg= %d distLin=%g  ",
     //    itr, stepNum, step, fPstepV[itr], lmax, fFrombdrV[itr], fSnextV[itr] );
-    //  Printf("track %d: step=%g (safelen=%g)", itr, step, lmax);          
+    //  Printf("track %d: step=%g (safelen=%g)", itr, step, lmax);
     PropagateInVolumeSingle(itr, step, td);
     //Update number of partial steps propagated in field
     td->fNmag++;
@@ -2217,7 +2218,7 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
       fBoundaryV[itr] = true;
       icrossed++;
       // Update number of steps to physics and total number of steps
-      td->fNsteps++;     
+      td->fNsteps++;
       if (fStepV[itr] < 1.E-8) td->fNsmall++;
       MarkRemoved(itr);
     }

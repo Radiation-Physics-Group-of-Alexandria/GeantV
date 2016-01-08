@@ -3,6 +3,7 @@
 #include "GeantBasket.h"
 #include "GeantPropagator.h"
 #include "Geant/Typedefs.h"
+#include "GUFieldPropagator.h"
 
 #ifdef USE_ROOT
 #include "TRandom.h"
@@ -19,11 +20,12 @@ inline namespace GEANT_IMPL_NAMESPACE {
 
 //______________________________________________________________________________
 GeantTaskData::GeantTaskData(size_t nthreads, int maxDepth, int maxPerBasket)
-    : fTid(-1), fNthreads(nthreads), fMaxDepth(0), fSizeBool(0), fSizeDbl(0), fToClean(false), 
-      fVolume(nullptr), fRndm(nullptr), fBoolArray(nullptr), fDblArray(nullptr), fTrack(0, maxDepth), 
+    : fTid(-1), fNthreads(nthreads), fMaxDepth(0), fSizeBool(0), fSizeDbl(0), fToClean(false),
+      fVolume(nullptr), fRndm(nullptr), fBoolArray(nullptr), fDblArray(nullptr), fTrack(0, maxDepth),
       fPath(nullptr), fBmgr(nullptr), fPool(),
       fSOA3Dworkspace1(new vecgeom::SOA3D<vecgeom::Precision>(5 * maxPerBasket)),
-      fSOA3Dworkspace2(new vecgeom::SOA3D<vecgeom::Precision>(5 * maxPerBasket)), 
+      fSOA3Dworkspace2(new vecgeom::SOA3D<vecgeom::Precision>(5 * maxPerBasket)),
+      fFieldPropagator(nullptr),
       fSizeInt(5 * maxPerBasket), fIntArray(new int[fSizeInt]), fTransported(nullptr), fNkeepvol(0),
       fNsteps(0), fNsnext(0), fNphys(0), fNmag(0), fNpart(0), fNsmall(0), fNcross(0)
 {
@@ -109,7 +111,7 @@ GeantTaskData::GeantTaskData(void *addr, size_t nthreads, int maxDepth, int maxP
 }
 
 //______________________________________________________________________________
-GeantTaskData::~GeantTaskData() 
+GeantTaskData::~GeantTaskData()
 {
 // Destructor
 //  delete fMatrix;
@@ -153,7 +155,7 @@ size_t GeantTaskData::SizeOfInstance(size_t /*nthreads*/, int maxDepth, int maxP
 
 
 #ifndef GEANT_NVCC
-GeantBasket *GeantTaskData::GetNextBasket() 
+GeantBasket *GeantTaskData::GetNextBasket()
 {
   // Gets next free basket from the queue.
   if (fPool.empty()) 

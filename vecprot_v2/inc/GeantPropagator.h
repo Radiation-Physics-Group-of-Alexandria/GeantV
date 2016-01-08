@@ -34,6 +34,7 @@ class WorkloadManager;
 class GeantVApplication;
 class PrimaryGenerator;
 class TaskBroker;
+class GUFieldPropagator;
 
 #include "GeantFwd.h"
 
@@ -98,19 +99,20 @@ public:
   double fBmag;      /** Magnetic field */
   double fEpsilonRK; /** Relative error in RK integration */
 
-  bool fUsePhysics;            /** Enable/disable physics */
-  bool fUseRungeKutta;         /** Enable/disable Runge-Kutta integration in field */
-  bool fUseDebug;              /** Use debug mode */
-  bool fUseGraphics;           /** Graphics mode */
-  bool fUseStdScoring;         /** Use standard scoring */
-  bool fTransportOngoing;      /** Flag for ongoing transport */
-  bool fSingleTrack;           /** Use single track transport mode */
-  bool fFillTree;            /** Enable I/O */
-  int fTreeSizeWriteThreshold; /** Maximum size of the tree (before automatic writing) **/
-  bool fConcurrentWrite;     /** switch between single and mutlithreaded writing */
-  bool fUseMonitoring;         /** Monitoring different features */
-  bool fUseAppMonitoring;      /** Monitoring the application */
-  std::mutex fTracksLock;          /** Mutex for adding tracks */
+  bool fUsePhysics;       /** Enable/disable physics */
+  bool fUseRungeKutta;    /** Enable/disable Runge-Kutta integration in field */
+  bool fInitialisedRKIntegration;
+  bool fUseDebug;         /** Use debug mode */
+  bool fUseGraphics;      /** Graphics mode */
+  bool fUseStdScoring;    /** Use standard scoring */
+  bool fTransportOngoing; /** Flag for ongoing transport */
+  bool fSingleTrack;      /** Use single track transport mode */
+  Bool_t fFillTree;       /** Enable I/O */
+  int fTreeSizeWriteThreshold; /** Maximum size of the tree (before automatic writing) **/  
+  Bool_t fConcurrentWrite;/** switch between single and mutlithreaded writing */
+  bool fUseMonitoring;    /** Monitoring different features */
+  bool fUseAppMonitoring; /** Monitoring the application */
+  TMutex fTracksLock;       /** Mutex for adding tracks */
 
   WorkloadManager *fWMgr;             /** Workload manager */
   GeantVApplication *fApplication;    /** User application */
@@ -139,6 +141,9 @@ public:
 
   /** @brief Initialize classes for RK Integration */
   void PrepareRkIntegration();
+
+  /** @brief Create per-thread object for RK Integration */
+  GUFieldPropagator *CreateThreadRkPropagator(unsigned int tid);
 
   /** @brief Function for loading geometry */
   bool LoadGeometry(const char *filename = "geometry.root");
