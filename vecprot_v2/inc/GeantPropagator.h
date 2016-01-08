@@ -40,6 +40,7 @@ class GeantVApplication;
 class PrimaryGenerator;
 class MCTruthMgr;
 class TaskBroker;
+class GUFieldPropagator;
 
 #include "GeantFwd.h"
 
@@ -106,6 +107,7 @@ public:
 
   bool fUsePhysics;            /** Enable/disable physics */
   bool fUseRungeKutta;         /** Enable/disable Runge-Kutta integration in field */
+  bool fInitialisedRKIntegration;  /** Flag:  Is RK integration initialised ?  */
   bool fUseDebug;              /** Use debug mode */
   bool fUseGraphics;           /** Graphics mode */
   bool fUseStdScoring;         /** Use standard scoring */
@@ -150,6 +152,9 @@ public:
 
   /** @brief Initialize classes for RK Integration */
   void PrepareRkIntegration();
+
+  /** @brief Create per-thread object for RK Integration */
+  GUFieldPropagator *CreateThreadRkPropagator(unsigned int tid);
 
   /** @brief Function for loading geometry */
   bool LoadGeometry(const char *filename = "geometry.root");
