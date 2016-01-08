@@ -83,22 +83,19 @@ GeantPropagator *GeantPropagator::fgInstance = 0;
 
 //______________________________________________________________________________
 GeantPropagator::GeantPropagator()
-    : fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0),
-      fNprimaries(0), fNsteps(0), fNsnext(0),
-      fNphys(0), fNmag(0), fNsmall(0), fNcross(0),
-      fFeederLock(ATOMIC_FLAG_INIT),
-      fPriorityEvents(0), fDoneEvents(0), fNprocesses(3), fNstart(0), fMaxTracks(0),
-      fMaxThreads(100), fNminThreshold(10), fDebugEvt(-1), fDebugTrk(-1), fDebugStp(-1), fDebugRep(-1),
-      fMaxSteps(10000), fNperBasket(16), fMaxPerBasket(256), fMaxPerEvent(0), fMaxDepth(0), fLearnSteps(0),
-      fLastEvent(0), fPriorityThr(0), fNstepsKillThr(50000), fNminReuse(10000), fMaxRes(0), fMaxVirt(0), fNaverage(0),
-      fVertex(), fEmin(1.E-4), // 100 KeV
-      fEmax(10),               // 10 Gev
-      fBmag(0.),               // kiloGauss
-      fEpsilonRK(0.0003), fUsePhysics(true), fUseRungeKutta(false), fUseDebug(false), fUseGraphics(false),
-      fUseStdScoring(false), fTransportOngoing(false), fSingleTrack(false), fFillTree(false),
-      fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(false), fUseAppMonitoring(false),
-      fTracksLock(), fWMgr(0), fApplication(0), fStdApplication(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0),
-      fStoredTracks(0), fPrimaryGenerator(0), fNtracks(0), fEvents(0), fThreadData(0) {
+    : fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0), fNprimaries(0), fNsteps(0),
+      fNsnext(0), fNphys(0), fNmag(0), fNsmall(0), fFeederLock(ATOMIC_FLAG_INIT), fPriorityEvents(0), fDoneEvents(0),
+      fNprocesses(3), fNstart(0), fMaxTracks(0), fMaxThreads(100), fNminThreshold(10), fDebugEvt(-1), fDebugTrk(-1),
+      fDebugStp(-1), fDebugRep(-1), fMaxSteps(10000), fNperBasket(16), fMaxPerBasket(256), fMaxPerEvent(0),
+      fMaxDepth(0), fLearnSteps(0), fLastEvent(0), fPriorityThr(0), fMaxRes(0), fMaxVirt(0), fNaverage(0), fVertex(),
+      fEmin(1.E-4), // 100 KeV
+      fEmax(10),    // 10 Gev
+      fBmag(0.),    // kiloGauss
+      fEpsilonRK(0.0003),
+      fUsePhysics(true), fUseRungeKutta(false), fInitialisedRKIntegration(false), fUseDebug(false), fUseGraphics(false), fUseStdScoring(false),
+      fTransportOngoing(false), fSingleTrack(false), fFillTree(false), fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(false), fUseAppMonitoring(false), fTracksLock(),  
+      fWMgr(0), fApplication(0), fStdApplication(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0), fStoredTracks(0),
+      fPrimaryGenerator(0), fNtracks(0), fEvents(0), fThreadData(0) {
   // Constructor
   fgInstance = this;
 }
@@ -353,7 +350,7 @@ void GeantPropagator::Initialize() {
   fVectorPhysicsProcess->Initialize();
 #endif
 
-  if (fUseRungeKutta) {
+  if( fUseRungeKutta ) {
     PrepareRkIntegration();
   }
 
@@ -375,6 +372,8 @@ void GeantPropagator::InitializeAfterGeom() {
     for (int i = 0; i < fNthreads; i++) {
       fThreadData[i] = new GeantTaskData(fNthreads, fMaxDepth, fMaxPerBasket);
       fThreadData[i]->fTid = i;
+      if( fUseRungeKutta )
+        fThreadData[i]->fFieldPropagator = CreateThreadRkPropagator(i);
     }
   }
   // Initialize application
@@ -391,23 +390,27 @@ void GeantPropagator::PrepareRkIntegration() {
   using GUFieldPropagator = ::GUFieldPropagator;
 
   // Initialise the classes required for tracking in field
-  const unsigned int  Nvar= 6; // Integration will occur over 3-position & 3-momentum coord.
+  constexpr unsigned int  Nvar= 6; // Integration will occur over 3-position & 3-momentum coord.
   using Field_t    =  TUniformMagField;
   using Equation_t =  TMagFieldEquation<Field_t,Nvar>;
 
   auto gvField= new Field_t( fieldUnits::kilogauss * ThreeVector(0.0, 0.0, fBmag) );
-  auto gvEquation = FieldEquationFactory::CreateMagEquation<Field_t>(gvField);
+  auto gvEquation =
+     FieldEquationFactory::CreateMagEquation<Field_t>(gvField);
 
   GUVIntegrationStepper*
      aStepper= StepperFactory::CreateStepper<Equation_t>(gvEquation); // Default stepper
 
   constexpr double hminimum  = 1.0e-5; // * centimeter; =  0.0001 * millimeter;  // Minimum step = 0.1 microns
-  // const double epsTol = 3.0e-4;               // Relative error tolerance of integration
-  int statisticsVerbosity = 0;
-  cout << "Parameters for RK integration in magnetic field: " << endl;
-  cout << "   Driver parameters:  eps_tol= " << fEpsilonRK << "  h_min= " << hminimum << endl;
+  // constexpr double epsTol = 3.0e-4;               // Relative error tolerance of integration
+  int   statisticsVerbosity= 0;
+  cout << "Parameters for RK integration in magnetic field: "  << endl;
+  cout << "   Driver parameters:  eps_tol= "  << fEpsilonRK << "  h_min= " << hminimum << endl;
 
-  auto integrDriver = new GUIntegrationDriver(hminimum, aStepper, Nvar, statisticsVerbosity);
+  auto integrDriver= new GUIntegrationDriver( hminimum,
+                                                 aStepper,
+                                                 Nvar,
+                                                 statisticsVerbosity);
   // GUFieldPropagator *
   auto fieldPropagator=
      new GUFieldPropagator(integrDriver, fEpsilonRK);  // epsTol);
@@ -421,6 +424,7 @@ void GeantPropagator::PrepareRkIntegration() {
   } else {
     Geant::Error("PrepareRkIntegration", "Cannot find GUFieldPropagatorPool Instance.");
   }
+  fInitialisedRKIntegration= true;
 }
 
 #ifdef USE_ROOT
@@ -441,6 +445,25 @@ void GeantPropagator::InitNavigators() {
     lvol.second->SetLevelLocator(SimpleABBoxLevelLocator::GetInstance());
   }
 #endif
+}
+
+GUFieldPropagator *
+GeantPropagator::CreateThreadRkPropagator(unsigned int ThreadId) {
+   GUFieldPropagator *fieldPropagator= 0;
+
+  if( ! fInitialisedRKIntegration ) {
+    Geant::Error("PrepareThreadRkPropagator",
+            "Not initialised RkIntegration before calling GeantPropagator::PrepareThreadRkPropagator");
+  }
+  if( fInitialisedRKIntegration && fUseRungeKutta ){
+    // Initialize for the current thread -- move to GeantPropagator::Initialize()
+    static GUFieldPropagatorPool* fieldPropPool= GUFieldPropagatorPool::Instance();
+    assert( fieldPropPool );
+
+    fieldPropagator = fieldPropPool->GetPropagator(ThreadId);
+    assert( fieldPropagator );
+  }
+  return fieldPropagator;
 }
 
 /**

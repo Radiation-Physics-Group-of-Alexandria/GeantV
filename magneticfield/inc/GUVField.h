@@ -1,4 +1,11 @@
-// $Id: GUVField.hh 68055 2013-03-13 14:43:28Z gcosmo $
+//===----------------------------------------------------------------------===//
+/**
+ * @file GUVField.h
+ * @brief  Abstract field class for Geant-V prototype
+ * @author John Apostolakis
+ */
+//===----------------------------------------------------------------------===//
+
 //
 //
 // class GUVField
@@ -29,24 +36,25 @@
 // #include "GUVTypes.hh"
 // #include "globals.hh"
 
+/**
+ * @brief Class GUVField
+ */
+
 class GUVField
 {
   public:  // with description
 
-      virtual void  GetFieldValue( const  double Point[4],
-                                          double *fieldArr ) const = 0;
-       // Given the position time vector 'Point', 
-       // return the value of the field in the array fieldArr.
-       //  Notes: 
-       //   1) The 'Point' vector has the following structure:
-       //        Point[0]  is  x  ( position, in agreed units )
-       //        Point[1]  is  y
-       //        Point[2]  is  z
-       //        Point[3]  is  t  ( time,  in agreed units )
-       //   2) The convention for the components of the field
-       //      array 'fieldArr' are determined by the type of field.
-       //      See for example the class GUVElectroMagneticField.
-
+      /**
+       * @brief GeantTrack parametrized constructor
+       *
+       * @param Point    - position (0,1,2=x,y,z) and time (3) [Input]
+       * @param fieldArr - output values of field. Usual convention:
+       *                   0,1,2 = B_x, B_y, B_z
+       *                   3,4,5 = E_x, E_y, E_z  (foreseen extension)
+       *        Units are expected to be native GeantV units.
+       */
+      virtual void  GetFieldValue( const double Point[4],
+                                         double *fieldArr ) const = 0;
       inline
       GUVField( int NumberOfComponents, bool changesEnergy );
       inline
