@@ -65,10 +65,11 @@ Potential expansion:
  7. DormandPrince745
  */
 
-const unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
 
 int main(int argc, char *args[])
 {
+    constexpr unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
+
     using  GvEquationType=  TMagFieldEquation<TUniformMagField, Nposmom>;
    
     /* -----------------------------SETTINGS-------------------------------- */
