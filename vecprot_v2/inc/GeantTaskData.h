@@ -31,6 +31,7 @@ using VECGEOM_NAMESPACE::RNG;
 #endif
 class GeantBasketMgr;
 class GeantBasket;
+class GUFieldPropagator;
 
 #ifdef VECCORE_CUDA
 #include "base/Vector.h"
@@ -82,6 +83,7 @@ public:
   int *fIntArray;                           // Thread array of ints (used in vector navigation)
   GeantTrack_v  *fTransported;              // Transported tracks in current step
   vector_t<GeantTrack *> fTransported1;     // Transported tracks in current step
+  GUFieldPropagator  *fFieldPropagator;     // For RK integration of charged particle propagation
   int            fNkeepvol;                 // Number of tracks keeping the same volume
   int fNsteps;           /** Total number of steps per thread */
   int fNsnext;           /** Total number of calls to getting distance to next boundary */
@@ -90,6 +92,7 @@ public:
   int fNpart;            /** Total number of particles transported by the thread */
   int fNsmall;           /** Total number of small steps taken */
   int fNcross;           /** Total number of boundary crossings */
+  int fNmagLong;         /** Total number of long (non-RK) steps in magnetic field */
 
 private:
    // a helper function checking internal arrays and allocating more space if necessary

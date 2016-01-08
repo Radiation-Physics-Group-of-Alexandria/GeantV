@@ -104,6 +104,9 @@ public:
   VolumePath_t *fPath;   /** Paths for the particle in the geometry */
   VolumePath_t *fNextpath; /** Path for next volume */
 
+  static constexpr double kB2C = -0.299792458e-3;
+  static constexpr double kTiny = 1.E-50;
+
   /**
   * @brief GeantTrack in place constructor
   *
@@ -162,8 +165,6 @@ public:
   GEANT_FORCE_INLINE
   double Curvature(double Bz) const {
     // Curvature
-    constexpr double kB2C = -0.299792458e-3;
-    constexpr double kTiny = 1.E-50;
     double qB = fCharge * Bz;
     if (qB < kTiny) return kTiny;
     return fabs(kB2C * qB / (Pt() + kTiny));

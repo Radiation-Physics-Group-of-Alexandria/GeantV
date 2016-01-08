@@ -1296,30 +1296,32 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
    // const Double_t *newdir = 0;
 
    bool useRungeKutta;
+   GUFieldPropagator *fieldPropagator = nullptr;   
 #ifdef VECCORE_CUDA_DEVICE_COMPILATION
    const double bmag = gPropagator_fBmag;
    constexpr auto gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
    useRungeKutta= gPropagator_fUseRK;   //  Something like this is needed - TBD
 #else
-   const double bmag = gPropagator->fBmag;
-   useRungeKutta= gPropagator->fUseRungeKutta;
+  const double bmag = gPropagator->fBmag;
+  useRungeKutta= gPropagator->fUseRungeKutta;
+  if( useRungeKutta ){
+    fieldPropagator = td->fFieldPropagator;
+    assert( fieldPropagator );
+  }
 #endif
 
    // static unsigned long icount= 0;
    // if( icount++ < 2 )  std::cout << " PropagateInVolumeSingle: useRungeKutta= " << useRungeKutta << std::endl;
 
-// #ifdef RUNGE_KUTTA
-#ifndef VECCORE_CUDA_DEVICE_COMPILATION
-   GUFieldPropagator *fieldPropagator = nullptr;
-   if( useRungeKutta ){
-      // Initialize for the current thread -- move to GeantPropagator::Initialize()
-      static GUFieldPropagatorPool* fieldPropPool= GUFieldPropagatorPool::Instance();
-      assert( fieldPropPool );
+  double curvaturePlus= fabs(GeantTrack::kB2C * fChargeV[i] * bmag) / (fPV[i] + 1.0e-30);  // norm for step
+  // 'Curvature' along the full track - not just in the plane perpendicular to the B-field vector
 
-      fieldPropagator = fieldPropPool->GetPropagator(td->fTid);
-      assert( fieldPropagator );
-   }
-#endif
+  // printf("Curvature= %8.6f   CurvPlus= %8.6f   step= %f Bmag=%f   momentum mag=%f\n",
+  //        Curvature(i), curvaturePlus, crtstep, bmag, fPV[i] );
+
+  constexpr double numRadiansMax= 10.0;  //  A track turning more than 10 radians will be treated approximately
+  bool longStep= crtstep * curvaturePlus > numRadiansMax;
+  useRungeKutta = useRungeKutta && (!longStep);
 
   // Reset relevant variables
   fStatusV[i] = kInFlight;
@@ -2028,14 +2030,16 @@ int GeantTrack_v::PropagateTracksScalar(GeantTaskData *td, int stage) {
 
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
-double GeantTrack_v::Curvature(int i, double Bz) const {
-  // Curvature assuming constant field is along Z
-  constexpr double kB2C = -0.299792458e-3;
-  constexpr double kTiny = 1.E-50;
-
-  double qB = fChargeV[i] * Bz;
-  if (qB < kTiny) return kTiny;
-  return fabs(kB2C * qB / (Pt(i) + kTiny));
+double GeantTrack_v::Curvature(int i) const {   
+  // Curvature - general, NOT assuming constant field is along Z
+  // constexpr double kB2C = -0.299792458e-3;   
+  const double tiny = 1.E-50;
+#ifdef GEANT_CUDA_DEVICE_BUILD
+  const double bmag = gPropagator_fBmag;
+#else
+  const double bmag = gPropagator->fBmag;
+#endif
+  return fabs(GeantTrack::kB2C * fChargeV[i] * bmag / (Pt(i) + tiny));
 }
 
 //______________________________________________________________________________
@@ -2043,13 +2047,7 @@ VECCORE_ATT_HOST_DEVICE
 double GeantTrack_v::SafeLength(int i, double eps) {
   // Returns the propagation length in field such that the propagated point is
   // shifted less than eps with respect to the linear propagation.
-
-#ifdef VECCORE_CUDA_DEVICE_COMPILATION
-  const double bmag = gPropagator_fBmag;
-#else
-  const double bmag = gPropagator->fBmag;
-#endif
-  double c = Curvature(i, bmag);
+  double c = Curvature(i);
   if (c < 1.E-10)
     return 1.E50;
   return 2. * sqrt(eps / c);

@@ -523,7 +523,7 @@ public:
    * @param  i Input bit number 'i'
    */
   VECCORE_ATT_HOST_DEVICE
-  double Curvature(int i, double Bz) const;
+  double Curvature(int i) const;
 
   /** @brief Function that return safe length */
   VECCORE_ATT_HOST_DEVICE
