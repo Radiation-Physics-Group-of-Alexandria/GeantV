@@ -8,14 +8,14 @@
 GUVEquationOfMotion*  CreateFieldAndEquation(ThreeVector constFieldValue);
 bool  TestEquation(GUVEquationOfMotion* );
 
-const unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
+constexpr unsigned int gNposmom= 6; // Position 3-vec + Momentum 3-vec
 
 ThreeVector    FieldValue(0.0, 0.0, 1.0);
 
 int
 main( int, char** )
 {
-  GUVEquationOfMotion* eq= CreateFieldAndEquation( FieldValue );
+  GUVEquationOfMotion* eq = CreateFieldAndEquation( FieldValue );
   TestEquation(eq);
 
   return 1;
@@ -25,12 +25,12 @@ main( int, char** )
 
 GUVEquationOfMotion* CreateFieldAndEquation(ThreeVector FieldValue)
 {
-  TUniformMagField*     ConstBfield= new TUniformMagField( FieldValue );
-  // typedef typename TMagFieldEquation<TUniformMagField, Nposmom>  EquationType;
-  using EquationType = TMagFieldEquation<TUniformMagField, Nposmom>;
+  TUniformMagField*     ConstBfield = new TUniformMagField( FieldValue );
+  // typedef typename TMagFieldEquation<TUniformMagField, gNposmom>  EquationType;
+  using EquationType = TMagFieldEquation<TUniformMagField, gNposmom>;
   
-  // GUVEquationOfMotion*  magEquation= new TMagFieldEquation<TUniformMagField, Nposmom>(ConstBfield);
-  GUVEquationOfMotion*  magEquation= new EquationType(ConstBfield);
+  // GUVEquationOfMotion*  magEquation= new TMagFieldEquation<TUniformMagField, gNposmom>(ConstBfield);
+  GUVEquationOfMotion*  magEquation = new EquationType(ConstBfield);
   
   // pField = ConstBfield; 
   return magEquation;
@@ -40,8 +40,8 @@ int gVerbose= 1;
 
 bool TestEquation(GUVEquationOfMotion* equation)
 {
-  const double perMillion = 1e-6;
-  bool   hasError= false;  // Return value
+  constexpr double perMillion = 1e-6;
+  bool   hasError = false;  // Return value
   
   ThreeVector PositionVec( 1., 2.,  3.);  // initial
   ThreeVector MomentumVec( 0., 0.1, 1.);
@@ -49,23 +49,23 @@ bool TestEquation(GUVEquationOfMotion* equation)
 
   double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
   // double PositionTime[4] = { 1., 2., 3., 4.};
-  PositionTime[0]= PositionVec.x();
-  PositionTime[1]= PositionVec.y();
-  PositionTime[2]= PositionVec.z();
+  PositionTime[0] = PositionVec.x();
+  PositionTime[1] = PositionVec.y();
+  PositionTime[2] = PositionVec.z();
 
   // double magField[3];
 
-  double dydx[Nposmom];
-  double PositionMomentum[Nposmom];
+  double dydx[gNposmom];
+  double PositionMomentum[gNposmom];
 
   double charge= -1;
 
-  PositionMomentum[0]= PositionVec[0];
-  PositionMomentum[1]= PositionVec[1];  
-  PositionMomentum[2]= PositionVec[2];
-  PositionMomentum[3]= MomentumVec[0];
-  PositionMomentum[4]= MomentumVec[1];  
-  PositionMomentum[5]= MomentumVec[2];
+  PositionMomentum[0] = PositionVec[0];
+  PositionMomentum[1] = PositionVec[1];
+  PositionMomentum[2] = PositionVec[2];
+  PositionMomentum[3] = MomentumVec[0];
+  PositionMomentum[4] = MomentumVec[1];
+  PositionMomentum[5] = MomentumVec[2];
 
   double FieldArr[3]= { FieldVec.x(), FieldVec.y(), FieldVec.z() };
 
@@ -75,10 +75,10 @@ bool TestEquation(GUVEquationOfMotion* equation)
   ThreeVector  ForceVec( dydx[3], dydx[4], dydx[5]);
 
   // Check result
-  double MdotF= MomentumVec.Dot(ForceVec);
-  double BdotF= FieldVec.Dot(ForceVec); 
+  double MdotF = MomentumVec.Dot(ForceVec);
+  double BdotF = FieldVec.Dot(ForceVec);
 
-  double momentumMag= MomentumVec.Mag();
+  double momentumMag = MomentumVec.Mag();
   double fieldMag =   FieldVec.Mag();
   double ForceMag =   ForceVec.Mag();
 
@@ -102,7 +102,7 @@ bool TestEquation(GUVEquationOfMotion* equation)
     std::cerr << "ERROR: Force due to magnetic field is not perpendicular to B field!"
               << std::endl; 
     std::cerr << " Vectors:  BField   Force " << std::endl;
-    for ( int i=0; i<3; i++ )
+    for ( int i = 0; i < 3; i ++ )
       std::cerr << "   [" << i << "] " << FieldVec[i] << " " << ForceVec[i] << std::endl;
 
     hasError= true;

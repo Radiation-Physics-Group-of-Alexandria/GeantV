@@ -41,6 +41,7 @@ class WorkloadManager;
 class GeantVApplication;
 class PrimaryGenerator;
 class TaskBroker;
+class GUFieldPropagator;
 
 #include "GeantFwd.h"
 
@@ -104,6 +105,7 @@ public:
 
   bool fUsePhysics;       /** Enable/disable physics */
   bool fUseRungeKutta;    /** Enable/disable Runge-Kutta integration in field */
+  bool fInitialisedRKIntegration;
   bool fUseDebug;         /** Use debug mode */
   bool fUseGraphics;      /** Graphics mode */
   bool fUseStdScoring;    /** Use standard scoring */
@@ -137,13 +139,16 @@ public:
   /** @brief Initialization function */
   void Initialize();
 
-   /** @brief Initialization function */
+  /** @brief Initialization function */
   void InitializeAfterGeom();
 
   /** @brief Initialize classes for RK Integration */
   void PrepareRkIntegration();
 
-   /** @brief Function for loading geometry */
+  /** @brief Create per-thread object for RK Integration */
+  GUFieldPropagator *CreateThreadRkPropagator(unsigned int tid);
+
+  /** @brief Function for loading geometry */
   bool LoadGeometry(const char *filename = "geometry.root");
 #if USE_VECGEOM_NAVIGATOR == 1
 

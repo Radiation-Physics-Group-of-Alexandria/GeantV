@@ -29,7 +29,7 @@ using VECGEOM_NAMESPACE::RNG;
 #endif
 class GeantBasketMgr;
 class GeantBasket;
-
+class GUFieldPropagator;
 // SOA3D container from VecGeom
 #include "base/SOA3D.h"
 
@@ -66,16 +66,18 @@ public:
 #endif
   vecgeom::SOA3D<double> *fSOA3Dworkspace1; // Thread SOA3D workspace (to be used for vector navigation)
   vecgeom::SOA3D<double> *fSOA3Dworkspace2; // SOA3D workspace (to be used for vector navigation)
+  GUFieldPropagator  *fFieldPropagator;     // For RK integration of charged particle propagation
   int fSizeInt;                             // current size of IntArray
   int *fIntArray;                           // Thread array of ints (used in vector navigation)
   GeantTrack_v  *fTransported;              // Transported tracks in current step
-  int            fNkeepvol;                 // Number of tracks keeping the same volume
-  int fNsteps;           /** Total number of steps per thread */
-  int fNsnext;           /** Total number of calls to getting distance to next boundary */
-  int fNphys;            /** Total number of steps to physics processes */
-  int fNmag;             /** Total number of partial steps in magnetic field */
-  int fNpart;            /** Total number of particles transported by the thread */
-  int fNsmall;           /** Total number of small steps taken */
+  /* unsigned */ int fNkeepvol;                 // Number of tracks keeping the same volume
+  unsigned long  fNsteps;           /** Total number of steps per thread */
+  unsigned long  fNsnext;           /** Total number of calls to getting distance to next boundary */
+  unsigned long  fNphys;            /** Total number of steps to physics processes */
+  unsigned long  fNmag;             /** Total number of partial steps in magnetic field */
+  unsigned long  fNmagLong;         /** Total number of long (non-RK) steps in magnetic field */
+  /* unsigned */ int fNpart;            /** Total number of particles transported by the thread */
+  /* unsigned */ int fNsmall;           /** Total number of small steps taken */
 
 private:
    // a helper function checking internal arrays and allocating more space if necessary
