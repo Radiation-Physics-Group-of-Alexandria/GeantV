@@ -330,8 +330,8 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
       std::cout << "MagIntDrv: " ; 
       std::cout << "hdid="  << std::setw(12) << hdid  << " "
              << "hnext=" << std::setw(12) << hnext << " " 
-	     << "hstep=" << std::setw(12) << hstep << " (requested) " 
-	     << std::endl;
+             << "hstep=" << std::setw(12) << hstep << " (requested) " 
+             << std::endl;
       PrintStatus( ystart, x1, y, x, h, (nstp==nStpPr) ? -nstp: nstp); 
     }
 #endif
@@ -415,7 +415,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
                  << std::endl
                  << "  Integration step 'h' became "
                  << h << " due to roundoff. " << std::endl
-		 << " Calculated as difference of x2= "<< x2 << " and x=" << x
+                 << " Calculated as difference of x2= "<< x2 << " and x=" << x
                  << "  Forcing termination of advance." << std::endl;
           std::cout.precision(prec);
         }          

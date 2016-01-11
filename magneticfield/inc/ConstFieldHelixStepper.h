@@ -66,10 +66,10 @@ namespace Geant
        /**
         * basket version of dostep
         * version that takes plain arrays as input; suited for current Geant-V
-	* 
-	* SW: for the moment (12.5.2015) commenting this out as not used 
-	*
-	*/
+        * 
+        * SW: for the moment (12.5.2015) commenting this out as not used 
+        *
+        */
        //void DoStep_v( double const * /*posx*/, double const * /*posy*/, double const * /*posz*/,
        //               double const * /*dirx*/, double const * /*diry*/, double const * /*dirz*/,
        //              int const * /*charge*/, double const * /*momentum*/, double const * /*step*/,
