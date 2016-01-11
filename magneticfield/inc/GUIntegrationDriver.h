@@ -22,10 +22,10 @@
 class GUIntegrationDriver
 {
    public:  // with description
-     GUIntegrationDriver( double                hminimum, 
-                      GUVIntegrationStepper *pStepper,
-                      int                   numberOfComponents=6,
-                      int                   statisticsVerbosity=1);
+     GUIntegrationDriver( double                 hminimum, 
+                          GUVIntegrationStepper *pStepper,
+                          int                    numberOfComponents=6,
+                          int                    statisticsVerbosity=1);
      GUIntegrationDriver( const GUIntegrationDriver& );
        // Copy constructor used to create Clone method
      ~GUIntegrationDriver();
