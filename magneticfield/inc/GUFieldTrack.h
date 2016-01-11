@@ -326,7 +326,7 @@ GUFieldTrack & GUFieldTrack::operator = ( const GUFieldTrack& rStVec )
 #if 0   
 inline void 
 GUFieldTrack::UpdateFourMomentum( double momentum_mag, 
-				  const ThreeVector& momentumDirection )
+                                  const ThreeVector& momentumDirection )
 {
   // double momentum_mag  = std::sqrt(kineticEnergy*kineticEnergy
   //                       +2.0*fRestMass_c2*kineticEnergy);
@@ -342,10 +342,10 @@ GUFieldTrack::UpdateFourMomentum( double momentum_mag,
 }
 
 inline void GUFieldTrack::UpdateState( const ThreeVector& position, 
-				double             laboratoryTimeOfFlight,
-				const ThreeVector& momentumDirection,
-				double             kineticEnergy
-			      )
+                                double             laboratoryTimeOfFlight,
+                                const ThreeVector& momentumDirection,
+                                double             kineticEnergy
+                              )
 { 
   // SetCurvePnt( position, momentumVector, s_curve=0.0);     
   SetPosition( position); 
