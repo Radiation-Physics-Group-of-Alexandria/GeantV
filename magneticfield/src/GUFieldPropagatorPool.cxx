@@ -25,7 +25,8 @@ GUFieldPropagatorPool::Instance()
 }
 
 GUFieldPropagatorPool::GUFieldPropagatorPool( GUFieldPropagator* prototype )
-   : fNumberPropagators(0),
+   : fInitialisedRKIntegration(false),
+     fNumberPropagators(0),
      fPrototype(prototype)
 {
    // prototype can be null initially
@@ -48,6 +49,7 @@ GUFieldPropagatorPool::RegisterPrototype( GUFieldPropagator* prototype )
    assert( prototype );
    fPrototype= prototype;
 
+   fInitialisedRKIntegration=true;
    return ok;
 }
 
