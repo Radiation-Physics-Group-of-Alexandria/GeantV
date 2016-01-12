@@ -155,8 +155,8 @@ public:
   /** @brief Initialize classes for RK Integration */
   void PrepareRkIntegration();
 
-  /** @brief Create per-thread object for RK Integration */
-  GUFieldPropagator *CreateThreadRkPropagator(unsigned int tid);
+  /** @brief Obtain per-thread object for RK Integration */
+  GUFieldPropagator *ObtainThreadRkPropagator(unsigned int tid);
 
   /** @brief Function for loading geometry */
   bool LoadGeometry(const char *filename = "geometry.root");

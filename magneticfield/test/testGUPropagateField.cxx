@@ -164,6 +164,8 @@ int main(int argc, char *args[])
     else
        z_field = -1.0;  //  Tesla // *tesla ;
 
+
+
     // Field
     auto gvField= new TUniformMagField( fieldUnits::tesla * ThreeVector(x_field, y_field, z_field) );
 
@@ -172,6 +174,27 @@ int main(int argc, char *args[])
        // << (1.0/fieldUnits::tesla) * gvField->GetValue()->X() << ",  "
          << " Tesla " << endl;
     cout << "#  Initial  momentum * c = " << x_mom << " , " << y_mom << " , " << z_mom << " GeV " << endl;
+
+
+
+    if( stepper_no == -1 || stepper_no == 1)
+    {
+      using Field_t    =  TUniformMagField;
+
+      constexpr double hminimum  = 1.0e-5; //  Minimum step = 0.1 microns
+      // constexpr double epsTol = 3.0e-4; // Relative error tolerance of integration
+
+      using FieldPropagatorFactory = ::FieldPropagatorFactory;
+      auto fieldPropagator=
+        FieldPropagatorFactory::CreatePropagator<Field_t>( *gvField, 
+                                                           fEpsilonRK,
+                                                           hminimum);
+      if( ) 
+      // Create clones for other threads
+      GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
+    }
+
+
     //Create an Equation :
     auto gvEquation =
        new GvEquationType(gvField);

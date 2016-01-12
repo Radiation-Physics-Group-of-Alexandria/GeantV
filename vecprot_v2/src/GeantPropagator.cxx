@@ -75,6 +75,8 @@
 
 #include "GUFieldPropagator.h"
 #include "GUFieldPropagatorPool.h"
+
+#include "FieldPropagatorFactory.h"
 // #endif
 
 using namespace Geant;
@@ -399,8 +401,10 @@ void GeantPropagator::InitializeAfterGeom() {
     for (int i = 0; i < fNthreads; i++) {
       fThreadData[i] = new GeantTaskData(fNthreads, fMaxDepth, fMaxPerBasket);
       fThreadData[i]->fTid = i;
-      if( fUseRungeKutta )
-        fThreadData[i]->fFieldPropagator = CreateThreadRkPropagator(i);
+      if( fUseRungeKutta ){
+        // delete fThreadData[i]->fFieldPropagator;  // -> No, do not own it
+        fThreadData[i]->fFieldPropagator = ObtainThreadRkPropagator(i);
+      }
     }
   }
   // Initialize application
@@ -414,11 +418,27 @@ void GeantPropagator::InitializeAfterGeom() {
 void GeantPropagator::PrepareRkIntegration() {
 
   using GUFieldPropagatorPool = ::GUFieldPropagatorPool;
-  using GUFieldPropagator = ::GUFieldPropagator;
+  // using GUFieldPropagator = ::GUFieldPropagator;
 
   // Initialise the classes required for tracking in field
-  constexpr unsigned int  Nvar= 6; // Integration will occur over 3-position & 3-momentum coord.
   using Field_t    =  TUniformMagField;
+
+  auto gvField= new TUniformMagField( fieldUnits::kilogauss * ThreeVector( 0.0, 0.0, fBmag ) );
+  constexpr double hminimum  = 1.0e-5; //  Minimum step = 0.1 microns
+  // constexpr double epsTol = 3.0e-4; // Relative error tolerance of integration
+
+#if 1
+  using FieldPropagatorFactory = ::FieldPropagatorFactory;
+  // auto gvEquation =
+  FieldPropagatorFactory::CreatePropagator<Field_t>( *gvField, 
+                                                     fEpsilonRK,
+                                                     hminimum);
+  // Create clones for other threads
+  GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
+
+#else
+  constexpr unsigned int  Nvar= 6; // Integration will occur over 3-position & 3-momentum coord.
+  
   using Equation_t =  TMagFieldEquation<Field_t,Nvar>;
 
   auto gvField= new Field_t( fieldUnits::kilogauss * ThreeVector(0.0, 0.0, fBmag) );
@@ -428,8 +448,6 @@ void GeantPropagator::PrepareRkIntegration() {
   GUVIntegrationStepper*
      aStepper= StepperFactory::CreateStepper<Equation_t>(gvEquation); // Default stepper
 
-  constexpr double hminimum  = 1.0e-5; // * centimeter; =  0.0001 * millimeter;  // Minimum step = 0.1 microns
-  // constexpr double epsTol = 3.0e-4;               // Relative error tolerance of integration
   int   statisticsVerbosity= 0;
   cout << "Parameters for RK integration in magnetic field: "  << endl;
   cout << "   Driver parameters:  eps_tol= "  << fEpsilonRK << "  h_min= " << hminimum << endl;
@@ -451,6 +469,7 @@ void GeantPropagator::PrepareRkIntegration() {
   } else {
     Geant::Error("PrepareRkIntegration", "Cannot find GUFieldPropagatorPool Instance.");
   }
+#endif
   fInitialisedRKIntegration= true;
 }
 
@@ -475,19 +494,21 @@ void GeantPropagator::InitNavigators() {
 }
 
 GUFieldPropagator *
-GeantPropagator::CreateThreadRkPropagator(unsigned int ThreadId) {
-   GUFieldPropagator *fieldPropagator= 0;
+GeantPropagator::ObtainThreadRkPropagator(unsigned int ThreadId) {
+  GUFieldPropagator *fieldPropagator= 0;
+
+  printf("GeantPropagator::ObtainThreadRkPropagator called with tid=%d\n",
+         ThreadId );
 
   if( ! fInitialisedRKIntegration ) {
     Geant::Error("PrepareThreadRkPropagator",
             "Not initialised RkIntegration before calling GeantPropagator::PrepareThreadRkPropagator");
   }
   if( fInitialisedRKIntegration && fUseRungeKutta ){
-    // Initialize for the current thread -- move to GeantPropagator::Initialize()
-    static GUFieldPropagatorPool* fieldPropPool= GUFieldPropagatorPool::Instance();
-    assert( fieldPropPool );
+    static GUFieldPropagatorPool* fpPool= GUFieldPropagatorPool::Instance();
+    assert( fpPool );
 
-    fieldPropagator = fieldPropPool->GetPropagator(ThreadId);
+    fieldPropagator = fpPool->GetPropagator(ThreadId);
     assert( fieldPropagator );
   }
   return fieldPropagator;
