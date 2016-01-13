@@ -18,7 +18,7 @@
 // template<typename Field_t> // , typename Equation_t>
 class FieldPropagatorFactory
 {
-  public:
+public:
    
   static constexpr unsigned int  Nvar = 6; // Integration will occur over 3-position & 3-momentum coord.
   // using Equation_t = TMagFieldEquation<Field_t,Nvar>;
@@ -28,6 +28,16 @@ class FieldPropagatorFactory
   static constexpr double   fDefaultMinStep      = 0.0001;  // = 1 micron
   static constexpr double   fDefaultEpsTolerance = 1.0e-4;
 
+  template<typename Field_t> // , typename Equation_t>
+  static GUFieldPropagator* CreatePropagator(Field_t&    gvField,
+                               double      relativeEpsTolerance,
+                               double      minStepSize= fDefaultMinStep);
+  // Create a propagator for RK integration of the motion in the Field 'gvField'
+  // Then register it with the Pool (as the prototype)
+  //
+  // The Field_t object which is passed must be on the heap.
+  //  It will be owned by the Propagator
+
   static GUFieldPropagator* CreatePropagator( // Field_t&    gvField,
                           //   Equation_t* gvEquation=  nullptr,
                                GUIntegrationDriver&   integrDriver,
@@ -35,14 +45,8 @@ class FieldPropagatorFactory
    // The GUIntegrationDriver object which is passed must be on the heap.
    //  It will be owned by the Propagator
 
-  template<typename Field_t> // , typename Equation_t>
-  static GUFieldPropagator* CreatePropagator(Field_t&    gvField,
-                               double      relativeEpsTolerance,
-                               double      minStepSize= fDefaultMinStep);
-   // The Field_t object which is passed must be on the heap.
-   //  It will be owned by the Propagator
-
-  static void RegisterPropagator(GUFieldPropagator*);
+private:
+   static void RegisterPropagator(GUFieldPropagator*);
 };
 
 // template<typename Field_t> // , typename Equation_t>
