@@ -427,49 +427,14 @@ void GeantPropagator::PrepareRkIntegration() {
   constexpr double hminimum  = 1.0e-5; //  Minimum step = 0.1 microns
   // constexpr double epsTol = 3.0e-4; // Relative error tolerance of integration
 
-#if 1
-  using FieldPropagatorFactory = ::FieldPropagatorFactory;
-  // auto gvEquation =
+  // using FieldPropagatorFactory = ::FieldPropagatorFactory;
+  // auto fieldPropagator= 
   FieldPropagatorFactory::CreatePropagator<Field_t>( *gvField, 
                                                      fEpsilonRK,
                                                      hminimum);
   // Create clones for other threads
   GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
 
-#else
-  constexpr unsigned int  Nvar= 6; // Integration will occur over 3-position & 3-momentum coord.
-  
-  using Equation_t =  TMagFieldEquation<Field_t,Nvar>;
-
-  auto gvField= new Field_t( fieldUnits::kilogauss * ThreeVector(0.0, 0.0, fBmag) );
-  auto gvEquation =
-     FieldEquationFactory::CreateMagEquation<Field_t>(gvField);
-
-  GUVIntegrationStepper*
-     aStepper= StepperFactory::CreateStepper<Equation_t>(gvEquation); // Default stepper
-
-  int   statisticsVerbosity= 0;
-  cout << "Parameters for RK integration in magnetic field: "  << endl;
-  cout << "   Driver parameters:  eps_tol= "  << fEpsilonRK << "  h_min= " << hminimum << endl;
-
-  auto integrDriver= new GUIntegrationDriver( hminimum,
-                                                 aStepper,
-                                                 Nvar,
-                                                 statisticsVerbosity);
-  // GUFieldPropagator *
-  auto fieldPropagator=
-     new GUFieldPropagator(integrDriver, fEpsilonRK);  // epsTol);
-  
-  static GUFieldPropagatorPool* fpPool= GUFieldPropagatorPool::Instance();
-  assert( fpPool );  // Cannot be zero
-  if( fpPool ) {
-     fpPool->RegisterPrototype( fieldPropagator );
-     // Create clones for other threads
-     fpPool->Initialize(fNthreads);
-  } else {
-    Geant::Error("PrepareRkIntegration", "Cannot find GUFieldPropagatorPool Instance.");
-  }
-#endif
   fInitialisedRKIntegration= true;
 }
 
