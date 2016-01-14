@@ -21,8 +21,10 @@ set_source_files_properties(${sources} PROPERTY COMPILE_FLAGS                  "
 # Add the executables
 #
 
+## Need -lGeant_v in order to obtain the function/template Geant::cxx::ErrorHandlerImpl
+
 add_executable(testMagFieldEquation testMagFieldEquation.cxx) ## ${sources} ${headers})
-target_link_libraries(testMagFieldEquation -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield ${VECGEOM_LIBRARIES})
+target_link_libraries(testMagFieldEquation -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield -lGeant_v ${VECGEOM_LIBRARIES})
 message(STATUS "Created target for testMagFieldEquation")
 
 # add_executable(testTClassicalRK4 testTClassicalRK4.cxx) ## ${sources} ${headers})
@@ -30,19 +32,19 @@ message(STATUS "Created target for testMagFieldEquation")
 # message(STATUS "Created target for testTClassicalRK4")
 
 add_executable(testStepperFixed testStepperFixed.cxx) ## ${sources} ${headers})
-target_link_libraries(testStepperFixed -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield ${VECGEOM_LIBRARIES})
+target_link_libraries(testStepperFixed -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield -lGeant_v ${VECGEOM_LIBRARIES})
 message(STATUS "Created target for testStepperFixed")
 
 add_executable(testIntegrationDriver testIntegrationDriver.cxx) ## ${sources} ${headers})
-target_link_libraries(testIntegrationDriver -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield ${VECGEOM_LIBRARIES})
+target_link_libraries(testIntegrationDriver -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield -lGeant_v ${VECGEOM_LIBRARIES})
 message(STATUS "Created target for testIntegrationDriver")
 
 add_executable(testGUPropagateField testGUPropagateField.cxx) ## ${sources} ${headers})
-target_link_libraries(testGUPropagateField -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield ${VECGEOM_LIBRARIES})
+target_link_libraries(testGUPropagateField -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield -lGeant_v ${VECGEOM_LIBRARIES})
 message(STATUS "Created target for testGUPropagateField")
 
 ## add_executable(testFieldPropagator TestGUFieldPropagator.cxx) ## ${sources} ${headers})
-## target_link_libraries(testFieldPropagator Vmagfield  -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${VECGEOM_LIBRARIES})
+## target_link_libraries(testFieldPropagator -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield -lGeant_v ${VECGEOM_LIBRARIES})
 ## # ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} Xsec Geant_v)
 ## # add_dependencies(micromc xseclib Geantlib_v)
 ## message(STATUS "Created target for testFieldPropagator")

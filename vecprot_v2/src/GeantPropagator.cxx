@@ -99,7 +99,7 @@ GeantPropagator::GeantPropagator()
       fVertex(), fEmin(1.E-4), // 100 KeV
       fEmax(10),               // 10 Gev
       fBmag(0.),               // kiloGauss
-      fEpsilonRK(0.0003), fInitialisedRKIntegration(false),fUsePhysics(true), fUseRungeKutta(false), fUseDebug(false), fUseGraphics(false),
+      fEpsilonRK(0.0003), fUsePhysics(true), fUseRungeKutta(false), fInitialisedRKIntegration(false), fUseDebug(false), fUseGraphics(false),
       fUseStdScoring(false), fTransportOngoing(false), fSingleTrack(false), fFillTree(false),
       fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(false), fUseAppMonitoring(false),
       fTracksLock(), fWMgr(0), fApplication(0), fStdApplication(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0),
@@ -420,7 +420,7 @@ void GeantPropagator::PrepareRkIntegration() {
   using Field_t    =  TUniformMagField;
 
   auto gvField= new TUniformMagField( fieldUnits::kilogauss * ThreeVector( 0.0, 0.0, fBmag ) );
-  constexpr double hminimum  = 1.0e-5; //  Minimum step = 0.1 microns
+  constexpr double hminimum  = 1.0e-4; //  Minimum step = 0.1 microns
   // constexpr double epsTol = 3.0e-4; // Relative error tolerance of integration
 
   // using FieldPropagatorFactory = ::FieldPropagatorFactory;
