@@ -90,7 +90,7 @@ GeantPropagator::GeantPropagator()
       fEmax(10),    // 10 Gev
       fBmag(0.),    // kiloGauss
       fEpsilonRK(0.0003),
-      fUsePhysics(kTRUE), fUseRungeKutta(kFALSE), fInitialisedRKIntegration(false), fUseDebug(kFALSE), fUseGraphics(kFALSE), fUseStdScoring(kFALSE),
+      fUsePhysics(kTRUE), fUseRungeKutta(kFALSE), fInitialisedRKIntegration(kFALSE), fUseDebug(kFALSE), fUseGraphics(kFALSE), fUseStdScoring(kFALSE),
       fTransportOngoing(kFALSE), fSingleTrack(kFALSE), fFillTree(kFALSE), fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(kFALSE), fUseAppMonitoring(kFALSE), fTracksLock(),  
       fWMgr(0), fApplication(0), fStdApplication(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0), fStoredTracks(0),
       fPrimaryGenerator(0), fNtracks(0), fEvents(0), fThreadData(0) {
@@ -377,7 +377,7 @@ void GeantPropagator::PrepareRkIntegration() {
   using Field_t    =  TUniformMagField;
 
   auto gvField= new TUniformMagField( fieldUnits::kilogauss * ThreeVector( 0.0, 0.0, fBmag ) );
-  constexpr double hminimum  = 1.0e-5; //  Minimum step = 0.1 microns
+  constexpr double hminimum  = 1.0e-4; //  Minimum step = 0.1 microns
   // constexpr double epsTol = 3.0e-4; // Relative error tolerance of integration
 
   // using FieldPropagatorFactory = ::FieldPropagatorFactory;
@@ -387,7 +387,6 @@ void GeantPropagator::PrepareRkIntegration() {
                                                      hminimum);
   // Create clones for other threads
   GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
-
   fInitialisedRKIntegration= true;
 }
 
