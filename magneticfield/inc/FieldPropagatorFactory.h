@@ -12,8 +12,13 @@
 
 #include <ostream>
 
+// #include "base/inc/Error.h"
+#include "Geant/Error.h"
+
 #include "GUFieldPropagator.h"
 #include "GUFieldPropagatorPool.h"
+#include "FieldEquationFactory.h"
+#include "StepperFactory.h"
 
 // template<typename Field_t> // , typename Equation_t>
 class FieldPropagatorFactory
@@ -60,13 +65,16 @@ FieldPropagatorFactory::CreatePropagator( // Field_t&              gvField,
 
   // constexpr double epsTol = 3.0e-4;               // Relative error tolerance of integration
   // int  statisticsVerbosity= 0;
-  cout << "Parameters for RK integration in magnetic field: "; //  << endl;
 
   // GUFieldPropagator *
   fieldPropagator =
      new GUFieldPropagator(&integrDriver, relEpsilonTolerance);  // epsTol);
-  cout << " - Integration constraint:  eps_tol= " << relEpsilonTolerance << endl;
 
+  // cout << " - Integration constraint:  eps_tol= " << relEpsilonTolerance << endl;
+  Geant::Print("FieldPropagatorFactory::CreatePropagator",  
+               "Parameters for RK integration in magnetic field: - Integration constraint:  eps_tol=  %8.3g\n",
+               relEpsilonTolerance); 
+        
   RegisterPropagator(fieldPropagator);
 
   return fieldPropagator;
@@ -82,9 +90,13 @@ FieldPropagatorFactory::CreatePropagator(Field_t& gvField,
 
   auto gvEquation = 
      FieldEquationFactory::CreateMagEquation<Field_t>(&gvField);
-  cout << "Parameters for RK integration in magnetic field: "; //  << endl;
-  cout << " - Driver minimum step (h_min) = " << minStepSize << endl;
+  // cout << "Parameters for RK integration in magnetic field: "; //  << endl;
+  // cout << " - Driver minimum step (h_min) = " << minStepSize << endl;
 
+  Geant::Print("FieldPropagatorFactory::CreatePropagator",  
+               "Parameters for RK integration in magnetic field: - Driver minimum step (h_min) = %8.3g\n",
+               minStepSize); 
+  
   auto // GUVIntegrationStepper*
      aStepper = StepperFactory::CreateStepper<Equation_t>(gvEquation); // Default stepper
 
@@ -106,7 +118,7 @@ FieldPropagatorFactory::RegisterPropagator(GUFieldPropagator* fieldPropagator)
   if( fpPool ) {
      fpPool->RegisterPrototype( fieldPropagator );
   } else {
-     ::Error("PrepareRkIntegration","Cannot find GUFieldPropagatorPool Instance.");
+     Geant::Error("PrepareRkIntegration","Cannot find GUFieldPropagatorPool Instance.");
   }
 }
 #endif

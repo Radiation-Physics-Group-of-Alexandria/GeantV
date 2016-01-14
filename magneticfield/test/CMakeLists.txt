@@ -17,8 +17,10 @@ set_source_files_properties(${sources} PROPERTY COMPILE_FLAGS                  "
 #
 include_directories(${PROJECT_SOURCE_DIR}/magneticfield/inc)
 
+## Need -lGeant_v in order to obtain the function/template Geant::cxx::ErrorHandlerImpl
+
 add_executable(testMagFieldEquation testMagFieldEquation.cxx) ## ${sources} ${headers})
-target_link_libraries(testMagFieldEquation Vmagfield ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+target_link_libraries(testMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testMagFieldEquation")
 
 # add_executable(testTClassicalRK4 testTClassicalRK4.cxx) ## ${sources} ${headers})
@@ -26,15 +28,15 @@ message(STATUS "Created target for testMagFieldEquation")
 # message(STATUS "Created target for testTClassicalRK4")
 
 add_executable(testStepperFixed testStepperFixed.cxx) ## ${sources} ${headers})
-target_link_libraries(testStepperFixed Vmagfield ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+target_link_libraries(testStepperFixed Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testStepperFixed")
 
 add_executable(testIntegrationDriver testIntegrationDriver.cxx) ## ${sources} ${headers})
-target_link_libraries(testIntegrationDriver Vmagfield ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+target_link_libraries(testIntegrationDriver Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testIntegrationDriver")
 
 add_executable(testGUPropagateField testGUPropagateField.cxx) ## ${sources} ${headers})
-target_link_libraries(testGUPropagateField Vmagfield ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+target_link_libraries(testGUPropagateField Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testGUPropagateField")
 
 ## add_executable(testFieldPropagator TestGUFieldPropagator.cxx) ## ${sources} ${headers})
