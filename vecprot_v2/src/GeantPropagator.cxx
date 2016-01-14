@@ -397,7 +397,7 @@ void GeantPropagator::PrepareRkIntegration() {
   using Field_t    =  TUniformMagField;
 
   auto gvField= new TUniformMagField( fieldUnits::kilogauss * ThreeVector( 0.0, 0.0, fBmag ) );
-  constexpr double hminimum  = 1.0e-5; //  Minimum step = 0.1 microns
+  constexpr double hminimum  = 1.0e-4; //  Minimum step = 0.1 microns
   // constexpr double epsTol = 3.0e-4; // Relative error tolerance of integration
 
   // using FieldPropagatorFactory = ::FieldPropagatorFactory;

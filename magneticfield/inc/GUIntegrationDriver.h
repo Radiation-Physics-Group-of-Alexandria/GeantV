@@ -144,7 +144,7 @@ class GUIntegrationDriver
      void WarnSmallStepSize( double hnext, double hstep, 
                              double h,     double xDone,
                              int noSteps);
-     void WarnTooManyStep( double x1start, double x2end, double xCurrent);
+     void WarnTooManySteps( double x1start, double x2end, double xCurrent);
      void WarnEndPointTooFar (double  endPointDist, 
                               double  hStepSize , 
                               double  epsilonRelative,
@@ -216,8 +216,10 @@ class GUIntegrationDriver
 
      double fSurfaceTolerance; 
 
-     static const double max_stepping_increase;
-     static const double max_stepping_decrease;
+     //  Stepsize can increase by no more than 5.0
+     //           and decrease by no more than x10. = 0.1
+     static constexpr double fMaxSteppingIncrease = 5.0;
+     static constexpr double fMaxSteppingDecrease = 0.1;
         // Maximum stepsize increase/decrease factors.
 
      int    fStatisticsVerboseLevel;
@@ -245,7 +247,7 @@ class GUIntegrationDriver
 inline
 double GUIntegrationDriver::ComputeAndSetErrcon()
 {
-      fErrcon = std::pow(max_stepping_increase/fSafetyFactor,1.0/fPowerGrow);
+      fErrcon = std::pow(fMaxSteppingIncrease/fSafetyFactor,1.0/fPowerGrow);
       return fErrcon;
 } 
 

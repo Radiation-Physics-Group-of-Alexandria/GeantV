@@ -18,15 +18,6 @@
 #include "GUFieldTrack.h"
 #include "GUIntegrationDriver.h"
 
-//  Stepsize can increase by no more than 5.0
-//           and decrease by no more than 1/10. = 0.1
-//
-const double GUIntegrationDriver::max_stepping_increase = 5.0;
-const double GUIntegrationDriver::max_stepping_decrease = 0.1;
-
-const double perMillion  = 1.0e-6; 
-const double perThousand = 1.0e-3;
-
 //  The (default) maximum number of steps is Base
 //  divided by the order of Stepper
 //
@@ -44,7 +35,7 @@ const int  GUIntegrationDriver::fMaxStepBase = 250;  // Was 5000
 
 //  Constructor
 //
-GUIntegrationDriver::GUIntegrationDriver( double                hminimum, 
+GUIntegrationDriver::GUIntegrationDriver( double        hminimum, 
                                   GUVIntegrationStepper *pStepper,
                                   int                   numComponents,
                                   int                   statisticsVerbose)
@@ -154,16 +145,24 @@ GUIntegrationDriver* GUIntegrationDriver::Clone() const
 bool
 GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
                                               double     hstep,
-                                              double     eps,
+                                              double     epsilon,
                                            GUFieldTrack& yOutput,
                                               double     hinitial
    )
 {
-  // Runge-Kutta driver with adaptive stepsize control. Integrate starting
-  // values at y_current over hstep x2 with accuracy eps. 
-  // On output ystart is replaced by values at the end of the integration 
-  // interval. RightHandSide is the right-hand side of ODE system. 
-  // The source is similar to odeint routine from NRC p.721-722 .
+  // Driver for Runge-Kutta integration with adaptive stepsize control.
+  // Integrate starting 'vector' y_current, over length 'hstep'
+  // maintaining integration error so that relative accuracy is better
+  // than 'epsilon'.
+  // NOTE: The number of trial steps is limited by 'fMaxNoSteps'. Integration will 
+  //       stop if this maximum is reached, and the return value will be false.
+  // On return
+  //  - 'yOutput' provides the values at the end of the integration interval;
+  //  - the return value is 'true' if integration succeeded to the end of the interval,
+  //    and 'false' otherwise.
+
+  constexpr double perMillion  = 1.0e-6;
+  constexpr double perThousand = 1.0e-3;
 
   int nstp, i, no_warnings=0;
   double x, hnext, hdid, h;
@@ -232,7 +231,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
 
   // fpStepper->InitializeCharge( charge );   // May be added
   // OLD: fpStepper->GetEquationOfMotion()->InitializeCharge( charge );
-  
+
   do
   {
     ThreeVector StartPos( y[0], y[1], y[2] );
@@ -257,7 +256,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
     //      
     if( h > fMinimumStep )
     { 
-      OneGoodStep(y,dydx,x,h,eps,hdid,hnext) ;
+      OneGoodStep(y,dydx,x,h,epsilon,hdid,hnext) ;
       //--------------------------------------
       lastStepSucceeded= (hdid == h);   
 #ifdef GUDEBUG_FIELD
@@ -296,7 +295,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
                << " of " << fNoTotalSteps << " this time " << nstp << std::endl; 
         PrintStatus( ySubStepStart, x1, y, x, h,  nstp);   // Only this
         std::cout << " dyerr= " << dyerr_len << " relative = " << dyerr_len / h 
-               << " epsilon= " << eps << " hstep= " << hstep 
+               << " epsilon= " << epsilon << " hstep= " << hstep 
                << " h= " << h << " hmin= " << fMinimumStep << std::endl;
       }
 #endif        
@@ -312,10 +311,10 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
       x += hdid;
 
       // Compute suggested new step
-      hnext= ComputeNewStepSize( dyerr/eps, h);
+      hnext= ComputeNewStepSize( dyerr/epsilon, h);
 
-      // .. hnext= ComputeNewStepSize_WithinLimits( dyerr/eps, h);
-      lastStepSucceeded= (dyerr<= eps);
+      // .. hnext= ComputeNewStepSize_WithinLimits( dyerr/epsilon, h);
+      lastStepSucceeded= (dyerr<= epsilon);
     }
 
     if (lastStepSucceeded)  { noFullIntegr++; }
@@ -349,7 +348,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
 #ifdef GUDEBUG_FIELD
         if (dbg)
         {
-          WarnEndPointTooFar ( endPointDist, hdid, eps, dbg ); 
+          WarnEndPointTooFar ( endPointDist, hdid, epsilon, dbg ); 
           std::cerr << "  Total steps:  bad " << fNoBadSteps
                  << " good " << noGoodSteps << " current h= " << hdid
                  << std::endl;
@@ -366,7 +365,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
 // #endif
 
     //  Avoid numerous small last steps
-    if( (h < eps * hstep) || (h < fSmallestFraction * startCurveLength) )
+    if( (h < epsilon * hstep) || (h < fSmallestFraction * startCurveLength) )
     {
       // No more integration -- the next step will not happen
       lastStep = true;  
@@ -378,8 +377,8 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
       {
 #ifdef  GUDEBUG_FIELD
         // If simply a very small interval is being integrated, do not warn
-        if( (x < x2 * (1-eps) ) &&        // The last step can be small: OK
-            (std::fabs(hstep) > Hmin()) ) // and if we are asked, it's OK
+        if( (x < x2 * (1-epsilon) ) &&        // The last step can be small: OK
+            (std::fabs(hstep) > fMinimumStep ) ) // and if we are asked, it's OK
         {
           if(dbg>0)
           {
@@ -434,23 +433,26 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
   yOutput.LoadFromArray( yEnd, fNoIntegrationVariables );
   yOutput.SetCurveLength( x );
 
-  if(nstp > fMaxNoSteps)
+  if(nstp > fMaxNoSteps && !succeeded )
   {
     no_warnings++;
-    succeeded = false;
+    // succeeded = false;
 #ifdef GUDEBUG_FIELD
     if (dbg)
     {
-      WarnTooManyStep( x1, x2, x );  //  Issue WARNING
+      WarnTooManySteps( x1, x2, x );  //  Issue WARNING
       PrintStatus( yEnd, x1, y, x, hstep, -nstp);
     }
 #endif
   }
 
+  // std::cout << "GVIntegratorDriver no-steps= " << nstp <<std::endl; 
+  // if( fVerboseLevel > 1 ) printf( "GVIntegratorDriver no-steps= %d\n", nstp);
+
 #ifdef GUDEBUG_FIELD
   if( dbg && no_warnings )
   {
-    std::cerr << "GVIntegratorDriver exit status: no-steps " << nstp <<std::endl;
+    std::cerr << "GUIntegratorDriver exit status: no-steps " << nstp <<std::endl;
     PrintStatus( yEnd, x1, y, x, hstep, nstp);
   }
 #endif
@@ -500,18 +502,27 @@ GUIntegrationDriver::WarnSmallStepSize( double hnext, double hstep,
 // ---------------------------------------------------------
 
 void
-GUIntegrationDriver::WarnTooManyStep( double x1start, 
+GUIntegrationDriver::WarnTooManySteps( double x1start, 
                                   double x2end, 
                                   double xCurrent)
 {
    // std::ostringstream message;
-   std::cerr << "WARNING from GUIntegrationDriver::WarnTooManyStep()" << std::endl;
+   std::cerr << "WARNING from GUIntegrationDriver::WarnTooManySteps()" << std::endl;
    std::cerr << "The number of steps used in the Integration driver"
              << " (Runge-Kutta) is too many." << std::endl
-             << "Integration of the interval was not completed !" << std::endl
-             << "Only a " << (xCurrent-x1start)*100/(x2end-x1start)
-             << " % fraction of it was done." << std::endl;
-   // G4Exception("GUIntegrationDriver::WarnTooManyStep()", "GeomField1001",
+             << "Integration of the interval was not completed !" << std::endl;
+
+   unsigned int oldPrec= std::cerr.precision(16);
+   
+   std::cerr << "Only a " << (xCurrent-x1start)*100.0/(x2end-x1start)
+             << " % fraction of it was done.";
+   // std::cerr.setf (std::ios_base::scientific);
+   // std::cerr.precision(4);
+   std::cerr << "Remaining fraction= " << (x2end-xCurrent)*100.0/(x2end-x1start)      
+             << std::endl;
+   // std::cerr.unsetf (std::ios_base::scientific);
+   std::cerr.precision(oldPrec);
+   // G4Exception("GUIntegrationDriver::WarnTooManySteps()", "GeomField1001",
    //             JustWarning, message);
 }
 
@@ -520,7 +531,7 @@ GUIntegrationDriver::WarnTooManyStep( double x1start,
 void
 GUIntegrationDriver::WarnEndPointTooFar (double endPointDist, 
                                      double   h , 
-                                     double  eps,
+                                     double  epsilon,
                                      int     dbg)
 {
   static  double maxRelError=0.0; // thread_local
@@ -531,7 +542,7 @@ GUIntegrationDriver::WarnEndPointTooFar (double endPointDist,
   if( isNewMax ) { maxRelError= endPointDist / h - 1.0; }
 
   if( dbg && (h > fSurfaceTolerance) 
-          && ( (dbg>1) || prNewMax || (endPointDist >= h*(1.+eps) ) ) )
+          && ( (dbg>1) || prNewMax || (endPointDist >= h*(1.+epsilon) ) ) )
   { 
     static int noWarnings = 0;  // thread_local
     // std::ostringstream message;
@@ -546,7 +557,7 @@ GUIntegrationDriver::WarnEndPointTooFar (double endPointDist,
               << ", curve length = " << h << std::endl
               << "  Difference (curveLen-endpDist)= " << (h - endPointDist)
               << ", relative = " << (h-endPointDist) / h 
-              << ", epsilon =  " << eps << std::endl;
+              << ", epsilon =  " << epsilon << std::endl;
     // G4Exception("GUIntegrationDriver::WarnEndPointTooFar()", "GeomField1001",
     //             JustWarning, message);
   }
@@ -671,7 +682,7 @@ GUIntegrationDriver::OneGoodStep(      double y[],        // InOut
   }
   else
   {
-    hnext = max_stepping_increase*h ; // No more than a factor of 5 increase
+    hnext = fMaxSteppingIncrease*h ; // No more than a factor of 5 increase
   }
   x += (hdid = h);
 
@@ -742,7 +753,7 @@ bool  GUIntegrationDriver::QuickAdvance(
 #ifdef RETURN_A_NEW_STEP_LENGTH
   // The following step cannot be done here because "eps" is not known.
   dyerr_len = std::sqrt( dyerr_len_sq ); 
-  dyerr_len_sq /= eps ;
+  dyerr_len_sq /= epsilon ;
 
   // Look at the velocity deviation ?
   //  SQR(yerr_vec[3])+SQR(yerr_vec[4])+SQR(yerr_vec[5]));
@@ -809,7 +820,7 @@ GUIntegrationDriver::ComputeNewStepSize(
     hnew = GetSafety()*hstepCurrent*std::pow(errMaxNorm,GetPowerGrow()) ;
   } else {
     // if error estimate is zero (possible) or negative (dubious)
-    hnew = max_stepping_increase * hstepCurrent; 
+    hnew = fMaxSteppingIncrease * hstepCurrent; 
   }
 
   return hnew;
@@ -835,9 +846,9 @@ GUIntegrationDriver::ComputeNewStepSize_WithinLimits(
     // Step failed; compute the size of retrial Step.
     hnew = GetSafety()*hstepCurrent*std::pow(errMaxNorm,GetPowerShrink()) ;
   
-    if (hnew < max_stepping_decrease*hstepCurrent)
+    if (hnew < fMaxSteppingDecrease*hstepCurrent)
     {
-      hnew = max_stepping_decrease*hstepCurrent ;
+      hnew = fMaxSteppingDecrease*hstepCurrent ;
                          // reduce stepsize, but no more
                          // than this factor (value= 1/10)
     }
@@ -848,7 +859,7 @@ GUIntegrationDriver::ComputeNewStepSize_WithinLimits(
     if (errMaxNorm > fErrcon)
      { hnew = GetSafety()*hstepCurrent*std::pow(errMaxNorm,GetPowerGrow()); }
     else  // No more than a factor of 5 increase
-     { hnew = max_stepping_increase * hstepCurrent; }
+     { hnew = fMaxSteppingIncrease * hstepCurrent; }
   }
   return hnew;
 }

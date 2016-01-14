@@ -51,9 +51,10 @@ class  GUFieldTrack
      inline GUFieldTrack& operator = ( const GUFieldTrack & rStVec );
        // Assignment operator
 
-     inline ThreeVector  GetMomentum() const;   
-     inline ThreeVector  GetPosition() const; 
+     inline ThreeVector  GetMomentum() const;
+     inline ThreeVector  GetPosition() const;
      inline ThreeVector  GetMomentumDirection() const;
+     inline double       GetMomentumMag() const;
      inline double       GetCurveLength() const;
        // Distance along curve of point.
 
@@ -189,6 +190,13 @@ ThreeVector GUFieldTrack::GetPosition() const
 } 
 
 inline
+ThreeVector GUFieldTrack::GetMomentumDirection() const 
+{
+   double inv_mag= 1.0 / fMomentumMag;
+   return inv_mag * ThreeVector( SixVector[3], SixVector[4], SixVector[5] );
+} 
+
+inline
 void GUFieldTrack::SetPosition( ThreeVector pPosition) 
 {
    SixVector[0] = pPosition.x(); 
@@ -201,14 +209,14 @@ void GUFieldTrack::SetMomentum( ThreeVector vMomentum)
 {
    SixVector[3] = vMomentum.x(); 
    SixVector[4] = vMomentum.y(); 
-   SixVector[5] = vMomentum.z(); 
+   SixVector[5] = vMomentum.z();
+   fMomentumMag= vMomentum.Mag();
 } 
 
 inline
-ThreeVector GUFieldTrack::GetMomentumDirection() const 
+double GUFieldTrack::GetMomentumMag() const 
 {
-   double inv_mag= 1.0 / fMomentumMag;
-   return inv_mag * ThreeVector( SixVector[3], SixVector[4], SixVector[5] );
+   return fMomentumMag;
 } 
 
 inline
