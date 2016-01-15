@@ -1,28 +1,37 @@
-#include "iostream"
-#include "MagField.h"
-#include "base/Vector3D.h"
-#include "base/SOA3D.h"
-#include "base/Global.h"
+
 #include <string>
+#include <iostream>
 #include <vector>
+#include <cassert>
 #include <ctime>
 #include <cmath> //for sqrt
 #include <stdlib.h>
+
 #include <Vc/Vc>
 #include "backend/vc/Backend.h"
 #include "backend/vcfloat/Backend.h"
 #include "base/Vector.h"
+
 //#include "test/unit_tests/ApproxEqual.h"
 #include "ApproxEqual.h"
 
+#include "base/Vector3D.h"
+#include "base/SOA3D.h"
+#include "base/Global.h"
+
+#include "CMSmagField.h"
+
 #undef NDEBUG
-#include <cassert>
 
 typedef float dataType;
 //typedef double dataType;
 
 using namespace std;
 typedef vecgeom::Vector3D<dataType> ThreeVector; //normal Vector3D
+
+typedef vecgeom::Vector3D<float>    ThreeVector_f;
+typedef vecgeom::Vector3D<double>   ThreeVector_d;
+
 typedef vecgeom::Vector3D<vecgeom::kVcFloat::precision_v> ThreeVecSimd_v;
 typedef vecgeom::Vector<dataType> VcVectorFloat;
 typedef vecgeom::Vector<ThreeVecSimd_v> VecGeomVector;
@@ -75,12 +84,9 @@ void GenVecCart(vecgeom::Vector<ThreeVector> &posVec, const int &n){
     }
 }
 
-
-
-
-int main(){
-
-    MagField m1;
+int main()
+{
+    CMSmagField m1;
     m1.ReadVectorData("../VecMagFieldRoutine/cms2015.txt");
     vecgeom::Vector<ThreeVector> posVec;
     
@@ -100,6 +106,7 @@ int main(){
     for (int i = 0; i < n; ++i)
     {
         m1.GetFieldValue<vecgeom::kScalarFloat>(posVec[i], xyzField);
+        // m1.GetFieldValue(posVec[i], xyzField);        
         sumXYZField += xyzField;
         outputScalar.push_back(xyzField);
         outputScalar2.push_back(xyzField);
