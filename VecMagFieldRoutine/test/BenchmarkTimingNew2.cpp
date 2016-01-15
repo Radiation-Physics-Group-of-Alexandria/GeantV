@@ -26,6 +26,8 @@ with others for vectorized version.
 #include "backend/vcfloat/Backend.h"
 #include "base/Vector.h"
 
+#include "CMSmagField.h"
+
 using namespace std;
 typedef vecgeom::Vector3D<float> ThreeVector; //normal Vector3D
 typedef vecgeom::Vector3D<vecgeom::kVcFloat::precision_v> ThreeVecSimd_t;
@@ -89,7 +91,6 @@ void CalculateMeanStDev(const vector<float> timeVec, float &mean, float &stDev){
     // cout<<"Mean Time: "<<mean<<"ns"<<endl;
     // cout<<"Standard dev: "<<stDev<<"ns"<<endl;
 }
-
 
 template <class MagField>
 float TimeScalar(MagField m1, const vecgeom::Vector<ThreeVector> &posVec, const int &n, const int &nRepetitions){

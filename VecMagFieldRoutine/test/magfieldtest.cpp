@@ -1,14 +1,19 @@
-#include "iostream"
-#include "MagField.h"
+#include <iostream>
+#include <ctime>
+
 #include "base/Vector3D.h"
 #include "base/SOA3D.h"
 #include "base/Global.h"
-#include <ctime>
+
 #include <Vc/Vc>
 #include "backend/vc/Backend.h"
 #include "backend/vcfloat/Backend.h"
 #include "backend/scalarfloat/Backend.h"
 #include "backend/Backend.h"
+
+// #include "MagField.h"
+#include "CMSMagField.h"
+
 using namespace std;
 
 typedef vecgeom::Vector3D<float> Vec_t;

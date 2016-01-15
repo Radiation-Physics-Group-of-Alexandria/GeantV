@@ -5,7 +5,16 @@
 #include "GUVEquationOfMotion.h"
 
 #include "TMagFieldEquation.h"
+#include "FieldEquationFactory.h"
+
 #include "TUniformMagField.h"
+
+#define CMS_FIELD 1
+
+#ifdef CMS_FIELD
+// #include "VecMagFieldRoutine/CMSmagField.h"
+#include "CMSmagField.h"
+#endif
 
 using ThreeVector_f = vecgeom::Vector3D<float>;
 using ThreeVector_d = vecgeom::Vector3D<double>;
@@ -26,19 +35,29 @@ main( int, char** )
   return 1;
 }
 
-// GUVField*       pField;
-
 GUVEquationOfMotion* CreateFieldAndEquation(ThreeVector_f FieldValue)
 {
-  TUniformMagField*     ConstBfield = new TUniformMagField( FieldValue );
-  // typedef typename TMagFieldEquation<TUniformMagField, gNposmom>  EquationType;
+  // using uniformField_t = TUniformMagField;
+
+#if 0   
+  // 1. Original way of creating an equation
   using EquationType = TMagFieldEquation<TUniformMagField, gNposmom>;
+  TUniformMagField*   pConstBfield = new TUniformMagField( FieldValue );
+  GUVEquationOfMotion*  magEquation = new EquationType(pConstBfield);
+#endif
   
-  // GUVEquationOfMotion*  magEquation= new TMagFieldEquation<TUniformMagField, gNposmom>(ConstBfield);
-  GUVEquationOfMotion*  magEquation = new EquationType(ConstBfield);
+#ifndef CMS_FIELD
+  //  2. Different method of creating equation:  Factory
+  auto equation2 = FieldEquationFactory::CreateMagEquation<TUniformMagField>(pConstBfield);
+  auto equationRet = equation2;
+#else  
+  //  3. Equation for CMS field
+  auto equationCMS = FieldEquationFactory::CreateMagEquation<CMSmagField>(cmsField);
+  auto equationRet = equationCMS;
+#endif  
   
-  // pField = ConstBfield; 
-  return magEquation;
+  // return magEquation;  
+  return equationRet;
 }
 
 int gVerbose= 1;

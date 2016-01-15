@@ -30,7 +30,7 @@ bool ApproxEqual(const float x, const float y, const float r, const float z, con
         float diff = std::fabs(x - y);
         float abs_x = std::fabs(x), abs_y = std::fabs(y);
         if((diff / (abs_x + abs_y)) > kApproxEqualTolerance){
-            std::cout<<"\nFor r: "<<r<<" and z: "<<z<<"\nRelative error is:  "<<diff / (abs_x + abs_y)*1e+9<<endl;
+            std::cout<<"\nFor r: "<<r<<" and z: "<<z<<"\nRelative error is:  "<<diff / (abs_x + abs_y)*1e+9<<std::endl;
             if(i==1) std::cout<<"On edge, between 2 r values"<<std::endl;
             if(i==2) std::cout<<"On edge, between 2 z values"<<std::endl;
             if(i==3) std::cout<<"Middle of cell"<<std::endl;
