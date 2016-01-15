@@ -1,5 +1,5 @@
 // Approach is derived from the Geant4 class G4MagFieldEquation
-// 
+//
 
 #include <cmath>
 
@@ -16,6 +16,9 @@
 
 #ifndef TMAGFIELDEQUATION_H
 #define TMAGFIELDEQUATION_H  1
+
+// #include <vector>
+#include "base/Vector3D.h"
 
 #include "Units.h"
 #include "Constants.h"
@@ -44,7 +47,7 @@ class TMagFieldEquation : public GUVEquationOfMotion
      TMagFieldEquation<Field,Size>* CloneOrSafeSelf(bool* safe=0);
         // If class is thread safe, return self ptr.  Else return clone
      
-     REALLY_INLINE  // inline __attribute__((always_inline))     
+     REALLY_INLINE  // inline __attribute__((always_inline))
      void GetFieldValue(const double Point[4],
                               double Value[]) const
      {
@@ -56,27 +59,30 @@ class TMagFieldEquation : public GUVEquationOfMotion
 
      REALLY_INLINE
      void TEvaluateRhsGivenB( const double y[],
-                              const double B[3],
-                                //  double charge, 
+                              const vecgeom::Vector3D<float> B,  // Was double B[3],
+                                //  double charge,
                              double dydx[] ) const;
 
      // virtual
      void EvaluateRhsGivenB( const double y[],
-                             const double B[3],
-                              //   double charge, 
+                             const vecgeom::Vector3D<float> B,  // Was const double B[3],
+                              //   double charge,
                              double dydx[] ) const
      { TEvaluateRhsGivenB( y, B, /*charge,*/ dydx); }
 
      REALLY_INLINE
-     void FieldFromY(const double y[], /* double charge, */ double Bfield[] ) const;
-   
+     void FieldFromY(const double y[], double Bfield[] ) const;
+
+     REALLY_INLINE
+     void FieldFromY(const double y[], vecgeom::Vector3D<float> &Bfield ) const;
+
      REALLY_INLINE
      void PrintInputFieldAndDyDx(const double y[], /* double charge, */ double dydx[] ) const;
 
      REALLY_INLINE
      void InitializeCharge(double particleCharge) final
       { fParticleCharge= particleCharge;  GUVEquationOfMotion::InformReady();  }
-      
+
       void InvalidateParameters() final { GUVEquationOfMotion::InformDone();}
 
    private:
@@ -86,23 +92,23 @@ class TMagFieldEquation : public GUVEquationOfMotion
                                  // - to generalised for other forces
 };
 
-template 
+template
 <class Field, unsigned int Size>
    TMagFieldEquation<Field,Size>
    ::TMagFieldEquation(const TMagFieldEquation& right)
    :
-      GUVEquationOfMotion( (GUVField*) 0 ), 
+      GUVEquationOfMotion( (GUVField*) 0 ),
       fPtrField( right.fPtrField->CloneOrSafeSelf( (bool *)0 ) )
       // fPtrField( new Field(right.fPtrField) )
 {
-   // G4bool threadSafe; 
+   // G4bool threadSafe;
    // fPtrField = right.fPtrField->CloneOrSafeSelf( &threadSafe );
-   
+
    // std::cout <<  "TMagFieldEquation - copy constructor called." << std::endl;
    GUVEquationOfMotion::SetFieldObj( fPtrField ); //  Also stored in base class ... for now
 }
 
-template 
+template
 <class Field, unsigned int Size>
    TMagFieldEquation<Field,Size>*
    TMagFieldEquation<Field,Size>
@@ -113,11 +119,11 @@ template
       fPtrField->CloneOrSafeSelf(safe);
 
    std::cerr << " #TMagFieldEquation<Field,Size>::CloneOrSafeSelf(bool& safe) called# " << std::endl;
-   
+
    // If Field does not have such a method:
    //  = new Field( fPtrField ); // Need copy constructor.
    //  safe= false;
-   
+
    // safe = safe && fClassSafe;
    // if( safe )  {  equation = this; }
    //    Can be introduced when Equation is thread safe -- no state
@@ -128,32 +134,35 @@ template
    // }
 }
 
-template 
+template
 <class Field, unsigned int Size>
-   TMagFieldEquation<Field,Size>*   
+   TMagFieldEquation<Field,Size>*
    TMagFieldEquation<Field,Size>
    ::CloneOrSafeSelf(bool* pSafe)
 {
    bool safeLocal;
    std::cerr << " #TMagFieldEquation<Field,Size>::CloneOrSafeSelf(bool* safe) called#" << std::endl;
-   
+
    if( !pSafe ) pSafe= &safeLocal;
    return CloneOrSafeSelf(*pSafe);
 }
 
 
-template 
+template
 <class Field, unsigned int Size>
 REALLY_INLINE
    void  TMagFieldEquation<Field, Size>
    ::TEvaluateRhsGivenB( const double y[],
-                         const double B[3],
+                         const vecgeom::Vector3D<float> Bfloat,  // Was const double B[3],
                            //  double charge,
                                double dydx[]  ) const
 {
+    // ThreeVectorD momentum( y[3], y[4], y[5]);
     double momentum_mag_square = y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
     double inv_momentum_magnitude = 1. / std::sqrt( momentum_mag_square );
     // double inv_momentum_magnitude = vdt::fast_isqrt_general( momentum_mag_square, 2);
+
+    vecgeom::Vector3D<double> B( Bfloat[0], Bfloat[1], Bfloat[2] );
 
     double cof = fParticleCharge*fCof*inv_momentum_magnitude;
 
@@ -168,11 +177,11 @@ REALLY_INLINE
     return ;
 }
 
-template 
+template
 <class Field, unsigned int Size>
 REALLY_INLINE
 void
-TMagFieldEquation<Field,Size> 
+TMagFieldEquation<Field,Size>
    ::FieldFromY(const double y[], /* double charge, */ double Bfield[3] ) const
 {
     // double  Bfield[3];  //G4maximum_number_of_field_components];
@@ -182,69 +191,81 @@ TMagFieldEquation<Field,Size>
     PositionAndTime[2] = y[2];
     PositionAndTime[3] = 0;        // Time
     // PositionAndTime[3] = y[7];  //  --> extersion?
-    
+
     GetFieldValue(PositionAndTime, Bfield) ;
 }
 
-template 
+template
 <class Field, unsigned int Size>
 REALLY_INLINE
 void
-TMagFieldEquation<Field,Size> 
-   ::RightHandSide(const double y[], /* double charge, */ double dydx[] ) const
+TMagFieldEquation<Field,Size>
+   ::FieldFromY(const double y[],  vecgeom::Vector3D<float> &Bfield ) const
 {
-    double  Bfield[3];  //G4maximum_number_of_field_components];
+    // double  Bfield[3];  //G4maximum_number_of_field_components];
+    // double  PositionAndTime[4];
+    // Position[0] = y[0];
+    // Position[1] = y[1];
+    // Position[2] = y[2];
+    // PositionAndTime[3] = y[7];  //  --> Time / extension?
+    vecgeom::Vector3D<double> Position( y[0], y[1], y[2] );
 
-#if 0
-    double  PositionAndTime[4];
-    PositionAndTime[0] = y[0];
-    PositionAndTime[1] = y[1];
-    PositionAndTime[2] = y[2];
-    PositionAndTime[3] = 0;        // Time
-    // PositionAndTime[3] = y[7];  //  --> extersion?
-    GetFieldValue(PositionAndTime, Bfield) ;
-#endif
-    FieldFromY( y, Bfield );
-    
-    TEvaluateRhsGivenB(y, Bfield, dydx);
+    fPtrField->T_Field::GetFieldValue( Position, Bfield );
 }
 
+
+template
+<class Field, unsigned int Size>
+REALLY_INLINE
+void
+TMagFieldEquation<Field,Size>
+   ::RightHandSide(const double y[], /* double charge, */ double dydx[] ) const
+{
+    // double  BfieldArr[3];  //G4maximum_number_of_field_components];
+    // FieldFromY( y, BfieldArr );
+    // TEvaluateRhsGivenB( y, BfieldArr, dydx );
+
+    vecgeom::Vector3D<float> BfieldVec;
+
+    FieldFromY( y, BfieldVec );
+    TEvaluateRhsGivenB( y, BfieldVec, dydx );
+}
 
 #include <iostream>   // For debuging only
 using std::cout;
 using std::endl;
 
-template 
+template
 <class Field, unsigned int Size>
 REALLY_INLINE
 void
-TMagFieldEquation<Field,Size> 
+TMagFieldEquation<Field,Size>
    ::PrintInputFieldAndDyDx(const double y[], /* double charge, */ double dydx[] ) const
 {
 
     RightHandSide(y, dydx);
 
-    // Obtain the field value 
+    // Obtain the field value
     double  Bfield[3];  //G4maximum_number_of_field_components];
     FieldFromY( y, Bfield );
     TEvaluateRhsGivenB(y, Bfield, dydx);
-    
+
     cout.precision(8);
 
-    // cout.setf (std::ios_base::fixed);        
+    // cout.setf (std::ios_base::fixed);
     // cout << " Position = " << y[0] << " " << y[1] << " " << y[3] << endl;
     // cout.unsetf(std::ios_base::fixed);
-    cout << "\n# Input & B field \n";    
+    cout << "\n# Input & B field \n";
     cout.setf (std::ios_base::scientific);
-    cout << " Position = " << y[0] << " " << y[1] << " " << y[2] << endl;    
+    cout << " Position = " << y[0] << " " << y[1] << " " << y[2] << endl;
     cout << " Momentum = " << y[3] << " " << y[4] << " " << y[5] << endl;
     cout << " B-field  = " << Bfield[0] << " " << Bfield[1] << " " << Bfield[2] << endl;
     cout.unsetf(std::ios_base::scientific);
 
     cout << "\n# 'Force' from B field \n";
-    cout.setf (std::ios_base::fixed);    
+    cout.setf (std::ios_base::fixed);
     cout << " dy/dx [0-2] (=dX/ds) = " << dydx[0]   << " " << dydx[1]   << " " << dydx[2] << endl;
-    cout << " dy/dx [3-5] (=dP/ds) = " << dydx[3]   << " " << dydx[4]   << " " << dydx[5] << endl;    
+    cout << " dy/dx [3-5] (=dP/ds) = " << dydx[3]   << " " << dydx[4]   << " " << dydx[5] << endl;
     cout.unsetf(std::ios_base::fixed);
 }
-#endif  // TMAGFIELDEQUATION_H 
+#endif  // TMAGFIELDEQUATION_H

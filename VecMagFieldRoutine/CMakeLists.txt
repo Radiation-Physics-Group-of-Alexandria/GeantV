@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.8)
-project(Hello)
+project(TestVecMagField)
 
 #Added to detect compiler support for C++11
 include(CheckCXXCompilerFlag)
@@ -10,7 +10,7 @@ if(COMPILER_SUPPORTS_CXX11)
 elseif(COMPILER_SUPPORTS_CXX0X)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
-        message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+    message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
 #Added to include root. Used for graph plotting.
@@ -21,7 +21,6 @@ link_directories(${ROOT_LIBRARY_DIR})
 #Copies cms2015.txt to build/VecMagFieldRoutine at runtime 
 configure_file(${CMAKE_SOURCE_DIR}/VecMagFieldRoutine/cms2015.txt cms2015.txt COPYONLY)
 message(STATUS "CMake source directory is: " ${CMAKE_SOURCE_DIR})
-
 
 include_directories(include)
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
