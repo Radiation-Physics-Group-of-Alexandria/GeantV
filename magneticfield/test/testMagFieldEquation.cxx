@@ -1,16 +1,21 @@
 //
 //
+#include "base/Vector3D.h"
+
 #include "GUVEquationOfMotion.h"
 
 #include "TMagFieldEquation.h"
 #include "TUniformMagField.h"
 
-GUVEquationOfMotion*  CreateFieldAndEquation(ThreeVector constFieldValue);
+using ThreeVector_f = vecgeom::Vector3D<float>;
+using ThreeVector_d = vecgeom::Vector3D<double>;
+
+GUVEquationOfMotion*  CreateFieldAndEquation(ThreeVector_f constFieldValue);
 bool  TestEquation(GUVEquationOfMotion* );
 
 constexpr unsigned int gNposmom= 6; // Position 3-vec + Momentum 3-vec
 
-ThreeVector    FieldValue(0.0, 0.0, 1.0);
+ThreeVector_f  FieldValue(0.0, 0.0, 1.0);
 
 int
 main( int, char** )
@@ -23,7 +28,7 @@ main( int, char** )
 
 // GUVField*       pField;
 
-GUVEquationOfMotion* CreateFieldAndEquation(ThreeVector FieldValue)
+GUVEquationOfMotion* CreateFieldAndEquation(ThreeVector_f FieldValue)
 {
   TUniformMagField*     ConstBfield = new TUniformMagField( FieldValue );
   // typedef typename TMagFieldEquation<TUniformMagField, gNposmom>  EquationType;
@@ -43,9 +48,9 @@ bool TestEquation(GUVEquationOfMotion* equation)
   constexpr double perMillion = 1e-6;
   bool   hasError = false;  // Return value
   
-  ThreeVector PositionVec( 1., 2.,  3.);  // initial
-  ThreeVector MomentumVec( 0., 0.1, 1.);
-  ThreeVector FieldVec( 0., 0., 1.);  // Magnetic field value (constant)
+  ThreeVector_d PositionVec( 1., 2.,  3.);  // initial
+  ThreeVector_d MomentumVec( 0., 0.1, 1.);
+  ThreeVector_f FieldVec( 0., 0., 1.);  // Magnetic field value (constant)
 
   double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
   // double PositionTime[4] = { 1., 2., 3., 4.};
@@ -67,12 +72,12 @@ bool TestEquation(GUVEquationOfMotion* equation)
   PositionMomentum[4] = MomentumVec[1];
   PositionMomentum[5] = MomentumVec[2];
 
-  double FieldArr[3]= { FieldVec.x(), FieldVec.y(), FieldVec.z() };
-
+  // double FieldArr[3]= { FieldVec.x(), FieldVec.y(), FieldVec.z() };
+  
   equation->InitializeCharge( charge );
-  equation->EvaluateRhsGivenB( PositionTime, FieldArr, /* charge, */ dydx );
+  equation->EvaluateRhsGivenB( PositionTime, FieldVec, /* charge, */ dydx );
 
-  ThreeVector  ForceVec( dydx[3], dydx[4], dydx[5]);
+  ThreeVector_d  ForceVec( dydx[3], dydx[4], dydx[5]);
 
   // Check result
   double MdotF = MomentumVec.Dot(ForceVec);

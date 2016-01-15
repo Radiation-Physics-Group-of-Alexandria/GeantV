@@ -96,8 +96,10 @@ endif()
 #---Set pathes where to put the libraries, executables and headers------------------------------
 if( GEANT_OUTPUT_DIR )
     set(OUTDIR ${GEANT_OUTPUT_DIR})
+    message(STATUS "OutDir: Using cmake variable GEANT_OUTPUT_DIR = " ${OUTDIR})
 else()
     set(OUTDIR $ENV{GEANT_OUTPUT_DIR})
+    message(STATUS "OutDir: Using environment variable GEANT_OUTPUT_DIR = " ${OUTDIR})
 endif()
 if(NOT OUTDIR)
   set(OUTDIR ${PROJECT_SOURCE_DIR})
@@ -394,7 +396,6 @@ include_directories("${PROJECT_SOURCE_DIR}/examples/inc")
 # Work around VecCore not being its own project yet.
 include_directories("${VECGEOM_INSTALL_DIR}/include/VecCore")
 
-
 message(STATUS "VECGEOM_INSTALL_DIR is: ${VECGEOM_INSTALL_DIR}")
 message(STATUS "VECGEOM_INCLUDE_DIR is: ${VECGEOM_INCLUDE_DIR}")
 message(STATUS "VECGEOM_DEFINITIONS is: ${VECGEOM_DEFINITIONS}")
@@ -414,12 +415,11 @@ add_subdirectory (tabxsec)
 add_subdirectory (magneticfield)
 
 add_subdirectory (test-small)
-#add_subdirectory (test-complex)
+add_subdirectory (test-complex)
 
 add_subdirectory (cmstrack)
 add_subdirectory (Nudy)
 add_subdirectory (VecMagFieldRoutine)
-
 
 if(USE_VECPHYS)
  add_subdirectory (vectphysproc)
