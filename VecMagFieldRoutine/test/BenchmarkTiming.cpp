@@ -33,13 +33,21 @@
 #include "base/SOA3D.h"
 #include "base/Global.h"
 
-#include "MagField.h"
+// #include "VC_NO_MEMBER_GATHER"
+
+#include "CMSmagField.h"
+// using MagField=MagField3<float>
 
 using namespace std;
 
 typedef vecgeom::Vector3D<float> ThreeVector; //normal Vector3D
 typedef vecgeom::Vector3D<vecgeom::kVcFloat::precision_v> ThreeVecSimd_t;
-typedef vecgeom::Vector<float> VcVectorFloat;
+typedef vecgeom::Vector<float>   VcVectorFloat;
+
+// typedef MagVector3<float>         MagField;
+// using MagField=MagVector3<float>
+
+using MagField= CMSmagField;
 
 const float kRMax=9000;
 const float kZMax= 16000;
@@ -88,7 +96,7 @@ void GenVecCart(vecgeom::Vector<ThreeVector> &posVec, const int &n){
     }
 }
 
-float TimeScalar(MagField &m1, const vecgeom::Vector<ThreeVector> &posVec, const int &n, const int &nRepetitions){
+float TimeScalar(CMSmagField &m1, const vecgeom::Vector<ThreeVector> &posVec, const int &n, const int &nRepetitions){
     ThreeVector sumXYZField(0., 0., 0.), xyzField;
     float totScaTime = 0.;
     vector<float> scaTimePerRepitition; 
@@ -202,17 +210,13 @@ float TimeVector(MagField &m1, const vecgeom::Vector<ThreeVector> &posVec, const
     return totVecTime/noRunsAvg; 
 }
 
-
-
-
-
-int main(){
-
-    MagField m1;
+int main() // int argc, char**argv)
+{
+    CMSmagField m1("../VecMagFieldRoutine/cms2015.txt");
     //m1.ReadVectorData("/home/ananya/Work/MagFieldRoutine/cms2015.txt");
     //No absolute path required now. 
     //input file copied to build/VecMagFieldRoutine
-    m1.ReadVectorData("../VecMagFieldRoutine/cms2015.txt");
+    /// m1.ReadVectorData("../VecMagFieldRoutine/cms2015.txt");
     //vector<ThreeVector> posVec;
     vecgeom::Vector<ThreeVector> posVec;
     

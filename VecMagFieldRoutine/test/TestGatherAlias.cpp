@@ -4,13 +4,17 @@
 #include <vector>
 #include <stdlib.h>
 #include <ctime>
-#include "MagField.h"
+
 #include "base/Global.h"
+
 #include <Vc/Vc>
 #include "backend/vc/Backend.h"
 #include "backend/Backend.h"
 //#include "GatherAlias.h"
 #include "ReadVectorData.h"
+
+#include "CMSmagField.h"
+
 using namespace std;
 /*
 class ReadVectorData

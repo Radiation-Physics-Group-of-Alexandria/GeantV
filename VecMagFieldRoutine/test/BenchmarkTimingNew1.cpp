@@ -5,9 +5,8 @@ Generates some random points following the previous points and some new points
 
 */
 
-
 #include "iostream"
-#include "MagField.h"
+
 #include "base/Vector3D.h"
 #include "base/SOA3D.h"
 #include "base/Global.h"
@@ -20,6 +19,8 @@ Generates some random points following the previous points and some new points
 #include "backend/vc/Backend.h"
 #include "backend/vcfloat/Backend.h"
 #include "base/Vector.h"
+
+#include "CMSmagField.h"
 
 using namespace std;
 typedef vecgeom::Vector3D<float> ThreeVector; //normal Vector3D
