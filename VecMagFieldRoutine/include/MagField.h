@@ -1,9 +1,34 @@
+//===--- (CMS)MagField.h - Geant-V ------------------------------*- C++ -*-===//
+//
+//                     Geant-V Prototype
+//
+//===----------------------------------------------------------------------===//
+/**
+ * @file   (CMS)MagField.h
+ * @brief  Bi-linear interpolation of CMS field
+ * @author Ananya
+ */
+//===----------------------------------------------------------------------===//
+
 /*
-Reordered the way in which Gather was being used. 
-Gathered elements for i1 and then i3 (i.e. the next r value)
-Then i2, then i4
-Floats used.
-*/
+ *  Details of current version / choices:
+ *   - Reordered the way in which Gather was being used:
+ *     Gathered elements for i1 and then i3 (i.e. the next r value)
+ *     Then i2, then i4.
+ *        The idea is to ensure that the different cache lines are accessed early, 
+ *        so that they are available when the remaining values are needed, without
+ *        further waiting.
+ *   - Floats used 
+ * 
+ *  Note about ordering of memory:
+ *         row  (stagerred in memory) 
+ *          || 
+ *          \/    Column ( consecutive in memory )
+ *                  ===>
+ *          i        i1       i2 (= i1 +1 )
+ * 
+ *         i+1       i3       i4
+ */
 
 #ifndef _MAGFIELD_H_
 #define _MAGFIELD_H_
@@ -33,8 +58,6 @@ Floats used.
 
 using namespace std;
 
-
-
 #define FAST 
 
 typedef float dataType;
@@ -45,7 +68,6 @@ typedef float dataType;
 #ifndef FAST
 #define INLINE_CHOICE __attribute__ ((noinline))
 #endif
-
 
 struct MagVector{
 public:
@@ -87,7 +109,7 @@ public:
     //New stuff 
     //Takes as input x,y,z; Gives output Bx,By,Bz
     template <class Backend>
-    void GetFieldValue(const vecgeom::Vector3D<typename Backend::precision_v>      &pos, 
+    void GetFieldValue(const vecgeom::Vector3D<typename Backend::precision_v>      &pos,
                              vecgeom::Vector3D<typename Backend::precision_v> &xyzField);
 
     //Reads data from given 2D magnetic field map. Can be easily modified to read a given 2D map, in case the file changes
@@ -95,7 +117,7 @@ public:
     
     ~MagField();
 
-private:
+public: 
     //  Invariants -- parameters of the field 
     const dataType millimeter = 1.0;             // Currently -- to be native GeantV
 
@@ -121,6 +143,7 @@ private:
                          const typename Backend::precision_v      &z, 
                          vecgeom::Vector3D<typename Backend::precision_v> &rzField); 
 
+protected: 
     //Used to convert cartesian coordinates to cylindrical coordinates R-Z-phi
     //Does not calculate phi
     template <class Backend>
@@ -307,7 +330,7 @@ void MagField::GetFieldValueRZ(const typename Backend::precision_v &r,
     //to make sense of the indices, consider any particular instance e.g. (25,-200)
     Float_v rFloor = floor(radius*kRDiffInv);
     Float_v rIndLow = rFloor*kNoZValues;
-    Float_v rIndHigh = rIndLow + kNoZValues;
+    // Float_v rIndHigh = rIndLow + kNoZValues;
 
     //if we use z-z0 in place of two loops for Z<0 and Z>0
     //z-z0 = [0,32000]

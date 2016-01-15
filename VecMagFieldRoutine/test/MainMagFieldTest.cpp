@@ -67,8 +67,8 @@ int main(){
     m1.ReadVectorData("../VecMagFieldRoutine/cms2015.txt");
     ReadVectorData dataMap("../VecMagFieldRoutine/cms2015.txt");
 
-    const float kRDiff = 50;
-    const float kZDiff = 200;
+    const float kRDiff = 50.;
+    const float kZDiff = 200.;
     const float kRDiffInv = 1.0/kRDiff;
     const float kZDiffInv = 1.0/kZDiff;
     const float kRMax= 9000;
