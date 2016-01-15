@@ -1,5 +1,5 @@
 #include "iostream"
-#include "MagField.h"
+
 #include "base/Vector3D.h"
 #include "base/SOA3D.h"
 #include "base/Global.h"
@@ -12,6 +12,8 @@
 #include "backend/vc/Backend.h"
 #include "backend/vcfloat/Backend.h"
 #include "base/Vector.h"
+
+#include "CMSmagField.h"
 
 using namespace std;
 typedef vecgeom::Vector3D<float> ThreeVector; //normal Vector3D

@@ -1,5 +1,12 @@
-#include "iostream"
-#include "MagField.h"
+#include <string>
+#include <vector>
+#include <ctime>
+#include <cmath> //for sqrt
+#include <cstdlib>
+// #include <stdlib.h>
+#include <iostream>
+
+// #include "MagField.h"
 // #include "MagFieldCellVersion.h"
 // #include "MagFieldVcGather.h"
 // #include "MagFieldReorder.h"
@@ -7,23 +14,19 @@
 #include "base/Vector3D.h"
 #include "base/SOA3D.h"
 #include "base/Global.h"
-#include <string>
-#include <vector>
-#include <ctime>
-#include <cmath> //for sqrt
-#include <stdlib.h>
+
 #include <Vc/Vc>
 #include "backend/vc/Backend.h"
 #include "backend/vcfloat/Backend.h"
 #include "base/Vector.h"
 #include "TRandom1.h"
 
+#include "CMSmagField.h"
+
 using namespace std;
 typedef vecgeom::Vector3D<float> ThreeVector; //normal Vector3D
 typedef vecgeom::Vector3D<vecgeom::kVcFloat::precision_v> ThreeVecSimd_t;
 typedef vecgeom::Vector<float> VcVectorFloat;
-
-
 
 const float kRMax=9000;
 const float kZMax= 16000;
