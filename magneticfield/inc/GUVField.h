@@ -33,6 +33,12 @@
 #ifndef GUVFIELD_HH
 #define GUVFIELD_HH
 
+#include <vector>
+#include "base/Vector3D.h"
+#include "base/SOA3D.h"
+#include "base/Global.h"
+#include "backend/Backend.h"
+
 // #include "GUVTypes.hh"
 // #include "globals.hh"
 
@@ -47,14 +53,24 @@ class GUVField
       /**
        * @brief GeantTrack parametrized constructor
        *
-       * @param Point    - position (0,1,2=x,y,z) and time (3) [Input]
+       * @param Position - position (0,1,2=x,y,z)   [Input]   - Note: time is suppressed => B(t)=B(0)
        * @param fieldArr - output values of field. Usual convention:
        *                   0,1,2 = B_x, B_y, B_z
        *                   3,4,5 = E_x, E_y, E_z  (foreseen extension)
        *        Units are expected to be native GeantV units.
        */
-      virtual void  GetFieldValue( const double Point[4],
-                                         double *fieldArr ) const = 0;
+      // virtual void  GetFieldValue( const double Position[4],
+      //                                    double *fieldArr ) const = 0;
+      virtual void GetFieldValue( const vecgeom::Vector3D<double> &Position,
+                                        vecgeom::Vector3D<float>  &FieldValue ) = 0;
+
+      /*
+       * The expected vector interface is: 
+       *
+       * virtual void GetFieldValue( const vecgeom::Vector3D<typename Backend::precision_v> &Position, 
+       *                                   vecgeom::Vector3D<typename Backend::precision_v> &FieldValue ) = 0;
+       */
+
       inline
       GUVField( int NumberOfComponents, bool changesEnergy );
       inline
