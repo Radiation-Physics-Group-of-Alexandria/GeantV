@@ -1,20 +1,24 @@
-#include "iostream"
-#include "MagField.h"
-#include "base/Vector3D.h"
-#include "base/SOA3D.h"
-#include "base/Global.h"
-//#include "test/unit_tests/ApproxEqual.h"
-#include "ApproxEqual.h"
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 #include <ctime>
 #include <cmath> //for sqrt
+#include <iostream>
+
+#include "base/Vector3D.h"
+#include "base/SOA3D.h"
+#include "base/Global.h"
+//#include "test/unit_tests/ApproxEqual.h"
+#include "ApproxEqual.h"
+
 #include <Vc/Vc>
 #include "backend/vc/Backend.h"
 #include "backend/vcfloat/Backend.h"
 #include "backend/scalarfloat/Backend.h"
+
+// #include "MagField.h"
+#include "CMSmagField.h"
 
 // ensure asserts are compiled in                                                                                           
 #undef NDEBUG
@@ -62,10 +66,12 @@ private:
 
 int main(){
 
-    MagField m1;
+    CMSmagField m1;
     //input file is copied to build/VecMagFieldRoutine using CMakeLists
-    m1.ReadVectorData("../VecMagFieldRoutine/cms2015.txt");
-    ReadVectorData dataMap("../VecMagFieldRoutine/cms2015.txt");
+    std::string inputMap("../VecMagFieldRoutine/cms2015.txt");
+    
+    m1.ReadVectorData(inputMap); // "../VecMagFieldRoutine/cms2015.txt");
+    ReadVectorData dataMap(inputMap); // "../VecMagFieldRoutine/cms2015.txt");
 
     const float kRDiff = 50.;
     const float kZDiff = 200.;
