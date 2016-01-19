@@ -415,7 +415,7 @@ add_subdirectory (tabxsec)
 add_subdirectory (magneticfield)
 
 add_subdirectory (test-small)
-add_subdirectory (test-complex)
+#add_subdirectory (test-complex)
 
 add_subdirectory (cmstrack)
 add_subdirectory (Nudy)

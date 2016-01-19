@@ -20,8 +20,12 @@ include_directories(${PROJECT_SOURCE_DIR}/magneticfield/inc)
 ## Need -lGeant_v in order to obtain the function/template Geant::cxx::ErrorHandlerImpl
 
 add_executable(testMagFieldEquation testMagFieldEquation.cxx) ## ${sources} ${headers})
-target_link_libraries(testMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+target_link_libraries(testMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testMagFieldEquation")
+
+#add_executable(testVectorMagFieldEquation testVectorMagFieldEquation.cxx) ## ${sources} ${headers})
+#target_link_libraries(testVectorMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+#message(STATUS "Created target for testVectorMagFieldEquation")
 
 # add_executable(testTClassicalRK4 testTClassicalRK4.cxx) ## ${sources} ${headers})
 # target_link_libraries(testTClassicalRK4 Vmagfield ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

@@ -24,6 +24,7 @@
 #include "Constants.h"
 //  Update to GeantV units ASAP
 
+
 template
 <class Field, unsigned int Size>
 class TMagFieldEquation : public GUVEquationOfMotion
