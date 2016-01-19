@@ -2,86 +2,60 @@
 //
 #include "base/Vector3D.h"
 
-#include "GUVEquationOfMotion.h"
-
-#include "GUVVectorEquationOfMotion.h"
+// #include "GUVVectorEquationOfMotion.h"
 #include "GUVVectorField.h"
-#include "TVectorMagFieldEquation.h"
-#include "GUVMagneticField.h"
-#include "GUVVectorMagneticField.h"
-#include "TVectorUniformMagField.h"
+// #include "TVectorMagFieldEquation.h"
 
-#include "GUVField.h"
 #include "TMagFieldEquation.h"
-#include "FieldEquationFactory.h"
-
 #include "TUniformMagField.h"
+// #include "TVectorUniformMagField.h"
 
-#define CMS_FIELD 1
-
-#ifdef CMS_FIELD
-// #include "VecMagFieldRoutine/CMSmagField.h"
-#include "CMSmagField.h"
-#endif
-
+typedef typename vecgeom::kVc::precision_v Double_v;
+typedef typename vecgeom::kVcFloat::precision_v Float_v;
+typedef typename vecgeom::kVc::int_v Int_v;
+typedef typename vecgeom::kVc::bool_v Bool_v;
 
 using ThreeVector_f = vecgeom::Vector3D<float>;
 using ThreeVector_d = vecgeom::Vector3D<double>;
 
-GUVEquationOfMotion* CreateUniformFieldAndEquation(ThreeVector_f constFieldValue);
-GUVEquationOfMotion* CreateFieldAndEquation(const char* filename);
+using ThreeVectorSimd_f = vecgeom::Vector3D<Float_v>;
+using ThreeVectorSimd_d = vecgeom::Vector3D<Double_v>;
 
-bool  TestEquation(GUVEquationOfMotion* );
+
+GUVVectorEquationOfMotion*  CreateFieldAndEquation(ThreeVectorSimd_f constFieldValue);
+bool  TestEquation(GUVVectorEquationOfMotion* );
 
 constexpr unsigned int gNposmom= 6; // Position 3-vec + Momentum 3-vec
+
+ThreeVector_f  FieldValue(0.0, 0.0, 1.0);
 
 int
 main( int, char** )
 {
-  ThreeVector_f  FieldValue(0.0, 0.0, 1.0);
-   
-  GUVEquationOfMotion* eq = CreateUniformFieldAndEquation( FieldValue );
+  GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue );
   TestEquation(eq);
 
-#ifdef CMS_FIELD
-  GUVEquationOfMotion* eq2 = CreateFieldAndEquation("cmsMagneticField.txt");
-  TestEquation(eq2);
-#endif
-  
   return 1;
 }
 
-GUVEquationOfMotion* CreateUniformFieldAndEquation(ThreeVector_f FieldValue)
+// GUVField*       pField;
+
+GUVVectorEquationOfMotion* CreateFieldAndEquation(ThreeVector_f FieldValue)
 {
-  // using Field_t = TUniformMagField;
-
-  TUniformMagField*   pConstBfield = new TUniformMagField( FieldValue );
-
-  // 1. Original way of creating an equation
-  // using EquationType = TMagFieldEquation<TUniformMagField, gNposmom>;
-  // GUVEquationOfMotion*  magEquation = new EquationType(pConstBfield);
-  // return magEquation;
-
-  //  2. Different method of creating equation:  Factory
-  return FieldEquationFactory::CreateMagEquation<TUniformMagField>(pConstBfield);
+  TUniformMagField*     ConstBfield = new TUniformMagField( FieldValue );
+  // typedef typename TVectorMagFieldEquation<TUniformMagField, gNposmom>  EquationType;
+  using EquationType = TVectorMagFieldEquation<TUniformMagField, gNposmom>;
+  
+  // GUVVectorEquationOfMotion*  magEquation= new TVectorMagFieldEquation<TUniformMagField, gNposmom>(ConstBfield);
+  GUVVectorEquationOfMotion*  magEquation = new EquationType(ConstBfield);
+  
+  // pField = ConstBfield; 
+  return magEquation;
 }
-
-#ifdef CMS_FIELD
-GUVEquationOfMotion* CreateFieldAndEquation(const char* filename)
-{
-  const char *altname= "cmsMagneticField.txt";
-   
-  //  3. Equation for CMS field
-  auto cmsField = new CMSmagField( filename ? filename : altname ); 
-  auto equationCMS = FieldEquationFactory::CreateMagEquation<CMSmagField>(cmsField);
-
-  return equationCMS;
-}
-#endif
 
 int gVerbose= 1;
 
-bool TestEquation(GUVEquationOfMotion* equation)
+bool TestEquation(GUVVectorEquationOfMotion* equation)
 {
   constexpr double perMillion = 1e-6;
   bool   hasError = false;  // Return value
