@@ -196,7 +196,6 @@ private:
 #else
   std::map<int, int> fPDGToGVMap;              // PDG->GV code map
 #endif
-  int fSpecGVIndices[4];                       // store GV codes of e-,e+,gamma and proton
   std::vector<const Particle_t *> fGVParticle; // direct access to particles via GV index
 
 #ifdef USE_ROOT
