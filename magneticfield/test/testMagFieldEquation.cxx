@@ -4,6 +4,14 @@
 
 #include "GUVEquationOfMotion.h"
 
+#include "GUVVectorEquationOfMotion.h"
+#include "GUVVectorField.h"
+#include "TVectorMagFieldEquation.h"
+#include "GUVMagneticField.h"
+#include "GUVVectorMagneticField.h"
+#include "TVectorUniformMagField.h"
+
+#include "GUVField.h"
 #include "TMagFieldEquation.h"
 #include "FieldEquationFactory.h"
 
@@ -15,6 +23,7 @@
 // #include "VecMagFieldRoutine/CMSmagField.h"
 #include "CMSmagField.h"
 #endif
+
 
 using ThreeVector_f = vecgeom::Vector3D<float>;
 using ThreeVector_d = vecgeom::Vector3D<double>;
