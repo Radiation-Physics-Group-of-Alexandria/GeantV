@@ -49,7 +49,7 @@
 #include <cassert>
 #include <ctime>
 
-//comment the followin gline if Vc1 not desired
+//comment the following line if Vc1 not desired
 #define VC1
 
 #ifdef VC1
