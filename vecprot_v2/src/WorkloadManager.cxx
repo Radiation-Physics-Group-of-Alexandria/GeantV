@@ -611,7 +611,8 @@ void *WorkloadManager::TransportTracks() {
         //  Geant::Print("","============= Basket: %s\n", basket->GetName());
         //  output.PrintTracks();        
       }
-      Geant::Print("","============= WrkMgr After UsePhysics - Basket: %s\n", basket->GetName());
+      // Geant::Print("","============= WrkMgr After UsePhysics - Basket: %s\n", basket->GetName());
+      Geant::Print("","============= WrkMgr After UsePhysics \n" );      
       output.PrintTracks();       
     }
     

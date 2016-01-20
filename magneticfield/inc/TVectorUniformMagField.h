@@ -17,17 +17,17 @@
 #include "Constants.h"  
 
 
-class TVectorUniformMagField : public TUniformMagField
-{
-    typedef typename vecgeom::kVc::precision_v Double_v;
+class TVectorUniformMagField : public GUVVectorMagneticField
+{  
+    typedef typename vecgeom::kVc::precision_v      Double_v;
     typedef typename vecgeom::kVcFloat::precision_v Float_v;
     public:  
 
-/*        TVectorUniformMagField(const vecgeom::Vector3D<Float_v>& FieldVector )
-           : TUniformMagField() //, GUVMagneticField() 
+        TVectorUniformMagField(const vecgeom::Vector3D<Float_v>& FieldVector )
+           : GUVVectorMagneticField() 
         {
-           for (int i=0; i<3; i++) fFieldComponents[i] = (Double_v) FieldVector[i];
-        }*/
+           for (int i=0; i<3; i++) fFieldComponents[i] = /*(Double_v)*/ FieldVector[i];
+        }
 
         TVectorUniformMagField(Double_v vField,
                                Double_v vTheta,
@@ -37,7 +37,7 @@ class TVectorUniformMagField : public TUniformMagField
         ~TVectorUniformMagField() {}
 
         TVectorUniformMagField(const TVectorUniformMagField &p)   // : G4MagneticField(p)
-          : TUniformMagField(p)
+          // : TUniformMagField(p)
         {
            fFieldComponents = p.fFieldComponents;
         }
@@ -53,34 +53,59 @@ class TVectorUniformMagField : public TUniformMagField
 
         // virtual
         void GetFieldValue( const vecgeom::Vector3D<Double_v> &, // Position,
-                                  vecgeom::Vector3D<Double_v> &FieldValue )
+                                  vecgeom::Vector3D<Float_v> &FieldValue )
         {
-           FieldValue= fFieldComponents;
+           for (int i=0; i<3; i++) FieldValue[i] = fFieldComponents[i];
+           // FieldValue= fFieldComponents;
         }
 
-        void SetFieldValue(const vecgeom::Vector3D<Double_v>& fieldValue)
+        void SetFieldValue(const vecgeom::Vector3D<Float_v>& fieldValue)
         {
-           fFieldComponents= fieldValue;
+           for (int i=0; i<3; i++) fFieldComponents[i] = fieldValue[i];
+           // fFieldComponents= fieldValue;
         }
 
-        vecgeom::Vector3D<Double_v> GetConstantFieldValue() const
+        vecgeom::Vector3D<Float_v> GetConstantFieldValue() const
         {
            return fFieldComponents;
+        }
+
+        //below 3 functions similar as TUniformMagField
+        TVectorUniformMagField* Clone() const
+        {
+          //discuss
+          //uncommenting the line below gives error
+          //why?
+          //Resolved. 
+          //error was because of inheriting GUVVectorMagField from GUVField ultimately which had a virtual function with scalar signature
+           return new TVectorUniformMagField( *this );
+        }
+
+        TVectorUniformMagField* CloneOrSafeSelf( bool /*Safe = 0*/ )
+        { /*Safe= false;*/ return Clone(); }  
+
+        TVectorUniformMagField* CloneOrSafeSelf( bool* pSafe )
+        {
+           if( pSafe ) *pSafe= true;
+           return this; 
         }
       
 
     private:
-        vecgeom::Vector3D<Double_v> fFieldComponents;
+        // vecgeom::Vector3D<float> fFieldComponents;
+        vecgeom::Vector3D<Float_v> fFieldComponents;
+
 };
 
+// This function is not working now. Uncomment and compile to see error
+// discuss
 TVectorUniformMagField::TVectorUniformMagField(typename vecgeom::kVc::precision_v vField,
                                                typename vecgeom::kVc::precision_v vTheta,
                                                typename vecgeom::kVc::precision_v vPhi   )
-  : TUniformMagField(vField[0], vTheta[0], vPhi[0])
+  // : TUniformMagField(vField[0], vTheta[0], vPhi[0])
 {
    // if ( (vField<0) || (vTheta<0) || (vTheta>Constants::pi) || (vPhi<0) || (vPhi>Constants::twopi) )
 
-   typedef typename vecgeom::kVc::bool_v Bool_v;
    bool fieldLessThanZero = !(vecgeom::IsEmpty(vField<0));
    bool thetaLessThanZero = !(vecgeom::IsEmpty(vTheta<0));
    bool thetaMoreThanPi   = !(vecgeom::IsEmpty(vTheta>Constants::pi));
@@ -98,9 +123,9 @@ TVectorUniformMagField::TVectorUniformMagField(typename vecgeom::kVc::precision_
                 << "  Expected vField > 0 " << Constants::twopi << std::endl;
    }
 
-
-   fFieldComponents.Set( vField*Vc::sin(vTheta)*Vc::cos(vPhi),
-                         vField*Vc::sin(vTheta)*Vc::sin(vPhi),
-                         vField*Vc::cos(vTheta)                );
+  
+  fFieldComponents.Set((Float_v) (vField*Vc::sin(vTheta)*Vc::cos(vPhi)),
+                        (Float_v) (vField*Vc::sin(vTheta)*Vc::sin(vPhi)),
+                        (Float_v) (vField*Vc::cos(vTheta))              );
 }
 #endif

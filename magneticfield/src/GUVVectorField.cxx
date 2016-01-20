@@ -12,13 +12,18 @@ GUVVectorField::~GUVVectorField()
 }
 
 //Confirm about commenting this function. Assumed same functionality derived from GUVField
-/*GUVVectorField& GUVVectorField::operator = (const GUVVectorField &p)
+GUVVectorField& GUVVectorField::operator = (const GUVVectorField &p)
 {
   
-   if (&p == this) return *this;
-   this->fChangesEnergy=      p.fChangesEnergy;   
+   if (&p != this){
+
+    //line below if inheriting from GUVField. Comment 2nd line in that case
+    // this->GUVField::operator=(p);
+   
+     this->fChangesEnergy= p.fChangesEnergy;   
+   }
    return *this;
-}*/
+}
 
 
 GUVVectorField* GUVVectorField::Clone() const

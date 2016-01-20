@@ -10,21 +10,21 @@
 
 #include "VcFloatBackend.h"
 
+unsigned int GUVVectorEquationOfMotion::fNumObjectsCreated= 0;
+unsigned int GUVVectorEquationOfMotion::fNumObjectsDeleted= 0;
+
 GUVVectorEquationOfMotion::~GUVVectorEquationOfMotion()
 {
   CheckDone();
-  //fNumObjectsDeleted is not accessible in this function
-  //what to do?
-  // fNumObjectsDeleted++;
+  fNumObjectsDeleted++;
 }
 
 void
 GUVVectorEquationOfMotion::
-EvaluateRhsReturnB( const typename vecgeom::kVc::precision_v   y[],
+EvaluateRhsReturnB( const typename vecgeom::kVc::precision_v  y[],
                           typename vecgeom::kVc::precision_v  dydx[],
-                       // Double_v          charge,
-                 vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &Field
-                  ) const
+                          typename vecgeom::kVc::precision_v  charge,
+                                   vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &Field ) const
 {
    typedef typename vecgeom::kVc::precision_v Double_v;
    Double_v  PositionAndTime[4];
@@ -34,7 +34,7 @@ EvaluateRhsReturnB( const typename vecgeom::kVc::precision_v   y[],
    PositionAndTime[3] = y[7];  
 
    GetFieldValue( PositionAndTime, Field) ;
-   EvaluateRhsGivenB( y, Field, /*charge,*/ dydx );
+   EvaluateRhsGivenB( y, Field, charge, dydx );
 }
 
 std::ostream&  operator<<( std::ostream& os, const GUVVectorEquationOfMotion& eq)

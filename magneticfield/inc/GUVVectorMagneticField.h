@@ -5,16 +5,18 @@
 #include "GUVField.h"
 #include "GUVMagneticField.h"
 
-class GUVVectorMagneticField : public GUVMagneticField, public GUVVectorField
+class GUVVectorMagneticField :  public GUVVectorField 
 {
-
-  typedef typename vecgeom::kVc::precision_v Double_v;
+  typedef typename vecgeom::kVc::precision_v      Double_v;
   typedef typename vecgeom::kVcFloat::precision_v Float_v;
-  
-  public:
-    GUVVectorMagneticField():  GUVVectorField( fNumFieldComponents, fFieldChangesEnergy) {}
 
-    virtual ~GUVVectorMagneticField(); 
+  public:
+    static constexpr int   fNumFieldComponents= 3;
+    static constexpr bool  fFieldChangesEnergy= false;
+  
+    GUVVectorMagneticField():  GUVVectorField( fNumFieldComponents, fFieldChangesEnergy) {std::cout<<"--- entered here ---"<<std::endl;}
+
+    virtual ~GUVVectorMagneticField(){}; 
 
     void  GetFieldValue( const Double_v  Point[4],     // The old interface
                                Double_v* Field );
@@ -28,7 +30,7 @@ class GUVVectorMagneticField : public GUVMagneticField, public GUVVectorField
 
 void
 GUVVectorMagneticField::GetFieldValue( const typename vecgeom::kVc::precision_v  Point[4],     // The old interface
-                                 typename vecgeom::kVc::precision_v* FieldArr )
+                                             typename vecgeom::kVc::precision_v* FieldArr )
 {
    typedef typename vecgeom::kVc::precision_v Double_v;
    typedef typename vecgeom::kVcFloat::precision_v Float_v;
