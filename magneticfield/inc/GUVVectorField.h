@@ -42,13 +42,13 @@
 #include "GUVField.h"
 
 
-class GUVVectorField : public GUVField
+class GUVVectorField //  : public GUVField
 {
   public: 
 
       //Vector interface with specialization
-      virtual void GetFieldValue( const vecgeom::Vector3D<typename vecgeom::kVc::precision_v>  &Position,
-                                        vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v>  &FieldValue ) = 0;
+      virtual void GetFieldValue( const vecgeom::Vector3D<typename vecgeom::kVc::precision_v>      &Position,
+                                        vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &FieldValue ) = 0;
 
       inline
       GUVVectorField( int NumberOfComponents, bool changesEnergy );
@@ -56,19 +56,30 @@ class GUVVectorField : public GUVField
       GUVVectorField( const GUVVectorField &);
       virtual ~GUVVectorField();
 
+      bool DoesFieldChangeEnergy() const { return fChangesEnergy; } 
+      int  GetNumberOfComponents() const { return fNumberOfComponents; } 
+
       GUVVectorField& operator = (const GUVVectorField &p); // Useful ?
       
       virtual GUVVectorField* Clone() const;
+
+  private:
+      const int  fNumberOfComponents; 
+      bool       fChangesEnergy; 
 };
 
 inline GUVVectorField::GUVVectorField( int numberOfComponents, bool changesEnergy )
-   : GUVField(numberOfComponents, changesEnergy)
+   : fNumberOfComponents(numberOfComponents),
+     fChangesEnergy(changesEnergy)
+     //GUVField(numberOfComponents, changesEnergy)
 {
 }
 
 
 inline GUVVectorField::GUVVectorField( const GUVVectorField &field) 
-  : GUVField(field)
+  :  fNumberOfComponents(field.fNumberOfComponents)
+    //GUVField(field)
 {
+  fChangesEnergy= field.fChangesEnergy;
 }
 #endif /* GUVFVECTORIELD_HH */

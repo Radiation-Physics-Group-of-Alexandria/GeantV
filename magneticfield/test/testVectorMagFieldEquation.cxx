@@ -1,14 +1,20 @@
-//
-//
+
 #include "base/Vector3D.h"
 
-// #include "GUVVectorEquationOfMotion.h"
-#include "GUVVectorField.h"
-// #include "TVectorMagFieldEquation.h"
+#include "GUVEquationOfMotion.h"
 
+#include "GUVVectorEquationOfMotion.h"
+#include "GUVVectorField.h"
+#include "TVectorMagFieldEquation.h"
+#include "GUVMagneticField.h"
+#include "GUVVectorMagneticField.h"
+#include "TVectorUniformMagField.h"
+
+#include "GUVField.h"
 #include "TMagFieldEquation.h"
 #include "TUniformMagField.h"
-// #include "TVectorUniformMagField.h"
+
+using namespace std;
 
 typedef typename vecgeom::kVc::precision_v Double_v;
 typedef typename vecgeom::kVcFloat::precision_v Float_v;
@@ -22,30 +28,69 @@ using ThreeVectorSimd_f = vecgeom::Vector3D<Float_v>;
 using ThreeVectorSimd_d = vecgeom::Vector3D<Double_v>;
 
 
+/*int main(){
+
+  ThreeVectorSimd_f FieldValue2(0.0, 0.0, 1.0);
+
+  TVectorUniformMagField* ConstBfield = new TVectorUniformMagField( FieldValue2 );
+  cout<<"here 0.5"<<endl;
+  using EquationType = TVectorMagFieldEquation<TVectorUniformMagField, gNposmom>;
+
+  return 0;
+}*/
+
 GUVVectorEquationOfMotion*  CreateFieldAndEquation(ThreeVectorSimd_f constFieldValue);
 bool  TestEquation(GUVVectorEquationOfMotion* );
 
 constexpr unsigned int gNposmom= 6; // Position 3-vec + Momentum 3-vec
 
-ThreeVector_f  FieldValue(0.0, 0.0, 1.0);
+ThreeVectorSimd_f  FieldValue(0.0, 0.0, 1.0);
 
-int
+/*int
 main( int, char** )
 {
+  std::cout<<"Entered main"<<std::endl;
+
   GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue );
+
+  std::cout<<"eq created "<<std::endl;
   TestEquation(eq);
 
   return 1;
+}*/
+int main(int argc, char *argv[]){
+  int flag = atoi(argv[1]);
+
+  if(flag) {
+
+    ThreeVectorSimd_f FieldValue2(0.0, 0.0, 1.0);
+
+    TVectorUniformMagField* ConstBfield = new TVectorUniformMagField( FieldValue2 );
+    cout<<"here 0.5"<<endl;
+    // using EquationType = TVectorMagFieldEquation<TVectorUniformMagField, gNposmom>;
+  }
+
+  else{
+    std::cout<<"Entered main"<<std::endl;
+
+    GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue );
+
+    std::cout<<"eq created "<<std::endl;
+    TestEquation(eq);
+  }
+
+  return 0;
 }
 
-// GUVField*       pField;
 
-GUVVectorEquationOfMotion* CreateFieldAndEquation(ThreeVector_f FieldValue)
+GUVVectorEquationOfMotion* CreateFieldAndEquation(ThreeVectorSimd_f FieldValue)
 {
-  TUniformMagField*     ConstBfield = new TUniformMagField( FieldValue );
-  // typedef typename TVectorMagFieldEquation<TUniformMagField, gNposmom>  EquationType;
-  using EquationType = TVectorMagFieldEquation<TUniformMagField, gNposmom>;
-  
+  std::cout<<"Creating field and equation..."<<std::endl;
+
+  TVectorUniformMagField* ConstBfield = new TVectorUniformMagField( FieldValue );
+  cout<<"here 0.5"<<endl;
+  using EquationType = TVectorMagFieldEquation<TVectorUniformMagField, gNposmom>;
+  cout<<"here1"<<endl;
   // GUVVectorEquationOfMotion*  magEquation= new TVectorMagFieldEquation<TUniformMagField, gNposmom>(ConstBfield);
   GUVVectorEquationOfMotion*  magEquation = new EquationType(ConstBfield);
   
@@ -60,22 +105,17 @@ bool TestEquation(GUVVectorEquationOfMotion* equation)
   constexpr double perMillion = 1e-6;
   bool   hasError = false;  // Return value
   
-  ThreeVector_d PositionVec( 1., 2.,  3.);  // initial
-  ThreeVector_d MomentumVec( 0., 0.1, 1.);
-  ThreeVector_f FieldVec( 0., 0., 1.);  // Magnetic field value (constant)
+  ThreeVectorSimd_d PositionVec( 1., 2.,  3.);  // initial
+  ThreeVectorSimd_d MomentumVec( 0., 0.1, 1.);
+  ThreeVectorSimd_f FieldVec( 0., 0., 1.);  // Magnetic field value (constant)
 
-  double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
-  // double PositionTime[4] = { 1., 2., 3., 4.};
-  PositionTime[0] = PositionVec.x();
-  PositionTime[1] = PositionVec.y();
-  PositionTime[2] = PositionVec.z();
+  Double_v PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
 
-  // double magField[3];
+  Double_v dydx[gNposmom];
+  Double_v PositionMomentum[gNposmom];
 
-  double dydx[gNposmom];
-  double PositionMomentum[gNposmom];
-
-  double charge= -1;
+  double charge= -1;  
+  Double_v Charge(-1);
 
   PositionMomentum[0] = PositionVec[0];
   PositionMomentum[1] = PositionVec[1];
@@ -84,28 +124,36 @@ bool TestEquation(GUVVectorEquationOfMotion* equation)
   PositionMomentum[4] = MomentumVec[1];
   PositionMomentum[5] = MomentumVec[2];
 
-  // double FieldArr[3]= { FieldVec.x(), FieldVec.y(), FieldVec.z() };
   
   equation->InitializeCharge( charge );
-  equation->EvaluateRhsGivenB( PositionTime, FieldVec, /* charge, */ dydx );
 
-  ThreeVector_d  ForceVec( dydx[3], dydx[4], dydx[5]);
+  equation->EvaluateRhsGivenB( PositionTime, FieldVec,  Charge,   dydx );
+
+  ThreeVectorSimd_d  ForceVec( dydx[3], dydx[4], dydx[5]);
 
   // Check result
-  double MdotF = MomentumVec.Dot(ForceVec);
-  double BdotF = FieldVec.Dot(ForceVec);
+  Double_v MdotF = MomentumVec.Dot(ForceVec);
+  ThreeVectorSimd_d doubleFieldVec;
+  for(int i=0; i<3;i++) doubleFieldVec[i] = (Double_v) FieldVec[i];
 
-  double momentumMag = MomentumVec.Mag();
-  double fieldMag =   FieldVec.Mag();
-  double ForceMag =   ForceVec.Mag();
+  Double_v BdotF = doubleFieldVec.Dot(ForceVec);
 
-  if( ForceMag != momentumMag * fieldMag ) {
+  Double_v momentumMag = MomentumVec.Mag();
+  Double_v fieldMag =   doubleFieldVec.Mag();
+  Double_v ForceMag =   ForceVec.Mag();
+
+  bool cond1 = !( vecgeom::IsEmpty( ForceMag != momentumMag*fieldMag ) );
+  bool cond2 = !( vecgeom::IsEmpty( Vc::abs(MdotF) > perMillion * MomentumVec.Mag()    * ForceVec.Mag() ) );
+  bool cond3 = !( vecgeom::IsEmpty( Vc::abs(BdotF) > perMillion * doubleFieldVec.Mag() * ForceVec.Mag() ) );
+
+
+  if( cond1 ) {
      std::cerr << "ERROR: Force magnitude is not equal to momentum * field."  << std::endl;     
   }
      
-  assert( ForceMag != momentumMag * fieldMag );  // Must add coefficient !!
+  assert( cond1 );  // Must add coefficient !!
   
-  if( std::fabs(MdotF) > perMillion * MomentumVec.Mag() * ForceVec.Mag() )
+  if( cond2 )
   { 
      std::cerr << "ERROR: Force due to magnetic field is not perpendicular to momentum!!"  << std::endl;
      hasError= true;
@@ -114,7 +162,8 @@ bool TestEquation(GUVVectorEquationOfMotion* equation)
   {
      std::cout << " Success:  Good (near zero) dot product momentum . force " << std::endl;
   }
-  if( std::fabs(BdotF) > perMillion * FieldVec.Mag() * ForceVec.Mag() )
+
+  if( cond3 )
   { 
     std::cerr << "ERROR: Force due to magnetic field is not perpendicular to B field!"
               << std::endl; 
@@ -130,4 +179,5 @@ bool TestEquation(GUVVectorEquationOfMotion* equation)
   }
 
   return hasError;
+  //return true;
 }
