@@ -25,11 +25,12 @@ set_source_files_properties(${sources} PROPERTY COMPILE_FLAGS                  "
 add_executable(testMagFieldEquation testMagFieldEquation.cxx) ## ${sources} ${headers})
 
 target_link_libraries(testMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+# target_link_libraries(testMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 message(STATUS "Created target for testMagFieldEquation")
 
-#add_executable(testVectorMagFieldEquation testVectorMagFieldEquation.cxx) ## ${sources} ${headers})
-#target_link_libraries(testVectorMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+add_executable(testVectorMagFieldEquation testVectorMagFieldEquation.cxx) ## ${sources} ${headers})
+target_link_libraries(testVectorMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 #message(STATUS "Created target for testVectorMagFieldEquation")
 
 # add_executable(testTClassicalRK4 testTClassicalRK4.cxx) ## ${sources} ${headers})
