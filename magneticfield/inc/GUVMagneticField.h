@@ -7,7 +7,7 @@ class GUVMagneticField : public GUVField
 
 {
   public:
-    static constexpr int   fNumFieldComponents=3;
+    static constexpr int   fNumFieldComponents= 3;
     static constexpr bool  fFieldChangesEnergy= false;
     GUVMagneticField():  GUVField( fNumFieldComponents, fFieldChangesEnergy) {}
 
@@ -35,7 +35,7 @@ class GUVMagneticField : public GUVField
 
 void
 GUVMagneticField::GetFieldValue( const double  Point[4],     // The old interface
-                                 double* FieldArr )
+                                       double* FieldArr )
 {
    vecgeom::Vector3D<double> PositionV3D( Point[0], Point[1], Point[2]);
    vecgeom::Vector3D<float>  Field_v3f;
