@@ -28,16 +28,14 @@
 
 template
 <class Field, unsigned int Size>
-class TVectorMagFieldEquation :public TMagFieldEquation<Field, Size> , public GUVVectorEquationOfMotion
+class TVectorMagFieldEquation :  public GUVVectorEquationOfMotion
 {
    public:
-     typedef typename vecgeom::kVc::precision_v Double_v;
+     typedef typename vecgeom::kVc::precision_v      Double_v;
      typedef typename vecgeom::kVcFloat::precision_v Float_v;
      typedef Field T_Field;
-     // static const unsigned int  N   = Size;
+     static const unsigned int  N   = Size;
      static constexpr double fCof   = Constants::c_light;  
-
-
 
      TVectorMagFieldEquation(T_Field* pF) : GUVVectorEquationOfMotion(pF) { fPtrField = pF; }
 
@@ -56,51 +54,59 @@ class TVectorMagFieldEquation :public TMagFieldEquation<Field, Size> , public GU
      }
 
      inline 
-     void RightHandSide(const Double_v y[], /*double charge,*/ Double_v dydx[] ) const;
+     void RightHandSide(const Double_v y[], 
+                        const Double_v charge, 
+                              Double_v dydx[] ) const;
 
      REALLY_INLINE
      void TEvaluateRhsGivenB( const Double_v y[],
                               const vecgeom::Vector3D<Float_v> B,  // Was double B[3],
-                                //  double charge,
-                             Double_v dydx[] ) const;
+                              const Double_v charge,
+                                    Double_v dydx[] ) const;
 
      // virtual
      void EvaluateRhsGivenB( const Double_v y[],
                              const vecgeom::Vector3D<Float_v> B,  // Was const double B[3],
-                              //   double charge,
-                             Double_v dydx[] ) const
-     { TEvaluateRhsGivenB( y, B, /*charge,*/ dydx); }
+                             const Double_v charge,
+                                   Double_v dydx[] ) const
+     { TEvaluateRhsGivenB( y, B, charge, dydx); }
 
      REALLY_INLINE
-     void FieldFromY(const Double_v y[], Double_v Bfield[] ) const;
+     void FieldFromY(const Double_v y[], 
+                     const Double_v charge,
+                           Double_v Bfield[] ) const;
 
      REALLY_INLINE
-     void FieldFromY(const Double_v y[], vecgeom::Vector3D<Float_v> &Bfield ) const;
+     void FieldFromY(const Double_v y[], 
+                    /* const Double_v charge,*/
+                           vecgeom::Vector3D<Float_v> &Bfield ) const;
 
      REALLY_INLINE
-     void PrintInputFieldAndDyDx(const Double_v y[], /* double charge, */ Double_v dydx[] ) const;
+     void PrintInputFieldAndDyDx(const Double_v y[],  
+                                 const Double_v charge,  
+                                       Double_v dydx[] ) const;
 
+     //Discuss
+     //Function needed? probably not if we don't care about particleCharge
+     //or not take any input but just do InformReady?
      REALLY_INLINE
      void InitializeCharge(double particleCharge) final 
-      { fParticleCharge= particleCharge;  GUVVectorEquationOfMotion::InformReady();  }
+      {  fParticleCharge= particleCharge; GUVVectorEquationOfMotion::InformReady();  }
 
       //should get this func. from inheritance
-      // void InvalidateParameters() final { GUVVectorEquationOfMotion::InformDone();}
+      void InvalidateParameters() final { GUVVectorEquationOfMotion::InformDone();}
 
    private:
-    //should get these 2 variables from inheritance
-     // enum { G4maximum_number_of_field_components = 24 };
+     enum { G4maximum_number_of_field_components = 24 };
      T_Field *fPtrField;
-     double    fParticleCharge;  // Can be moved to concrete Equation (as a type!)
-                                 // - to generalised for other forces
+     double   fParticleCharge;
 };
 
 template
 <class Field, unsigned int Size>
    TVectorMagFieldEquation<Field,Size>
    ::TVectorMagFieldEquation(const TVectorMagFieldEquation& right)
-   :
-      GUVVectorEquationOfMotion( (GUVField*) 0 ),
+   :  GUVVectorEquationOfMotion( (GUVVectorField*) 0 ),
       fPtrField( right.fPtrField->CloneOrSafeSelf( (bool *)0 ) )
       // fPtrField( new Field(right.fPtrField) )
 {
@@ -136,15 +142,16 @@ REALLY_INLINE
    void  TVectorMagFieldEquation<Field, Size>
    ::TEvaluateRhsGivenB( const typename vecgeom::kVc::precision_v y[],
                          const vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> Bfloat,  
-                           //  double charge,
+                         const typename vecgeom::kVc::precision_v charge,
                                typename vecgeom::kVc::precision_v dydx[]  ) const
 {
   
     typedef typename vecgeom::kVc::precision_v Double_v;
+    
     Double_v momentum_mag_square = y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
-    Double_v inv_momentum_magnitude = 1. / std::sqrt( momentum_mag_square );
+    Double_v inv_momentum_magnitude = 1. / Vc::sqrt( momentum_mag_square );
 
-    vecgeom::Vector3D<Double_v> B( Bfloat[0], Bfloat[1], Bfloat[2] );
+    vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
 
     Double_v cof = fParticleCharge*fCof*inv_momentum_magnitude;
 
@@ -165,7 +172,7 @@ REALLY_INLINE
 void
 TVectorMagFieldEquation<Field,Size>
    ::FieldFromY(const typename vecgeom::kVc::precision_v y[], 
-                      /* double charge, */ 
+                const typename vecgeom::kVc::precision_v charge,  
                       typename vecgeom::kVc::precision_v Bfield[3] ) const
 {
     // double  Bfield[3];  //G4maximum_number_of_field_components];
@@ -183,8 +190,8 @@ template
 REALLY_INLINE
 void
 TVectorMagFieldEquation<Field,Size>
-   ::FieldFromY(const typename vecgeom::kVc::precision_v y[],  
-                      vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &Bfield ) const
+   ::FieldFromY(const typename vecgeom::kVc::precision_v                                  y[],  
+                               vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &Bfield ) const
 {
     vecgeom::Vector3D<typename vecgeom::kVc::precision_v> Position( y[0], y[1], y[2] );
 
@@ -198,13 +205,13 @@ REALLY_INLINE
 void
 TVectorMagFieldEquation<Field,Size>
    ::RightHandSide(const typename vecgeom::kVc::precision_v y[], 
-                        /* double charge, */ 
+                   const typename vecgeom::kVc::precision_v charge, 
                          typename vecgeom::kVc::precision_v dydx[] ) const
 {
     vecgeom::Vector3D<Float_v> BfieldVec;
 
     FieldFromY( y, BfieldVec );
-    TEvaluateRhsGivenB( y, BfieldVec, dydx );
+    TEvaluateRhsGivenB( y, BfieldVec, charge, dydx );
 }
 
 #include <iostream>   // For debuging only
@@ -217,7 +224,7 @@ REALLY_INLINE
 void
 TVectorMagFieldEquation<Field,Size>
    ::PrintInputFieldAndDyDx(const typename vecgeom::kVc::precision_v y[], 
-                                  /* double charge, */ 
+                            const typename vecgeom::kVc::precision_v charge, 
                                   typename vecgeom::kVc::precision_v dydx[] ) const
 {
 
@@ -227,7 +234,7 @@ TVectorMagFieldEquation<Field,Size>
     typedef typename vecgeom::kVc::precision_v Double_v;
     Double_v  Bfield[3];  //G4maximum_number_of_field_components];
     FieldFromY( y, Bfield );
-    TEvaluateRhsGivenB(y, Bfield, dydx);
+    TEvaluateRhsGivenB(y, Bfield, charge, dydx);
 
     cout.precision(8);
 
