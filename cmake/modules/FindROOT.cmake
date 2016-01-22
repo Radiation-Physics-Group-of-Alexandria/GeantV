@@ -159,7 +159,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${ROOTCINT_EXECUTABLE} -f  ${dictionary}.cxx -c ${newargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${linkdefs}
-                     DEPENDS ${headerfiles} ${linkdef} ${ROOTCINTDEP})
+                     DEPENDS ${headerfiles} ${linkdefs} ${ROOTCINTDEP})
 #  get_filename_component(dictname ${dictionary} NAME)
 
 endfunction()
