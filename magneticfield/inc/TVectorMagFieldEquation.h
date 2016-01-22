@@ -233,7 +233,7 @@ TVectorMagFieldEquation<Field,Size>
     // Obtain the field value
     typedef typename vecgeom::kVc::precision_v Double_v;
     Double_v  Bfield[3];  //G4maximum_number_of_field_components];
-    FieldFromY( y, Bfield );
+    FieldFromY( y, charge, Bfield );
     TEvaluateRhsGivenB(y, Bfield, charge, dydx);
 
     cout.precision(8);
