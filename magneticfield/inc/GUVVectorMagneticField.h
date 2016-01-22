@@ -14,7 +14,9 @@ class GUVVectorMagneticField :  public GUVVectorField
     static constexpr int   fNumFieldComponents= 3;
     static constexpr bool  fFieldChangesEnergy= false;
   
-    GUVVectorMagneticField():  GUVVectorField( fNumFieldComponents, fFieldChangesEnergy) {std::cout<<"--- entered here ---"<<std::endl;}
+    GUVVectorMagneticField():  
+     GUVVectorField( fNumFieldComponents, fFieldChangesEnergy) 
+    {std::cout<<"--- GUVVectorMagneticField entered here ---"<<std::endl;}
 
     virtual ~GUVVectorMagneticField(){}; 
 
