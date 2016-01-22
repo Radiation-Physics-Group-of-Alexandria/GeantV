@@ -5,39 +5,38 @@
 #ifndef TVectorUniformMagField_H
 #define TVectorUniformMagField_H
 
-#include "GUVMagneticField.h"
 #include "GUVVectorMagneticField.h"
-#include "GUVVectorField.h"
-
-#include "TUniformMagField.h"
 #include <iostream>
 
 #include "base/Vector3D.h"
 
-#include "Constants.h"  
+#include "Constants.h"  //   For pi & twopi - Temporary solution ..
 
+// using fieldConstants::pi;
+// using fieldConstants::twopi;
 
 class TVectorUniformMagField : public GUVVectorMagneticField
-{  
-    typedef typename vecgeom::kVc::precision_v      Double_v;
-    typedef typename vecgeom::kVcFloat::precision_v Float_v;
-    public:  
+{
+    public:  // with description
 
-        TVectorUniformMagField(const vecgeom::Vector3D<Float_v>& FieldVector )
-           : GUVVectorMagneticField() 
+      typedef typename vecgeom::kVc::precision_v      Double_v;
+      typedef typename vecgeom::kVcFloat::precision_v Float_v;
+      
+        TVectorUniformMagField(const vecgeom::Vector3D<float>& FieldVector )
+           : GUVVectorMagneticField() //NumberOfComponents(3)
+            // A field with value equal to FieldVector.
         {
-           for (int i=0; i<3; i++) fFieldComponents[i] = /*(Double_v)*/ FieldVector[i];
+           fFieldComponents = FieldVector;
         }
 
-        TVectorUniformMagField(Double_v vField,
-                               Double_v vTheta,
-                               Double_v vPhi  );
+        TVectorUniformMagField(double vField,
+                         double vTheta,
+                         double vPhi  );
 
         // virtual
         ~TVectorUniformMagField() {}
 
         TVectorUniformMagField(const TVectorUniformMagField &p)   // : G4MagneticField(p)
-          // : TUniformMagField(p)
         {
            fFieldComponents = p.fFieldComponents;
         }
@@ -52,6 +51,12 @@ class TVectorUniformMagField : public GUVVectorMagneticField
         }
 
         // virtual
+        void GetFieldValue( const vecgeom::Vector3D<double> &, // Position,
+                                  vecgeom::Vector3D<float> &FieldValue )
+        {
+           FieldValue= fFieldComponents;
+        }
+
         void GetFieldValue( const vecgeom::Vector3D<Double_v> &, // Position,
                                   vecgeom::Vector3D<Float_v> &FieldValue )
         {
@@ -59,60 +64,47 @@ class TVectorUniformMagField : public GUVVectorMagneticField
            // FieldValue= fFieldComponents;
         }
 
-        void SetFieldValue(const vecgeom::Vector3D<Float_v>& fieldValue)
+        void SetFieldValue(const vecgeom::Vector3D<float>& fieldValue)
         {
-           for (int i=0; i<3; i++) fFieldComponents[i] = fieldValue[i];
-           // fFieldComponents= fieldValue;
+           fFieldComponents= fieldValue;
         }
 
-        vecgeom::Vector3D<Float_v> GetConstantFieldValue() const
+        vecgeom::Vector3D<float> GetConstantFieldValue() const
         {
            return fFieldComponents;
         }
+        // Return the field value
 
-        //below 3 functions similar as TUniformMagField
+        // virtual
         TVectorUniformMagField* Clone() const
         {
-          //discuss
-          //uncommenting the line below gives error
-          //why?
-          //Resolved. 
-          //error was because of inheriting GUVVectorMagField from GUVField ultimately which had a virtual function with scalar signature
            return new TVectorUniformMagField( *this );
         }
 
         TVectorUniformMagField* CloneOrSafeSelf( bool /*Safe = 0*/ )
-        { /*Safe= false;*/ return Clone(); }  
+        // {  Safe= true; return this; }  //  Class is thread-safe, can use 'self' instead of clone
+        // { Safe= false; return new TVectorUniformMagField( this ); }  // Check ...
+        { /*Safe= false;*/ return Clone(); }  // Check ...
 
         TVectorUniformMagField* CloneOrSafeSelf( bool* pSafe )
         {
            if( pSafe ) *pSafe= true;
-           return this; 
+           return this; // ->CloneOrSafeSelf(*pSafe);
         }
-      
+        //  Class is thread-safe, can use 'self' instead of clone
 
     private:
-        // vecgeom::Vector3D<float> fFieldComponents;
-        vecgeom::Vector3D<Float_v> fFieldComponents;
-
+        vecgeom::Vector3D<float> fFieldComponents;
 };
 
-// This function is not working now. Uncomment and compile to see error
-// discuss
-TVectorUniformMagField::TVectorUniformMagField(typename vecgeom::kVc::precision_v vField,
-                                               typename vecgeom::kVc::precision_v vTheta,
-                                               typename vecgeom::kVc::precision_v vPhi   )
-  // : TUniformMagField(vField[0], vTheta[0], vPhi[0])
+TVectorUniformMagField::TVectorUniformMagField(double vField,
+                                   double vTheta,
+                                   double vPhi     )
 {
-   // if ( (vField<0) || (vTheta<0) || (vTheta>Constants::pi) || (vPhi<0) || (vPhi>Constants::twopi) )
-
-   bool fieldLessThanZero = !(vecgeom::IsEmpty(vField<0));
-   bool thetaLessThanZero = !(vecgeom::IsEmpty(vTheta<0));
-   bool thetaMoreThanPi   = !(vecgeom::IsEmpty(vTheta>Constants::pi));
-   bool phiLessThanZero   = !(vecgeom::IsEmpty(vPhi<0));
-   bool phiMoreThanPi     = !(vecgeom::IsEmpty(vPhi>Constants::pi));
-   if ( fieldLessThanZero || thetaLessThanZero || thetaMoreThanPi || phiLessThanZero || phiMoreThanPi )
+   if ( (vField<0) || (vTheta<0) || (vTheta>Constants::pi) || (vPhi<0) || (vPhi>Constants::twopi) )
    {
+      // Exception("TVectorUniformMagField::TVectorUniformMagField()",
+      //     "GeomField0002", FatalException, "Invalid parameters.") ;
       std::cerr << "ERROR in TVectorUniformMagField::TVectorUniformMagField()"
                 << "Invalid parameter(s): expect " << std::endl;
       std::cerr << " - Theta angle: Value = " << vTheta
@@ -122,10 +114,8 @@ TVectorUniformMagField::TVectorUniformMagField(typename vecgeom::kVc::precision_
       std::cerr << " - Magnitude vField: Value = " << vField
                 << "  Expected vField > 0 " << Constants::twopi << std::endl;
    }
-
-  
-  fFieldComponents.Set((Float_v) (vField*Vc::sin(vTheta)*Vc::cos(vPhi)),
-                        (Float_v) (vField*Vc::sin(vTheta)*Vc::sin(vPhi)),
-                        (Float_v) (vField*Vc::cos(vTheta))              );
+   fFieldComponents.Set( vField*std::sin(vTheta)*std::cos(vPhi),
+                         vField*std::sin(vTheta)*std::sin(vPhi),
+                         vField*std::cos(vTheta)                );
 }
 #endif
