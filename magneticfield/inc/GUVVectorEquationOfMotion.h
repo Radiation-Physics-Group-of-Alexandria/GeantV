@@ -134,8 +134,6 @@ GUVVectorEquationOfMotion::GUVVectorEquationOfMotion(GUVVectorField* pField, uns
      std::cout << " Called GUVVectorEquationOfMotion::InformDone() " << std::endl;
      std::cout << *this << std::endl;
    }
-   assert( fInitialised );
-   fInitialised= false;
 }
 
 inline
