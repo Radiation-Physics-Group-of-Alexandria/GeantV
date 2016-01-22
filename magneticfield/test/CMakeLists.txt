@@ -33,6 +33,10 @@ add_executable(testVectorMagFieldEquation testVectorMagFieldEquation.cxx) ## ${s
 target_link_libraries(testVectorMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 #message(STATUS "Created target for testVectorMagFieldEquation")
 
+add_executable(ReproduceError ReproduceError.cxx) ## ${sources} ${headers})
+target_link_libraries(ReproduceError Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+#message(STATUS "Created target for testVectorMagFieldEquation")
+
 # add_executable(testTClassicalRK4 testTClassicalRK4.cxx) ## ${sources} ${headers})
 # target_link_libraries(testTClassicalRK4 -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield ${VECGEOM_LIBRARIES})
 # message(STATUS "Created target for testTClassicalRK4")
