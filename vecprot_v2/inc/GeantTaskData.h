@@ -39,6 +39,8 @@ class GUFieldPropagator;
 #include <vector>
 #endif
 
+class GUVField;
+
 /**
  * @brief Class GeantTaskData
  * @details Class descripting data organized per thread
@@ -78,11 +80,15 @@ public:
 #else
   std::deque<GeantBasket *> fPool; /** Pool of empty baskets */
 #endif
+  GUVField           *fFieldObj;            // To get value of the field!
+  vecgeom::Vector3D<double>  fConstFieldValue;   // Value - if field is constant.
+  double                     fBfieldMag;    // Magnitude of field for current track - or for const field
+  bool                       fBfieldIsConst;// Flag - is the B field constant ?
   int fSizeInt;                             // current size of IntArray
   int *fIntArray;                           // Thread array of ints (used in vector navigation)
+  GUFieldPropagator  *fFieldPropagator;     // For RK integration of charged particle propagation
   GeantTrack_v  *fTransported;              // Transported tracks in current step
   vector_t<GeantTrack *> fTransported1;     // Transported tracks in current step
-  GUFieldPropagator  *fFieldPropagator;     // For RK integration of charged particle propagation
   int            fNkeepvol;                 // Number of tracks keeping the same volume
   int fNsteps;           /** Total number of steps per thread */
   int fNsnext;           /** Total number of calls to getting distance to next boundary */

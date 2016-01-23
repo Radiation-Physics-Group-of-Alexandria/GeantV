@@ -586,6 +586,7 @@ include_directories("${PROJECT_SOURCE_DIR}/base/inc")
 include_directories("${PROJECT_SOURCE_DIR}/xsec/inc")
 include_directories("${PROJECT_SOURCE_DIR}/fastsim/inc")
 include_directories("${PROJECT_SOURCE_DIR}/examples/inc")
+include_directories("${PROJECT_SOURCE_DIR}/VecMagFieldRoutine/include")
 
 string(REPLACE " -DVECGEOM_ROOT" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 

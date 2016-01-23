@@ -4,8 +4,7 @@
 file(GLOB sources )  # Common source  files
 file(GLOB headers )  # Common include files
 
-include_directories(${CMAKE_SOURCE_DIR}/magneticfield/inc)
-
+include_directories(${CMAKE_SOURCE_DIR}/magneticfield/inc ${CMAKE_SOURCE_DIR}/VecMagFieldRoutine/include)
 #----------------------------------------------------------------------------------------------
 # Redefine compilation flags since Geant4 is overriding them
 #
