@@ -519,15 +519,24 @@ public:
   double Beta(int i) const { return fPV[i] / fEV[i]; }
 
   /**
+   * @brief Function that return magnetic field for particle 'i'
+   * @param  i     Input track number 'i'
+   * @param  B[3]  Output magnetic field vector value (global coordinates)
+   * @param  bmag  Output (optional) field magnitude
+   */
+  VECCORE_ATT_HOST_DEVICE
+  void GetFieldValue(GeantTaskData *td, int i, double B[3], double *bmag) const;
+   
+  /**
    * @brief Function that return curvature in different areas of geometry
    * @param  i Input bit number 'i'
    */
   VECCORE_ATT_HOST_DEVICE
-  double Curvature(int i) const;
-
+  double Curvature(GeantTaskData *td, int i) const;
+   
   /** @brief Function that return safe length */
   VECCORE_ATT_HOST_DEVICE
-  double SafeLength(int i, double eps = 1.E-4);
+  double SafeLength(GeantTaskData *td, int i, double eps = 1.E-4);
 
   /**
    * @brief Function that return gamma value

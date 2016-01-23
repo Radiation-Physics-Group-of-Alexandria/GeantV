@@ -59,7 +59,8 @@ GUIntegrationDriver::GUIntegrationDriver( double        hminimum,
 {  
   // In order to accomodate "Laboratory Time", which is [7], fMinNoVars=8
   // is required. For proper time of flight and spin,  fMinNoVars must be 12
-
+  assert( pStepper != nullptr );
+  
   RenewStepperAndAdjust( pStepper );
   fMaxNoSteps = fMaxStepBase / fpStepper->IntegratorOrder();
 #ifdef GUDEBUG_FIELD

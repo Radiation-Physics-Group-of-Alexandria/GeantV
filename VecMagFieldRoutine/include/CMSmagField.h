@@ -46,7 +46,8 @@
 #include "base/Global.h"
 
 #include "backend/Backend.h"
-#include "backend/scalarfloat/Backend.h"
+// #include "backend/scalarfloat/Backend.h"
+#include "ScalarFloatBackend.h"
 
 // Configuration options - to be improved and incorporated in CMakeLists.txt
 //
@@ -59,7 +60,10 @@
 //  For efficience purposes methods which expose the backend (Vc) are needed
 #include <Vc/Vc>
 #include "backend/vc/Backend.h"
-#include "backend/vcfloat/Backend.h"
+// #include "backend/vcfloat/Backend.h"
+#include "VcFloatBackend.h"
+
+#include "GUVMagneticField.h"
 
 // Vc Version 0.7 and earlier had a 'Gather' method which obtained one 
 //    member of a class/struct. 
@@ -72,14 +76,14 @@
 
 // End of Configuration option
 
-#ifdef VC_NO_MEMBER_GATHER
+#ifdef Vc_FOUND
 #include <Vc/vector>
 #endif 
 
 // using namespace std;
 
 
-#ifdef FORCE_INLINE 
+#ifdef FORCE_INLINE
 // #if !(EQUAL($FORCE_INLINE,"Never"))
 // #define INLINE_CHOICE inline __attribute__ ((always_inline))
 // #else
@@ -105,19 +109,20 @@ public:
     dataType GetBz()   { return Bz;   }
 };
 
-class CMSmagField
+class CMSmagField : public GUVMagneticField
 {
 public:
     CMSmagField();   
     CMSmagField(std::string inputMap);
-    
+    CMSmagField(const CMSmagField &right);
+   
     //Takes as input x,y,z; Gives output Bx,By,Bz
     template <class Backend>
     void GetFieldValue(const vecgeom::Vector3D<typename Backend::precision_v>      &pos,
                              vecgeom::Vector3D<typename Backend::precision_v> &xyzField);
 
     void GetFieldValue(const vecgeom::Vector3D<double>     &pos,
-                             vecgeom::Vector3D<float> &xyzField);
+                             vecgeom::Vector3D<float> &xyzField) override final;
    
     //Reads data from given 2D magnetic field map. Can be easily modified to read a given 2D map, in case the file changes
     bool ReadVectorData(std::string inputMap);
@@ -173,64 +178,97 @@ protected:
                        typename Backend::precision_v B1[3],
                        typename Backend::precision_v B2[3]);
 
-
-private: 
-    MagVector3<float> *fMagvArray = new MagVector3<float>[30000];
-    bool   fReadData;
+public:
+    // Methods for Multi-treading
+    CMSmagField* CloneOrSafeSelf( bool* pSafe );
+    GUVField*    Clone() const override;
    
-    #ifdef VC_NO_MEMBER_GATHER
-    Vc::vector<MagVector3<float>> fVcMagVector3;
+private: 
+    MagVector3<float> *fMagvArray; //  = new MagVector3<float>[30000];
+    bool   fReadData;
+    bool   fVerbose;
+    bool   fPrimary;  /** Read in and own the data arrays */
+    #ifdef Vc_FOUND
+    Vc::vector<MagVector3<float>> *fVcMagVector3;
     #endif 
 };
 
-CMSmagField::CMSmagField() :fReadData(false) {
+CMSmagField::CMSmagField() :fReadData(false), fVerbose(true), fPrimary(false) {
     fMagvArray = new MagVector3<float>[kNoZValues*kNoRValues];
-
-    std::cout<<"CMSmagField class: Version: Reorder2 (floats) (with VC_NO_MEMBER_GATHER enabled if required)"<<std::endl;
+    fVcMagVector3 = new Vc::vector<MagVector3<float>>;
+    if( fVerbose ) {
+      printf( "%s", "CMSmagField class: Version: Reorder2 (floats)");
+#ifdef VC_NO_MEMBER_GATHER
+      printf( "%s", ", with VC_NO_MEMBER_GATHER enabled." );
+#endif
+    }
 }
 
 CMSmagField::CMSmagField(std::string inputMap) : CMSmagField() {
-    // fMagvArray = new MagVector3<float>[kNoZValues*kNoRValues];
+    fMagvArray = new MagVector3<float>[kNoZValues*kNoRValues];
 
-    // std::cout<<"CMSmagField class: Version: Reorder2 (floats) (with VC_NO_MEMBER_GATHER enabled if required)"<<std::endl;
-    fReadData= CMSmagField::ReadVectorData(inputMap);
+   std::cout<<"- CMSmagField c-tor #2" << std::endl;
+   // std::cout<<" Version: Reorder2 (floats) (with VC_NO_MEMBER_GATHER enabled if required)"<<std::endl;
+   fReadData= CMSmagField::ReadVectorData(inputMap);
+   fPrimary= true;   // Own the data!
+}
+
+CMSmagField::CMSmagField(const CMSmagField &right) :
+   fReadData(right.fReadData),
+   fVerbose(right.fVerbose),
+   fPrimary(false)
+{
+   fMagvArray= right.fMagvArray;
+
+   fVcMagVector3= right.fVcMagVector3;
 }
 
 CMSmagField::~CMSmagField(){
-    delete[] fMagvArray;
+   if( fPrimary )
+      delete[] fMagvArray;
 }
-
 
 INLINE_CHOICE
 bool CMSmagField::ReadVectorData(std::string inputMap)
 {
-    std::string line;
-    std::string s1,s2,s3,s4,s5,s0;
-    float d1,d2,d3,d4,d5,d0;
-    int ind =0;
-    std::ifstream pFile(inputMap);
-    if (pFile.is_open()){
-        // getline() returns the stream. testing the stream with while returns error such as EOF
-        while(getline(pFile,line)){
-             // so here we know that the read was a success and that line has valid data
-            std::stringstream ss(line);
-            //parsing all the parts. s0's store the string names which are of no use to us. 
-            ss>> s0>> d1>> s1>> d0>> s2>> d2>> s3>> d3>> s4>> d4>> s5>> d5;
-
-            fMagvArray[ind].SetBr(d4*kAInverse);
-            fMagvArray[ind].SetBphi(d5*kAInverse);
-            fMagvArray[ind].SetBz(d3*kAInverse);
-            #ifdef VC_NO_MEMBER_GATHER
-            fVcMagVector3.push_back(fMagvArray[ind]); 
-            #endif
-            ind++;
-        }
-        pFile.close();
-    }
-    else{
-        std::cout<<"Unable to open file";
-    }
-    return true;
+   std::cout<< "- CMSmagField::ReadVectorData called with filename= " << inputMap << std::endl;
+   // printf( "- CMSmagField::ReadVectorData called with filename= %s\n", inputMap );
+   std::string line;
+   std::string s1,s2,s3,s4,s5,s0;
+   float d1,d2,d3,d4,d5,d0;
+   int ind =0;
+   std::ifstream pFile(inputMap);
+   if (pFile.is_open())
+   {
+      // getline() returns the stream. testing the stream with while returns error such as EOF
+      while(getline(pFile,line)){
+         // so here we know that the read was a success and that line has valid data
+         std::stringstream ss(line);
+         //parsing all the parts. s0's store the string names which are of no use to us. 
+         ss>> s0>> d1>> s1>> d0>> s2>> d2>> s3>> d3>> s4>> d4>> s5>> d5;
+      
+         fMagvArray[ind].SetBr(d4*kAInverse);
+         fMagvArray[ind].SetBphi(d5*kAInverse);
+         fMagvArray[ind].SetBz(d3*kAInverse);
+#ifdef VC_NO_MEMBER_GATHER
+         fVcMagVector3->push_back(fMagvArray[ind]); 
+#endif
+#if    VERBOSE
+         if( ind % 10 == 0 ) std::cout << "Read in line " << ind
+                                       << " Values= " << d3 << " " << d4 << " "
+                                       << d5 << std::endl;
+#endif         
+         ind++;
+      }
+      pFile.close();
+   }
+   else
+   {
+      std::cerr << "Unable to open file (for CMS mag field). Name = '" << inputMap
+                << "'" << std::endl;
+      exit(1);
+   }
+   return true;
 }
 
 template <class Backend>
@@ -293,14 +331,14 @@ void CMSmagField::Gather2<vecgeom::kVcFloat>(const typename vecgeom::kVcFloat::p
 #ifdef VC_NO_MEMBER_GATHER
     typedef Vc::Vector<float> float_v;
     float_v::IndexType indexes1 = (float_v::IndexType) index;
-    B1[0] = fVcMagVector3[indexes1][&MagVector3<float>::Br];
-    B1[1] = fVcMagVector3[indexes1][&MagVector3<float>::Bphi];
-    B1[2] = fVcMagVector3[indexes1][&MagVector3<float>::Bz];
+    B1[0] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Br];
+    B1[1] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Bphi];
+    B1[2] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Bz];
 
     float_v::IndexType indexes2 = (float_v::IndexType) (index+kNoZValues);
-    B2[0] = fVcMagVector3[indexes2][&MagVector3<float>::Br];
-    B2[1] = fVcMagVector3[indexes2][&MagVector3<float>::Bphi];
-    B2[2] = fVcMagVector3[indexes2][&MagVector3<float>::Bz];
+    B2[0] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Br];
+    B2[1] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Bphi];
+    B2[2] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Bz];
 #else 
     // typedef typename vecgeom::kVcFloat::Int_t  Int_v;
     using Int_v = vecgeom::kVcFloat::Int_t;
@@ -419,4 +457,16 @@ void CMSmagField::GetFieldValue(const vecgeom::Vector3D<double>  &pos_d,
    GetFieldValue<vecgeom::kScalarFloat>( pos_f, xyzField ); 
 }
 
+// This class is thread safe.  So other threads can use the same instance
+//
+CMSmagField* CMSmagField::CloneOrSafeSelf( bool* pSafe )
+{
+   if( pSafe ) *pSafe= true;
+   return this;
+}
+
+GUVField* CMSmagField::Clone() const
+{
+   return new CMSmagField( *this );
+}
 #endif

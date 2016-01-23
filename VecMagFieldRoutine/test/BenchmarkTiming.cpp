@@ -26,7 +26,8 @@
 #include <Vc/Vc>
 
 #include "backend/vc/Backend.h"
-#include "backend/vcfloat/Backend.h"
+// #include "backend/vcfloat/Backend.h"
+#include "VcFloatBackend.h"
 #include "base/Vector.h"
 
 #include "base/Vector3D.h"

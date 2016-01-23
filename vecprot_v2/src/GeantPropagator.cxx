@@ -76,6 +76,7 @@
 #include "GUFieldPropagator.h"
 #include "GUFieldPropagatorPool.h"
 
+#include "UserDetectorConstruction.h"
 #include "FieldPropagatorFactory.h"
 // #endif
 
@@ -87,8 +88,6 @@ GeantPropagator *GeantPropagator::fgInstance = 0;
 
 //______________________________________________________________________________
 GeantPropagator::GeantPropagator()
-
-   
     : fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0),
       fNprimaries(0), fNsteps(0), fNsnext(0),
       fNphys(0), fNmag(0), fNsmall(0), fNcross(0),
@@ -105,6 +104,9 @@ GeantPropagator::GeantPropagator()
       fTracksLock(), fWMgr(0), fApplication(0), fStdApplication(0), fTaskMgr(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0),
       fStoredTracks(0), fPrimaryGenerator(0), fTruthMgr(0), fNtracks(0), fEvents(0), fThreadData(0) {
   // Constructor
+  fVertex[0] = fVertex[1] = fVertex[2] = 0.;
+  fBfieldArr[0] = fBfieldArr[1] = fBfieldArr[2] = 0.;
+
   fgInstance = this;
 }
 
@@ -396,6 +398,24 @@ void GeantPropagator::InitializeAfterGeom() {
   // Add some empty baskets in the queue
   fWMgr->CreateBaskets(); // geometry must be created by now
 
+  if( !fUserDetectorCtion ){
+    Printf("- GeantPropagator::InitializeAfterGeom - %s.\n",
+           " no User Detector Construction found." );
+    Printf("     Default object created with field= %f %f %f\n",
+            fBfieldArr[0], fBfieldArr[1], fBfieldArr[2]
+          );
+    fUserDetectorCtion= new UserDetectorConstruction();
+    fUserDetectorCtion->UseConstantMagField( fBfieldArr );
+
+    // CMSDetectorConstruction* CMSdetector= new CMSDetectorConstruction();
+    // CMSdetector->SetFileForField("CMSmagneticField.txt");
+    // fUserDetectorCtion= CMSdetector;
+  }
+
+  if( !fInitialisedRKIntegration ) {
+    GeantPropagator::PrepareRkIntegration();
+  }
+
   if (!fThreadData) {
     fThreadData = new GeantTaskData *[fNthreads];
     for (int i = 0; i < fNthreads; i++) {
@@ -405,6 +425,8 @@ void GeantPropagator::InitializeAfterGeom() {
         // delete fThreadData[i]->fFieldPropagator;  // -> No, do not own it
         fThreadData[i]->fFieldPropagator = ObtainThreadRkPropagator(i);
       }
+      fThreadData[i]->fFieldObj = ObtainField(i);
+      fThreadData[i]->fBfieldIsConst = fUserDetectorCtion->IsFieldUniform();
     }
   }
   // Initialize application
@@ -417,23 +439,18 @@ void GeantPropagator::InitializeAfterGeom() {
 
 void GeantPropagator::PrepareRkIntegration() {
 
-  using GUFieldPropagatorPool = ::GUFieldPropagatorPool;
-  // using GUFieldPropagator = ::GUFieldPropagator;
+  // using GUFieldPropagatorPool = ::GUFieldPropagatorPool;
+  Printf(" GV-Propagator calling Detector's CreateFieldAndSolver");
+  Printf("    fUserDetectorCtion= %p ", fUserDetectorCtion );
+  
+  // bool createdField= 
+  fUserDetectorCtion->CreateFieldAndSolver(fUseRungeKutta);
+  
+  Printf("GV-Propagator CreateFieldAndSolver called.\n");
 
-  // Initialise the classes required for tracking in field
-  using Field_t    =  TUniformMagField;
-
-  auto gvField= new TUniformMagField( fieldUnits::kilogauss * ThreeVector( 0.0, 0.0, fBmag ) );
-  constexpr double hminimum  = 1.0e-4; //  Minimum step = 0.1 microns
-  // constexpr double epsTol = 3.0e-4; // Relative error tolerance of integration
-
-  // using FieldPropagatorFactory = ::FieldPropagatorFactory;
-  // auto fieldPropagator= 
-  FieldPropagatorFactory::CreatePropagator<Field_t>( *gvField, 
-                                                     fEpsilonRK,
-                                                     hminimum);
   // Create clones for other threads
-  GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
+  if( fUseRungeKutta )
+    GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
 
   fInitialisedRKIntegration= true;
 }
@@ -462,8 +479,8 @@ GUFieldPropagator *
 GeantPropagator::ObtainThreadRkPropagator(unsigned int ThreadId) {
   GUFieldPropagator *fieldPropagator= 0;
 
-  printf("GeantPropagator::ObtainThreadRkPropagator called with tid=%d\n",
-         ThreadId );
+  Printf("GeantPropagator::ObtainThreadRkPropagator called with tid=%d\n",
+          ThreadId );
 
   if( ! fInitialisedRKIntegration ) {
     Geant::Error("PrepareThreadRkPropagator",
@@ -477,6 +494,17 @@ GeantPropagator::ObtainThreadRkPropagator(unsigned int ThreadId) {
     assert( fieldPropagator );
   }
   return fieldPropagator;
+}
+
+GUVField* GeantPropagator::ObtainField(unsigned int threadId) {
+  GUVField* pField = nullptr;
+  if( fInitialisedRKIntegration && fUseRungeKutta ){
+    pField= GUFieldPropagatorPool::Instance()->GetField(threadId);
+  } else {
+    // Create a uniform field ?
+    // pField = new TUniformMagField( vecgeom::Vector3D<float> zeroField );
+  }
+  return pField;
 }
 
 /**
@@ -592,6 +620,14 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
     printf("No user application attached - aborting");
     return;
   }
+
+  //  Read and create field early - to check, as it is failing ... 
+  if( !fInitialisedRKIntegration ) {
+    Printf("- GeantPropagator::PropagatorGeom> Reading and creating field early - to check"); 
+    GeantPropagator::PrepareRkIntegration();
+    fInitialisedRKIntegration= true;
+  }
+  
   Initialize();
   // Initialize geometry and current volume
   if (!LoadGeometry(geomfile))

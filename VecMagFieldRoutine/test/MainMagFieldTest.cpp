@@ -14,8 +14,10 @@
 
 #include <Vc/Vc>
 #include "backend/vc/Backend.h"
-#include "backend/vcfloat/Backend.h"
-#include "backend/scalarfloat/Backend.h"
+// #include "backend/vcfloat/Backend.h"
+#include "VcFloatBackend.h"
+// #include "backend/scalarfloat/Backend.h"
+#include "ScalarFloatBackend.h"
 
 // #include "MagField.h"
 #include "CMSmagField.h"

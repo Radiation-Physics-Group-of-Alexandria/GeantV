@@ -1,10 +1,15 @@
 #----------------------------------------------------------------------------------------------
 # Add source files & include directories
+
+#----------------------------------------------------------------------------
+# Locate sources and headers for this project
+# NB: headers are included so they will show up in IDEs
 #
 include_directories(inc ../vecprot_v2/inc ../physics/particle/inc)
 if (USE_TBB)
   include_directories(${TBB_INCLUDE_DIR})
 endif()
+include_directories(../magneticfield/inc  ../VecMagFieldRoutine/include)
 
 set(sources
   src/ExN03Application.cxx
@@ -49,7 +54,7 @@ else()
   add_library(GeantExamples SHARED ${sources})
 endif()
 
-target_link_libraries(GeantExamples -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v
+target_link_libraries(GeantExamples -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v -lVmagfield
   ${TBB_LIBRARIES})
 
 if (USE_ROOT)

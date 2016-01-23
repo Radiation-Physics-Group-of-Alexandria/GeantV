@@ -64,8 +64,8 @@ class GUIntegrationDriver
        // Question:  If the current object and all sub-objects are const, can it return 'this' ?
      
      GUVEquationOfMotion* GetEquationOfMotion() { return fpStepper->GetEquationOfMotion(); }
-     const GUVEquationOfMotion* GetEquationOfMotion() const { return fpStepper->GetEquationOfMotion(); } 
-     
+     const GUVEquationOfMotion* GetEquationOfMotion() const { return fpStepper->GetEquationOfMotion(); }
+
      // Auxiliary methods
      inline double GetHmin()        const { return fMinimumStep; } 
      inline double GetSafety()      const { return fSafetyFactor; }
