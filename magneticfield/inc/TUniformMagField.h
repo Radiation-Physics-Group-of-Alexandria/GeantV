@@ -38,14 +38,7 @@ class TUniformMagField : public GUVMagneticField
            fFieldComponents = p.fFieldComponents;
         }
 
-        TUniformMagField& operator = (const TUniformMagField &p)
-            // Copy constructor and assignment operator.
-        {
-           if (&p == this) return *this;
-           // for (int i=0; i<3; i++) fFieldComponents[i] = p.fFieldComponents[i];
-           fFieldComponents = p.fFieldComponents;
-           return *this;
-        }
+        TUniformMagField& operator = (const TUniformMagField &p);
 
         // virtual
         void GetFieldValue( const vecgeom::Vector3D<double> &, // Position,
@@ -66,15 +59,9 @@ class TUniformMagField : public GUVMagneticField
         // Return the field value
 
         // virtual
-        TUniformMagField* Clone() const
-        {
-           return new TUniformMagField( *this );
-        }
-
-        TUniformMagField* CloneOrSafeSelf( bool /*Safe = 0*/ )
-        // {  Safe= true; return this; }  //  Class is thread-safe, can use 'self' instead of clone
-        // { Safe= false; return new TUniformMagField( this ); }  // Check ...
-        { /*Safe= false;*/ return Clone(); }  // Check ...
+        // TUniformMagField*
+        GUVField* Clone() const
+        {  return new TUniformMagField( *this ); }
 
         TUniformMagField* CloneOrSafeSelf( bool* pSafe )
         {
@@ -86,6 +73,16 @@ class TUniformMagField : public GUVMagneticField
     private:
         vecgeom::Vector3D<float> fFieldComponents;
 };
+
+TUniformMagField& 
+TUniformMagField:: operator = (const TUniformMagField &p)
+   // Copy constructor and assignment operator.
+{
+   if (&p == this) return *this;
+   // for (int i=0; i<3; i++) fFieldComponents[i] = p.fFieldComponents[i];
+   fFieldComponents = p.fFieldComponents;
+   return *this;
+}
 
 TUniformMagField::TUniformMagField(double vField,
                                    double vTheta,

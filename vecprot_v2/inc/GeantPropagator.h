@@ -34,7 +34,9 @@ class WorkloadManager;
 class GeantVApplication;
 class PrimaryGenerator;
 class TaskBroker;
+class GUVField;
 class GUFieldPropagator;
+class UserDetectorConstruction;
 
 #include "GeantFwd.h"
 
@@ -97,11 +99,12 @@ public:
   double fEmin;      /** Min energy threshold */
   double fEmax;      /** Max energy threshold */
   double fBmag;      /** Magnetic field */
+  float  fBfieldArr[3]; /** Constant Magnetic Field value - if any */
   double fEpsilonRK; /** Relative error in RK integration */
 
   bool fUsePhysics;       /** Enable/disable physics */
   bool fUseRungeKutta;    /** Enable/disable Runge-Kutta integration in field */
-  bool fInitialisedRKIntegration;
+  bool fInitialisedRKIntegration;  /** Flag if initialised of RK for tracking in field  */
   bool fUseDebug;         /** Use debug mode */
   bool fUseGraphics;      /** Graphics mode */
   bool fUseStdScoring;    /** Use standard scoring */
@@ -114,6 +117,8 @@ public:
   bool fUseAppMonitoring; /** Monitoring the application */
   TMutex fTracksLock;       /** Mutex for adding tracks */
 
+
+  UserDetectorConstruction *fUserDetectorCtion; /** Class to initialize detector, field */
   WorkloadManager *fWMgr;             /** Workload manager */
   GeantVApplication *fApplication;    /** User application */
   GeantVApplication *fStdApplication; /** Standard application */
@@ -143,7 +148,10 @@ public:
   void PrepareRkIntegration();
 
   /** @brief Obtain per-thread object for RK Integration */
-  GUFieldPropagator *ObtainThreadRkPropagator(unsigned int tid);
+  GUFieldPropagator* ObtainThreadRkPropagator(unsigned int tid);
+
+  /** @brief Get per-thread field object */
+  GUVField* ObtainField(unsigned int tid);
 
   /** @brief Function for loading geometry */
   bool LoadGeometry(const char *filename = "geometry.root");
@@ -275,6 +283,9 @@ public:
   void PropagatorGeom(const char *geomfile = "geometry.root", int nthreads = 4, bool graphics = false,
                       bool single = false);
 
+  /** @brief Set object to initialize detector, field */
+  void SetUserDetectorConstruction(UserDetectorConstruction* udc) {fUserDetectorCtion= udc;}
+   
   /** @brief Function returning the number of monitored features */
   int GetMonFeatures() const;
 

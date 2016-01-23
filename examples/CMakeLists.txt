@@ -2,6 +2,7 @@
 # Setup the project
 
 include_directories(inc ../vecprot_v2/inc)
+include_directories(../magneticfield/inc  ../VecMagFieldRoutine/include)
 
 #----------------------------------------------------------------------------
 # Locate sources and headers for this project
@@ -45,7 +46,7 @@ else()
 endif()
 
 target_link_libraries(GeantExamples -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
-  -lGeant_v ${ROOT_LIBRARIES} -lEG -lGeom ${Vc_LIBRARIES})
+  -lGeant_v -lVmagfield ${ROOT_LIBRARIES} -lEG -lGeom ${Vc_LIBRARIES})
 
 add_dependencies(GeantExamples Geant_v)
 add_custom_target(Exampleslib DEPENDS GeantExamples)

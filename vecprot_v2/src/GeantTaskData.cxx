@@ -1,7 +1,7 @@
 #include "GeantTaskData.h"
 #include "globals.h"
 #include "GeantBasket.h"
-#include "GeantPropagator.h"
+// #include "GeantPropagator.h"
 #include "Geant/Typedefs.h"
 #include "GUFieldPropagator.h"
 
