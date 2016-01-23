@@ -31,6 +31,8 @@ using VECGEOM_NAMESPACE::RNG;
 class GeantBasketMgr;
 class GeantBasket;
 class GUFieldPropagator;
+class GUVField;
+
 // SOA3D container from VecGeom
 #include "base/SOA3D.h"
 
@@ -68,6 +70,10 @@ public:
   vecgeom::SOA3D<double> *fSOA3Dworkspace1; // Thread SOA3D workspace (to be used for vector navigation)
   vecgeom::SOA3D<double> *fSOA3Dworkspace2; // SOA3D workspace (to be used for vector navigation)
   GUFieldPropagator  *fFieldPropagator;     // For RK integration of charged particle propagation
+  GUVField           *fFieldObj;            // To get value of the field!
+  vecgeom::Vector3D<double>  fConstFieldValue;   // Value - if field is constant.
+  double                     fBfieldMag;    // Magnitude of field for current track - or for const field
+  bool                       fBfieldIsConst;// Flag - is the B field constant ?
   int fSizeInt;                             // current size of IntArray
   int *fIntArray;                           // Thread array of ints (used in vector navigation)
   GeantTrack_v  *fTransported;              // Transported tracks in current step
