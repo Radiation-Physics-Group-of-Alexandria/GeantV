@@ -19,46 +19,56 @@
 using ThreeVector_f = vecgeom::Vector3D<float>;
 using ThreeVector_d = vecgeom::Vector3D<double>;
 
-GUVEquationOfMotion*  CreateFieldAndEquation(ThreeVector_f constFieldValue);
+GUVEquationOfMotion* CreateUniformFieldAndEquation(ThreeVector_f constFieldValue);
+GUVEquationOfMotion* CreateFieldAndEquation(const char* filename);
+
 bool  TestEquation(GUVEquationOfMotion* );
 
 constexpr unsigned int gNposmom= 6; // Position 3-vec + Momentum 3-vec
 
-ThreeVector_f  FieldValue(0.0, 0.0, 1.0);
-
 int
 main( int, char** )
 {
-  GUVEquationOfMotion* eq = CreateFieldAndEquation( FieldValue );
+  ThreeVector_f  FieldValue(0.0, 0.0, 1.0);
+   
+  GUVEquationOfMotion* eq = CreateUniformFieldAndEquation( FieldValue );
   TestEquation(eq);
 
+#ifdef CMS_FIELD
+  GUVEquationOfMotion* eq2 = CreateFieldAndEquation("cmsMagneticField.txt");
+  TestEquation(eq2);
+#endif
+  
   return 1;
 }
 
-GUVEquationOfMotion* CreateFieldAndEquation(ThreeVector_f FieldValue)
+GUVEquationOfMotion* CreateUniformFieldAndEquation(ThreeVector_f FieldValue)
 {
-  // using uniformField_t = TUniformMagField;
+  // using Field_t = TUniformMagField;
 
-#if 0   
-  // 1. Original way of creating an equation
-  using EquationType = TMagFieldEquation<TUniformMagField, gNposmom>;
   TUniformMagField*   pConstBfield = new TUniformMagField( FieldValue );
-  GUVEquationOfMotion*  magEquation = new EquationType(pConstBfield);
-#endif
-  
-#ifndef CMS_FIELD
+
+  // 1. Original way of creating an equation
+  // using EquationType = TMagFieldEquation<TUniformMagField, gNposmom>;
+  // GUVEquationOfMotion*  magEquation = new EquationType(pConstBfield);
+  // return magEquation;
+
   //  2. Different method of creating equation:  Factory
-  auto equation2 = FieldEquationFactory::CreateMagEquation<TUniformMagField>(pConstBfield);
-  auto equationRet = equation2;
-#else  
-  //  3. Equation for CMS field
-  auto equationCMS = FieldEquationFactory::CreateMagEquation<CMSmagField>(cmsField);
-  auto equationRet = equationCMS;
-#endif  
-  
-  // return magEquation;  
-  return equationRet;
+  return FieldEquationFactory::CreateMagEquation<TUniformMagField>(pConstBfield);
 }
+
+#ifdef CMS_FIELD
+GUVEquationOfMotion* CreateFieldAndEquation(const char* filename)
+{
+  const char *altname= "cmsMagneticField.txt";
+   
+  //  3. Equation for CMS field
+  auto cmsField = new CMSmagField( filename ? filename : altname ); 
+  auto equationCMS = FieldEquationFactory::CreateMagEquation<CMSmagField>(cmsField);
+
+  return equationCMS;
+}
+#endif
 
 int gVerbose= 1;
 

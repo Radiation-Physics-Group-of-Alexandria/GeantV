@@ -87,9 +87,15 @@ class GUVField
 
       GUVField& operator = (const GUVField &p); // Useful ?
       
-      virtual GUVField* Clone() const;
+      virtual GUVField* Clone() const = 0;
         // Implements cloning, likely needed for MT 
 
+      // Expect a method of the following signature
+      //  [Derived-Field-type] * CloneOrSafeSelf( bool* pSafe ) const
+      // to be implemented for each derived class.
+      // If the class is thread-safet, it can be implemented as:
+      //  { if( pSafe ) { *pSafe= false; } ; return Clone(); } 
+      
 private:
       const int  fNumberOfComponents; // E.g.  B -> N=3 , ie x,y,z 
                                      //       E+B -> N=6 

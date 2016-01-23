@@ -4,6 +4,9 @@
 
 // For implementation
 #include "GUFieldPropagator.h"
+#include "GUIntegrationDriver.h"
+#include "GUVEquationOfMotion.h"
+#include "GUVField.h"
 
 #include <iostream>
 
@@ -27,7 +30,8 @@ GUFieldPropagatorPool::Instance()
 GUFieldPropagatorPool::GUFieldPropagatorPool( GUFieldPropagator* prototype )
    : fInitialisedRKIntegration(false),
      fNumberPropagators(0),
-     fPrototype(prototype)
+     fPrototype(prototype),
+     fFieldPrototype(nullptr)
 {
    // prototype can be null initially
 }
@@ -47,9 +51,11 @@ GUFieldPropagatorPool::RegisterPrototype( GUFieldPropagator* prototype )
                 << fNumberPropagators << " instances. " << std::endl;
    }
    assert( prototype );
-   fPrototype= prototype;
+   fPrototype = prototype;
 
-   fInitialisedRKIntegration=true;
+   fFieldPrototype= prototype->GetField();
+  
+   fInitialisedRKIntegration = true;
    return ok;
 }
 
@@ -97,10 +103,14 @@ GUFieldPropagatorPool::Extend(size_t noNeeded)
       //  fFieldPropagatorVec.push( new(banks(num)) GUFieldPropagator() );
       //  else
       // fFieldPropagatorVec.push_back( new GUFieldPropagator() );
-      fFieldPropagatorVec.push_back( fPrototype->Clone() );       
+      auto prop= fPrototype->Clone();
+      fFieldPropagatorVec.push_back( prop );
+
+      // fFieldVec.push_back( fFieldPrototype->CloneOrSafeSelf() );      
+      // auto field= prop->GetField();
+      // fFieldVec.push_back( field );
     }
 }
-
 
 #if 0
 

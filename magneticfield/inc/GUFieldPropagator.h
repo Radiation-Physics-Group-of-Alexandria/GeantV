@@ -5,9 +5,10 @@
 #ifndef GUFIELDPROPAGATOR_H
 #define GUFIELDPROPAGATOR_H 1
 
+#include "Geant/Config.h"
 // #include "ThreeVector.h"
 #include "base/Vector3D.h"
-typedef vecgeom::Vector3D<double>  ThreeVector; 
+// typedef vecgeom::Vector3D<double>  ThreeVector; 
 
 class GUIntegrationDriver;
 class GUVField;
@@ -21,26 +22,29 @@ class GUFieldPropagator
     template<typename FieldType>  // , typename StepperType>
        GUFieldPropagator(FieldType* magField, double epsilon, double hminimum= 1.0e-4);
 
-    virtual ~GUFieldPropagator() {}   //  Likely needed - to enable use of templated classes
+    ~GUFieldPropagator() {}  // Not virtual anymore.
 
-     /**
-       * Propagate track along in a field for length 'step'
-       *    input: current position, current direction, particle properties
-       *   output: success(returned), new position, new direction of particle
-       */
-  // GEANT_CUDA_BOTH_CODE          
-      bool DoStep( ThreeVector const & position,  ThreeVector const & direction,
-                           int const & charge,         double const & momentum,
-                        double const & step,
-                   ThreeVector       & endPosition,
-                   ThreeVector       & endDiretion
-         ) ;   //  Goal => make it 'const';  -- including all classes it uses
+    /**
+      * Propagate track along in a field for length 'step'
+      *    input: current position, current direction, particle properties
+      *   output: success(returned), new position, new direction of particle
+      */
+    GEANT_CUDA_BOTH_CODE          
+    bool DoStep( vecgeom::Vector3D<double> const & position,  
+                 vecgeom::Vector3D<double> const & direction,
+                          int const & charge,         
+                       double const & momentum,
+                       double const & step,
+                  vecgeom::Vector3D<double>      & endPosition,
+                  vecgeom::Vector3D<double>      & endDiretion
+        ) ;   //  Goal => make it 'const';  -- including all classes it uses
 
-      GUIntegrationDriver* GetIntegrationDriver(){ return fDriver; }
-      const GUIntegrationDriver* GetIntegrationDriver() const { return fDriver; }
-      double GetEpsilon() { return fEpsilon; }
+    GUIntegrationDriver* GetIntegrationDriver(){ return fDriver; }
+    const GUIntegrationDriver* GetIntegrationDriver() const { return fDriver; }
+    double GetEpsilon() { return fEpsilon; }
 
-      virtual GUFieldPropagator* Clone() const;
+    GUVField* GetField();
+    GUFieldPropagator* Clone() const;
 
   /******
     template<typename Vector3D, typename DblType, typename IntType>
@@ -74,4 +78,6 @@ private:
     GUIntegrationDriver* fDriver;
     double               fEpsilon;
 };
+
+
 #endif

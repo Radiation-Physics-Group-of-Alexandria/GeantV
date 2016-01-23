@@ -32,11 +32,9 @@
 #include "ConstFieldHelixStepper.h"
 #include "GeantScheduler.h"
 
-// #ifdef  RUNGE_KUTTA
-#pragma message("Compiling using Runge-Kutta for integration")
 #include "GUFieldPropagatorPool.h"
 #include "GUFieldPropagator.h"
-// #endif
+#include "GUVField.h"
 
 #ifdef __INTEL_COMPILER
 #include <immintrin.h>
@@ -2426,7 +2424,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   ntracks = GetNtracks();
   double *steps = td->GetDblArray(ntracks);
   for (itr = 0; itr < fNtracks; itr++) {
-    lmax = SafeLength(itr, eps);
+    lmax = SafeLength(td, itr, eps);
     lmax = Math::Max<double>(lmax, fSafetyV[itr]);
     // Select step to propagate as the minimum among the "safe" step and:
     // the straight distance to boundary (if fboundary=1) or the proposed  physics
@@ -2516,6 +2514,7 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
   int icrossed = 0;
   double step, lmax;
   const double eps = 1.E-2; // 1 micron
+
 #ifdef GEANT_CUDA_DEVICE_BUILD
   const double bmag = gPropagator_fBmag;
 #else
@@ -2586,7 +2585,7 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
     // i.e. what is the propagated length for which the track deviation in magnetic
     // field with respect to straight propagation is less than epsilon.
     // Take the maximum between the safety and the "bending" safety
-    lmax = SafeLength(itr, eps);
+    lmax = SafeLength(td,itr, eps);
     lmax = Math::Max<double>(lmax, fSafetyV[itr]);
     // Select step to propagate as the minimum among the "safe" step and:
     // the straight distance to boundary (if frombdr=1) or the proposed  physics
@@ -2672,23 +2671,71 @@ int GeantTrack_v::PropagateTracksScalar(GeantTaskData *td, int stage) {
 
 //______________________________________________________________________________
 GEANT_CUDA_BOTH_CODE
-double GeantTrack_v::Curvature(int i) const {
-  // Curvature assuming constant field is along Z
-  const double tiny = 1.E-30;
-#ifdef GEANT_CUDA_DEVICE_BUILD
-  const double bmag = gPropagator_fBmag;
-#else
-  const double bmag = gPropagator->fBmag;
-#endif
-  return fabs(kB2C * fChargeV[i] * bmag / (Pt(i) + tiny));
+// vecgeom::Vector3D<double>
+void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *bmag) const {
+  using ThreeVector_f = vecgeom::Vector3D<float>;
+  using ThreeVector_d = vecgeom::Vector3D<double>;
+  // Field value at position of particle 'i'
+  if( bmag ) *bmag= 0.0;
+  ThreeVector_d MagFldD;  //  Transverse wrt direction of B
+
+  if( td->fBfieldIsConst ) {
+    MagFldD= td->fConstFieldValue;
+    if( bmag ) *bmag=   td->fBfieldMag;
+  }
+  else
+  {
+    ThreeVector_d Position (fXposV[i], fZposV[i], fZposV[i]);
+    ThreeVector_f MagFldF;
+    td->fFieldObj->GetFieldValue(Position, MagFldF);
+    // MagFldD = MagFldF;
+    MagFldD = ThreeVector_d(MagFldF.x(), MagFldF.y(), MagFldD.z());
+    if( bmag ) *bmag= MagFldD.Mag();
+  }
+  
+  B[0]= MagFldD.x();
+  B[1]= MagFldD.y();
+  B[2]= MagFldD.z();
+  
+  // fBXfldV[i]= MagFld.x();
+  // fBYfldV[i]= MagFld.y();
+  // fBZfldV[i]= MagFld.z();
+  // fBfMagV[i]= bmag;
+  
+  // return MagFldD;
 }
 
 //______________________________________________________________________________
 GEANT_CUDA_BOTH_CODE
-double GeantTrack_v::SafeLength(int i, double eps) {
+double GeantTrack_v::Curvature(GeantTaskData *td, int i) const {
+  using ThreeVector_d = vecgeom::Vector3D<double>;
+  
+  // Curvature for general field
+  const double tiny = 1.E-30;
+
+  double Bfield[3], bmag= 0.0;
+  
+  GetFieldValue(td, i, Bfield, &bmag);
+  ThreeVector_d MagFld(Bfield[0], Bfield[1], Bfield[2]);
+  ThreeVector_d Momentum( fXdirV[i], fXdirV[i], fXdirV[i] );
+  Momentum *= fPV[i];
+  ThreeVector_d PtransB;  //  Transverse wrt direction of B
+  double ratio = Momentum.Dot( MagFld );
+  PtransB = Momentum - ratio * MagFld ;
+  double Pt_mag = PtransB.Mag();
+
+  //  Must replace 'Pt' by P - P_projection_on_B
+  // fPV[i] * 
+  
+  return fabs(kB2C * fChargeV[i] * bmag / (Pt_mag + tiny));
+}
+
+//______________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
+double GeantTrack_v::SafeLength(GeantTaskData *td, int i, double eps) {
   // Returns the propagation length in field such that the propagated point is
   // shifted less than eps with respect to the linear propagation.
-  double c = Curvature(i);
+  double c = Curvature(td, i);
   if (c < 1.E-10)
     return 1.E20;
   return 2. * sqrt(eps / c);

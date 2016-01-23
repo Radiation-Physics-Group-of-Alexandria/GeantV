@@ -414,7 +414,7 @@ include_directories("${PROJECT_SOURCE_DIR}/vecprot_v2/inc")
 include_directories("${PROJECT_SOURCE_DIR}/base/inc")
 include_directories("${PROJECT_SOURCE_DIR}/xsec/inc")
 include_directories("${PROJECT_SOURCE_DIR}/examples/inc")
-
+include_directories("${PROJECT_SOURCE_DIR}/VecMagFieldRoutine/include")
 
 # Work around VecCore not being its own project yet.
 include_directories("${VECGEOM_INSTALL_DIR}/include/VecCore")
