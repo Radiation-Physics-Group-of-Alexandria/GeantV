@@ -16,10 +16,11 @@
 #include "GeantPropagator.h"
 #include "TTabPhysProcess.h"
 #include "CMSApplication.h"
+#include "CMSDetectorConstruction.h"
 
-static int n_events = 10;
+static int n_events =   10;
 static int n_buffered = 5;
-static int n_threads = 4;
+static int n_threads =  4;
 static int n_track_max = 64;
 static int n_learn_steps = 100000;
 static int max_memory = 4000; /* MB */
@@ -28,9 +29,11 @@ static bool monitor = false, score = false, debug = false, coprocessor = false;
 static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"hepmc-event-file", required_argument, 0, 'E'},
                                   {"fstate", required_argument, 0, 'f'},
+                                  {"field-file", required_argument, 0, 'F'},
                                   {"geometry", required_argument, 0, 'g'},
                                   {"learn-steps", required_argument, 0, 'l'},
                                   {"max-tracks-per-basket", required_argument, 0, 'B'},
+                                  {"use-Runge-Kutta", no_argument, 0, 'K'},
                                   {"monitor", no_argument, 0, 'm'},
                                   {"debug", no_argument, 0, 'd'},
                                   {"max-memory", required_argument, 0, 'M'},
@@ -56,6 +59,8 @@ int main(int argc, char *argv[]) {
   std::string xsec_filename("xsec_FTFP_BERT_G496p02_1mev.root");
   std::string fstate_filename("fstate_FTFP_BERT_G496p02_1mev.root");
   std::string hepmc_event_filename("pp14TeVminbias.root");
+  std::string field_filename("CMSmagneticField.txt");
+  bool useRungeKutta= false;
 
   if (argc == 1) {
     help();
@@ -65,7 +70,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "E:e:f:g:l:B:mM:b:t:x:r", options, &optidx);
+    c = getopt_long(argc, argv, "E:e:f:F:g:l:B:mM:b:t:x:r:K", options, &optidx);
 
     if (c == -1)
       break;
@@ -74,6 +79,21 @@ int main(int argc, char *argv[]) {
     case 0:
       c = options[optidx].val;
     /* fall through */
+
+    case 'b':
+      n_buffered = (int)strtol(optarg, NULL, 10);
+
+      if (n_buffered < 1)
+        errx(1, "number of buffered events must be positive");
+      break;
+
+    case 'B':
+      n_track_max = (int)strtol(optarg, NULL, 10);
+
+      if (n_track_max < 1)
+        errx(1, "max number of tracks per basket must be positive");
+      break;
+
     case 'e':
       n_events = (int)strtol(optarg, NULL, 10);
 
@@ -89,8 +109,16 @@ int main(int argc, char *argv[]) {
       fstate_filename = optarg;
       break;
 
+    case 'F':
+      field_filename = optarg;
+      break;
+
     case 'g':
       cms_geometry_filename = optarg;
+      break;
+
+    case 'K':
+      useRungeKutta = true;
       break;
 
     case 'l':
@@ -98,13 +126,6 @@ int main(int argc, char *argv[]) {
 
       if (n_learn_steps <= 0)
         errx(1, "number of learning steps must be positive");
-      break;
-
-    case 'B':
-      n_track_max = (int)strtol(optarg, NULL, 10);
-
-      if (n_track_max < 1)
-        errx(1, "max number of tracks per basket must be positive");
       break;
 
     case 'm':
@@ -118,11 +139,12 @@ int main(int argc, char *argv[]) {
         errx(1, "max memory is too low");
       break;
 
-    case 'b':
-      n_buffered = (int)strtol(optarg, NULL, 10);
+    case 'r':
+      coprocessor = optarg;
+      break;
 
-      if (n_buffered < 1)
-        errx(1, "number of buffered events must be positive");
+    case 's':
+      score = true;
       break;
 
     case 't':
@@ -133,16 +155,8 @@ int main(int argc, char *argv[]) {
 
       break;
 
-    case 's':
-      score = true;
-      break;
-
     case 'x':
       xsec_filename = optarg;
-      break;
-
-    case 'r':
-      coprocessor = optarg;
       break;
 
     default:
@@ -206,6 +220,22 @@ int main(int argc, char *argv[]) {
   propagator->fEmin = 0.001; // [1 MeV] energy cut
   propagator->fEmax = 0.01;  // 10 MeV
 
+  // CMS magnetic field
+  // propagator->fBmag = 40.; // 4 Tesla
+
+  //  Enable use of RK integration in field for charged particles
+  // propagator->fUseRungeKutta = false;
+  propagator->fUseRungeKutta = useRungeKutta;
+
+  propagator->fEpsilonRK = 0.0003;  // Revised / reduced accuracy - vs. 0.0003 default 
+
+  CMSDetectorConstruction* CMSdetector= new CMSDetectorConstruction();
+  CMSdetector->SetFileForField(field_filename);
+  printf("CMSApp: Setting CMS-detector-construction to GeantPropagator\n");
+  propagator->SetUserDetectorConstruction(CMSdetector);
+  // printf("Calling CreateFieldAndSolver from runCMS_new.C");
+  // CMSDetector->CreateFieldAndSolver(propagator->fUseRungeKutta);
+  
 #ifdef USE_VECGEOM_NAVIGATOR
 #ifdef USE_ROOT
   propagator->LoadVecGeomGeometry();

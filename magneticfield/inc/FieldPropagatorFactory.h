@@ -19,6 +19,8 @@
 #include "GUFieldPropagatorPool.h"
 #include "FieldEquationFactory.h"
 #include "StepperFactory.h"
+#include "GUIntegrationDriver.h"
+
 
 // template<typename Field_t> // , typename Equation_t>
 class FieldPropagatorFactory

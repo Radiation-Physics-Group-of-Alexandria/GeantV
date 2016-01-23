@@ -18,6 +18,7 @@ file(GLOB headers inc/*.h)   # (T*.h inc/GU*.h)
 # Set include directories
 #----------------------------------------------------------------------------
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
+include_directories(${PROJECT_SOURCE_DIR}/VecMagFieldRoutine/inc)
 #include_directories(${PROJECT_SOURCE_DIR}/xsec/inc)
 
 # print include directories
@@ -35,7 +36,7 @@ message(STATUS "Include directories: ${inc_dirs}")
 add_library(Vmagfield SHARED ${sources} ) ## vMagFieldDict.cxx)
 target_link_libraries(Vmagfield  ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-add_headers("${headers}")
+add_headers("${headers}")  ## Adds the headers into the top include directory
 ## add_dependencies
 
 add_subdirectory(test)
