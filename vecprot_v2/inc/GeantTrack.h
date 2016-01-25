@@ -1040,15 +1040,23 @@ public:
   double Beta(int i) const { return fPV[i] / fEV[i]; }
 
   /**
-   * @brief Function that return curvature in different areas of geometry
-   * @param  i Input bit number 'i'
+   * @brief Function that return magnetic field for particle 'i'
+   * @param  i Input track number 'i'
    */
   GEANT_CUDA_BOTH_CODE
-  double Curvature(int i) const;
+  // vecgeom::Vector3D<double>
+  void GetFieldValue(GeantTaskData *td, int i, double B[3], double *bmag) const;
+  
+  /**
+   * @brief Function that return curvature in different areas of geometry
+   * @param  i Input track number 'i'
+   */
+  GEANT_CUDA_BOTH_CODE
+  double Curvature(GeantTaskData *td, int i) const;
 
   /** @brief Function that return safe length */
   GEANT_CUDA_BOTH_CODE
-  double SafeLength(int i, double eps = 1.E-4);
+  double SafeLength(GeantTaskData *td, int i, double eps = 1.E-4);
 
   /**
    * @brief Function that return gamma value
@@ -1077,7 +1085,7 @@ public:
   double Pz(int i) const { return fPV[i] * fZdirV[i]; }
 
   /**
-   * @brief Function that return module of momentum value
+   * @brief Function that return modulus of transverse momentum - ie not along Z
    * @param  i Input bit number 'i'
    */
   GEANT_CUDA_BOTH_CODE
