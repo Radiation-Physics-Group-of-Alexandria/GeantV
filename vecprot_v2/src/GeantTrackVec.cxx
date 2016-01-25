@@ -489,7 +489,7 @@ void GeantTrack_v::Resize(int newsize) {
   // Resize the container.
   int size = GeantTrack::round_up_align(newsize);
   if (size < GetNtracks()) {
-    Geant::Error("Resize","Cannot resize to less than current track content");
+    Geant::Error("Resize","Cannot resize to less than current track content (round up size: %d less than current number of tracks: %d)",size,GetNtracks());
     return;
   }
   fBufSize = BufferSize(size, fMaxDepth);
@@ -1292,18 +1292,18 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   // - safety step (bdr=0)
   // - snext step (bdr=1)
 
-   // Double_t c = 0.;
-   // const Double_t *point = 0;
-   // const Double_t *newdir = 0;
+  // Double_t c = 0.;
 
-   bool useRungeKutta;
-   GUFieldPropagator *fieldPropagator = nullptr;   
-#ifdef VECCORE_CUDA_DEVICE_COMPILATION
-   const double bmag = gPropagator_fBmag;
-   constexpr auto gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
-   useRungeKutta= gPropagator_fUseRK;   //  Something like this is needed - TBD
+  bool useRungeKutta;
+  GUFieldPropagator *fieldPropagator = nullptr;
+
+  double Bfield[3], bmag= 0.0;
+  GetFieldValue(td, i, Bfield, &bmag);
+
+#ifdef GEANT_CUDA_DEVICE_BUILD
+  constexpr bool gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
+  useRungeKutta= gPropagator_fUseRK;   //  Something like this is needed - TBD
 #else
-  const double bmag = gPropagator->fBmag;
   useRungeKutta= gPropagator->fUseRungeKutta;
   if( useRungeKutta ){
     fieldPropagator = td->fFieldPropagator;
@@ -1311,20 +1311,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   }
 #endif
 
-   // static unsigned long icount= 0;
-   // if( icount++ < 2 )  std::cout << " PropagateInVolumeSingle: useRungeKutta= " << useRungeKutta << std::endl;
-
-  double curvaturePlus= fabs(GeantTrack::kB2C * fChargeV[i] * bmag) / (fPV[i] + 1.0e-30);  // norm for step
-  // 'Curvature' along the full track - not just in the plane perpendicular to the B-field vector
-
-  // printf("Curvature= %8.6f   CurvPlus= %8.6f   step= %f Bmag=%f   momentum mag=%f\n",
-  //        Curvature(i), curvaturePlus, crtstep, bmag, fPV[i] );
-
-  constexpr double numRadiansMax= 10.0;  //  A track turning more than 10 radians will be treated approximately
-  bool longStep= crtstep * curvaturePlus > numRadiansMax;
-  useRungeKutta = useRungeKutta && (!longStep);
-
-  // Reset relevant variables
+  // Reset relevant variables - TBC: check if changes are needed after the endpoint is knownn
   fStatusV[i] = kInFlight;
   fPstepV[i] -= crtstep;
   if (fPstepV[i] < 1.E-10) {
@@ -1342,12 +1329,29 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
     }
   }
   fStepV[i] += crtstep;
+
+  // static unsigned long icount= 0;
+  // if( icount++ < 2 )  std::cout << " PropagateInVolumeSingle: useRungeKutta= " << useRungeKutta << std::endl;
+
+  double curvaturePlus= fabs(GeantTrack::kB2C * fChargeV[i] * bmag) / (fPV[i] + 1.0e-30);  // norm for step
+  // 'Curvature' along the full track - not just in the plane perpendicular to the B-field vector
+
+  constexpr double numRadiansMax= 10.0;   //  Too large an angle - many RK steps.  Potential change -> 2.0*PI;
+  constexpr double numRadiansMin= 0.05;   //  Very small an angle - helix is adequate.  TBC: Use average B-field value?
+      //  A track turning more than 10 radians will be treated approximately
+  const double angle= crtstep * curvaturePlus;
+  bool mediumAngle = ( numRadiansMin < angle ) && ( angle < numRadiansMax );
+  useRungeKutta = useRungeKutta && (mediumAngle);
+
+#ifdef DEBUG_FIELD  
+  printf("--PropagateInVolumeSingle: \n");
+  printf("Curvature= %8.4g   CurvPlus= %8.4g  step= %f   Bmag=%8.4g   momentum mag=%f  angle= %g\n"
+         Curvature(td, i), curvaturePlus, crtstep, bmag, fPV[i], angle );
+#endif
+  
 #ifdef USE_VECGEOM_NAVIGATOR
 //  CheckLocationPathConsistency(i);
 #endif
-// alternative code with lean stepper would be:
-// ( stepper header has to be included )
-
   using ThreeVector = vecgeom::Vector3D<double>;
   // typedef vecgeom::Vector3D<double>  ThreeVector;   
   ThreeVector Position(fXposV[i], fYposV[i], fZposV[i]);
@@ -1513,7 +1517,7 @@ void GeantTrack_v::PrintTrack(int itr, const char *msg) const {
 void GeantTrack_v::PrintTracks(const char *msg) const {
   // Print all tracks
   int ntracks = GetNtracks();
-  Geant::Print(msg,"");
+  Geant::Print(msg,"%s","");
   for (int i = 0; i < ntracks; i++)
     PrintTrack(i);
 }
@@ -1672,7 +1676,8 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   int nsel = 0;
   double lmax;
   const double eps = 1.E-2; // 100 micron
-  const double bmag = gPropagator->fBmag;
+
+  double Bfield[3], bmag= 0.0;  
 
   // Remove dead tracks, propagate neutrals
   for (itr = 0; itr < ntracks; itr++) {
@@ -1689,7 +1694,18 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
     // Propagate straight tracks to the precomputed location and update state,
     // then mark them for copy/removal
     // (Inlined from PropagateStraight)
-    if (fChargeV[itr] == 0 || bmag < 1.E-10) {
+
+    // if (fChargeV[itr] == 0 || bmag < 1.E-10) {
+    
+    bool straightTraj= ( fChargeV[itr] == 0 );
+    if( !straightTraj ) {
+       GetFieldValue(td, itr, Bfield, &bmag);
+       // td->StoreFieldValue(itr, Bfield, bmag);   // Store it in Task-Data array !?
+       straightTraj = bmag < 1.E-10;
+    } else { 
+       // td->ClearFieldValue(itr);
+    }
+    if( straightTraj ) {
       // Do straight propagation to physics process or boundary
       if (fBoundaryV[itr]) {
         if (fNextpathV[itr]->IsOutside())
@@ -1856,11 +1872,9 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
   int icrossed = 0;
   double step, lmax;
   const double eps = 1.E-2; // 1 micron
-#ifdef VECCORE_CUDA_DEVICE_COMPILATION
-  const double bmag = gPropagator_fBmag;
-#else
-  const double bmag = gPropagator->fBmag;
-#endif
+
+  double Bfield[3], bmag= 0.0;
+
 // Compute transport length in geometry, limited by the physics step
 #ifdef BUG_HUNT
   GeantPropagator *prop = GeantPropagator::Instance();
@@ -1882,7 +1896,14 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
   }
   // Stage 0: straight propagation
   if (stage == 0) {
-    if (fChargeV[itr] == 0 || bmag < 1.E-10) {
+    bool neutral = (fChargeV[itr] == 0);
+    if( !neutral ) {
+       // printf( " PropagateSingleTrack> getting Field. Charge= %3d ", fChargeV[itr]);
+       GetFieldValue(td, itr, Bfield, &bmag);
+       // if( bmag < 1.E-10) { printf(" Tiny field - mag = %f\n", bmag); } 
+    }
+    // if (fChargeV[itr] == 0 || bmag < 1.E-10) {
+    if ( neutral || bmag < 1.E-10) {       
       // Do straight propagation to physics process or boundary
       if (fBoundaryV[itr]) {
         //*fPathV[itr] = *fNextpathV[itr];
@@ -1931,7 +1952,8 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
     // Select step to propagate as the minimum among the "safe" step and:
     // the straight distance to boundary (if frombdr=1) or the proposed  physics
     // step (frombdr=0)
-    step = (fBoundaryV[itr]) ? Math::Min<double>(lmax, Math::Max<double>(fSnextV[itr], 1.E-4)) : Math::Min<double>(lmax, fPstepV[itr]);
+    step = (fBoundaryV[itr]) ? Math::Min<double>(lmax, Math::Max<double>(fSnextV[itr], 1.E-4)) :
+                               Math::Min<double>(lmax, fPstepV[itr]);
     //      Printf("track %d: step=%g (safelen=%g)", itr, step, lmax);
     // int stepNum= fNstepsV[itr];
     // Printf("track %d: Step #=%3d len=%g proposed=%g (safelen=%9.3g) bndrFlg= %d distLin=%g  ",
@@ -2046,18 +2068,30 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
   }
   else
   {
-    ThreeVector_d Position (fXposV[i], fZposV[i], fZposV[i]);
+    ThreeVector_d Position (fXposV[i], fYposV[i], fZposV[i]);
     ThreeVector_f MagFldF;
     td->fFieldObj->GetFieldValue(Position, MagFldF);
     // MagFldD = MagFldF;
-    MagFldD = ThreeVector_d(MagFldF.x(), MagFldF.y(), MagFldD.z());
+    MagFldD = ThreeVector_d(MagFldF.x(), MagFldF.y(), MagFldF.z());
     if( bmag ) *bmag= MagFldD.Mag();
+
+    // printf(" GeantTrack_v::GetFieldValue>  Field at x,y,z= ( %f %f %f ) is (%f %f %f) kGauss - mag = %f \n",
+    //       fXposV[i], fZposV[i], fZposV[i], MagFldF.x(), MagFldF.y(), MagFldD.z(), *bmag );
+    /***
+    int oldPrec= cout.precision(3);
+    std::cout << " GeantTrack_v::GetFieldValue>  Field at x,y,z= ( "
+              << std::setw(8) << fXposV[i]<< " , " << std::setw(8) << fYposV[i]
+              << " , " << std::setw(8) << fZposV[i] << " ) is ( "
+              << std::setw(8) << MagFldD.x() << " , " << std::setw(8) << MagFldD.y()
+              << " , " << std::setw(8) << MagFldD.z() <<  " ) kGauss - "
+              << "mag = " << *bmag << std::endl;
+    cout.precision(oldPrec);
+    ****/
   }
-  
   B[0]= MagFldD.x();
   B[1]= MagFldD.y();
   B[2]= MagFldD.z();
-  
+
   // fBXfldV[i]= MagFld.x();
   // fBYfldV[i]= MagFld.y();
   // fBZfldV[i]= MagFld.z();
@@ -2078,10 +2112,14 @@ double GeantTrack_v::Curvature(GeantTaskData *td, int i) const {
   
   GetFieldValue(td, i, Bfield, &bmag);
   ThreeVector_d MagFld(Bfield[0], Bfield[1], Bfield[2]);
+
+  //  Calculate transverse momentum 'Pt' for field 'B'
+  // 
   ThreeVector_d Momentum( fXdirV[i], fXdirV[i], fXdirV[i] );
   Momentum *= fPV[i];
   ThreeVector_d PtransB;  //  Transverse wrt direction of B
-  double ratio = Momentum.Dot( MagFld );
+  double ratio = 0.0;
+  if( bmag > 0 ) ratio = Momentum.Dot( MagFld ) / (bmag*bmag);
   PtransB = Momentum - ratio * MagFld ;
   double Pt_mag = PtransB.Mag();
 

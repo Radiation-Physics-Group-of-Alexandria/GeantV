@@ -88,21 +88,18 @@ GeantPropagator *GeantPropagator::fgInstance = 0;
 
 //______________________________________________________________________________
 GeantPropagator::GeantPropagator()
-    : fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0),
-      fNprimaries(0), fNsteps(0), fNsnext(0),
-      fNphys(0), fNmag(0), fNsmall(0), fNcross(0),
-      fPriorityEvents(0), fDoneEvents(0), fNprocesses(3), fNstart(0), fMaxTracks(0),
-      fMaxThreads(100), fNminThreshold(10), fDebugEvt(-1), fDebugTrk(-1), fDebugStp(-1), fDebugRep(-1),
-      fMaxSteps(10000), fNperBasket(16), fMaxPerBasket(256), fMaxPerEvent(0), fMaxDepth(0), fLearnSteps(0),
-      fLastEvent(0), fPriorityThr(0), fNstepsKillThr(50000), fNminReuse(10000), fNTransportTask(0), fMaxRes(0), fMaxVirt(0), fNaverage(0),
-      fVertex(), fEmin(1.E-4), // 100 KeV
-      fEmax(10),               // 10 Gev
-      fBmag(0.),               // kiloGauss
-      fEpsilonRK(0.0003), fUsePhysics(true), fUseRungeKutta(false), fInitialisedRKIntegration(false), fUseDebug(false), fUseGraphics(false),
-      fUseStdScoring(false), fTransportOngoing(false), fSingleTrack(false), fFillTree(false),
-      fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(false), fUseAppMonitoring(false),
-      fTracksLock(), fWMgr(0), fApplication(0), fStdApplication(0), fTaskMgr(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0),
-      fStoredTracks(0), fPrimaryGenerator(0), fTruthMgr(0), fNtracks(0), fEvents(0), fThreadData(0) {
+    : fNthreads(1), fNevents(100), fNtotal(1000), fNtransported(0), fNprimaries(0), fNsteps(0),
+      fNsnext(0), fNphys(0), fNmag(0), fNsmall(0), fNcross(0), fPriorityEvents(0), fDoneEvents(0),
+      fNprocesses(3), fNstart(0), fMaxTracks(0), fMaxThreads(100), fNminThreshold(10), fDebugEvt(-1), fDebugTrk(-1),
+      fDebugStp(-1), fDebugRep(-1), fMaxSteps(10000), fNperBasket(16), fMaxPerBasket(256), fMaxPerEvent(0),
+      fMaxDepth(0), fLearnSteps(0), fLastEvent(0), fPriorityThr(0), fNstepsKillThr(50000), fNminReuse(10000), fNTransportTask(0), fMaxRes(0), fMaxVirt(0), fNaverage(0), fVertex(),
+      fEmin(1.E-4), // 100 KeV
+      fEmax(10),    // 10 Gev
+      // fBmag(0.),
+      fEpsilonRK(0.0003), fUsePhysics(true), fUseRungeKutta(false), fInitialisedRKIntegration(false), fUseDebug(false), fUseGraphics(false), fUseStdScoring(false),
+      fTransportOngoing(false), fSingleTrack(false), fFillTree(false), fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(false), fUseAppMonitoring(false), fTracksLock(),  
+      fWMgr(0), fApplication(0), fStdApplication(0), fTaskMgr(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0), fStoredTracks(0),
+      fPrimaryGenerator(0), fTruthMgr(0), fNtracks(0), fEvents(0), fThreadData(0) {
   // Constructor
   fVertex[0] = fVertex[1] = fVertex[2] = 0.;
   fBfieldArr[0] = fBfieldArr[1] = fBfieldArr[2] = 0.;

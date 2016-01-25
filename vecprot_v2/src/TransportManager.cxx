@@ -40,6 +40,7 @@
 // #ifdef  RUNGE_KUTTA
 #include "GUFieldPropagatorPool.h"
 #include "GUFieldPropagator.h"
+#include "GUVField.h"
 // #endif
 
 #ifdef __INTEL_COMPILER
@@ -313,13 +314,13 @@ void TransportManager::PropagateInVolumeSingle(GeantTrack &track, double crtstep
 
    bool useRungeKutta;
 #ifdef VECCORE_CUDA_DEVICE_COMPILATION
-   const double bmag = gPropagator_fBmag;
+   // const double bmag = gPropagator_fBmag;
    constexpr auto gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
    useRungeKutta= gPropagator_fUseRK;   //  Something like this is needed - TBD
 #else
-   const double bmag = gPropagator->fBmag;
    useRungeKutta= gPropagator->fUseRungeKutta;
 #endif
+   const double bmag = td->fBfieldMag;
 
    // static unsigned long icount= 0;
    // if( icount++ < 2 )  std::cout << " PropagateInVolumeSingle: useRungeKutta= " << useRungeKutta << std::endl;
@@ -438,7 +439,7 @@ int TransportManager::PropagateTracks(TrackVec_t &tracks, GeantTaskData *td) {
   int icrossed = 0;
   double lmax;
   const double eps = 1.E-2; // 100 micron
-  const double bmag = gPropagator->fBmag;
+  const double bmag = td->fBfieldMag;
 
   // Remove dead tracks, propagate neutrals
   for (unsigned int itr=0; itr<tracks.size(); ++itr) {
@@ -575,11 +576,9 @@ int TransportManager::PropagateSingleTrack(TrackVec_t &tracks, int &itr, GeantTa
   int icrossed = 0;
   double step, lmax;
   const double eps = 1.E-2; // 1 micron
-#ifdef VECCORE_CUDA_DEVICE_COMPILATION
-  const double bmag = gPropagator_fBmag;
-#else
-  const double bmag = gPropagator->fBmag;
-#endif
+
+  double Bfield[3], bmag= 0.0;
+
 // Compute transport length in geometry, limited by the physics step
 #ifdef BUG_HUNT
   GeantPropagator *prop = GeantPropagator::Instance();
@@ -606,7 +605,13 @@ int TransportManager::PropagateSingleTrack(TrackVec_t &tracks, int &itr, GeantTa
   }
   // Stage 0: straight propagation
   if (stage == 0) {
-    if (track.fCharge == 0 || bmag < 1.E-10) {
+    bool neutral = (track.fCharge == 0);
+    if( !neutral ) {
+       // printf( " PropagateSingleTrack> getting Field. Charge= %3d ", track.fCharge );
+       GetFieldValue(td, *tracks[itr], Bfield, &bmag);
+       // if( bmag < 1.E-10) { printf("TransportMgr::TrSnglTrk> Tiny field - mag = %f\n", bmag); }
+    }
+    if ( neutral || bmag < 1.E-10) {       
       // Do straight propagation to physics process or boundary
       if (track.fBoundary) {
         if (track.fNextpath->IsOutside())
@@ -687,6 +692,44 @@ int TransportManager::PropagateSingleTrack(TrackVec_t &tracks, int &itr, GeantTa
   return icrossed;
 }
 
+//______________________________________________________________________________
+VECCORE_ATT_HOST_DEVICE
+void TransportManager::GetFieldValue( GeantTaskData *td,
+                                      // const TrackVec_t &tracks, int itr,
+                                      const GeantTrack& track,
+                                  double B[3], double *bmag)
+{
+  // Field value at position of particle 'itr' in 'tracks'
+
+  using ThreeVector_f = vecgeom::Vector3D<float>;
+  using ThreeVector_d = vecgeom::Vector3D<double>;
+  // const GeantTrack& track = *( tracks[itr] );
+  
+  if( bmag ) *bmag= 0.0;
+  ThreeVector_d MagFldD;  //  Transverse wrt direction of B
+
+#ifdef CONST_FIELD_FLAG  
+  if( td->fBfieldIsConst ) {
+    MagFldD= td->fConstFieldValue;
+    if( bmag ) *bmag=   td->fBfieldMag;
+  }
+  else
+#endif     
+  {
+    ThreeVector_d Position (track.fXpos, track.fYpos, track.fZpos);
+    ThreeVector_f MagFldF;
+    td->fFieldObj->GetFieldValue(Position, MagFldF);
+    MagFldD = ThreeVector_d(MagFldF.x(), MagFldF.y(), MagFldF.z());
+    if( bmag ) *bmag= MagFldD.Mag();
+
+    // printf(" TransportManager::GetFieldValue>  Field at x,y,z= ( %f %f %f ) is (%f %f %f) kGauss - mag = %f \n",
+    //       track.fXpos, track.fZpos, track.fZpos, MagFldF.x(), MagFldF.y(), MagFldD.z(), *bmag );
+  }
+  B[0]= MagFldD.x();
+  B[1]= MagFldD.y();
+  B[2]= MagFldD.z();
+}
+   
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
 int TransportManager::PropagateTracksScalar(TrackVec_t &tracks,
