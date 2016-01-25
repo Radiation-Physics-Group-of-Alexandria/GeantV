@@ -89,8 +89,8 @@ GeantPropagator::GeantPropagator()
       fMaxDepth(0), fLearnSteps(0), fLastEvent(0), fPriorityThr(0), fMaxRes(0), fMaxVirt(0), fNaverage(0), fVertex(),
       fEmin(1.E-4), // 100 KeV
       fEmax(10),    // 10 Gev
-      fBmag(0.),
-
+      // fBmag(0.),
+      fEpsilonRK(0.0003),
       fUsePhysics(kTRUE), fUseRungeKutta(kFALSE), fInitialisedRKIntegration(kFALSE), fUseDebug(kFALSE), fUseGraphics(kFALSE), fUseStdScoring(kFALSE),
       fTransportOngoing(kFALSE), fSingleTrack(kFALSE), fFillTree(kFALSE), fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(kFALSE), fUseAppMonitoring(kFALSE), fTracksLock(),  
       fWMgr(0), fApplication(0), fStdApplication(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0), fStoredTracks(0),

@@ -98,7 +98,7 @@ public:
   double fVertex[3]; /** Vertex position */
   double fEmin;      /** Min energy threshold */
   double fEmax;      /** Max energy threshold */
-  double fBmag;      /** Magnetic field */
+  // double fBmag;      /** Magnetic field */      ==>  Moved to Task Data
   float  fBfieldArr[3]; /** Constant Magnetic Field value - if any */
   double fEpsilonRK; /** Relative error in RK integration */
 
