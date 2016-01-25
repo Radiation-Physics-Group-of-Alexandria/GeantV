@@ -313,13 +313,13 @@ void TransportManager::PropagateInVolumeSingle(GeantTrack &track, double crtstep
 
    bool useRungeKutta;
 #ifdef VECCORE_CUDA_DEVICE_COMPILATION
-   const double bmag = gPropagator_fBmag;
+   // const double bmag = gPropagator_fBmag;
    constexpr auto gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
    useRungeKutta= gPropagator_fUseRK;   //  Something like this is needed - TBD
 #else
-   const double bmag = gPropagator->fBmag;
    useRungeKutta= gPropagator->fUseRungeKutta;
 #endif
+   const double bmag = td->fBfieldMag;
 
    // static unsigned long icount= 0;
    // if( icount++ < 2 )  std::cout << " PropagateInVolumeSingle: useRungeKutta= " << useRungeKutta << std::endl;
@@ -438,7 +438,7 @@ int TransportManager::PropagateTracks(TrackVec_t &tracks, GeantTaskData *td) {
   int icrossed = 0;
   double lmax;
   const double eps = 1.E-2; // 100 micron
-  const double bmag = gPropagator->fBmag;
+  const double bmag = td->fBfieldMag;
 
   // Remove dead tracks, propagate neutrals
   for (unsigned int itr=0; itr<tracks.size(); ++itr) {
