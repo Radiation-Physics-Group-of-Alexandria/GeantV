@@ -19,29 +19,29 @@
 //                Derived from my G4MagIntegrationStepper class 
 // --------------------------------------------------------------------
 
-#ifndef GUVVectorIntegrationStepper_h
-#define GUVVectorIntegrationStepper_h
+#ifndef TemplateGUVIntegrationStepper_h
+#define TemplateGUVIntegrationStepper_h
 
-// #include "GUVTypes.h"
-#include "GUVVectorEquationOfMotion.h"
-// class GUVVectorEquationOfMotion;
- 
-class GUVVectorIntegrationStepper
+#include "TemplateGUVEquationOfMotion.h"
+
+
+template <class Backend> 
+class TemplateGUVIntegrationStepper
 {
-    typedef typename vecgeom::kVc::precision_v Double_v;
+    typedef typename Backend::precision_v Double_v;
 
   public:
-        // GUVVectorIntegrationStepper();   // DELET
-        GUVVectorIntegrationStepper( GUVVectorEquationOfMotion* equation, 
-                                     unsigned int IntegrationOrder,
-                                     unsigned int numIntegrationVariables,
-                                     int          numStateVariables      ); // = -1 same? or  unsigned ?    // in G4 =12
+        // TemplateGUVIntegrationStepper();   // DELET
+        TemplateGUVIntegrationStepper(TemplateGUVEquationOfMotion<Backend>* equation, 
+                                                unsigned int IntegrationOrder,
+                                                unsigned int numIntegrationVariables,
+                                                int          numStateVariables      ); // = -1 same? or  unsigned ?    // in G4 =12
            // See explanations of each below - e.g. order => RK order
 
-        GUVVectorIntegrationStepper( const GUVVectorIntegrationStepper& );
+        TemplateGUVIntegrationStepper( const TemplateGUVIntegrationStepper& );
            // For use in Clone() method
         
-        virtual ~GUVVectorIntegrationStepper();
+        virtual ~TemplateGUVIntegrationStepper();
 
         // Core methods
         // ---------------------
@@ -65,7 +65,7 @@ class GUVVectorIntegrationStepper
 
         // Auxiliary methods
         // ---------------------
-        virtual  GUVVectorIntegrationStepper* Clone() const = 0;
+        virtual  TemplateGUVIntegrationStepper* Clone() const = 0;
         // Create an independent copy of the current object -- including independent 'owned' objects
         
         inline void RightHandSideVIS( const Double_v y[], Double_v charge, Double_v dydx[] );   
@@ -90,10 +90,10 @@ class GUVVectorIntegrationStepper
         // inline void NormalisePolarizationVector( double vec[12] ); // TODO - add polarisation
         // Simple utility function to (re)normalise 'unit spin' vector.
 
-        inline GUVVectorEquationOfMotion *GetEquationOfMotion() { return  fAbstrEquation; }
-        inline const GUVVectorEquationOfMotion *GetEquationOfMotion() const { return  fAbstrEquation; }        
+        inline TemplateGUVEquationOfMotion<Backend> *GetEquationOfMotion() { return  fAbstrEquation; }
+        inline const TemplateGUVEquationOfMotion<Backend> *GetEquationOfMotion() const { return  fAbstrEquation; }        
         // As some steppers require access to other methods of Eq_of_Mot
-        void SetEquationOfMotion(GUVVectorEquationOfMotion* newEquation); 
+        void SetEquationOfMotion(TemplateGUVEquationOfMotion<Backend>* newEquation); 
 
         virtual void InitializeCharge(double particleCharge) { GetEquationOfMotion()->InitializeCharge(particleCharge); }
            // Some steppers may need the value(s) / or status - they can intercept        
@@ -103,12 +103,12 @@ class GUVVectorIntegrationStepper
 
     private:
 
-        GUVVectorIntegrationStepper& operator=(const GUVVectorIntegrationStepper&);
+        TemplateGUVIntegrationStepper& operator=(const TemplateGUVIntegrationStepper&);
         // Private copy constructor and assignment operator.
 
     private:
 
-        GUVVectorEquationOfMotion *fAbstrEquation;  // For use in calling RightHandSideVIS only
+        TemplateGUVEquationOfMotion<Backend> *fAbstrEquation;  // For use in calling RightHandSideVIS only
           // Object is typically owned by stepper, but if a separate pointer (TEquation)
           //  exists which points to the same object, it must not be deleted using
           //  this pointer!
@@ -118,27 +118,65 @@ class GUVVectorIntegrationStepper
         const unsigned int fNoStateVariables;       // # required for FieldTrack
 };
 
-// #include  "GUVVectorIntegrationStepper.icc"
+// #include  "TemplateGUVIntegrationStepper.icc"
+template <class Backend> 
 inline
-void GUVVectorIntegrationStepper::
-RightHandSideVIS( const  typename vecgeom::kVc::precision_v y[], 
-                         typename vecgeom::kVc::precision_v charge,
-                         typename vecgeom::kVc::precision_v dydx[] )
+void TemplateGUVIntegrationStepper<Backend>::
+  RightHandSideVIS( const  typename Backend::precision_v y[], 
+                           typename Backend::precision_v charge,
+                           typename Backend::precision_v dydx[] )
 {
    fAbstrEquation-> RightHandSide(y, charge, dydx);
 }
 
+template <class Backend> 
 inline
-unsigned int GUVVectorIntegrationStepper::GetNumberOfVariables() const
+unsigned int TemplateGUVIntegrationStepper<Backend>::GetNumberOfVariables() const
 {
   return fNoIntegrationVariables;
 }
 
-
+template <class Backend> 
 inline
-unsigned int GUVVectorIntegrationStepper::GetNumberOfStateVariables() const
+unsigned int TemplateGUVIntegrationStepper<Backend>::GetNumberOfStateVariables() const
 {
   return fNoStateVariables;
 }
 
-#endif  /* GUVVectorIntegrationStepper */
+
+template <class Backend> 
+TemplateGUVIntegrationStepper<Backend>::
+  TemplateGUVIntegrationStepper(TemplateGUVEquationOfMotion<Backend>* equation,
+                                            unsigned int num_integration_vars,
+                                            unsigned int integrationOrder,
+                                                     int num_state_vars       )
+  : fAbstrEquation(equation),
+    fIntegrationOrder(integrationOrder),
+    fNoIntegrationVariables(num_integration_vars),
+    fNoStateVariables(num_state_vars > 0 ? num_state_vars : num_integration_vars)
+{
+}
+
+template <class Backend> 
+TemplateGUVIntegrationStepper<Backend>::~TemplateGUVIntegrationStepper()
+{
+}
+
+// This allows the method to cache the value etc - Not needed for now
+// void TemplateGUVIntegrationStepper<Backend>::ComputeRightHandSide( const double y[], /*double charge,*/ double dydx[] ) 
+// {
+//    this->RightHandSide( y, /*charge,*/ dydx );
+// }
+
+template <class Backend> 
+void TemplateGUVIntegrationStepper<Backend>::
+  SetEquationOfMotion(TemplateGUVEquationOfMotion<Backend>* newEquation)
+{
+  if( newEquation != 0 )
+  {
+    fAbstrEquation= newEquation;
+  }
+}
+
+
+#endif  /* TemplateGUVIntegrationStepper */

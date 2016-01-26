@@ -12,10 +12,23 @@
 #include "GUVVectorIntegrationStepper.h"
 #include "GUVectorLineSection.h"
 #include "ConstVectorFieldHelixStepper.h"
+#include "GUVVectorHelicalStepper.h"
 
 #include "GUVField.h"
 #include "TMagFieldEquation.h"
 #include "TUniformMagField.h"
+
+//include template header files for testing
+#include "TemplateGUVField.h"
+#include "TemplateGUVMagneticField.h"
+#include "TemplateTUniformMagField.h"
+#include "TemplateGUVEquationOfMotion.h"
+#include "TemplateTMagFieldEquation.h"
+#include "TemplateGULineSection.h"
+#include "TemplateGUVIntegrationStepper.h"
+#include "TemplateConstFieldHelixStepper.h" //nothing templatized really
+// #include "TemplateGUFieldTrack.h"
+
 
 using namespace std;
 
@@ -47,7 +60,7 @@ bool  TestEquation(GUVVectorEquationOfMotion* );
 
 constexpr unsigned int gNposmom= 6; // Position 3-vec + Momentum 3-vec
 
-ThreeVectorSimd_f  FieldValue(0.0, 0.0, 1.0);
+ThreeVectorSimd_f  FieldValue (0.0, 0.0, 1.0);
 ThreeVector_f      FieldValue1(0.0, 0.0, 1.0);
 ThreeVector_f      FieldValue2(1.0, 2.0, 3.0);
 ThreeVectorSimd_f  FieldValueV(1.0, 2.0, 3.0);
