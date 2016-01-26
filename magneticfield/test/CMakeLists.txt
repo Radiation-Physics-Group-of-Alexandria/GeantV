@@ -33,6 +33,13 @@ add_executable(testVectorMagFieldEquation testVectorMagFieldEquation.cxx) ## ${s
 target_link_libraries(testVectorMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 #message(STATUS "Created target for testVectorMagFieldEquation")
 
+add_executable(testTemplateMagFieldEquation testTemplateMagFieldEquation.cxx) ## ${sources} ${headers})
+target_link_libraries(testTemplateMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+#add_executable(TestConstBzStepper TestConstBzStepper.cxx) ## ${sources} ${headers})
+#target_link_libraries(TestConstBzStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+
 add_executable(ReproduceError ReproduceError.cxx) ## ${sources} ${headers})
 target_link_libraries(ReproduceError Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 #message(STATUS "Created target for testVectorMagFieldEquation")
