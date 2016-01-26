@@ -5,8 +5,8 @@
  *      Author: swenzel
  */
 
-#ifndef CONSTVECTORFIELDHELIXSTEPPER_H_
-#define CONSTVECTORFIELDHELIXSTEPPER_H_
+#ifndef TEMPLATECONSTFIELDHELIXSTEPPER_H_
+#define TEMPLATECONSTFIELDHELIXSTEPPER_H_
 
 #include "Geant/Config.h"
 
@@ -16,7 +16,7 @@
 * ( neglecting energy loss of particle )
 * This class is roughly equivalent to TGeoHelix in ROOT
 */
-class ConstVectorBzFieldHelixStepper
+class TemplateConstBzFieldHelixStepper
 {
   private:
     double fBz;
@@ -24,7 +24,7 @@ class ConstVectorBzFieldHelixStepper
   public:
     typedef Vc::Vector<double>     Double_v;
 
-    ConstVectorBzFieldHelixStepper( double Bz = 0. ) : fBz(Bz) {}
+    TemplateConstBzFieldHelixStepper( double Bz = 0. ) : fBz(Bz) {}
 
     void SetBz( double Bz ){ fBz = Bz; }
     double GetBz() const { return fBz; }
@@ -73,7 +73,7 @@ class ConstVectorBzFieldHelixStepper
 template<typename BaseDType, typename BaseIType>
 inline
 __attribute__((always_inline))
-void ConstVectorBzFieldHelixStepper::DoStep(
+void TemplateConstBzFieldHelixStepper::DoStep(
              BaseDType const & x0, 
              BaseDType const & y0, 
              BaseDType const & z0,
@@ -119,7 +119,7 @@ void ConstVectorBzFieldHelixStepper::DoStep(
  SW: commented out due to explicit Vc dependence and since it is not currently used
      leaving the code here to show how one would dispatch to the kernel with Vc
 #define _R_ __restrict__
-void ConstVectorBzFieldHelixStepper::DoStep_v(
+void TemplateConstBzFieldHelixStepper::DoStep_v(
                       double const * _R_ posx, double const * _R_ posy, double const * _R_ posz,
                       double const * _R_ dirx, double const * _R_ diry, double const * _R_ dirz,
                       int const * _R_ charge, double const * _R_ momentum, double const * _R_ step,
@@ -165,4 +165,4 @@ void ConstVectorBzFieldHelixStepper::DoStep_v(
 
 
 
-#endif /* CONSTVECTORFIELDHELIXSTEPPER_H_ */
+#endif /* TEMPLATECONSTFIELDHELIXSTEPPER_H_ */
