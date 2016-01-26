@@ -1,5 +1,5 @@
 //
-// class GUVectorLineSection
+// class TemplateGUVLineSection
 //
 // Class description:
 //
@@ -10,21 +10,22 @@
 // - Created. J. Apostolakis.
 // --------------------------------------------------------------------
 
-#ifndef GUVectorLineSection_hh
-#define GUVectorLineSection_hh
+#ifndef TemplateGULineSection_hh
+#define TemplateGULineSection_hh
 
 
 #include <base/Vector3D.h> 
 
 
-class GUVectorLineSection
+template <class Backend>
+class TemplateGUVLineSection
 {
   public:  // with description
 
-    typedef vecgeom::Vector3D<typename vecgeom::kVc::precision_v>  ThreeVectorSimd; 
-    typedef typename vecgeom::kVc::precision_v Double_v;
+    typedef vecgeom::Vector3D<typename Backend::precision_v>  ThreeVectorSimd; 
+    typedef typename Backend::precision_v Double_v;
 
-    inline GUVectorLineSection( const ThreeVectorSimd& PntA, 
+    inline TemplateGUVLineSection( const ThreeVectorSimd& PntA, 
                                 const ThreeVectorSimd& PntB );
 
     Double_v Dist( ThreeVectorSimd OtherPnt ) const;
@@ -43,37 +44,40 @@ class GUVectorLineSection
 
 // Inline methods implementations
 
+template <class Backend>
 inline
-GUVectorLineSection::GUVectorLineSection( const ThreeVectorSimd& PntA, 
+TemplateGUVLineSection<Backend>::TemplateGUVLineSection( const ThreeVectorSimd& PntA, 
                                           const ThreeVectorSimd& PntB )
   : EndpointA(PntA), VecAtoB(PntB-PntA)
 { 
   fABdistanceSq = VecAtoB.Mag2();  
 }
 
+template <class Backend>
 inline
-typename vecgeom::kVc::precision_v GUVectorLineSection::GetABdistanceSq() const
+typename Backend::precision_v TemplateGUVLineSection<Backend>::GetABdistanceSq() const
 {
   return fABdistanceSq;
 }
 
+template <class Backend>
 inline
-typename vecgeom::kVc::precision_v GUVectorLineSection::Distline
-              ( const vecgeom::Vector3D<typename vecgeom::kVc::precision_v> & OtherPnt, 
-                const vecgeom::Vector3D<typename vecgeom::kVc::precision_v> & LinePntA, 
-                const vecgeom::Vector3D<typename vecgeom::kVc::precision_v> & LinePntB )
+typename Backend::precision_v TemplateGUVLineSection<Backend>::Distline
+              ( const vecgeom::Vector3D<typename Backend::precision_v> & OtherPnt, 
+                const vecgeom::Vector3D<typename Backend::precision_v> & LinePntA, 
+                const vecgeom::Vector3D<typename Backend::precision_v> & LinePntB )
 {
-  GUVectorLineSection LineAB( LinePntA, LinePntB );  // Line from A to B
+  TemplateGUVLineSection<Backend> LineAB( LinePntA, LinePntB );  // Line from A to B
   return LineAB.Dist( OtherPnt );
 }
 
-
-typename vecgeom::kVc::precision_v GUVectorLineSection::Dist
-             ( vecgeom::Vector3D<typename vecgeom::kVc::precision_v> OtherPnt ) const
+template <class Backend>
+typename Backend::precision_v TemplateGUVLineSection<Backend>::Dist
+             ( vecgeom::Vector3D<typename Backend::precision_v> OtherPnt ) const
 {
-  typename vecgeom::kVc::precision_v  dist_sq;  
-  vecgeom::Vector3D<typename vecgeom::kVc::precision_v>  VecAZ;
-  typename vecgeom::kVc::precision_v sq_VecAZ, inner_prod, unit_projection(10.0) ; 
+  typename Backend::precision_v  dist_sq;  
+  vecgeom::Vector3D<typename Backend::precision_v>  VecAZ;
+  typename Backend::precision_v sq_VecAZ, inner_prod, unit_projection(10.0) ; 
 
   VecAZ= OtherPnt - EndpointA;
   sq_VecAZ = VecAZ.Mag2();
