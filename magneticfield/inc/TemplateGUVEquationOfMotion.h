@@ -27,7 +27,7 @@ template <class Backend>
 class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion 
 {
   
-  typedef typename Backend::precision_v      Double_v;
+  typedef typename Backend::precision_v Double_v;
 
   public:  // with description
 
@@ -35,10 +35,10 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
      virtual ~TemplateGUVEquationOfMotion();
        // Constructor and virtual destructor. No operations, just checks
 
-     virtual void EvaluateRhsGivenB( const  Double_v yVec[],
-                                     const  vecgeom::Vector3D<Double_v> B,  // Was double B[3],
-                                            Double_v charge, 
-                                            Double_v dydx[]             ) const = 0;
+     virtual void EvaluateRhsGivenB( const Double_v yVec[],
+                                     const vecgeom::Vector3D<Double_v> B,  // Was double B[3],
+                                           Double_v charge, 
+                                           Double_v dydx[]             ) const = 0;
        // Given the value of the  field "B", this function 
        // calculates the value of the derivative dydx.
        // --------------------------------------------------------
@@ -81,8 +81,8 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
        // Obtain only the field - the stepper assumes it is pure Magnetic.
        // Not protected, because GUVRKG3_Stepper uses it directly.
      inline
-     void GetFieldValue( const  Double_v                     Point[4],
-                                vecgeom::Vector3D<Double_v>  &FieldValue ) const;
+     void GetFieldValue( const Double_v                     Point[4],
+                               vecgeom::Vector3D<Double_v>  &FieldValue ) const;
 
      inline
      void GetFieldValue( const vecgeom::Vector3D<Double_v> &Position,
