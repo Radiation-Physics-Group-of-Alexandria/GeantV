@@ -26,12 +26,23 @@
 #include "TemplateTMagFieldEquation.h"
 #include "TemplateGULineSection.h"
 #include "TemplateGUVIntegrationStepper.h"
-#include "TemplateConstFieldHelixStepper.h" //nothing templatized really
+// #include "TemplateConstFieldHelixStepper.h" //nothing templatized really
 #include "TemplateGUFieldTrack.h"
 #include "TemplateGUVHelicalStepper.h"
 #include "TemplateGUTCashKarpRKF45.h"
-#include "TMagErrorStepper.h" //for sake of GUIntegrationNms::NumVars
+#include "TemplateGUIntegrationDriver.h" //nothing done yet. Also, need to append stuff from .cxx file
+#include "TemplateTMagErrorStepper.h"
+#include "TemplateGUExactHelixStepper.h"
 
+
+#include "Units.h"
+
+// using fieldUnits::meter;
+using fieldUnits::millimeter;   
+using fieldUnits::second;  
+using fieldUnits::eplus;  
+using fieldUnits::tesla;
+using fieldUnits::degree;
 
 using namespace std;
 
@@ -47,16 +58,6 @@ using ThreeVectorSimd_f = vecgeom::Vector3D<Float_v>;
 using ThreeVectorSimd_d = vecgeom::Vector3D<Double_v>;
 
 
-/*int main(){
-
-  ThreeVectorSimd_f FieldValue2(0.0, 0.0, 1.0);
-
-  TVectorUniformMagField* ConstBfield = new TVectorUniformMagField( FieldValue2 );
-  cout<<"here 0.5"<<endl;
-  using EquationType = TVectorMagFieldEquation<TVectorUniformMagField, gNposmom>;
-
-  return 0;
-}*/
 
 GUVVectorEquationOfMotion*  CreateFieldAndEquation(ThreeVector_f constFieldValue);
 bool  TestEquation(GUVVectorEquationOfMotion* );
@@ -68,41 +69,14 @@ ThreeVector_f      FieldValue1(0.0, 0.0, 1.0);
 ThreeVector_f      FieldValue2(1.0, 2.0, 3.0);
 ThreeVectorSimd_f  FieldValueV(1.0, 2.0, 3.0);
 
-/*int
-main( int, char** )
-{
-  std::cout<<"Entered main"<<std::endl;
 
-  GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue );
+int main(int argc, char *argv[]){
 
-  std::cout<<"eq created "<<std::endl;
+
+  GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue1 );
   TestEquation(eq);
 
   return 1;
-}*/
-int main(int argc, char *argv[]){
-  int flag = atoi(argv[1]);
-
-  if(flag) {
-
-    // TVectorUniformMagField* ConstBfield = new TVectorUniformMagField( FieldValue1 );
-    // cout<<"here 0.5"<<endl;
-    // using EquationType = TVectorMagFieldEquation<TVectorUniformMagField, gNposmom>;
-    // delete ConstBfield;
-    GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue1 );
-
-  }
-
-  else{
-    // std::cout<<"Entered main"<<std::endl;
-
-    GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue1 );
-
-    // std::cout<<"eq created "<<std::endl;
-    TestEquation(eq);
-  }
-
-  return 0;
 }
 
 
