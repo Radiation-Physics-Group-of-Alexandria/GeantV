@@ -27,7 +27,10 @@
 #include "TemplateGULineSection.h"
 #include "TemplateGUVIntegrationStepper.h"
 #include "TemplateConstFieldHelixStepper.h" //nothing templatized really
-// #include "TemplateGUFieldTrack.h"
+#include "TemplateGUFieldTrack.h"
+#include "TemplateGUVHelicalStepper.h"
+#include "TemplateGUTCashKarpRKF45.h"
+#include "TMagErrorStepper.h" //for sake of GUIntegrationNms::NumVars
 
 
 using namespace std;
