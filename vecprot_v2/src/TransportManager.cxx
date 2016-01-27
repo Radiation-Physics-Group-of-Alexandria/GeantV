@@ -578,7 +578,8 @@ int TransportManager::PropagateSingleTrack(TrackVec_t &tracks, int &itr, GeantTa
   const double eps = 1.E-2; // 1 micron
 
   double Bfield[3], bmag= 0.0;
-
+  // const double bmag = td->fBfieldMag;
+  
 // Compute transport length in geometry, limited by the physics step
 #ifdef BUG_HUNT
   GeantPropagator *prop = GeantPropagator::Instance();
@@ -695,9 +696,8 @@ int TransportManager::PropagateSingleTrack(TrackVec_t &tracks, int &itr, GeantTa
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
 void TransportManager::GetFieldValue( GeantTaskData *td,
-                                      // const TrackVec_t &tracks, int itr,
                                       const GeantTrack& track,
-                                  double B[3], double *bmag)
+                                      double B[3], double *bmag)
 {
   // Field value at position of particle 'itr' in 'tracks'
 
@@ -708,13 +708,11 @@ void TransportManager::GetFieldValue( GeantTaskData *td,
   if( bmag ) *bmag= 0.0;
   ThreeVector_d MagFldD;  //  Transverse wrt direction of B
 
-#ifdef CONST_FIELD_FLAG  
   if( td->fBfieldIsConst ) {
     MagFldD= td->fConstFieldValue;
     if( bmag ) *bmag=   td->fBfieldMag;
   }
   else
-#endif     
   {
     ThreeVector_d Position (track.fXpos, track.fYpos, track.fZpos);
     ThreeVector_f MagFldF;

@@ -31,7 +31,7 @@ set(sources
 
 set(headers
   inc/ExN03Application.h 
-  inc/CMSApplication.h 
+  inc/CMSApplication.h
   inc/LHCbApplication.h 
   inc/FastSimApplication.h 
   )   

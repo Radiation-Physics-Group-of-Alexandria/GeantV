@@ -204,10 +204,7 @@ namespace TransportManager {
 
   /** @brief Auxiliary function to fetch the field value */
   VECCORE_ATT_HOST_DEVICE
-  void GetFieldValue( GeantTaskData *td,
-                      // const TrackVec_t &tracks, int itr,
-                      const GeantTrack& track,
-                      double B[3], double *bmag);
+  void GetFieldValue( GeantTaskData *td, const GeantTrack& track, double B[3], double *bmag);
    
 };
 
