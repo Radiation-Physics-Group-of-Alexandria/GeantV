@@ -126,21 +126,10 @@ class GUVVectorHelicalStepper : public GUVVectorIntegrationStepper
       double fParticleCharge;
 };
 
-// #include  "GUVVectorHelicalStepper.icc"
-#include "Units.h"     
-using fieldUnits::meter;  //  Update to GeantV units ASAP
-using fieldUnits::GeV;
-using fieldUnits::tesla;
-
-#include "Constants.h"
-using Constants::pi;
-using Constants::twopi;
-
-const double GUVVectorHelicalStepper::fUnitConstant = 0.299792458*(GeV/(tesla*meter));
 
 
-inline void
-GUVVectorHelicalStepper::LinearStep( const Vc::Vector<double> yIn[],
+inline 
+void GUVVectorHelicalStepper::LinearStep( const Vc::Vector<double> yIn[],
                                            double  h,
                                            Vc::Vector<double> yLinear[]) const
 {

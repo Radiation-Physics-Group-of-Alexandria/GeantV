@@ -56,8 +56,8 @@ double GULineSection::GetABdistanceSq() const
 
 inline
 double GULineSection::Distline( const ThreeVector& OtherPnt, 
-                                  const ThreeVector& LinePntA, 
-                                  const ThreeVector& LinePntB )
+                                const ThreeVector& LinePntA, 
+                                const ThreeVector& LinePntB )
 {
   GULineSection LineAB( LinePntA, LinePntB );  // Line from A to B
   return LineAB.Dist( OtherPnt );
