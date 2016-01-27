@@ -12,7 +12,8 @@
 #include "TemplateGULineSection.h"
 #include "TemplateGUVIntegrationStepper.h"
 
-#include "TMagErrorStepper.h" //for sake of GUIntegrationNms::NumVars
+// #include "TMagErrorStepper.h" //for sake of GUIntegrationNms::NumVars
+#include "TemplateTMagErrorStepper.h"
 
 #define INLINERHS 1
 
@@ -49,13 +50,13 @@ class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>
     TemplateGUVIntegrationStepper<Backend>* Clone() const override;
 
     REALLY_INLINE
-       void StepWithErrorEstimate(const Double_v* yInput,    // Consider __restrict__
-                                  const Double_v*  dydx,
-                                        Double_v   Step,
-                                        Double_v*  yOut,
-                                        Double_v*  yErr) override;
+    void StepWithErrorEstimate(const Double_v* yInput,    // Consider __restrict__
+                               const Double_v*  dydx,
+                                     Double_v   Step,
+                                     Double_v*  yOut,
+                                     Double_v*  yErr) override;
 
-    Double_v  DistChord()   const override;  
+    Double_v DistChord()   const override;  
 
     REALLY_INLINE
     void RightHandSideInl(Double_v y[], Double_v dydx[]) 
@@ -73,7 +74,7 @@ class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>
         // 'Invariant' during integration - the pointers must not change
         // -----------
         T_Equation* fEquation_Rhs;
-        bool        fOwnTheEquation;
+        bool        fOwnTheEquation; //enquire it's nature. If Bool_v , need to change if -> MaskedAssign
         TemplateGUTCashKarpRKF45* fAuxStepper;
 
         // State -- intermediate values used during RK step
@@ -114,7 +115,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
      fAuxStepper(0),
      fLastStepLength(0.)
 {
-   assert( dynamic_cast<GUVEquationOfMotion*>(EqRhs) != 0 );
+   assert( dynamic_cast<TemplateGUVEquationOfMotion<Backend>*>(EqRhs) != 0 );
    assert( (numStateVariables == 0) || (numStateVariables >= Nvar) );
   
    typedef typename Backend::precision_v Double_v;
@@ -134,8 +135,8 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
 }
 
 template <class Backend, class T_Equation, unsigned int Nvar>
-   void TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
-     SetEquationOfMotion(T_Equation* equation)
+void TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
+  SetEquationOfMotion(T_Equation* equation)
 {
    fEquation_Rhs= equation;
    this->TemplateGUVIntegrationStepper<Backend>::SetEquationOfMotion(fEquation_Rhs);
@@ -147,10 +148,10 @@ template <class Backend, class T_Equation,unsigned int Nvar>
 inline
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
    TemplateGUTCashKarpRKF45( const TemplateGUTCashKarpRKF45& right )
-   : TemplateGUVIntegrationStepper<Backend>( (GUVEquationOfMotion*) 0,
-                            sOrderMethod,
-                            Nvar,
-                            right.GetNumberOfStateVariables() ),
+   : TemplateGUVIntegrationStepper<Backend>( (TemplateGUVEquationOfMotion<Backend>*) 0,
+                                              sOrderMethod,
+                                              Nvar,
+                                              right.GetNumberOfStateVariables() ),
      fEquation_Rhs( (T_Equation*) 0 ),
      fOwnTheEquation(true),
      fAuxStepper(0),   //  May overwrite below
@@ -162,7 +163,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
    fOwnTheEquation=true;
     // fEquation_Rhs= right.GetEquationOfMotion()->Clone());
    
-   assert( dynamic_cast<GUVEquationOfMotion*>(fEquation_Rhs) != 0 );  
+   assert( dynamic_cast<TemplateGUVEquationOfMotion<Backend>*>(fEquation_Rhs) != 0 );  
    assert( this->GetNumberOfStateVariables() >= Nvar);
   
    typedef typename Backend::precision_v Double_v;
@@ -189,7 +190,6 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
 
 
 template <class Backend, class T_Equation,unsigned int Nvar>
-// inline
 REALLY_INLINE
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::~TemplateGUTCashKarpRKF45()
 {
@@ -206,7 +206,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::~TemplateGUTCashKarpRKF45()
 
 template <class Backend, class T_Equation, unsigned int Nvar>
 TemplateGUVIntegrationStepper<Backend>* 
-   TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::Clone() const
+TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::Clone() const
 {
    // return new TemplateGUTCashKarpRKF45( *this );
    return new TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>( *this );   
@@ -216,11 +216,11 @@ TemplateGUVIntegrationStepper<Backend>*
 template <class Backend, class T_Equation, unsigned int Nvar>
 inline void
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
-   StepWithErrorEstimate(const typename Backend::precision_v*  yInput, // [],    
-                         const typename Backend::precision_v*  dydx, // [],
-                               typename Backend::precision_v   Step,
-                               typename Backend::precision_v*  yOut, // [],
-                               typename Backend::precision_v*  yErr  ) // [])
+  StepWithErrorEstimate(const typename Backend::precision_v*  yInput, // [],    
+                        const typename Backend::precision_v*  dydx, // [],
+                              typename Backend::precision_v   Step,
+                              typename Backend::precision_v*  yOut, // [],
+                              typename Backend::precision_v*  yErr  ) // [])
 {
     // const int nvar = 6 ;
     // const double a2 = 0.2 , a3 = 0.3 , a4 = 0.6 , a5 = 1.0 , a6 = 0.875;
@@ -336,12 +336,11 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
 
     // Do half a step using StepNoErr
 
-    fAuxStepper->TemplateGUTCashKarpRKF45::StepWithErrorEstimate( 
-            fLastInitialVector, 
-            fLastDyDx, 
-            0.5 * fLastStepLength, 
-            fMidVector,   
-            fMidError );
+    fAuxStepper->TemplateGUTCashKarpRKF45::StepWithErrorEstimate( fLastInitialVector, 
+                                                                  fLastDyDx, 
+                                                                  0.5 * fLastStepLength, 
+                                                                  fMidVector,   
+                                                                  fMidError );
 
     midPoint = ThreeVector( fMidVector[0], fMidVector[1], fMidVector[2]);       
 
