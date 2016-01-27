@@ -1,5 +1,5 @@
 //
-// class TemplateGUVLineSection
+// class TemplateGULineSection
 //
 // Class description:
 //
@@ -18,15 +18,15 @@
 
 
 template <class Backend>
-class TemplateGUVLineSection
+class TemplateGULineSection
 {
   public:  // with description
 
     typedef vecgeom::Vector3D<typename Backend::precision_v>  ThreeVectorSimd; 
     typedef typename Backend::precision_v Double_v;
 
-    inline TemplateGUVLineSection( const ThreeVectorSimd& PntA, 
-                                const ThreeVectorSimd& PntB );
+    inline TemplateGULineSection( const ThreeVectorSimd& PntA, 
+                                  const ThreeVectorSimd& PntB );
 
     Double_v Dist( ThreeVectorSimd OtherPnt ) const;
 
@@ -46,8 +46,9 @@ class TemplateGUVLineSection
 
 template <class Backend>
 inline
-TemplateGUVLineSection<Backend>::TemplateGUVLineSection( const ThreeVectorSimd& PntA, 
-                                          const ThreeVectorSimd& PntB )
+TemplateGULineSection<Backend>
+  ::TemplateGULineSection( const ThreeVectorSimd& PntA, 
+                           const ThreeVectorSimd& PntB )
   : EndpointA(PntA), VecAtoB(PntB-PntA)
 { 
   fABdistanceSq = VecAtoB.Mag2();  
@@ -55,25 +56,29 @@ TemplateGUVLineSection<Backend>::TemplateGUVLineSection( const ThreeVectorSimd& 
 
 template <class Backend>
 inline
-typename Backend::precision_v TemplateGUVLineSection<Backend>::GetABdistanceSq() const
+typename Backend::precision_v 
+TemplateGULineSection<Backend>
+  ::GetABdistanceSq() const
 {
   return fABdistanceSq;
 }
 
 template <class Backend>
 inline
-typename Backend::precision_v TemplateGUVLineSection<Backend>::Distline
-              ( const vecgeom::Vector3D<typename Backend::precision_v> & OtherPnt, 
-                const vecgeom::Vector3D<typename Backend::precision_v> & LinePntA, 
-                const vecgeom::Vector3D<typename Backend::precision_v> & LinePntB )
+typename Backend::precision_v 
+TemplateGULineSection<Backend>
+  ::Distline( const vecgeom::Vector3D<typename Backend::precision_v> & OtherPnt, 
+              const vecgeom::Vector3D<typename Backend::precision_v> & LinePntA, 
+              const vecgeom::Vector3D<typename Backend::precision_v> & LinePntB )
 {
-  TemplateGUVLineSection<Backend> LineAB( LinePntA, LinePntB );  // Line from A to B
+  TemplateGULineSection<Backend> LineAB( LinePntA, LinePntB );  // Line from A to B
   return LineAB.Dist( OtherPnt );
 }
 
 template <class Backend>
-typename Backend::precision_v TemplateGUVLineSection<Backend>::Dist
-             ( vecgeom::Vector3D<typename Backend::precision_v> OtherPnt ) const
+typename Backend::precision_v 
+TemplateGULineSection<Backend>
+  ::Dist( vecgeom::Vector3D<typename Backend::precision_v> OtherPnt ) const
 {
   typename Backend::precision_v  dist_sq;  
   vecgeom::Vector3D<typename Backend::precision_v>  VecAZ;
