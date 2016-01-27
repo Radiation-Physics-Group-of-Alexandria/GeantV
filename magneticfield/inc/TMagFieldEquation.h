@@ -54,8 +54,21 @@ class TMagFieldEquation : public GUVEquationOfMotion
         fPtrField->T_Field::GetFieldValue(Point, Value);
      }
 
+     T_Field* GetField() { return fPtrField; } 
+
      inline // REALLY_INLINE
      void RightHandSide(const double y[], /*double charge,*/ double dydx[] ) const;
+
+     inline // REALLY_INLINE
+     void RightHandSide(const double y[], /*double charge,*/ double dydx[],
+                        vecgeom::Vector3D<float> &BfieldVec) const;
+
+     inline // REALLY_INLINE
+     void RightHandSide(const             double  y[],
+                        const vecgeom::Vector3D<double> &Position,   // Copy of y[0], y[1], y[2] - for optim
+                                        /*double  charge,*/
+                                          double  dydx[],
+                        vecgeom::Vector3D<float> &BfieldVec) const;
 
      REALLY_INLINE
      void TEvaluateRhsGivenB( const double y[],
@@ -162,7 +175,7 @@ REALLY_INLINE
     double inv_momentum_magnitude = 1. / std::sqrt( momentum_mag_square );
     // double inv_momentum_magnitude = vdt::fast_isqrt_general( momentum_mag_square, 2);
 
-    vecgeom::Vector3D<double> B( Bfloat[0], Bfloat[1], Bfloat[2] );
+    double B[3]= { Bfloat[0], Bfloat[1], Bfloat[2] };
 
     double cof = fParticleCharge*fCof*inv_momentum_magnitude;
 
@@ -182,17 +195,12 @@ template
 REALLY_INLINE
 void
 TMagFieldEquation<Field,Size>
-   ::FieldFromY(const double y[], /* double charge, */ double Bfield[3] ) const
+   ::FieldFromY(const double y[],  double Bfield[3] ) const
 {
-    // double  Bfield[3];  //G4maximum_number_of_field_components];
-    double  PositionAndTime[4];
-    PositionAndTime[0] = y[0];
-    PositionAndTime[1] = y[1];
-    PositionAndTime[2] = y[2];
-    PositionAndTime[3] = 0;        // Time
-    // PositionAndTime[3] = y[7];  //  --> extersion?
-
-    GetFieldValue(PositionAndTime, Bfield) ;
+   // double  PositionAndTime[4] = { y[0], y[1], y[2], 0.0 } 
+   // PositionAndTime[3] = y[7];  //  --> extersion?
+   // GetFieldValue(PositionAndTime, Bfield) ;
+   GetFieldValue(y, Bfield) ;
 }
 
 template
@@ -202,15 +210,12 @@ void
 TMagFieldEquation<Field,Size>
    ::FieldFromY(const double y[],  vecgeom::Vector3D<float> &Bfield ) const
 {
-    // double  Bfield[3];  //G4maximum_number_of_field_components];
-    // double  PositionAndTime[4];
-    // Position[0] = y[0];
-    // Position[1] = y[1];
-    // Position[2] = y[2];
-    // PositionAndTime[3] = y[7];  //  --> Time / extension?
-    vecgeom::Vector3D<double> Position( y[0], y[1], y[2] );
+   // double  Bfield[3];  //G4maximum_number_of_field_components];
+   // double  PositionAndTime[4] = { y[0], y[1], y[2], 0.0 } 
+   // PositionAndTime[3] = y[7];  //  --> Time / extension?
+   vecgeom::Vector3D<double> Position( y[0], y[1], y[2] );
 
-    fPtrField->T_Field::GetFieldValue( Position, Bfield );
+   fPtrField->T_Field::GetFieldValue( Position, Bfield );
 }
 
 
@@ -223,13 +228,44 @@ TMagFieldEquation<Field,Size>
 {
     // double  BfieldArr[3];  //G4maximum_number_of_field_components];
     // FieldFromY( y, BfieldArr );
-    // TEvaluateRhsGivenB( y, BfieldArr, dydx );
+    // TEvaluateRhsGivenB( y, BfieldArr, /*charge,*/ dydx );
 
     vecgeom::Vector3D<float> BfieldVec;
 
     FieldFromY( y, BfieldVec );
+    TEvaluateRhsGivenB( y, BfieldVec, /*charge,*/ dydx );
+}
+
+template
+<class Field, unsigned int Size>
+REALLY_INLINE
+void
+TMagFieldEquation<Field,Size>
+   ::RightHandSide(const double  y[],
+                      /* double  charge, */
+                         double  dydx[],
+       vecgeom::Vector3D<float> &BfieldVec ) const
+{
+    FieldFromY( y, BfieldVec );
     TEvaluateRhsGivenB( y, BfieldVec, dydx );
 }
+
+template
+<class Field, unsigned int Size>
+REALLY_INLINE
+void
+TMagFieldEquation<Field,Size>
+   ::RightHandSide(const                   double  y[],
+                   const vecgeom::Vector3D<double> &Position,
+                                         /*double  charge,*/
+                                           double  dydx[],
+                         vecgeom::Vector3D<float> &BfieldVec) const
+{
+   fPtrField->T_Field::GetFieldValue( Position, BfieldVec );
+   TEvaluateRhsGivenB( y, BfieldVec, dydx );
+}
+
+
 
 #include <iostream>   // For debuging only
 using std::cout;
@@ -242,7 +278,6 @@ void
 TMagFieldEquation<Field,Size>
    ::PrintInputFieldAndDyDx(const double y[], /* double charge, */ double dydx[] ) const
 {
-
     RightHandSide(y, dydx);
 
     // Obtain the field value

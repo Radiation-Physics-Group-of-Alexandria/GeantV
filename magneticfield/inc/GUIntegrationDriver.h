@@ -45,7 +45,9 @@ class GUIntegrationDriver
      bool  QuickAdvance(      GUFieldTrack& y_posvel,        // INOUT
                           const double      dydx[],  
                                 double      hstep,           // IN
+#ifdef USE_DCHORD
                                 double&     dchord_step,
+#endif
                                 double&     dyerr_pos_sq,
                                 double&     dyerr_mom_rel_sq ) ;
        // New QuickAdvance that also just tries one Step
@@ -223,7 +225,6 @@ class GUIntegrationDriver
         // Maximum stepsize increase/decrease factors.
 
      int    fStatisticsVerboseLevel;
-
 
      // ---------------------------------------------------------------
      //  STATE
