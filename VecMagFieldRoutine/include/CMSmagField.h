@@ -130,8 +130,9 @@ public:
 
 public: 
     //  Invariants -- parameters of the field 
-    const float millimeter = 1.0;             // Currently -- to be native GeantV
-
+    static constexpr float millimeter = 0.1;             // Equal to Native GeantV unit
+    static constexpr float tesla = 10.0;                 // Navite unit = KiloGauss
+   
     const float kRMax   = 9000.  * millimeter;   //  Maximum value of R =  9.00 meters
     const float kZMax   = 16000. * millimeter;   //  Max value of Z = 16.00 meters
     const int kNoZValues   = 161;
@@ -146,7 +147,7 @@ public:
     const float kZ0       = -kZMax;
     const float kRDiffInv = 1.0/kRDiff;
     const float kZDiffInv = 1.0/kZDiff;
-    const float kAInverse = 1.0/(kRDiff*kZDiff);
+    const float kAInverse = tesla/(kRDiff*kZDiff);  // Values in files are Tesla
 
     //For (R,Z) pairs : gives field in cylindrical coordinates in rzfield
     template <class Backend>
@@ -452,7 +453,7 @@ void CMSmagField::GetFieldValue(const vecgeom::Vector3D<double>  &pos_d,
    //                        vecgeom::Vector3D<float> &xyzField)
 
    const vecgeom::Vector3D<float>  &pos_f= pos_d;
-   GetFieldValue<vecgeom::kScalarFloat>( pos_f, xyzField ); 
+   GetFieldValue<vecgeom::kScalarFloat>( pos_f, xyzField );
 }
 
 // This class is thread safe.  So other threads can use the same instance
