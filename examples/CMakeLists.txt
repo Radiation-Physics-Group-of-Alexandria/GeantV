@@ -14,6 +14,7 @@ include_directories(../magneticfield/inc  ../VecMagFieldRoutine/include)
 set(sources
   src/ExN03Application.cxx
   src/CMSApplication.cxx
+  src/CMSDetectorConstruction.cxx
   src/LHCbApplication.cxx
   src/FastSimApplication.cxx
   )     
@@ -32,6 +33,7 @@ set(sources
 set(headers
   inc/ExN03Application.h 
   inc/CMSApplication.h
+#  inc/CMSDetectorConstruction.h
   inc/LHCbApplication.h 
   inc/FastSimApplication.h 
   )   

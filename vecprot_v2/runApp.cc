@@ -20,6 +20,7 @@
 #ifdef GEANT_TBB
 #include "TaskMgrTBB.h"
 #endif
+#include "UserDetectorConstruction.h"
 
 static int n_events = 50;
 static int n_buffered = 10;
@@ -59,7 +60,8 @@ int main(int argc, char *argv[]) {
   std::string exn03_geometry_filename("ExN03.root");
   std::string xsec_filename("xsec_FTFP_BERT.root");
   std::string fstate_filename("fstate_FTFP_BERT.root");
-
+  bool useRungeKutta= false;
+  
   if (argc == 1) {
     help();
     exit(0);
@@ -68,7 +70,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "e:f:g:l:B:b:t:x:r:i:u:", options, &optidx);
+    c = getopt_long(argc, argv, "e:f:g:l:B:b:t:x:r:i:u:K", options, &optidx);
 
     if (c == -1)
       break;
@@ -144,6 +146,10 @@ int main(int argc, char *argv[]) {
 
     case 'u':
       n_reuse = (int)strtol(optarg, NULL, 10);
+
+    case 'K':
+      useRungeKutta = true;
+
       break;
 
     default:
@@ -198,6 +204,21 @@ int main(int argc, char *argv[]) {
   propagator->fEmin = 3.E-6; // [3 KeV] energy cut
   propagator->fEmax = 0.03;  // [30MeV] used for now to select particle gun energy
 
+  //  Enable use of RK integration in field for charged particles
+  // propagator->fUseRungeKutta = false;
+  propagator->fUseRungeKutta = useRungeKutta;
+
+  propagator->fEpsilonRK = 0.0003;  // Revised / reduced accuracy - vs. 0.0003 default 
+
+  UserDetectorConstruction* detectorCt= new UserDetectorConstruction();
+  float fieldVec[3] = { 0.0f, 0.0f, 2.0f };
+  detectorCt->UseConstantMagField( fieldVec, "kilogauss" );
+  printf("runApp: Setting generic detector-construction to GeantPropagator - to create field.\n");
+  propagator->SetUserDetectorConstruction(detectorCt);
+  
+  // printf("Calling CreateFieldAndSolver from runCMS_new.C");
+  // CMSDetector->CreateFieldAndSolver(propagator->fUseRungeKutta);
+  
   // Create the tab. phys process.
   propagator->fProcess = new TTabPhysProcess("tab_phys", xsec_filename.c_str(), fstate_filename.c_str());
 // Create the tab. phys process.

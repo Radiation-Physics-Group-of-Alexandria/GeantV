@@ -375,7 +375,12 @@ void GeantPropagator::Initialize() {
   // Initialize the process(es)
   fProcess->Initialize();
 #if USE_VECPHYS == 1
-  fVectorPhysicsProcess->Initialize();
+  if(fVectorPhysicsProcess) {
+    fVectorPhysicsProcess->Initialize();
+  }else{
+    Geant::Error("GeantPropagator::Initialize(): ",
+                 "Trying to call process fVectorPhysicsProcess, but it is null.");
+  }
 #endif
 
   if( fUseRungeKutta ) {
@@ -441,15 +446,16 @@ void GeantPropagator::PrepareRkIntegration() {
   Printf("    fUserDetectorCtion= %p ", fUserDetectorCtion );
   
   // bool createdField= 
-  fUserDetectorCtion->CreateFieldAndSolver(fUseRungeKutta);
+  if( fUserDetectorCtion ) {
+    fUserDetectorCtion->CreateFieldAndSolver(fUseRungeKutta);
+    Printf("GV-Propagator::PrepareRkIntegration: User Detector construction's CreateFieldAndSolver called.\n");
   
-  Printf("GV-Propagator CreateFieldAndSolver called.\n");
+    // Create clones for other threads
+    if( fUseRungeKutta )
+       GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
 
-  // Create clones for other threads
-  if( fUseRungeKutta )
-    GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
-
-  fInitialisedRKIntegration= true;
+    fInitialisedRKIntegration= true;
+  }
 }
 
 #ifdef USE_ROOT

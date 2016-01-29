@@ -32,12 +32,15 @@
 #include "WorkloadManager.h"
 
 #include "GeantTaskData.h"
-#include "ConstFieldHelixStepper.h"
+#include "StepChecker.h"
+#include "ConstBzFieldHelixStepper.h"
+#include "ConstVecFieldHelixStepper.h"
 #include "GeantScheduler.h"
 
 #include "GUVField.h"
 #include "GUFieldPropagatorPool.h"
 #include "GUFieldPropagator.h"
+#include "FieldLookup.h"
 
 #ifdef __INTEL_COMPILER
 #include <immintrin.h>
@@ -1280,6 +1283,13 @@ void GeantTrack_v::PropagateInVolume(int ntracks, const double *crtstep, GeantTa
   }
 }
 
+//______________________________________________________________________________          
+VECCORE_ATT_HOST_DEVICE
+void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double BfieldOut[3], double *bmagOut) const
+{
+   vecgeom::Vector3D<double> Position (fXposV[i], fYposV[i], fZposV[i]);
+   FieldLookup::GetFieldValue(td, Position, BfieldOut, bmagOut);
+}
 
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
@@ -1359,16 +1369,45 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   ThreeVector PositionNew(0.,0.,0.);
   ThreeVector DirectionNew(0.,0.,0.);
 
-  if( useRungeKutta ) {
+  if( useRungeKutta )
+  {
+     // crtstep = 1.0e-4;   printf( "Setting crtstep = %f -- for DEBUGing ONLY.", crtstep ); 
+
+     // PrintTrack(i);
+     ThreeVector PositionNewRK(0.,0.,0.);
+     ThreeVector DirectionNewRK(0.,0.,0.);
 #ifndef VECCORE_CUDA
      fieldPropagator->DoStep(Position,    Direction,    fChargeV[i], fPV[i], crtstep,
-                             PositionNew, DirectionNew);
-#endif
+                             PositionNewRK, DirectionNewRK);
+
+     const bool fCheckingStep= false;
+     if( fCheckingStep ) {
+        const double epsDiff= 2.0e-3; // bool verbDiff= true );
+
+        GetFieldValue(td, i, Bfield, &bmag);        
+        StepChecker EndChecker( epsDiff, epsDiff * crtstep, true );
+        vecgeom::Vector3D<double> BfieldVec( Bfield[0], Bfield[1], Bfield[2] );
+        EndChecker.CheckStep( Position, Direction, fChargeV[i], fPV[i], crtstep,
+                              PositionNewRK, DirectionNewRK, BfieldVec );
+     }
+
+     PositionNew =  PositionNewRK;
+     DirectionNew = DirectionNewRK;     
+#endif     
   } else {
-     // Old - constant field
-     Geant::ConstBzFieldHelixStepper stepper(bmag);
-     stepper.DoStep<ThreeVector,double,int>(Position,    Direction,    fChargeV[i], fPV[i], crtstep,
-                                         PositionNew, DirectionNew);
+     // GetFieldValue(td, i, Bfield, &bmag);
+     double Bz= Bfield[2];
+     if ( std::fabs( Bz ) > 1e6 *
+                    std::max( std::fabs(Bfield[0]), std::fabs(Bfield[1]) ) ) {
+        // Old - constant field in Z-direction
+        ConstBzFieldHelixStepper stepper( Bz ); // z-component
+        stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
+                                               PositionNew, DirectionNew);
+     } else {
+        Geant::ConstVecFieldHelixStepper stepper( Bfield );
+        stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
+                                               PositionNew, DirectionNew);
+     }
   }
 
   fXposV[i] = PositionNew.x();
@@ -2051,55 +2090,6 @@ int GeantTrack_v::PropagateTracksScalar(GeantTaskData *td, int stage) {
   return icrossed;
 }
 
-//______________________________________________________________________________
-VECCORE_ATT_HOST_DEVICE
-// vecgeom::Vector3D<double>
-void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *bmag) const
-{
-  using ThreeVector_f = vecgeom::Vector3D<float>;
-  using ThreeVector_d = vecgeom::Vector3D<double>;
-  // Field value at position of particle 'i'
-  if( bmag ) *bmag= 0.0;
-  ThreeVector_d MagFldD;  //  Transverse wrt direction of B
-
-  if( td->fBfieldIsConst ) {
-    MagFldD= td->fConstFieldValue;
-    if( bmag ) *bmag=   td->fBfieldMag;
-  }
-  else
-  {
-    ThreeVector_d Position (fXposV[i], fYposV[i], fZposV[i]);
-    ThreeVector_f MagFldF;
-    td->fFieldObj->GetFieldValue(Position, MagFldF);
-    // MagFldD = MagFldF;
-    MagFldD = ThreeVector_d(MagFldF.x(), MagFldF.y(), MagFldF.z());
-    if( bmag ) *bmag= MagFldD.Mag();
-
-    // printf(" GeantTrack_v::GetFieldValue>  Field at x,y,z= ( %f %f %f ) is (%f %f %f) kGauss - mag = %f \n",
-    //       fXposV[i], fZposV[i], fZposV[i], MagFldF.x(), MagFldF.y(), MagFldD.z(), *bmag );
-    /***
-    int oldPrec= cout.precision(3);
-    std::cout << " GeantTrack_v::GetFieldValue>  Field at x,y,z= ( "
-              << std::setw(8) << fXposV[i]<< " , " << std::setw(8) << fYposV[i]
-              << " , " << std::setw(8) << fZposV[i] << " ) is ( "
-              << std::setw(8) << MagFldD.x() << " , " << std::setw(8) << MagFldD.y()
-              << " , " << std::setw(8) << MagFldD.z() <<  " ) kGauss - "
-              << "mag = " << *bmag << std::endl;
-    cout.precision(oldPrec);
-    ****/
-  }
-  B[0]= MagFldD.x();
-  B[1]= MagFldD.y();
-  B[2]= MagFldD.z();
-
-  // fBXfldV[i]= MagFld.x();
-  // fBYfldV[i]= MagFld.y();
-  // fBZfldV[i]= MagFld.z();
-  // fBfMagV[i]= bmag;
-  
-  // return MagFldD;
-}
-          
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
 double GeantTrack_v::Curvature(GeantTaskData *td, int i) const {

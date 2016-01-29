@@ -10,13 +10,7 @@
 
 #include "Geant/Config.h"
 
-// add the sincos function on MAC because sincos is not part of math.h
-#if defined(__APPLE__) & !defined(NVCC)  // possibly other conditions
-inline
-void sincos(double x, double *s, double *c) {
-  __sincos(x,s,c);
-}
-#endif
+#include "GFldAuxFunctions.h"
 
 namespace Geant
 {
@@ -46,7 +40,7 @@ namespace Geant
         if (charge == 0) return RT(0.);
         return abs( kB2C * fBz * dir.FastInverseScaledXYLength( momentum ) );
       }
-*/
+      */
 
       /**
        * this function propagates the track along the helix solution by a step
@@ -67,7 +61,7 @@ namespace Geant
        /**
         * basket version of dostep
         * version that takes plain arrays as input; suited for current Geant-V
-        * 
+        *
         * SW: for the moment (12.5.2015) commenting this out as not used 
         *
         */
