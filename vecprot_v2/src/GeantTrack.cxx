@@ -32,14 +32,17 @@
 #endif
 
 #include "WorkloadManager.h"
-
 #include "GeantTaskData.h"
-#include "ConstFieldHelixStepper.h"
 #include "GeantScheduler.h"
+
+#include "ConstBzFieldHelixStepper.h"
+#include "ConstVecFieldHelixStepper.h"
 
 #include "GUFieldPropagatorPool.h"
 #include "GUFieldPropagator.h"
 #include "GUVField.h"
+
+#include "StepChecker.h"
 
 #ifdef __INTEL_COMPILER
 #include <immintrin.h>
@@ -1530,8 +1533,8 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   bool useRungeKutta;
   GUFieldPropagator *fieldPropagator = nullptr;
 
-  double Bfield[3], bmag= 0.0;
-  GetFieldValue(td, i, Bfield, &bmag);
+  double BfieldInitial[3], bmag= 0.0;
+  GetFieldValue(td, i, BfieldInitial, &bmag);
 
 #ifdef GEANT_CUDA_DEVICE_BUILD
   constexpr bool gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
@@ -1592,18 +1595,47 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   ThreeVector PositionNew(0.,0.,0.);
   ThreeVector DirectionNew(0.,0.,0.);
 
-  if( useRungeKutta ) {
+  ThreeVector PositionNewHlx(0.,0.,0.);
+  ThreeVector DirectionNewHlx(0.,0.,0.);  
+  if( useRungeKutta )
+  {
+     // crtstep = 1.0e-4;   printf( "Setting crtstep = %f -- for DEBUGing ONLY.", crtstep ); 
+
+     // PrintTrack(i);
+     ThreeVector PositionNewRK(0.,0.,0.);
+     ThreeVector DirectionNewRK(0.,0.,0.);
 #ifndef GEANT_NVCC
-     // PrintTrack(i); 
      fieldPropagator->DoStep(Position,    Direction,    fChargeV[i], fPV[i], crtstep,
-                             PositionNew, DirectionNew);
-#endif
+                             PositionNewRK, DirectionNewRK); // BfieldInitial );
+
+     const bool fCheckingStep= false;
+     if( fCheckingStep ) {
+        const double epsDiff= 2.0e-3; // bool verbDiff= true );
+        StepChecker EndChecker( epsDiff, epsDiff * crtstep, true );
+        vecgeom::Vector3D<double> Bfield( BfieldInitial[0], BfieldInitial[1], BfieldInitial[2] );
+        EndChecker.CheckStep( Position, Direction, fChargeV[i], fPV[i], crtstep,
+                              PositionNewRK, DirectionNewRK, Bfield );
+     }
+     PositionNew =  PositionNewRK;
+     DirectionNew = DirectionNewRK;     
+#endif     
   } else {
-     // Old - constant field
-     Geant::ConstBzFieldHelixStepper stepper(bmag);
-     stepper.DoStep<ThreeVector,double,int>(Position,    Direction,    fChargeV[i], fPV[i], crtstep,
-                                         PositionNew, DirectionNew);
+     double Bz= BfieldInitial[2];
+     if ( std::fabs( Bz ) > 1e6 *
+                    std::max( std::fabs(BfieldInitial[0]), std::fabs(BfieldInitial[1]) ) ) {
+        // Old - constant field in Z-direction
+        Geant::ConstBzFieldHelixStepper stepper( Bz ); // z-component
+        stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
+                                               PositionNewHlx, DirectionNewHlx);
+     } else {
+        Geant::ConstVecFieldHelixStepper stepper( BfieldInitial ); // double Bfield[3] );
+        stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
+                                         PositionNewHlx, DirectionNewHlx);
+     }
+     PositionNew =  PositionNewHlx;
+     DirectionNew = DirectionNewHlx;     
   }
+
 
   fXposV[i] = PositionNew.x();
   fYposV[i] = PositionNew.y();
@@ -2134,7 +2166,8 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
     if( !neutral ) {
        printf( " PropagateSingleTrack> getting Field. Charge= %3d ", fChargeV[itr]);
        GetFieldValue(td, itr, Bfield, &bmag);
-       if( bmag < 1.E-10) { printf(" Tiny field - mag = %f\n", bmag); } 
+       if( bmag < 1.E-10) { printf(" Tiny field - mag = %g at %f %f %f\n",
+                                   bmag,  fXposV[itr],  fYposV[itr],  fZposV[itr]); } 
     }
     // if (fChargeV[itr] == 0 || bmag < 1.E-10) {
     if ( neutral || bmag < 1.E-10) {       
@@ -2310,14 +2343,15 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
 
     // printf(" GeantTrack_v::GetFieldValue>  Field at x,y,z= ( %f %f %f ) is (%f %f %f) kGauss - mag = %f \n",
     //       fXposV[i], fZposV[i], fZposV[i], MagFldF.x(), MagFldF.y(), MagFldD.z(), *bmag );
-    int oldPrec= cout.precision(3);
-    std::cout << " GeantTrack_v::GetFieldValue>  Field at x,y,z= ( "
+    /* int oldPrec= cout.precision(3);
+       std::cout << " GeantTrack_v::GetFieldValue>  Field at x,y,z= ( "
               << std::setw(8) << fXposV[i]<< " , " << std::setw(8) << fYposV[i]
               << " , " << std::setw(8) << fZposV[i] << " ) is ( "
               << std::setw(8) << MagFldD.x() << " , " << std::setw(8) << MagFldD.y()
               << " , " << std::setw(8) << MagFldD.z() <<  " ) kGauss - "
               << "mag = " << *bmag << std::endl;
-    cout.precision(oldPrec);
+       cout.precision(oldPrec);
+     */ 
   }
   B[0]= MagFldD.x();
   B[1]= MagFldD.y();
@@ -2504,6 +2538,7 @@ bool GeantTrack_v::BreakOnStep(int evt, int trk, int stp, int nsteps, const char
   // Put breakpoint at line below
   return true;
 }
+
 
 } // GEANT_IMPL_NAMESPACE
 
