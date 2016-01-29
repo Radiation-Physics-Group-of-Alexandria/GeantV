@@ -25,6 +25,7 @@ set(sources
    src/GeantPropagator.cxx
    src/GeantEvent.cxx
    src/GeantScheduler.cxx
+   src/FieldLookup.cxx
    src/PhysicsProcess.cxx
    src/WorkloadManager.cxx
    src/GeantVApplication.cxx
@@ -52,6 +53,7 @@ set(headers
    inc/GeantOutput.h
    inc/GeantVApplication.h
    inc/GeantTrackStat.h
+   inc/FieldLookup.h
    inc/MyHit.h
    inc/GeantFactory.h 
    inc/StdApplication.h 
@@ -188,7 +190,7 @@ function(add_to_ctest EXECUTABLES)
   endforeach()
 endfunction()
 
-link_directories(${PROJECT_BINARY_DIR}/lib)
+link_directories(${OUTPUTDIR}/lib)
 
 build_executables("${TEST_EXECUTABLES}")
 

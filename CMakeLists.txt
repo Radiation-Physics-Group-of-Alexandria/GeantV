@@ -581,6 +581,7 @@ endif()
 #----------------------------------------------------------------------------------------------
 # Include directories
 #
+include_directories("${PROJECT_SOURCE_DIR}/magneticfield/inc")
 include_directories("${PROJECT_SOURCE_DIR}/vecprot_v2/inc")
 include_directories("${PROJECT_SOURCE_DIR}/base/inc")
 include_directories("${PROJECT_SOURCE_DIR}/xsec/inc")

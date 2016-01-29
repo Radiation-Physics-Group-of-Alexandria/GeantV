@@ -31,7 +31,7 @@ class TMagFieldEquation : public GUVEquationOfMotion
    public:
      typedef Field T_Field;
      static const unsigned int  N   = Size;
-     static constexpr double fCof   = Constants::c_light;   //  / fieldUnits::meter ;
+     static constexpr double fCof   = Constants::c_light;  //   / fieldUnits::meter ;
 
      // Expected constant value:
      // static constexpr double fCof    = Constants::c_light * fieldUnits::second /
@@ -92,6 +92,13 @@ class TMagFieldEquation : public GUVEquationOfMotion
      REALLY_INLINE
      void PrintInputFieldAndDyDx(const double y[], /* double charge, */ double dydx[] ) const;
 
+     REALLY_INLINE
+     void PrintAll(  double const  y[],
+                     double const  B[3],
+                     double        charge,
+                     double        cof,                     
+                     double const  dydx[]  ) const;
+     
      REALLY_INLINE
      void InitializeCharge(double particleCharge) final
       { fParticleCharge= particleCharge;  GUVEquationOfMotion::InformReady();  }
@@ -170,15 +177,20 @@ REALLY_INLINE
                            //  double charge,
                                double dydx[]  ) const
 {
+    const double charge = fParticleCharge; 
     // ThreeVectorD momentum( y[3], y[4], y[5]);
     double momentum_mag_square = y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
     double inv_momentum_magnitude = 1. / std::sqrt( momentum_mag_square );
     // double inv_momentum_magnitude = vdt::fast_isqrt_general( momentum_mag_square, 2);
-
+  
     double B[3]= { Bfloat[0], Bfloat[1], Bfloat[2] };
 
-    double cof = fParticleCharge*fCof*inv_momentum_magnitude;
+    double cof = charge*fCof*inv_momentum_magnitude;
 
+//  printf("            B-field= %10.3f %10.3f %10.3f  mag= %10.3f %10.3f\n", B[0], B[1], B[2],
+//        std::sqrt(Bmag2chk) , (double)Bfloat.Mag() );    
+    printf("           Momentum= %12.6g %12.6g %12.6g    mag= %12.7g \n", y[3], y[4], y[5], 1.0/inv_momentum_magnitude );
+    
     dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
     dydx[1] = y[4]*inv_momentum_magnitude;       //  (d/ds)y = Vy/V
     dydx[2] = y[5]*inv_momentum_magnitude;       //  (d/ds)z = Vz/V
@@ -187,6 +199,41 @@ REALLY_INLINE
     dydx[4] = cof*(y[5]*B[0] - y[3]*B[2]) ;  // Ay = a*(Vz*Bx - Vx*Bz)
     dydx[5] = cof*(y[3]*B[1] - y[4]*B[0]) ;  // Az = a*(Vx*By - Vy*Bx)
 
+    // PrintAll( y, B, charge, cof, dydx );
+    return;
+}
+
+
+template
+<class Field, unsigned int Size>
+REALLY_INLINE
+   void  TMagFieldEquation<Field, Size>
+   ::PrintAll(  double const  y[],
+                double const  B[3],
+                double        charge,
+                double        cof,
+                double const  dydx[]  ) const
+{
+    using ThreeVectorD = vecgeom::Vector3D<double>;
+   
+    printf("Equation:  fCof = %8.4g  charge= %f cof= %10.5g   B-field= %f %f %f \n",
+           fCof, charge, cof, B[0], B[1], B[2] );
+    // printf("               X  = %12.6g %12.6g %12.6g - mag %12.6g\n",  y[0], y[1], y[2] );
+
+    printf("            dx/ds  = %12.6g %12.6g %12.6g - mag %12.6g\n",
+           dydx[0], dydx[1], dydx[2],  std::sqrt( dydx[0] * dydx[0] + dydx[1] * dydx[1] + dydx[2] * dydx[2] ) );
+    printf("            dp/ds  = %12.6g %12.6g %12.6g - mag %12.6g\n",
+           dydx[3], dydx[4], dydx[5],  std::sqrt( dydx[3] * dydx[3] + dydx[4] * dydx[4] + dydx[5] * dydx[5] ) );
+
+    double Bmag2chk = B[0] * B[0] + B[1] * B[1] + B[2] * B[2];
+    printf("            B-field= %10.3f %10.3f %10.3f  ( KGaus ) mag= %10.4f\n",
+           B[0] / fieldUnits::kilogauss ,
+           B[1] / fieldUnits::kilogauss ,
+           B[2] / fieldUnits::kilogauss ,
+           std::sqrt(Bmag2chk) );
+
+    printf("               P  = %12.6g %12.6g %12.6g - mag %12.6g\n",  y[3], y[4], y[5],
+           ThreeVectorD(y[3],y[4],y[5]).Mag() );
     return ;
 }
 

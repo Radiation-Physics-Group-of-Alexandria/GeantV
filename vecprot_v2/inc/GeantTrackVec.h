@@ -14,6 +14,7 @@
 #define GEANT_TRACK_VEC
 
 #include "GeantTrack.h"
+#include "FieldLookup.h"
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
@@ -520,12 +521,16 @@ public:
 
   /**
    * @brief Function that return magnetic field for particle 'i'
-   * @param  i     Input track number 'i'
-   * @param  B[3]  Output magnetic field vector value (global coordinates)
-   * @param  bmag  Output (optional) field magnitude
+   * @param  i             Input track number 'i'
+   * @param  BfieldOut[3]  Output magnetic field vector value (global coordinates)
+   * @param  bmagOut       Output (optional) field magnitude
    */
   VECCORE_ATT_HOST_DEVICE
-  void GetFieldValue(GeantTaskData *td, int i, double B[3], double *bmag) const;
+  void GetFieldValue(GeantTaskData *td, int i, double BfieldOut[3], double *bmagOut) const;
+  //  {
+  //     vecgeom::Vector3D<double> Position (fXposV[i], fYposV[i], fZposV[i]);
+  //     FieldLookup::GetFieldValue(td, Position, BfieldOut, bmagOut);
+  //  }
    
   /**
    * @brief Function that return curvature in different areas of geometry

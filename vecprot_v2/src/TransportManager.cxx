@@ -34,12 +34,14 @@
 #include "WorkloadManager.h"
 
 #include "GeantTaskData.h"
-#include "ConstFieldHelixStepper.h"
+#include "ConstBzFieldHelixStepper.h"
+#include "ConstVecFieldHelixStepper.h"
 #include "GeantScheduler.h"
 
 // #ifdef  RUNGE_KUTTA
 #include "GUFieldPropagatorPool.h"
 #include "GUFieldPropagator.h"
+#include "FieldLookup.h"
 // #endif
 
 #ifdef __INTEL_COMPILER
@@ -328,12 +330,13 @@ void TransportManager::PropagateInVolumeSingle(GeantTrack &track, double crtstep
 #ifndef VECCORE_CUDA_DEVICE_COMPILATION
    GUFieldPropagator *fieldPropagator = nullptr;
    if( useRungeKutta ){
-      // Initialize for the current thread -- move to GeantPropagator::Initialize()
+      // Initialize for the current thread -- move to GeantPropagator::Initialize() or per thread Init method
       static GUFieldPropagatorPool* fieldPropPool= GUFieldPropagatorPool::Instance();
       assert( fieldPropPool );
 
       fieldPropagator = fieldPropPool->GetPropagator(td->fTid);
       assert( fieldPropagator );
+      td->fFieldPropagator= fieldPropagator;
    }
 #endif
 
@@ -362,39 +365,69 @@ void TransportManager::PropagateInVolumeSingle(GeantTrack &track, double crtstep
 // ( stepper header has to be included )
 
   using ThreeVector = vecgeom::Vector3D<double>;
-  // typedef vecgeom::Vector3D<double>  ThreeVector;   
   ThreeVector Position(track.fXpos, track.fYpos, track.fZpos);
   ThreeVector Direction(track.fXdir, track.fYdir, track.fZdir);
   ThreeVector PositionNew(0.,0.,0.);
   ThreeVector DirectionNew(0.,0.,0.);
 
+  double curvaturePlus= fabs(GeantTrack::kB2C * track.fCharge * bmag) / (track.fP + 1.0e-30);  // norm for step
+  // 'Curvature' along the full track - not just in the plane perpendicular to the B-field vector
+
+  constexpr double numRadiansMax= 10.0;   //  Too large an angle - many RK steps.  Potential change -> 2.0*PI;
+  constexpr double numRadiansMin= 0.05;   //  Very small an angle - helix is adequate.  TBC: Use average B-field value?
+      //  A track turning more than 10 radians will be treated approximately
+  const double angle= crtstep * curvaturePlus;
+  bool mediumAngle = ( numRadiansMin < angle ) && ( angle < numRadiansMax );
+  useRungeKutta = useRungeKutta && mediumAngle;
+  
+  // double BfieldInitial[3], bmag= 0.0;
+  // FieldLookup::GetFieldValue(td, Position, BfieldInitial, &bmag);
+  // printf("TransportMgr::PropagateInVolumeSingle> Curvature= %8.4g  CurvPlus= %8.4g  step= %f  Bmag=%8.4g  momentum mag=%f  angle= %g\n",
+  //       Curvature(td, i), curvaturePlus, crtstep, bmag, track.fP, angle );
+  
   if( useRungeKutta ) {
 #ifndef VECCORE_CUDA
      fieldPropagator->DoStep(Position,    Direction,    track.fCharge, track.fP, crtstep,
                              PositionNew, DirectionNew);
+     /**
+     const bool fCheckingStep= false;
+     if( fCheckingStep ) {
+        const double epsDiff= 2.0e-3; // bool verbDiff= true );
+        StepChecker EndChecker( epsDiff, epsDiff * crtstep, true );
+        vecgeom::Vector3D<double> Bfield( BfieldInitial[0], BfieldInitial[1], BfieldInitial[2] );
+        EndChecker.CheckStep( Position, Direction, track.fCharge, track.fP, crtstep,
+                              PositionNewRK, DirectionNewRK, Bfield );
+     }  
+     **/   
 #endif
   } else {
-     // Old - constant field
-     Geant::ConstBzFieldHelixStepper stepper(bmag);
-     stepper.DoStep<ThreeVector,double,int>(Position,    Direction,    track.fCharge, track.fP, crtstep,
+     double BfieldInitial[3], bmag= 0.0;
+     FieldLookup::GetFieldValue(td, Position, BfieldInitial, &bmag);
+     double Bx= BfieldInitial[0], By= BfieldInitial[1], Bz= BfieldInitial[2];
+     if ( std::fabs( Bz ) > 1.0e6 * std::max( std::fabs(Bx), std::fabs(By) ) )
+     {
+        Geant::ConstBzFieldHelixStepper stepper( Bz );
+        stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  track.fCharge, track.fP, crtstep,
+                                               PositionNew, DirectionNew);
+     } else {
+        Geant::ConstVecFieldHelixStepper stepper( BfieldInitial );
+        stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  track.fCharge, track.fP, crtstep,
                                          PositionNew, DirectionNew);
+     }     
   }
 
   track.fXpos = PositionNew.x();
   track.fYpos = PositionNew.y();
   track.fZpos = PositionNew.z();
 
-  //  maybe normalize direction here  // Math::Normalize(dirnew);
-  DirectionNew = DirectionNew.Unit();   
+  DirectionNew = DirectionNew.Unit();   // Could measure deviation from unit magnitude as check
   track.fXdir = DirectionNew.x();
   track.fYdir = DirectionNew.y();
   track.fZdir = DirectionNew.z();
 
 #if 0
   ThreeVector SimplePosition = Position + crtstep * Direction;
-  // double diffpos2 = (PositionNew - Position).Mag2();
   double diffpos2 = (PositionNew - SimplePosition).Mag2();
-  //   -- if (Math::Sqrt(diffpos)>0.01*crtstep) {     
   const double drift= 0.01*crtstep;
   if ( diffpos2>drift*drift ){
       double diffpos= Math::Sqrt(diffpos2);
