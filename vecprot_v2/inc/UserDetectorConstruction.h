@@ -18,6 +18,8 @@
 // #include "Geant/Typedefs.h"
 
 #include "FieldPropagatorFactory.h"
+#include "Units.h"  //  For fieldUnits
+
 #include "TUniformMagField.h"  //  For now - plan to strip it into separate 'simple' det constr.
 
 class UserDetectorConstruction
@@ -29,7 +31,7 @@ class UserDetectorConstruction
     virtual bool CreateFieldAndSolver(bool useRungeKutta= true);
 
     /** Register a constanct B-field */ 
-    void UseConstantMagField( float value[3] );
+    void UseConstantMagField( float value[3], const char* Unit= 0 ); // Default unit is kilogauss
 
     /** Register a B-field, and create integrator for it. */ 
     template <class Field_t>
@@ -53,6 +55,7 @@ class UserDetectorConstruction
 
   protected: 
     bool             fCreatedField;
+    bool             fCalled;
 
   public:
     static constexpr double   fEpsilonDefault = 3.0e-5; 
@@ -65,7 +68,8 @@ UserDetectorConstruction::UserDetectorConstruction() :
    fMinimumStepInField(fMinimumStepInFieldDef),
    fUseUniformField(false),
    fZeroField(true),
-   fCreatedField(false)
+   fCreatedField(false),
+   fCalled(false)
    {}
 
 // bool UserDetectorConstruction::Construct(const char *geomfile)
@@ -79,13 +83,33 @@ bool UserDetectorConstruction::CreateSolverForField(Field_t* ptrField)
   FieldPropagatorFactory::CreatePropagator<Field_t>( *ptrField,
                                                      fEpsilonRK,
                                                      fMinimumStepInField);
+  fCreatedField= true;  
   return true;
 }
 
 void UserDetectorConstruction::
-UseConstantMagField( float fieldVal[3] ) // vecgeom::Vector3D<float> value )
+UseConstantMagField( float fieldVal[3],  const char* Units ) // vecgeom::Vector3D<float> value )
 {
-  fUniformMagField= vecgeom::Vector3D<float>( fieldVal[0], fieldVal[1], fieldVal[2] );
+  bool defaultUsed= false;
+  double unit= 1;
+  
+  if( Units == 0  || strcmp(Units,"kilogauss") == 0 ) {
+     unit= fieldUnits::kilogauss;
+     defaultUsed = (Units == 0);
+  } else if( ( strcmp(Units,"gauss") == 0 ) || ( strcmp(Units,"Gauss") == 0 ) ) {
+     unit= fieldUnits::gauss;
+  } else if( ( strcmp(Units,"tesla") == 0 ) || ( strcmp(Units,"Tesla") == 0 ) ) {
+     unit= fieldUnits::gauss;
+  } else {
+     unit= fieldUnits::kilogauss;
+     defaultUsed = (Units == 0);     
+  }
+
+  if( defaultUsed )
+     printf("%s - WARNING: No units provided - using kilogauss as default unit", 
+            "UserDetectorConstruction::UseConstantMagField");
+  
+  fUniformMagField= vecgeom::Vector3D<float>( fieldVal[0] * unit, fieldVal[1] * unit, fieldVal[2] * unit );
   fUseUniformField= true;
   fZeroField = ( fUniformMagField.Mag2() == 0.0 );
 }
@@ -104,14 +128,14 @@ CreateFieldAndSolver(bool useRungeKutta)
   {
     if( useRungeKutta )
     {
-        auto gvField= new TUniformMagField( fieldUnits::kilogauss * fUniformMagField );
-        rtv= CreateSolverForField<TUniformMagField>(gvField);
+       auto gvField= new TUniformMagField( fieldUnits::kilogauss * fUniformMagField );
+       rtv= CreateSolverForField<TUniformMagField>(gvField);
     }
-    fCreatedField= true;
+    fCalled = true;
   }
   if (fZeroField) {
     Geant::Print(method," Zero Magnetic Field configured.");
-    fCreatedField= true;
+    fCalled = true;
   }else{    
     Geant::Error(method,"No user Magnetic Field is registered.");
   }

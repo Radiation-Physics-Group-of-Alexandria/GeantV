@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
   propagator->SetUserDetectorConstruction(CMSdetector);
   // printf("Calling CreateFieldAndSolver from runCMS_new.C");
   // CMSDetector->CreateFieldAndSolver(propagator->fUseRungeKutta);
-  
+
 #ifdef USE_VECGEOM_NAVIGATOR
   propagator->LoadVecGeomGeometry();
 #endif

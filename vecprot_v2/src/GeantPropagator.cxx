@@ -391,14 +391,16 @@ void GeantPropagator::PrepareRkIntegration() {
   Printf("    fUserDetectorCtion= %p ", fUserDetectorCtion );
   
   // bool createdField= 
-  fUserDetectorCtion->CreateFieldAndSolver(fUseRungeKutta);
+  if( fUserDetectorCtion ) {
+    fUserDetectorCtion->CreateFieldAndSolver(fUseRungeKutta);
+    Printf("GV-Propagator::PrepareRkIntegration: User Detector construction's CreateFieldAndSolver called.\n");
   
-  Printf("GV-Propagator CreateFieldAndSolver called.\n");
+    // Create clones for other threads
+    if( fUseRungeKutta )
+       GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
 
-  // Create clones for other threads
-  if( fUseRungeKutta )
-    GUFieldPropagatorPool::Instance()->Initialize(fNthreads);
-  fInitialisedRKIntegration= true;
+    fInitialisedRKIntegration= true;
+  }
 }
 
 GUFieldPropagator *
