@@ -283,14 +283,14 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
         yIn[i]=yInput[i];
     }
     // RightHandSideInl(yIn, dydx) ;              // 1st Step
-    PrintDyDx("dydx", dydx, yIn);
+    // PrintDyDx("dydx", dydx, yIn);
 
 #if 0
     double ak1[sNstore];
     vecgeom::Vector3D<float>  Bfield1;
     this->RightHandSideInl(yIn, ak1, Bfield1 );   // -- Get it again, for debugging
     // PrintField("yIn   ", yIn, Bfield1);
-    PrintDyDx("ak1-", ak1, yIn);
+    // PrintDyDx("ak1-", ak1, yIn);
 #endif
     
     for(i=0;i<Nvar;i++) 
@@ -299,7 +299,7 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
     }
     this->RightHandSideInl(yTemp2, ak2, Bfield2 ); // 2nd Step
     // PrintField("yTemp2", yTemp2, Bfield2);
-    PrintDyDx("ak2", ak2, yTemp2); 
+    // PrintDyDx("ak2", ak2, yTemp2); 
     
     for(i=0;i<Nvar;i++)
     {
@@ -307,7 +307,7 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
     }
     this->RightHandSideInl(yTemp3, ak3, Bfield3 ); // 3rd Step
     // PrintField("yTemp3", yTemp3, Bfield3);
-    PrintDyDx("ak3", ak3, yTemp3); 
+    // PrintDyDx("ak3", ak3, yTemp3); 
     
     for(i=0;i<Nvar;i++)
     {
@@ -315,7 +315,7 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
     }
     this->RightHandSideInl(yTemp4, ak4, Bfield4 ); // 4th Step
     // PrintField("yTemp4", yTemp4, Bfield4);
-    PrintDyDx("ak4", ak4, yTemp4); 
+    // PrintDyDx("ak4", ak4, yTemp4); 
     
     for(i=0;i<Nvar;i++)
     {
@@ -324,7 +324,7 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
     }
     this->RightHandSideInl(yTemp5, ak5, Bfield5 );              // 5th Step
     // PrintField("yTemp5", yTemp5, Bfield5);
-    PrintDyDx("ak5", ak5, yTemp5); 
+    // PrintDyDx("ak5", ak5, yTemp5); 
 
     for(i=0;i<Nvar;i++)
     {
@@ -333,7 +333,7 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
     }
     this->RightHandSideInl(yTemp6, ak6, Bfield6 );              // 6th Step
     // PrintField("yTemp6", yTemp6, Bfield6);
-    PrintDyDx("ak6", ak6, yTemp6);
+    // PrintDyDx("ak6", ak6, yTemp6);
 
     for(i=0;i<Nvar;i++)
     {
