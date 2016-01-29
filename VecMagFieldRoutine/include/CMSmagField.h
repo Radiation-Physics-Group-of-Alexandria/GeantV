@@ -48,6 +48,8 @@
 #include "backend/Backend.h"
 #include "backend/scalarfloat/Backend.h"
 
+#include "Units.h"
+
 // Configuration options - to be improved and incorporated in CMakeLists.txt
 //
 #define Vc_FOUND 1
@@ -130,8 +132,11 @@ public:
 
 public: 
     //  Invariants -- parameters of the field 
-    static constexpr float millimeter = 0.1;             // Equal to Native GeantV unit
-    static constexpr float tesla = 10.0;                 // Navite unit = KiloGauss
+    // static constexpr float millimeter = 0.1;             // Equal to Native GeantV unit
+    // static constexpr float tesla = 10.0;                 // Navite unit = KiloGauss
+    static constexpr float tesla     = fieldUnits::tesla; 
+    static constexpr float kilogauss = fieldUnits::kilogauss;
+    static constexpr float millimeter = fieldUnits::millimeter;
    
     const float kRMax   = 9000.  * millimeter;   //  Maximum value of R =  9.00 meters
     const float kZMax   = 16000. * millimeter;   //  Max value of Z = 16.00 meters
