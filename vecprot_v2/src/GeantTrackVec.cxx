@@ -2263,6 +2263,59 @@ bool GeantTrack_v::BreakOnStep(int evt, int trk, int stp, int nsteps, const char
   return true;
 }
 
+VECCORE_ATT_HOST_DEVICE
+void GeantTrack_v::CheckTrack(int itr, const char *msg, double epsilon ) const {
+#define IsNan(x)  ( ! ( x > 0 || x <= 0.0 ) )
+   // Ensure that values are 'sensible' - else print msg and track
+   if( epsilon <= 0.0 || epsilon > 0.01 ) { epsilon = 1.e-6; }
+
+   double x= fXposV[itr], y = fYposV[itr], z= fZposV[itr];
+   bool badPosition = IsNan(x) || IsNan(y) || IsNan(z);
+   const double maxRadius = 10000.0;   // Should be a property of the geometry
+   const double maxRadXY  =  5000.0;   // Should be a property of the geometry
+
+   // const double maxUnitDev =  1.0e-4;  // Deviation from unit of the norm of the direction
+   double radiusXy2= x*x + y*y;
+   double radius2=  radiusXy2 + z*z;
+   badPosition = badPosition
+                || (radiusXy2 > maxRadXY  * maxRadXY )
+                || (radius2   > maxRadius * maxRadius ) ;
+
+   const double maxUnitDev = epsilon;  // Use epsilon for max deviation of direction norm from 1.0
+
+   double dx= fYdirV[itr], dy= fYdirV[itr], dz= fZdirV[itr];
+   double dirNorm2 = dx*dx + dy*dy + dz*dz;
+   bool   badDirection = std::fabs( dirNorm2 - 1.0 ) > maxUnitDev;
+   if( badPosition || badDirection ) {
+      static const char* errMsg[4]= { " All ok - No error. ",
+                                      " Bad position.",                  // [1]
+                                      " Bad direction.",                 // [2]
+                                      " Bad direction and position. " }; // [3]
+      int iM=0;
+      if( badPosition ) { iM++; }
+      if( badDirection  ) { iM += 2; }
+      // if( badDirection ) {
+      //   Printf( " Norm^2 direction= %f ,  Norm -1 = %g", dirNorm2, sqrt(dirNorm2)-1.0 );
+      // }
+      Printf("ERROR> Problem with track %d . Issue: %s. Info message: %s -- Mag^2(dir)= %9.6f Norm-1= %g",
+             itr, errMsg[iM], msg, dirNorm2, sqrt(dirNorm2)-1.0 );
+      PrintTrack(itr, msg);
+   }
+}
+
+VECCORE_ATT_HOST_DEVICE
+bool GeantTrack_v::CheckDirection(int itr, double epsilon ) const
+{
+   if( epsilon <= 0.0 || epsilon > 0.001 ) { epsilon = 1.e-6; }
+
+   double xdir= fXdirV[itr];
+   double ydir= fYdirV[itr];
+   double zdir= fZdirV[itr];
+   double norm2= xdir * xdir + ydir * ydir + zdir * zdir;
+
+   return ( std::fabs( norm2 - 1.0 ) <= epsilon );
+}
+
 } // GEANT_IMPL_NAMESPACE
 
 #ifdef GEANT_CUDA

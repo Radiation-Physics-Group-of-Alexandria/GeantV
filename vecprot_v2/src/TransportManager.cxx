@@ -387,11 +387,24 @@ void TransportManager::PropagateInVolumeSingle(GeantTrack &track, double crtstep
   // FieldLookup::GetFieldValue(td, Position, BfieldInitial, &bmag);
   // printf("TransportMgr::PropagateInVolumeSingle> Curvature= %8.4g  CurvPlus= %8.4g  step= %f  Bmag=%8.4g  momentum mag=%f  angle= %g\n",
   //       Curvature(td, i), curvaturePlus, crtstep, bmag, track.fP, angle );
+
+  // Option: use RK as fall back - until 'General Helix' is robust
+  // bool dominantBz =  std::fabs( std::fabs(BfieldInitial[1]) )
+  //       > 1e6 *
+  //   std::max( std::fabs( BfieldInitial[0]), std::fabs(BfieldInitial[1]) );
+  // if( !dominantBz )
+  //   useRungeKutta = true;
+  // int propagationType= 0;
   
   if( useRungeKutta ) {
 #ifndef VECCORE_CUDA
      fieldPropagator->DoStep(Position,    Direction,    track.fCharge, track.fP, crtstep,
                              PositionNew, DirectionNew);
+     // crtstep = 1.0e-4;   printf( "Setting crtstep = %f -- for DEBUGing ONLY.", crtstep );
+     // propagationType= 1;
+
+     // CheckDirection(DirectionNew);
+     
      /**
      const bool fCheckingStep= false;
      if( fCheckingStep ) {
@@ -412,10 +425,12 @@ void TransportManager::PropagateInVolumeSingle(GeantTrack &track, double crtstep
         Geant::ConstBzFieldHelixStepper stepper( Bz );
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  track.fCharge, track.fP, crtstep,
                                                PositionNew, DirectionNew);
+        // propagationType= 2;
      } else {
         Geant::ConstVecFieldHelixStepper stepper( BfieldInitial );
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  track.fCharge, track.fP, crtstep,
                                          PositionNew, DirectionNew);
+        // propagationType= 3;        
      }     
   }
 
