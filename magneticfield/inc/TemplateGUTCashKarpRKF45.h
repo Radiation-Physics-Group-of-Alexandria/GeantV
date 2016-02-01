@@ -16,12 +16,16 @@
 #include "TemplateTMagErrorStepper.h"
 
 #define INLINERHS 1
+#define DEBUGAnanya
+#define RemoveAuxStepper
+// #define NoPointers
 
 #ifdef INLINERHS
 #define REALLY_INLINE   inline __attribute__((always_inline))
 #else
 #define REALLY_INLINE   inline
 #endif
+
 
 template
 <class Backend, class T_Equation, unsigned int Nvar>
@@ -50,13 +54,22 @@ class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>
     TemplateGUVIntegrationStepper<Backend>* Clone() const override;
 
     REALLY_INLINE
+    #ifdef NoPointers
+    void StepWithErrorEstimate(const Double_v yInput[],    // Consider __restrict__
+                               const Double_v  dydx[],
+                                     Double_v  Step,
+                                     Double_v  yOut[],
+                                     Double_v  yErr[]) override;
+   #else 
     void StepWithErrorEstimate(const Double_v* yInput,    // Consider __restrict__
                                const Double_v*  dydx,
                                      Double_v   Step,
                                      Double_v*  yOut,
                                      Double_v*  yErr) override;
+    #endif 
 
-    Double_v DistChord()   const override;  
+    Double_v DistChord() ;// override;  
+    Double_v DistChord() const override {}
 
     REALLY_INLINE
     void RightHandSideInl(Double_v y[], Double_v dydx[]) 
@@ -75,8 +88,9 @@ class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>
         // -----------
         T_Equation* fEquation_Rhs;
         bool        fOwnTheEquation; //enquire it's nature. If Bool_v , need to change if -> MaskedAssign
+        #ifndef RemoveAuxStepper
         TemplateGUTCashKarpRKF45* fAuxStepper;
-
+        #endif
         // State -- intermediate values used during RK step
         // -----        
         Double_v ak2[sNstore];
@@ -91,13 +105,23 @@ class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>
 
         // State -- values used for subsequent call to DistChord
         // -----
+        
         Double_v  fLastStepLength;
+      #ifdef NoPointers
+        Double_v  fLastInitialVector[sNstore];
+        Double_v  fLastFinalVector[sNstore];
+        Double_v  fLastDyDx[sNstore];
+        Double_v  fMidVector[sNstore];
+        Double_v  fMidError[sNstore];
+      #endif 
+        // for DistChord calculations
+       #ifndef NoPointers
         Double_v* fLastInitialVector;
         Double_v* fLastFinalVector;
         Double_v* fLastDyDx;
         Double_v* fMidVector;
         Double_v* fMidError;
-        // for DistChord calculations
+       #endif
 };
 
 template <class Backend, class T_Equation, unsigned int Nvar>
@@ -108,30 +132,55 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
                              bool primary                  )
    : TemplateGUVIntegrationStepper<Backend>( EqRhs,    
                                              sOrderMethod,
-                                             Nvar,
+                                             Nvar, //8, //Ananya
                                             ((numStateVariables>0) ? numStateVariables : sNstore) ),
      fEquation_Rhs(EqRhs),
      fOwnTheEquation(primary),
+    #ifndef RemoveAuxStepper
      fAuxStepper(0),
+    #endif
      fLastStepLength(0.)
 {
+  #ifdef DEBUGAnanya
+     std::cout<<"\n----Entered constructor of TemplateGUTCashKarpRKF45 "<<std::endl;
+     std::cout<<"----In TemplateGUTCashKarpRKF45 constructor, Nvar is: "<<Nvar<<std::endl;
+  #endif
    assert( dynamic_cast<TemplateGUVEquationOfMotion<Backend>*>(EqRhs) != 0 );
+
+
    assert( (numStateVariables == 0) || (numStateVariables >= Nvar) );
   
    typedef typename Backend::precision_v Double_v;
 
+  #ifndef NoPointers
    fLastInitialVector = new Double_v[sNstore] ;
    fLastFinalVector   = new Double_v[sNstore] ;
    fLastDyDx          = new Double_v[sNstore];
    
    fMidVector = new Double_v[sNstore];
    fMidError  = new Double_v[sNstore];
- 
+  #endif
+
+  #ifdef DEBUGAnanya
+    std::cout<<"----Before Auxiliary stepper if condition"<<std::endl;
+  #endif
+
+  #ifndef RemoveAuxStepper
    if( primary )
    {
       // Reuse the Equation of motion in the Auxiliary Stepper      
-      fAuxStepper = new TemplateGUTCashKarpRKF45(EqRhs, numStateVariables, false);
+      TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar> fAuxStepper2(EqRhs, numStateVariables, false);
+      fAuxStepper = &fAuxStepper2;
+      // fAuxStepper = new TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>(EqRhs, numStateVariables, false);
+      #ifdef DEBUGAnanya
+      std::cout<<"----TemplateGUTCashKarpRKF45 Auxiliary Stepper being made"<<std::endl;
+      #endif 
    }
+  #endif 
+
+   #ifdef DEBUGAnanya
+    std::cout<<"----end of constructor of TemplateGUTCashKarpRKF45"<<std::endl;
+   #endif
 }
 
 template <class Backend, class T_Equation, unsigned int Nvar>
@@ -154,10 +203,17 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
                                               right.GetNumberOfStateVariables() ),
      fEquation_Rhs( (T_Equation*) 0 ),
      fOwnTheEquation(true),
+
+     #ifndef RemoveAuxStepper
      fAuxStepper(0),   //  May overwrite below
+     #endif 
+
      fLastStepLength(0.)
      // fPrimary( right.fPrimary )
 {
+/*  #ifdef DEBUGAnanya
+    std::cout<<"----Entered constructor of TemplateGUTCashKarpRKF45 "<<std::endl;
+  #endif*/
    // if( primary )
    SetEquationOfMotion( new T_Equation( *(right.fEquation_Rhs)) );
    fOwnTheEquation=true;
@@ -168,23 +224,29 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
   
    typedef typename Backend::precision_v Double_v;
 
+  #ifndef NoPointers
    fLastInitialVector = new Double_v[sNstore] ;
    fLastFinalVector   = new Double_v[sNstore] ;
    fLastDyDx          = new Double_v[sNstore];
    
    fMidVector = new Double_v[sNstore];
    fMidError  = new Double_v[sNstore];
+  #endif 
 #if 1
    // if( verbose )
       std::cout << " TemplateGUTCashKarpRKF45 - copy constructor: " << std::endl
                 << " Nvar = " << Nvar << " Nstore= " << sNstore 
                 << " Own-the-Equation = " << fOwnTheEquation << std::endl;
 #endif   
+
+  #ifndef RemoveAuxStepper
    if( right.fAuxStepper )
    {
       // Reuse the Equation of motion in the Auxiliary Stepper
       fAuxStepper = new TemplateGUTCashKarpRKF45(fEquation_Rhs, this->GetNumberOfStateVariables(), false);
+      std::cout<<"Auxiliary stepper made"<<std::endl;
    }
+  #endif
 }
 
 
@@ -193,15 +255,38 @@ template <class Backend, class T_Equation,unsigned int Nvar>
 REALLY_INLINE
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::~TemplateGUTCashKarpRKF45()
 {
+#ifdef DEBUGAnanya
+  std::cout<<"----- CashKarp destructor0"<<std::endl;
+#endif
+
+
+#ifndef NoPointers
    delete[] fLastInitialVector;
    delete[] fLastFinalVector;
    delete[] fLastDyDx;
    delete[] fMidVector;
    delete[] fMidError;
+#ifdef DEBUGAnanya
+  std::cout<<"----- CashKarp destructor0.5"<<std::endl;
+#endif
 
+  #ifndef RemoveAuxStepper
+  std::cout<<fAuxStepper<<std::endl;
    delete fAuxStepper;
+  #endif 
+
+#ifdef DEBUGAnanya
+  std::cout<<"----- CashKarp destructor1"<<std::endl;
+#endif
+
    if( fOwnTheEquation )
       delete fEquation_Rhs; // Expect to own the equation, except if auxiliary (then sharing the equation)
+#endif
+
+#ifdef DEBUGAnanya
+  std::cout<<"----- CashKarp destructor1"<<std::endl;
+#endif
+
 }
 
 template <class Backend, class T_Equation, unsigned int Nvar>
@@ -216,11 +301,19 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::Clone() const
 template <class Backend, class T_Equation, unsigned int Nvar>
 inline void
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
+#ifdef NoPointers
+  StepWithErrorEstimate(const typename Backend::precision_v  yInput[],    
+                        const typename Backend::precision_v  dydx[],
+                              typename Backend::precision_v   Step,
+                              typename Backend::precision_v  yOut[],
+                              typename Backend::precision_v  yErr[])
+#else 
   StepWithErrorEstimate(const typename Backend::precision_v*  yInput, // [],    
                         const typename Backend::precision_v*  dydx, // [],
                               typename Backend::precision_v   Step,
                               typename Backend::precision_v*  yOut, // [],
                               typename Backend::precision_v*  yErr  ) // [])
+#endif 
 {
     // const int nvar = 6 ;
     // const double a2 = 0.2 , a3 = 0.3 , a4 = 0.6 , a5 = 1.0 , a6 = 0.875;
@@ -320,7 +413,7 @@ template <class Backend, class T_Equation, unsigned int Nvar>
 inline 
 typename Backend::precision_v
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
-  DistChord()   const
+  DistChord() //  const
 {
     typedef typename Backend::precision_v Double_v;
     typedef vecgeom::Vector3D<Double_v> ThreeVector;
@@ -334,23 +427,29 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
     finalPoint   = ThreeVector( fLastFinalVector[0],  
             fLastFinalVector[1],  fLastFinalVector[2]); 
 
+#ifndef RemoveAuxStepper
     // Do half a step using StepNoErr
-
+  #ifdef NoPointers
+    fAuxStepper->StepWithErrorEstimate( fLastInitialVector, 
+                                        fLastDyDx, 
+                                        0.5 * fLastStepLength, 
+                                        fMidVector,   
+                                        fMidError );
+  #else 
     fAuxStepper->TemplateGUTCashKarpRKF45::StepWithErrorEstimate( fLastInitialVector, 
                                                                   fLastDyDx, 
                                                                   0.5 * fLastStepLength, 
                                                                   fMidVector,   
                                                                   fMidError );
-
+  #endif 
     midPoint = ThreeVector( fMidVector[0], fMidVector[1], fMidVector[2]);       
 
     // Use stored values of Initial and Endpoint + new Midpoint to evaluate
     //  distance of Chord
 
-    distLine  = TemplateGULineSection<Backend>::Distline( midPoint, initialPoint, finalPoint );
-    distChord = distLine;
-
-    vecgeom::MaskedAssign(initialPoint == finalPoint, (midPoint-initialPoint).Mag2(), &distChord);
+    distChord  = TemplateGULineSection<Backend>::Distline( midPoint, initialPoint, finalPoint );
+  #endif
+    // distChord = distLine;
 /*
     if (initialPoint != finalPoint) 
     {
@@ -365,4 +464,4 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
 }
 
 
-#endif /*TCashKARP_RKF45 */
+#endif /*TemplateTCashKARP_RKF45 */
