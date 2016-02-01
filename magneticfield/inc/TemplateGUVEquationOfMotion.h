@@ -21,6 +21,8 @@
 #include <ostream>
 #include "TemplateGUVField.h"   // required in inline method implementations
 
+#define DEBUGAnanya
+
 //vecgeom::VECGEOM_DEVICE_FORWARD_DECLARE( template <typename Type> class TemplateGUVEquationOfMotion;)
 
 template <class Backend>
@@ -141,7 +143,9 @@ TemplateGUVEquationOfMotion<Backend>::TemplateGUVEquationOfMotion(TemplateGUVFie
      std::cout << " Called TemplateGUVEquationOfMotion::InformDone() " << std::endl;
      // std::cout << *this << std::endl;
    }
-
+  #ifdef DEBUGAnanya
+     std::cout<<"----Entered constructor of TemplateGUVEquationOfMotion "<<std::endl;
+  #endif
 
 }
 
@@ -222,7 +226,7 @@ void TemplateGUVEquationOfMotion<Backend>::CheckInitialization() const
       std::cerr << "TemplateGUVEquationOfMotion is not Initialised" << std::endl;
    }
 #endif
-   assert( fInitialised );
+   // assert( fInitialised ); //Ananya:temp
 }
 
 template <class Backend>

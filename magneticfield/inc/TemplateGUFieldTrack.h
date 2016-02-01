@@ -33,7 +33,7 @@ class  TemplateGUFieldTrack
      TemplateGUFieldTrack(const ThreeVector& pPosition, 
                           const ThreeVector& pMomentum,
                          // double       restMass_c2,
-                         // double       charge,
+                          Double_v                  charge=-1,
                           Double_v  laboratoryTimeOfFlight= 0.0,
                           Double_v            curve_length= 0.0); 
 
@@ -389,7 +389,7 @@ TemplateGUFieldTrack<Backend>::
   TemplateGUFieldTrack( const vecgeom::Vector3D<typename Backend::precision_v> & pPosition, 
                         const vecgeom::Vector3D<typename Backend::precision_v> & pMomentum,
                         // double       restMass_c2,
-                        // double       charge, 
+                                                typename Backend::precision_v charge, 
                                                 typename Backend::precision_v LaboratoryTimeOfFlight,
                                                 typename Backend::precision_v curve_length          )
                         // const ThreeVector& vecPolarization,
