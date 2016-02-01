@@ -293,7 +293,7 @@ TemplateGUVHelicalStepper<Backend>::
 
 
   //from if statement
-  LinearStep( yIn, h, yHelix );
+  // LinearStep( yIn, h, yHelix );
   
   //from else statement
   ThreeVectorSimd Bnorm = (1.0/Bmag)*Bfld;
@@ -305,17 +305,20 @@ TemplateGUVHelicalStepper<Backend>::
   Double_v        Theta = R_1 * h; // * B_v_P;
 
 
-  //else inside else
+/*  //else inside else
   Double_v Theta2 = Theta  * Theta;
   Double_v Theta3 = Theta2 * Theta;
   Double_v Theta4 = Theta2 * Theta2;
   SinT     = Theta - 1.0/6.0 * Theta3;
-  CosT     = 1 - 0.5 * Theta2 + 1.0/24.0 * Theta4;
+  CosT     = 1 - 0.5 * Theta2 + 1.0/24.0 * Theta4;*/
 
   //if inside else
-  Bool_v trigCond = vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(Theta) > approc_limit;
+/*  Bool_v trigCond = vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(Theta) > approc_limit;
   vecgeom::MaskedAssign(trigCond, vecgeom::VECGEOM_IMPL_NAMESPACE::sin(Theta), &SinT);
-  vecgeom::MaskedAssign(trigCond, vecgeom::VECGEOM_IMPL_NAMESPACE::cos(Theta), &CosT);
+  vecgeom::MaskedAssign(trigCond, vecgeom::VECGEOM_IMPL_NAMESPACE::cos(Theta), &CosT);*/
+
+  SinT = vecgeom::VECGEOM_IMPL_NAMESPACE::sin(Theta);
+  CosT = vecgeom::VECGEOM_IMPL_NAMESPACE::cos(Theta);
 
   Double_v R = 1.0 / R_1;
 
@@ -360,10 +363,10 @@ TemplateGUVHelicalStepper<Backend>::
   // for too small magnetic fields there is no curvature
   // (include momentum here) FIXME
 
-  Bool_v noCurvatureCond = (vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(R_1) < 1e-10) || (Bmag<1e-12);
+/*  Bool_v noCurvatureCond = (vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(R_1) < 1e-10) || (Bmag<1e-12);
   vecgeom::MaskedAssign(noCurvatureCond, 1., &Theta  );
   vecgeom::MaskedAssign(noCurvatureCond, h , &R      );
-  vecgeom::MaskedAssign(noCurvatureCond, 0., &R_Helix);
+  vecgeom::MaskedAssign(noCurvatureCond, 0., &R_Helix);*/
 
 
   SetAngCurve(vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(Theta));
