@@ -24,6 +24,7 @@
 
 #include "TemplateGUVEquationOfMotion.h"
 
+#define DEBUGAnanya
 
 template <class Backend> 
 class TemplateGUVIntegrationStepper
@@ -69,6 +70,9 @@ class TemplateGUVIntegrationStepper
         // Create an independent copy of the current object -- including independent 'owned' objects
         
         inline void RightHandSideVIS( const Double_v y[], Double_v charge, Double_v dydx[] );   
+
+        // inline void RightHandSideVIS( const Double_v y[], Double_v charge, Double_v dydx[] ); 
+
         // Utility method to supply the standard Evaluation of the
         // Right Hand side of the associated equation.
 
@@ -155,11 +159,19 @@ TemplateGUVIntegrationStepper<Backend>::
     fNoIntegrationVariables(num_integration_vars),
     fNoStateVariables(num_state_vars > 0 ? num_state_vars : num_integration_vars)
 {
+  #ifdef DEBUGAnanya
+    std::cout<<"\n----Entered constructor of TemplateGUVIntegrationStepper"<<std::endl;
+    std::cout<<"----Equation is: "<<equation->idxTime<<std::endl;
+    std::cout<<"----num_state_vars is: "<<integrationOrder<<std::endl;
+  #endif
 }
 
 template <class Backend> 
 TemplateGUVIntegrationStepper<Backend>::~TemplateGUVIntegrationStepper()
 {
+  #ifdef DEBUGAnanya
+    std::cout<<"----IntegrationStepper destructor"<<std::endl;
+  #endif 
 }
 
 // This allows the method to cache the value etc - Not needed for now

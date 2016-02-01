@@ -56,19 +56,24 @@ class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
      inline 
      void RightHandSide(const Double_v y[], 
                         const Double_v charge, 
-                              Double_v dydx[] ) const;
+                              Double_v dydx[]) const;
+
+     void RightHandSide(const Double_v y[],  
+                              Double_v dydx[]) const
+     { Double_v charge  = -1.0;
+       RightHandSide(y, charge, dydx);  };
 
      REALLY_INLINE
      void TEvaluateRhsGivenB( const Double_v y[],
                               const vecgeom::Vector3D<Double_v> B,  // Was double B[3],
-                              const Double_v charge,
-                                    Double_v dydx[] ) const;
+                              const Double_v charge= -1.,
+                                    Double_v dydx[]= 0. ) const;
 
      // virtual
      void EvaluateRhsGivenB( const Double_v y[],
                              const vecgeom::Vector3D<Double_v> B,  // Was const double B[3],
-                             const Double_v charge,
-                                   Double_v dydx[] ) const
+                             const Double_v charge= -1.,
+                                   Double_v dydx[]= 0. ) const
      { TEvaluateRhsGivenB( y, B, charge, dydx); }
 
      REALLY_INLINE
