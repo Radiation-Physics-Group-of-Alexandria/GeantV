@@ -531,6 +531,21 @@ public:
   //     vecgeom::Vector3D<double> Position (fXposV[i], fYposV[i], fZposV[i]);
   //     FieldLookup::GetFieldValue(td, Position, BfieldOut, bmagOut);
   //  }
+
+  /** @brief Simple check of tracks -- if a problem is found, then the track is printed 
+   * @param  itr           Input track number 'i'
+   * @param  msg           Message to inform about location from call is made
+   * @param  epsilon       tolerance for problems
+   */ 
+  VECCORE_ATT_HOST_DEVICE
+  void CheckTrack(int itr, const char *msg, double epsilon= 0.0) const;
+
+  /** @brief Check the direction -- report if its length is within epsilon of 1.0
+   * @param  itr           Input track number 'i'
+   * @param  epsilon       tolerance for problems
+   */    
+  VECCORE_ATT_HOST_DEVICE
+  bool CheckDirection(int itr, double epsilon = 1.0e-6 ) const;
    
   /**
    * @brief Function that return curvature in different areas of geometry
