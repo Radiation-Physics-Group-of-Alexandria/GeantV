@@ -472,6 +472,11 @@ void *WorkloadManager::TransportTracks() {
         // first: sample target and type of interaction for each primary tracks
         propagator->Process()->PostStepTypeOfIntrActSampling(mat, nphys, output, td);
 
+        for (auto itr = 0; itr < nout; ++itr) {
+           // input.CheckTrack(itr, "Input to PostStepFinalStateSampling.");
+           input.Normalize(itr);
+           // input.CheckTrack(itr, "Input to PostStepFinalStateSampling - 2nd check.");           
+        }
 //
 // TODO: vectorized final state sampling can be inserted here through
 //       a proper interface code that will:
@@ -494,12 +499,22 @@ void *WorkloadManager::TransportTracks() {
         //         the track vector, update primary tracks;
         propagator->Process()->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
 
-        if (0 /*ntotnext*/) {
-          Geant::Print("","============= Basket: %s\n", basket->GetName());
-          output.PrintTracks();
-        }
+        // if (0 /*ntotnext*/) {
+        //  Geant::Print("","============= Basket: %s\n", basket->GetName());
+        //  output.PrintTracks();        
+
       }
     }
+
+    // Report problem tracks (option in comments) -- and correct them!
+    if (ntotnext) {
+      // Geant::Print("","============= Basket: %s\n", basket->GetName());
+      for (int itr=0; itr<ntotnext; ++itr) {
+        // output.CheckTrack(itr, "Product of PostStepFinalStateSampling.");
+        output.Normalize(itr);
+      }
+    }
+
     if (gPropagator->fStdApplication)
       gPropagator->fStdApplication->StepManager(output.GetNtracks(), output, td);
     gPropagator->fApplication->StepManager(output.GetNtracks(), output, td);
