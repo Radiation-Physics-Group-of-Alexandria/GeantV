@@ -911,6 +911,14 @@ public:
   /** @brief Function that print all tracks */
   void PrintTracks(const char *msg = "") const;
 
+  /** @brief Simple check of tracks -- if a problem is found, then the track is printed */
+  GEANT_CUDA_BOTH_CODE
+  void CheckTrack(int itr, const char *msg, double epsilon= 0.0) const;
+
+  /** @brief Check the direction -- report if its length is within epsilon of 1.0 */
+  GEANT_CUDA_BOTH_CODE
+  bool CheckDirection(int itr, double epsilon = 1.0e-6 ) const;
+
   /**
    * @brief Function for navigation that check if location is the same or not for single track
    *

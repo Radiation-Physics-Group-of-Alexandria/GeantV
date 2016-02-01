@@ -1579,12 +1579,19 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   bool mediumAngle = ( numRadiansMin < angle ) && ( angle < numRadiansMax );
   useRungeKutta = useRungeKutta && (mediumAngle);
 
-#ifdef DEBUG_FIELD  
+  // But use RK as fall back - until 'General Helix' is robust
+  bool dominantBz =  std::fabs( std::fabs(BfieldInitial[1]) )
+         > 1e6 *
+     std::max( std::fabs( BfieldInitial[0]), std::fabs(BfieldInitial[1]) );
+  if( !dominantBz )
+     useRungeKutta = true;
+
+#ifdef DEBUG_FIELD
   printf("--PropagateInVolumeSingle: \n");
   printf("Curvature= %8.4g   CurvPlus= %8.4g  step= %f   Bmag=%8.4g   momentum mag=%f  angle= %g\n"
          Curvature(td, i), curvaturePlus, crtstep, bmag, fPV[i], angle );
 #endif
-  
+
 #ifdef USE_VECGEOM_NAVIGATOR
 //  CheckLocationPathConsistency(i);
 #endif
@@ -1596,11 +1603,13 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   ThreeVector DirectionNew(0.,0.,0.);
 
   ThreeVector PositionNewHlx(0.,0.,0.);
-  ThreeVector DirectionNewHlx(0.,0.,0.);  
+  ThreeVector DirectionNewHlx(0.,0.,0.);
+  int propagationType= 0;
+
   if( useRungeKutta )
   {
-     // crtstep = 1.0e-4;   printf( "Setting crtstep = %f -- for DEBUGing ONLY.", crtstep ); 
-
+     // crtstep = 1.0e-4;   printf( "Setting crtstep = %f -- for DEBUGing ONLY.", crtstep );
+     propagationType= 1;
      // PrintTrack(i);
      ThreeVector PositionNewRK(0.,0.,0.);
      ThreeVector DirectionNewRK(0.,0.,0.);
@@ -1617,35 +1626,72 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
                               PositionNewRK, DirectionNewRK, Bfield );
      }
      PositionNew =  PositionNewRK;
-     DirectionNew = DirectionNewRK;     
-#endif     
+     DirectionNew = DirectionNewRK;
+     // CheckDirection(DirectionNew);
+#endif
   } else {
-     double Bz= BfieldInitial[2];
-     if ( std::fabs( Bz ) > 1e6 *
-                    std::max( std::fabs(BfieldInitial[0]), std::fabs(BfieldInitial[1]) ) ) {
+     constexpr double toKiloGauss= 1.0e+14; // Converts to kilogauss -- i.e. 1 / Unit::kilogauss
+                                            // Must agree with values in magneticfield/inc/Units.h
+     // double Bx = BfieldInitial[0] * toKiloGauss;
+     // double By = BfieldInitial[1] * toKiloGauss;
+     double Bz = BfieldInitial[2] * toKiloGauss;
+     if ( dominantBz ) {
+       // if( std::fabs( Bz ) > 1e6 *
+       //  std::max( std::fabs(Bx), std::fabs(By)) ){ // BfieldInitial[0]), std::fabs(BfieldInitial[1]) ) ) {
+        propagationType= 2;
+        // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g )", Bz, Bx, By );
+        Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g )", Bz,  BfieldInitial[0] * toKiloGauss,
+               BfieldInitial[0] * toKiloGauss );
         // Old - constant field in Z-direction
-        Geant::ConstBzFieldHelixStepper stepper( Bz ); // z-component
+        Geant::ConstBzFieldHelixStepper stepper( Bz ); // * toKiloGauss ); // z-component
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                                PositionNewHlx, DirectionNewHlx);
-     } else {
-        Geant::ConstVecFieldHelixStepper stepper( BfieldInitial ); // double Bfield[3] );
+     }
+  /* GENERAL_HELIX method - to be made more robust 
+     else {
+        propagationType= 3;
+        if( ! CheckDirection( i, 1.0e-4 ) )
+           PrintTrack(i, "Failed check of *direction* - input to General Helix stepper.");
+
+        Printf("Called Helix-General.  Bz= %g , Bx = %g, By= %g ", Bz, Bx, By );
+        double BfieldKG[3]= { Bx, By, Bz };
+           // BfieldInitial[0] * toKiloGauss, BfieldInitial[1] * toKiloGauss, BfieldInitial[2] * toKiloGauss );
+        Geant::ConstVecFieldHelixStepper stepper( BfieldKG ); // double Bfield[3] );
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                          PositionNewHlx, DirectionNewHlx);
      }
+   */
      PositionNew =  PositionNewHlx;
-     DirectionNew = DirectionNewHlx;     
+     DirectionNew = DirectionNewHlx;
   }
-
 
   fXposV[i] = PositionNew.x();
   fYposV[i] = PositionNew.y();
   fZposV[i] = PositionNew.z();
 
-  //  maybe normalize direction here  // Math::Normalize(dirnew);
+  // Normalize direction here - to avoid surprises
+
+  // double oldMag = DirectionNew.Mag();
+  // if( std::fabs( oldMag - 1.0 ) > 1.e-6 ) { fNumBadNormals++; fMaxBadNormalFld= std::max(fMaxBadNormal, oldMag); fMinBadNormalFld = std::min(fMinBadNormal, oldMag); }
   DirectionNew = DirectionNew.Unit();
+  // double newMag = DirectionNew.Mag();
+
   fXdirV[i] = DirectionNew.x();
   fYdirV[i] = DirectionNew.y();
   fZdirV[i] = DirectionNew.z();
+
+#ifdef REPORT_AND_CHECK
+  Printf(" -- State after propagation in field:  Position= %f, %f, %f   Direction= %f, %f, %f  - mag old, new, new-1.0 = %10.8f %10.8f %7.2g",
+         fXposV[i], fYposV[i], fZposV[i],
+         fXdirV[i], fYdirV[i], fZdirV[i], oldMag, newMag, newMag-1.0 );
+         // DirectionNew.Mag()-1.0  );
+
+  const char* Msg[4]= { "After propagation in field - type Unknown(ERROR) ",
+                        "After propagation in field - with RK           ",
+                        "After propagation in field - with Helix-Bz     ",
+                        "After propagation in field - with Helix-General" };
+  CheckTrack(i, Msg[propagationType] );
+#endif
 
 #if 0
   ThreeVector SimplePosition = Position + crtstep * Direction;
@@ -1786,6 +1832,59 @@ void GeantTrack_v::PrintTracks(const char *msg) const {
   Geant::Print(msg,"%s","");
   for (int i = 0; i < ntracks; i++)
     PrintTrack(i);
+}
+
+GEANT_CUDA_BOTH_CODE
+void GeantTrack_v::CheckTrack(int itr, const char *msg, double epsilon ) const {
+#define IsNan(x)  ( ! ( x > 0 || x <= 0.0 ) )
+   // Ensure that values are 'sensible' - else print msg and track
+   if( epsilon <= 0.0 || epsilon > 0.01 ) { epsilon = 1.e-6; }
+
+   double x= fXposV[itr], y = fYposV[itr], z= fZposV[itr];
+   bool badPosition = IsNan(x) || IsNan(y) || IsNan(z);
+   const double maxRadius = 10000.0;   // Should be a property of the geometry
+   const double maxRadXY  =  5000.0;   // Should be a property of the geometry
+
+   // const double maxUnitDev =  1.0e-4;  // Deviation from unit of the norm of the direction
+   double radiusXy2= x*x + y*y;
+   double radius2=  radiusXy2 + z*z;
+   badPosition = badPosition
+                || (radiusXy2 > maxRadXY  * maxRadXY )
+                || (radius2   > maxRadius * maxRadius ) ;
+
+   const double maxUnitDev = epsilon;  // Use epsilon for max deviation of direction norm from 1.0
+
+   double dx= fYdirV[itr], dy= fYdirV[itr], dz= fZdirV[itr];
+   double dirNorm2 = dx*dx + dy*dy + dz*dz;
+   bool   badDirection = std::fabs( dirNorm2 - 1.0 ) > maxUnitDev;
+   if( badPosition || badDirection ) {
+      static const char* errMsg[4]= { " All ok - No error. ",
+                                      " Bad position.",                  // [1]
+                                      " Bad direction.",                 // [2]
+                                      " Bad direction and position. " }; // [3]
+      int iM=0;
+      if( badPosition ) { iM++; }
+      if( badDirection  ) { iM += 2; }
+      // if( badDirection ) {
+      //   Printf( " Norm^2 direction= %f ,  Norm -1 = %g", dirNorm2, sqrt(dirNorm2)-1.0 );
+      // }
+      Printf("ERROR> Problem with track %d . Issue: %s. Info message: %s -- Mag^2(dir)= %9.6f Norm-1= %g",
+             itr, errMsg[iM], msg, dirNorm2, sqrt(dirNorm2)-1.0 );
+      PrintTrack(itr, msg);
+   }
+}
+
+GEANT_CUDA_BOTH_CODE
+bool GeantTrack_v::CheckDirection(int itr, double epsilon ) const
+{
+   if( epsilon <= 0.0 || epsilon > 0.001 ) { epsilon = 1.e-6; }
+
+   double xdir= fXdirV[itr];
+   double ydir= fYdirV[itr];
+   double zdir= fZdirV[itr];
+   double norm2= xdir * xdir + ydir * ydir + zdir * zdir;
+
+   return ( std::fabs( norm2 - 1.0 ) <= epsilon );
 }
 
 //______________________________________________________________________________
@@ -1943,7 +2042,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   double lmax;
   const double eps = 1.E-2; // 100 micron
 
-  double Bfield[3], bmag= 0.0;  
+  double Bfield[3], bmag= 0.0;
 
   // Remove dead tracks, propagate neutrals
   for (itr = 0; itr < ntracks; itr++) {
@@ -1962,13 +2061,13 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
     // (Inlined from PropagateStraight)
 
     // if (fChargeV[itr] == 0 || bmag < 1.E-10) {
-    
+
     bool straightTraj= ( fChargeV[itr] == 0 );
     if( !straightTraj ) {
        GetFieldValue(td, itr, Bfield, &bmag);
        // td->StoreFieldValue(itr, Bfield, bmag);   // Store it in Task-Data array !?
        straightTraj = bmag < 1.E-10;
-    } else { 
+    } else {
        // td->ClearFieldValue(itr);
     }
     if( straightTraj ) {
@@ -2114,7 +2213,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
       fBoundaryV[itr] = true;
       icrossed++;
       // Update number of steps to physics and total number of steps
-      td->fNsteps++;  
+      td->fNsteps++;
       if (fStepV[itr] < 1.E-8) td->fNsmall++;
       MarkRemoved(itr);
     }
@@ -2135,11 +2234,16 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
   // Propagate the tracks with their selected steps in a single loop,
   // starting from a given stage.
 
+  // printf(" PropagateSingleTrack called for itr= %d -- Track: ", itr );
+  // PrintTrack(itr);
+  CheckTrack(itr, " PropagateSingleTrack called.");
+  // PrintTrack(itr);
+
   int icrossed = 0;
   double step, lmax;
   const double eps = 1.E-2; // 1 micron
 
-  double Bfield[3], bmag= 0.0;  
+  double Bfield[3], bmag= 0.0;
 
 // Compute transport length in geometry, limited by the physics step
 #ifdef BUG_HUNT
@@ -2164,13 +2268,13 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
   if (stage == 0) {
     bool neutral = (fChargeV[itr] == 0);
     if( !neutral ) {
-       printf( " PropagateSingleTrack> getting Field. Charge= %3d ", fChargeV[itr]);
+       // printf( " PropagateSingleTrack> getting Field. Charge= %3d ", fChargeV[itr]);
        GetFieldValue(td, itr, Bfield, &bmag);
-       if( bmag < 1.E-10) { printf(" Tiny field - mag = %g at %f %f %f\n",
-                                   bmag,  fXposV[itr],  fYposV[itr],  fZposV[itr]); } 
+       // if( bmag < 1.E-10) { printf(" Tiny field - mag = %g at %f %f %f\n",
+       //                             bmag,  fXposV[itr],  fYposV[itr],  fZposV[itr]); }
     }
     // if (fChargeV[itr] == 0 || bmag < 1.E-10) {
-    if ( neutral || bmag < 1.E-10) {       
+    if ( neutral ) { // || bmag < 1.E-10 * kiloGauss ) {
       // Do straight propagation to physics process or boundary
       if (fBoundaryV[itr]) {
         //*fPathV[itr] = *fNextpathV[itr];
@@ -2229,8 +2333,11 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
     PropagateInVolumeSingle(itr, step, td);
     //Update number of partial steps propagated in field
     td->fNmag++;
-    //      Printf("====== After PropagateInVolumeSingle:");
-    //      PrintTrack(itr);
+    static int VerboseTrack = 0;
+    if( VerboseTrack ){
+       Printf("====== After PropagateInVolumeSingle:");
+       PrintTrack(itr);
+    }
     // The track may have made it to physics steps (kPhysics)
     //         -> remove and copy to output
     // The track may have been propagated with step greater than safety
@@ -2330,7 +2437,7 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
 
   if( td->fBfieldIsConst ) {
     MagFldD= td->fConstFieldValue;
-    if( bmag ) *bmag=   td->fBfieldMag;
+    if( bmag ) *bmag= td->fBfieldMag;
   }
   else
   {
@@ -2342,7 +2449,8 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
     if( bmag ) *bmag= MagFldD.Mag();
 
     // printf(" GeantTrack_v::GetFieldValue>  Field at x,y,z= ( %f %f %f ) is (%f %f %f) kGauss - mag = %f \n",
-    //       fXposV[i], fZposV[i], fZposV[i], MagFldF.x(), MagFldF.y(), MagFldD.z(), *bmag );
+    //       fXposV[i], fZposV[i], fZposV[i], MagFldF.x()/kiloGauss, MagFldF.y()/kiloGauss, MagFldD.z()/kiloGauss,
+    //        *bmag );
     /* int oldPrec= cout.precision(3);
        std::cout << " GeantTrack_v::GetFieldValue>  Field at x,y,z= ( "
               << std::setw(8) << fXposV[i]<< " , " << std::setw(8) << fYposV[i]
@@ -2351,7 +2459,7 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
               << " , " << std::setw(8) << MagFldD.z() <<  " ) kGauss - "
               << "mag = " << *bmag << std::endl;
        cout.precision(oldPrec);
-     */ 
+     */
   }
   B[0]= MagFldD.x();
   B[1]= MagFldD.y();
@@ -2369,12 +2477,12 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
 GEANT_CUDA_BOTH_CODE
 double GeantTrack_v::Curvature(GeantTaskData *td, int i) const {
   using ThreeVector_d = vecgeom::Vector3D<double>;
-  
+
   // Curvature for general field
   const double tiny = 1.E-30;
 
-  double Bfield[3], bmag= 0.0;  
-  
+  double Bfield[3], bmag= 0.0;
+
   GetFieldValue(td, i, Bfield, &bmag);
   ThreeVector_d MagFld(Bfield[0], Bfield[1], Bfield[2]);
 
