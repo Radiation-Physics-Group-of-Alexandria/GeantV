@@ -38,10 +38,11 @@
 #include "base/SOA3D.h"
 #include "base/Global.h"
 #include "backend/Backend.h"
+#include "AlignedBase.h"
 
 
 template <class Backend>
-class TemplateGUVField //  : public GUVField
+class TemplateGUVField : public AlignedBase
 {
   public: 
 
