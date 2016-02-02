@@ -25,12 +25,9 @@ using fieldUnits::degree;
 #include "TemplateFieldEquationFactory.h"
 
 #include "TemplateGUVIntegrationStepper.h"
-// #include "TemplateStepperFactory.h"
 
-// #include "TemplateTClassicalRK4.h"
 #include "TemplateGUTCashKarpRKF45.h"
-// #include "TemplateTSimpleRunge.h"
-// #include "TemplateGUExactHelixStepper.h"
+
 
 using namespace std;
 
@@ -81,12 +78,9 @@ int main(int argc, char *args[])
        1 , 1 , 0    // dydx mom  x, y, z
     }; //Variables in yOut[] & dydx[] we want to display - 0 for No, 1 for yes
 
-    bool printErr= 0,   // Print the predicted Error
-         printRef= 0,   // Print the reference Solution 
-         printDiff= 0;  // Print the diffrence 
+    bool printErr= 0;   // Print the predicted Error
     bool printSep = 0;  // separator  '|'
     bool printInp = 0;  // print the input values
-    bool printInpX= 0;  // print the input values for Ref 
     
     const unsigned int nwdf= 12;  // Width for float/double
     
@@ -133,8 +127,6 @@ int main(int argc, char *args[])
     #ifdef DEBUGAnanya
        cout<<"----EquationFactory made "<<endl;
     #endif 
-       // new GvEquationType(gvField);
-       // new TMagFieldEquation<TUniformMagField, Nposmom>(gvField);
 
     // gvEquation->InitializeCharge( particleCharge );  // Send it via Stepper instead    
 
@@ -142,38 +134,20 @@ int main(int argc, char *args[])
     
     //Create a stepper :
 
-     // , *exactStepper;
   #ifdef DEBUGAnanya
      cout<<"---- "<<endl;
-  #endif
-  #ifdef DEBUGAnanya
      cout<<"---- Making TemplateGUTCashKarpRKF45"<<endl;
   #endif   
-    TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom> myStepper2(gvEquation);
+    // TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom> myStepper2(gvEquation);
   #ifdef DEBUGAnanya
     cout<<"---- constructed TemplateGUTCashKarpRKF45"<<endl;
   #endif
-    // TemplateGUVIntegrationStepper<Backend> *myStepper(&myStepper2);
-    TemplateGUVIntegrationStepper<Backend> *myStepper;
-    myStepper = &myStepper2;
-    // myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
-  
+/*    TemplateGUVIntegrationStepper<Backend> *myStepper;
+    myStepper = &myStepper2;*/
 
-    // myStepper= TemplateStepperFactory<Backend>::CreateStepper<GvEquationType>(gvEquation, stepper_no);
-    // myStepper= StepperFactory::CreateStepper<decltype(gvEquation)*>(gvEquation, stepper_no);
+    TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
 
-    const int cloneBump= 10;
-    bool useClonedStepper= (stepper_no > cloneBump);
-    if(  useClonedStepper )
-       stepper_no -= cloneBump;
-    
-    if( useClonedStepper ){
-       auto baseStepper = myStepper;
-       auto cloneStepper = myStepper->Clone();
-       delete baseStepper;
-       myStepper = cloneStepper;
-    }
 
     myStepper->InitializeCharge( particleCharge );
     
@@ -183,19 +157,32 @@ int main(int argc, char *args[])
                                          //   Else it must be divided by fieldUnits::c_light;
     // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
-    // double yIn[] = {x_pos,y_pos,z_pos,x_mom,y_mom,z_mom};
-    Double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-                    x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
+/*    Double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                    x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};*/
+
+    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
+
+    for (int i = 0; i < 4; ++i)
+    {
+      X_pos[i] = i-1.;
+      Y_pos[i] = i-1.;
+      Z_pos[i] = i-1.;
+      X_mom[i] = i-1.;
+      Y_mom[i] = i+1.-1.;
+      Z_mom[i] = i+1.-1.;
+
+    }
+    cout<<"New X position is: "<<X_pos<<endl;
+
+    Double yIn[] = {X_pos * mmGVf, Y_pos * mmGVf ,Z_pos * mmGVf,
+                    X_mom * ppGVf ,Y_mom * ppGVf ,Z_mom * ppGVf};
+
+
     #ifdef DEBUGAnanya
       cout<<yIn[0]<<endl;
     #endif 
-    
+       
 
-    // double yInX[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-    //                 x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};    
-    const double mmRef = mmGVf; // Unit for reference of lenght   - milli-meter
-    const double ppRef = ppGVf; // Unit for reference of momentum - GeV / c^2
-    
     auto gvEquation2 = new GvEquationType(gvField);
                    // new TMagFieldEquation<TUniformMagField, Nposmom>(gvField);
     // gvEquation2->InitializeCharge( particleCharge ); // Let's make sure
@@ -203,36 +190,14 @@ int main(int argc, char *args[])
     // Should be able to share the Equation -- eventually
     // For now, it checks that it was Done() -- and fails an assert
 
-    //Creating the baseline stepper
-  #ifdef BASELINESTEPPER
-    auto exactStepperGV =
-        new TClassicalRK4<GvEquationType,Nposmom>(gvEquation2);
-    cout << "#  Reference stepper is: TClassicalRK4<GvEquationType,Nposmom>(gvEquation2);" << endl;
 
-       // new TSimpleRunge<GvEquationType,Nposmom>(gvEquation2);    
-       // new GUExactHelixStepper(gvEquation2);
-
-    // Configure Stepper for current particle
-    exactStepperGV->InitializeCharge( particleCharge ); // Passes to Equation, is cached by stepper
-    // gvEquation2->InitializeCharge( particleCharge ); //  Different way - in case this works
-    
-    auto exactStepper = exactStepperGV;
-  #endif 
     std::cout << "# step_len_mm = " << step_len_mm;
-    std::cout << " mmRef= " << mmRef << "   ppRef= " << ppRef << std::endl;
     
-    Double yInX[] = {x_pos * mmRef, y_pos * mmRef ,z_pos * mmRef,
-                     x_mom * ppRef ,y_mom * ppRef ,z_mom * ppRef};
-
-    double stepLengthRef = step_len_mm * mmRef;
     
     //Empty buckets for results
     Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
-        dydxRef[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
            yout[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-          youtX[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-           yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-          yerrX[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+           yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
     
     /*-----------------------END PREPARING STEPPER---------------------------*/
 
@@ -247,31 +212,12 @@ int main(int argc, char *args[])
     for (int i=0; i<6;i++)
         if (columns[i])
         {
-           if( printSep ) cout << " | " ;  // Separator
-           if( printInp )
-              cout << setw(nwdf-2)<< "yIn[" << i << "]";
-           if( printInp )
-              cout << setw(nwdf-2)<< "yInX[" << i << "]";           
            cout << setw(nwdf-2)<< "yOut[" << i << "]";
-           if( printRef )
-              cout << setw(nwdf-2) << "yOutX[" << i << "]";
-           if( printErr )
-              cout << setw(nwdf-1) << "yErr[" << i << "]";
-           if( printDiff )
-              cout << setw(nwdf) << " yOut-yOutX[" << i << "]";
         }
     for (int i=0; i<6;i++)
         if (columns[i+6])
         {
-           if( printSep ) cout << " | " ;  // Separator
-           if( printInp )                               
-              cout << setw(nwdf-2)<< "yIn[" << i << "]";           
            cout << setw(nwdf-2)<< "dydx[" << i << "]";
-           if( printRef )                    
-              cout << setw(nwdf-2) << "dydxRef[" << i << "]";
-           // if( printErr ) cout << setw(nwdf-2) << "yErr[" << i << "]";
-           if( printDiff ) //  printDiffDeriv )
-              cout << setw(nwdf-2) << "dydx-Ref[" << i << "]";
         }    
     cout<<setw(nwdf)<<"tan-1(y/x)";
     cout<<"\n";
@@ -283,12 +229,8 @@ int main(int argc, char *args[])
     for (int i=0; i<6;i++)
         if (columns[i])
         {
-           if( printSep ) cout << " | " ;  // Separator                      
            const char* nameUnit = ( i<3 ) ? nameUnitLength : nameUnitMomentum ; 
            cout << setw(nwdf)<< nameUnit;
-           if( printRef )  cout << setw(nwdf) << nameUnit;  // Reference output
-           if( printErr )  cout << setw(nwdf) << nameUnit;  // Estim. error
-           if( printDiff ) cout << setw(15) << nameUnit;    // Diff  new - ref
         }    
     cout<<"\n";
     
@@ -394,55 +336,38 @@ int main(int argc, char *args[])
     {
         cout<<setw(6)<<j ;           //Printing Step number
         Double charge(-1.);
+
+
+/*        #ifdef DEBUGAnanya
+          cout<<"\n----y before evaluating RightHandSideVIS was: "<<yIn[3]<<endl;
+        #endif */
+
         myStepper->RightHandSideVIS(yIn, charge, dydx);               //compute dydx - to supply the stepper
-        #ifdef baseline
-        exactStepper->RightHandSideVIS(yInX, dydxRef);   //compute the value of dydx for the exact stepper
-        #endif
+
+/*        #ifdef DEBUGAnanya
+          cout<<"----dydx from RightHandSideVIS is: "<<dydx[3]<<endl;
+          cout<<"----y given to RightHandSideVIS was: "<<yIn[3]<<endl;
+        #endif */
 
         if( j > 0 )  // Let's print the initial points!
         {
            myStepper->StepWithErrorEstimate(yIn,dydx,step_len,yout,yerr);   //Call the 'trial' stepper
-        
-          #ifdef  BASELINESTEPPER
-           exactStepperGV->StepWithErrorEstimate(yInX,dydxRef,stepLengthRef,youtX,yerrX); //call the reference stepper
-          #endif
+
         }
         //-> Then print the data
         cout.setf (ios_base::fixed);
         cout.precision(4);
         for(int i=0; i<3;i++)
             if(columns[i]){
-               if( printSep ) cout << " | " ;  // Separator
-               if( printInp ) cout << setw(nwdf-2)<< yIn[i] / mmGVf;
-              #ifdef BASELINESTEPPER
-               if( printInpX ) cout << setw(nwdf-2)<< yInX[i] / mmRef;
-               if( printRef ) cout<<setw(nwdf)<< youtX[i] / mmRef; // Reference Solution
-               if( printDiff )                
-                  cout<<setw(nwdf)<< yout[i] /  mmGVf - youtX[i] / mmRef ;
-              #endif
                cout<<setw(nwdf)<< yout[i] / mmGVf ;
-               
-               if( printErr ) cout<<setw(nwdf)<< yerr[i] / mmGVf ;
                cout.precision(3);
-               
             }
 
         cout.unsetf (ios_base::fixed);        
         cout.setf (ios_base::scientific);
         for(int i=3; i<6;i++)
             if(columns[i]){
-               if( printSep ) cout << " | " ;  // Separator
-               if( printInp ) cout << setw(nwdf-1)<< yIn[i] / ppGVf << " ";
-              #ifdef BASELINESTEPPER
-               if( printInpX ) cout << setw(nwdf-1)<< yInX[i] / ppRef << " ";
-               if( printRef ) cout<<setw(nwdf)<< youtX[i] / ppRef; // Reference Solution
-               if( printDiff ) 
-                  cout<<setw(nwdf+2)<< ( yout[i] /  ppGVf )
-                                     - ( youtX[i] / ppRef );
-              #endif
                cout<<setw(nwdf) << yout[i] / ppGVf ;
-               if( printErr ) cout<<setw(nwdf)<< yerr[i] / ppGVf ;
-
             }
         cout.unsetf (ios_base::scientific);
         
@@ -454,9 +379,6 @@ int main(int argc, char *args[])
 
            if( i >= 3 ){
               unitGVf = ppGVf / mmGVf; //  dp / ds
-            #ifdef BASELINESTEPPER
-              unitRef = ppRef / mmRef; //  dp / ds
-            #endif
            }
            
            if( i == 0 ){            // length / length                      
@@ -469,21 +391,8 @@ int main(int argc, char *args[])
            
            if(columns[i+6])
            {
-               // cout << " dy/dx["<<i<<"] = ";
-               if( printSep ) cout << " | " ;  // Separator
                cout<<setw(nwdf)<< dydx[i] / unitGVf ;
-               #ifdef BASELINESTEPPER
-               if( printRef )
-                 cout<<setw(nwdf)<< dydxRef[i] / unitRef; // Reference Solution
-                 if( printDiff ) // Deriv ) 
-                  cout<<setw(nwdf)<< ( dydx[i] / unitGVf )
-                                   - ( dydxRef[i] / unitRef );
-                #endif 
-               // bool printDiffDeriv = true;
-
            }
-           // if( i == 2 )     { cout.unsetf(ios_base::fixed);      }
-           // else if ( i==5 ) { cout.unsetf(ios_base::scientific); }
         }
         cout.unsetf(ios_base::scientific);
         if( j > 0 )  // Step 0 did not move -- printed the starting values
@@ -493,16 +402,10 @@ int main(int argc, char *args[])
            cout.precision(2);
            cout<<setw(nwdf) << atan2(yout[1],yout[0])/degree;
            
-          #ifdef BASELINESTEPPER                   // atan(yout[1]/yout[0])/degree;
-           if( printRef ) 
-             cout<<setw(nwdf) << atan2(youtX[1],youtX[0])/degree;
-           #endif
            //Copy yout into yIn
            for(int i=0; i<6;i++){
               yIn[i] = yout[i];
-              #ifdef BASELINESTEPPER
-              yInX[i] = youtX[i];
-              #endif
+
            }
         }
         
@@ -522,22 +425,13 @@ int main(int argc, char *args[])
     #ifdef DEBUGAnanya
       cout<<"----Informing done "<<endl;
     #endif 
-    
-    #ifdef BASELINESTEPPER
-    exactStepper->InformDone();
-    #endif 
 
-    // delete myStepper;
+    delete myStepper;
 
     #ifdef DEBUGAnanya
       cout<<"----deletion of stepper done "<<endl;
     #endif 
-
-    #ifdef BASELINESTEPPER
-    delete exactStepper;
-    #endif 
-    // delete gvEquation;  // The stepper now takes ownership of the equation
-    // delete gvEquation2;    
+ 
     delete gvField;
     
     cout<<"\n\n#-------------End of output-----------------\n";
