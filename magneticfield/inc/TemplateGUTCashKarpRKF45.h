@@ -14,6 +14,7 @@
 
 // #include "TMagErrorStepper.h" //for sake of GUIntegrationNms::NumVars
 #include "TemplateTMagErrorStepper.h"
+#include "AlignedBase.h"
 
 #define INLINERHS 1
 #define DEBUGAnanya
@@ -29,7 +30,7 @@
 
 template
 <class Backend, class T_Equation, unsigned int Nvar>
-class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>
+class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>, public AlignedBase
 {
   typedef                   typename Backend::precision_v  Double_v;
   typedef vecgeom::Vector3D<typename Backend::precision_v> ThreeVectorSimd; 
