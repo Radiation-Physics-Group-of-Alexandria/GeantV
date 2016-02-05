@@ -26,8 +26,6 @@ const int  GUIntegrationDriver::fMaxStepBase = 250;  // Was 5000
 #define GVFLD_STATS  1
 #endif
 
-#define GUDEBUG_FIELD 1
-
 #ifdef GVFLD_STATS
 #include "TH1.h"
 TH1F* gHistStepsLin=0;
@@ -634,7 +632,9 @@ GUIntegrationDriver::OneGoodStep(  double y[],        // InOut
 
   double yerr[GUFieldTrack::ncompSVEC], ytemp[GUFieldTrack::ncompSVEC];
 
-  std::cout << "OneGoodStep called with htry= " << htry << std::endl;
+  bool verbose= false;
+  if( verbose ) 
+     std::cout << "OneGoodStep called with htry= " << htry << std::endl;
   
   h = htry ; // Set stepsize to the initial trial value
 
@@ -721,8 +721,12 @@ GUIntegrationDriver::OneGoodStep(  double y[],        // InOut
       break;
     }
   }
-  std::cout << "GUIntDrv: 1-good-step - Loop done at iter = " << iter << std::endl;
 
+  if( verbose ) {
+     // std::cout << "GUIntDrv: 1-good-step - Loop done at iter = " << iter << std::endl;
+     Printf("GUIntDrv: 1-good-step - Loop done at iter = %d \n", iter);
+  }
+        
 #ifdef GVFLD_STATS
   // Sum of squares of position error // and momentum dir (underestimated)
   fSumH_lg += h; 
