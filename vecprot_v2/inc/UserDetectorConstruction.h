@@ -126,7 +126,7 @@ UseConstantMagField( float fieldVal[3],  const char* Units ) // vecgeom::Vector3
   */
 bool
 UserDetectorConstruction::
-CreateFieldAndSolver(bool useRungeKutta)
+CreateFieldAndSolver(bool ) // ( useRungeKutta)
 {
   static const char *method="UserDetectorConstruction::CreateFieldAndSolver";
   bool rtv= false;

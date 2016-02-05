@@ -1307,8 +1307,8 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   bool useRungeKutta;
   GUFieldPropagator *fieldPropagator = nullptr;
 
-  double Bfield[3], bmag= 0.0;
-  GetFieldValue(td, i, Bfield, &bmag);
+  double BfieldInitial[3], bmag= 0.0;
+  GetFieldValue(td, i, BfieldInitial, &bmag);
 
 #ifdef GEANT_CUDA_DEVICE_BUILD
   constexpr bool gPropagator_fUseRK = false; // Temporary work-around until actual implementation ..
@@ -1353,7 +1353,14 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   bool mediumAngle = ( numRadiansMin < angle ) && ( angle < numRadiansMax );
   useRungeKutta = useRungeKutta && (mediumAngle);
 
-#ifdef DEBUG_FIELD  
+  // But use RK as fall back - until 'General Helix' is robust
+  bool dominantBz =  std::fabs( std::fabs(BfieldInitial[1]) )
+         > 1e6 *
+     std::max( std::fabs( BfieldInitial[0]), std::fabs(BfieldInitial[1]) );
+  if( !dominantBz )
+     useRungeKutta = true;
+
+#ifdef DEBUG_FIELD
   printf("--PropagateInVolumeSingle: \n");
   printf("Curvature= %8.4g   CurvPlus= %8.4g  step= %f   Bmag=%8.4g   momentum mag=%f  angle= %g\n"
          Curvature(td, i), curvaturePlus, crtstep, bmag, fPV[i], angle );
@@ -1368,43 +1375,55 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   ThreeVector Direction(fXdirV[i], fYdirV[i], fZdirV[i]);
   ThreeVector PositionNew(0.,0.,0.);
   ThreeVector DirectionNew(0.,0.,0.);
-
+  int propagationType= -1;
+  
   if( useRungeKutta )
   {
-     // crtstep = 1.0e-4;   printf( "Setting crtstep = %f -- for DEBUGing ONLY.", crtstep ); 
-
+     // crtstep = 1.0e-4;   printf( "Setting crtstep = %f -- for DEBUGing ONLY.", crtstep );
+     propagationType= 1;
      // PrintTrack(i);
      ThreeVector PositionNewRK(0.,0.,0.);
      ThreeVector DirectionNewRK(0.,0.,0.);
 #ifndef VECCORE_CUDA
      fieldPropagator->DoStep(Position,    Direction,    fChargeV[i], fPV[i], crtstep,
-                             PositionNewRK, DirectionNewRK);
+                             PositionNewRK, DirectionNewRK); // BfieldInitial );
 
      const bool fCheckingStep= false;
      if( fCheckingStep ) {
         const double epsDiff= 2.0e-3; // bool verbDiff= true );
-
-        GetFieldValue(td, i, Bfield, &bmag);        
         StepChecker EndChecker( epsDiff, epsDiff * crtstep, true );
-        vecgeom::Vector3D<double> BfieldVec( Bfield[0], Bfield[1], Bfield[2] );
+        vecgeom::Vector3D<double> Bfield( BfieldInitial[0], BfieldInitial[1], BfieldInitial[2] );
         EndChecker.CheckStep( Position, Direction, fChargeV[i], fPV[i], crtstep,
-                              PositionNewRK, DirectionNewRK, BfieldVec );
+                              PositionNewRK, DirectionNewRK, Bfield );
      }
-
      PositionNew =  PositionNewRK;
-     DirectionNew = DirectionNewRK;     
-#endif     
+     DirectionNew = DirectionNewRK;
+     // CheckDirection(DirectionNew);
+#endif
   } else {
-     // GetFieldValue(td, i, Bfield, &bmag);
-     double Bz= Bfield[2];
-     if ( std::fabs( Bz ) > 1e6 *
-                    std::max( std::fabs(Bfield[0]), std::fabs(Bfield[1]) ) ) {
+     constexpr double toKiloGauss= 1.0e+14; // Converts to kilogauss -- i.e. 1 / Unit::kilogauss
+                                            // Must agree with values in magneticfield/inc/Units.h
+     double Bx = BfieldInitial[0] * toKiloGauss;
+     double By = BfieldInitial[1] * toKiloGauss;
+     double Bz = BfieldInitial[2] * toKiloGauss;
+     if ( dominantBz ) {
+        // printf("h"); std::cout << "h";
+        // if( std::fabs( Bz ) > 1e6 *
+        //  std::max( std::fabs(Bx), std::fabs(By)) ){ // BfieldInitial[0]), std::fabs(BfieldInitial[1]) ) ) {
+        propagationType= 2;
+        // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g )", Bz, Bx, By );
+        Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g )", Bz,  BfieldInitial[0] * toKiloGauss,
+               BfieldInitial[0] * toKiloGauss );
         // Old - constant field in Z-direction
         ConstBzFieldHelixStepper stepper( Bz ); // z-component
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                                PositionNew, DirectionNew);
      } else {
-        Geant::ConstVecFieldHelixStepper stepper( Bfield );
+        if( ! CheckDirection( i, 1.0e-4 ) )
+           PrintTrack(i, "Failed check of *direction* - input to General Helix stepper.");
+        Printf("Called Helix-General.  Bz= %g , Bx = %g, By= %g ", Bz, Bx, By );
+        
+        Geant::ConstVecFieldHelixStepper stepper( BfieldInitial );
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                                PositionNew, DirectionNew);
      }
@@ -1414,8 +1433,13 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   fYposV[i] = PositionNew.y();
   fZposV[i] = PositionNew.z();
 
-  //  maybe normalize direction here  // Math::Normalize(dirnew);
-  DirectionNew = DirectionNew.Unit();   
+  // Normalize direction here - to avoid surprises
+
+  // double oldMag = DirectionNew.Mag();
+  // if( std::fabs( oldMag - 1.0 ) > 1.e-6 ) { fNumBadNormals++; fMaxBadNormalFld= std::max(fMaxBadNormal, oldMag); fMinBadNormalFld = std::min(fMinBadNormal, oldMag); }
+  DirectionNew = DirectionNew.Unit();
+  // double newMag = DirectionNew.Mag();
+
   fXdirV[i] = DirectionNew.x();
   fYdirV[i] = DirectionNew.y();
   fZdirV[i] = DirectionNew.z();
