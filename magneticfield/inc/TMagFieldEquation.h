@@ -189,7 +189,7 @@ REALLY_INLINE
 
 //  printf("            B-field= %10.3f %10.3f %10.3f  mag= %10.3f %10.3f\n", B[0], B[1], B[2],
 //        std::sqrt(Bmag2chk) , (double)Bfloat.Mag() );    
-    printf("           Momentum= %12.6g %12.6g %12.6g    mag= %12.7g \n", y[3], y[4], y[5], 1.0/inv_momentum_magnitude );
+//  printf("           Momentum= %12.6g %12.6g %12.6g    mag= %12.7g \n", y[3], y[4], y[5], 1.0/inv_momentum_magnitude );
     
     dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
     dydx[1] = y[4]*inv_momentum_magnitude;       //  (d/ds)y = Vy/V
