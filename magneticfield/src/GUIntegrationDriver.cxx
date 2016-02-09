@@ -22,9 +22,9 @@
 //
 const int  GUIntegrationDriver::fMaxStepBase = 250;  // Was 5000
 
-#ifndef G4NO_FIELD_STATISTICS
-#define GVFLD_STATS  1
-#endif
+// #ifndef G4NO_FIELD_STATISTICS
+// #define GVFLD_STATS  1
+// #endif
 
 #ifdef GVFLD_STATS
 #include "TH1.h"
@@ -58,7 +58,7 @@ GUIntegrationDriver::GUIntegrationDriver( double        hminimum,
      fStatisticsVerboseLevel(statisticsVerbose),
      fNoTotalSteps(0),  fNoBadSteps(0), fNoSmallSteps(0),
      fNoInitialSmallSteps(0), 
-     fDyerr_max(0.0), fDyerr_mx2(0.0), 
+     fDyerrPosMaxSq(0.0), fDyerrDirMaxSq(0.0),      
      fDyerrPos_smTot(0.0), fDyerrPos_lgTot(0.0), fDyerrVel_lgTot(0.0), 
      fSumH_sm(0.0), fSumH_lg(0.0),
      fVerboseLevel(3)
@@ -112,7 +112,7 @@ GUIntegrationDriver::GUIntegrationDriver( const GUIntegrationDriver& right )
      fStatisticsVerboseLevel( right.fStatisticsVerboseLevel ),
      fNoTotalSteps(0),  fNoBadSteps(0), fNoSmallSteps(0),
      fNoInitialSmallSteps(0),
-     fDyerr_max(0.0), fDyerr_mx2(0.0), 
+     fDyerrPosMaxSq(0.0), fDyerrDirMaxSq(0.0), 
      fDyerrPos_smTot(0.0), fDyerrPos_lgTot(0.0), fDyerrVel_lgTot(0.0), 
      fSumH_sm(0.0), fSumH_lg(0.0),
      fVerboseLevel( right.fVerboseLevel )
@@ -310,9 +310,10 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
 
 #ifdef GVFLD_STATS
       fNoSmallSteps++;
-      double dyerr_len = std::sqrt(dyerr_len_sq); 
-      if ( dyerr_len > fDyerr_max)  { fDyerr_max= dyerr_len; }
-      fDyerrPos_smTot += dyerr_len;
+      fDyerrPosMaxSq = std::max ( fDyerrPosMaxSq, dyerr_len_sq );
+      fDyerrDirMaxSq = std::max ( fDyerrDirMaxSq, dyerr_mom_rel_sq );
+      
+      fDyerrPos_smTot += std::sqrt( dyerr_len_sq );
       fSumH_sm += h;  // Length total for 'small' steps
       if (nstp<=1)  { fNoInitialSmallSteps++; }
 #endif
@@ -368,7 +369,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
     const double edx= y[0] - StartPosAr[0];
     const double edy= y[1] - StartPosAr[1];
     const double edz= y[2] - StartPosAr[2];
-    double endPointDist2= std::sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); 
+    double endPointDist2= edx*edx+edy*edy+edz*edz ; // (EndPos-StartPos).Mag();
     if ( endPointDist2 >= hdid*hdid*(1.+2.*perMillion) )
     {
       double endPointDist = std::sqrt(endPointDist2);
@@ -722,10 +723,9 @@ GUIntegrationDriver::OneGoodStep(  double y[],        // InOut
     }
   }
 
-  if( verbose ) {
-     // std::cout << "GUIntDrv: 1-good-step - Loop done at iter = " << iter << std::endl;
-     Printf("GUIntDrv: 1-good-step - Loop done at iter = %d \n", iter);
-  }
+  // if( verbose ) {
+  //    printf("GUIntDrv: 1-good-step - Loop done at iter = %d \n", iter);
+  // }
         
 #ifdef GVFLD_STATS
   // Sum of squares of position error // and momentum dir (underestimated)
@@ -1113,13 +1113,14 @@ void GUIntegrationDriver::PrintStatisticsReport()
 
 #ifdef GVFLD_STATS
   std::cout << "MID dyerr: " 
-         << " maximum= " << fDyerr_max 
-         << " Sum small= " << fDyerrPos_smTot 
-         << " std::sqrt(Sum large^2): pos= " << std::sqrt(fDyerrPos_lgTot)
-         << " vel= " << std::sqrt( fDyerrVel_lgTot )
-         << " Total h-distance: small= " << fSumH_sm 
-         << " large= " << fSumH_lg
-         << std::endl;
+            << " maximum pos= " << std::sqrt(fDyerrPosMaxSq)
+            << " maximum vel= " << std::sqrt(fDyerrDirMaxSq)
+            << " Sum small= " << fDyerrPos_smTot 
+            << " std::sqrt(Sum large^2): pos= " << std::sqrt(fDyerrPos_lgTot)
+            << " vel= " << std::sqrt( fDyerrVel_lgTot )
+            << " Total h-distance: small= " << fSumH_sm 
+            << " large= " << fSumH_lg
+            << std::endl;
 
 #if 0
   int noPrecSmall=4; 
@@ -1130,8 +1131,8 @@ void GUIntegrationDriver::PrintStatisticsReport()
          << "  "  <<  fNoSmallSteps
          << "  "  << fNoSmallSteps-fNoInitialSmallSteps
          << "  "  << fNoBadSteps         
-         << "   " << fDyerr_max
-         << "   " << fDyerr_mx2 
+         << "   " << DyerrPosMaxSq
+         << "   " << DyerrPosMaxSq_vel 
          << "   " << fDyerrPos_smTot 
          << "   " << fSumH_sm
          << "   " << fDyerrPos_lgTot
