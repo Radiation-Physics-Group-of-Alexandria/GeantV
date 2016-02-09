@@ -161,6 +161,7 @@ void GeantTrack::Clear(const char *) {
   fCharge = 0;
   fProcess = -1;
   fNsteps = 0;
+  fParentId = -1;
   fSpecies = kHadron;
   fStatus = kAlive;
   fMass = 0.;

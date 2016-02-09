@@ -38,6 +38,7 @@
 #include "GeantScheduler.h"
 
 #include "GUVField.h"
+#include "Units.h"     //  Field Units - to be 'unified'
 #include "GUFieldPropagatorPool.h"
 #include "GUFieldPropagator.h"
 #include "FieldLookup.h"
@@ -1419,8 +1420,10 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                                PositionNew, DirectionNew);
      } else {
+        propagationType= 3;
         if( ! CheckDirection( i, 1.0e-4 ) )
            PrintTrack(i, "Failed check of *direction* - input to General Helix stepper.");
+
         Printf("Called Helix-General.  Bz= %g , Bx = %g, By= %g ", Bz, Bx, By );
         
         Geant::ConstVecFieldHelixStepper stepper( BfieldInitial );
@@ -1443,6 +1446,18 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   fXdirV[i] = DirectionNew.x();
   fYdirV[i] = DirectionNew.y();
   fZdirV[i] = DirectionNew.z();
+
+#ifdef REPORT_AND_CHECK
+  Printf(" -- State after propagation in field:  Position= %f, %f, %f   Direction= %f, %f, %f  - mag old, new, new-1.0 = %10.8f %10.8f %7.2g",
+         fXposV[i], fYposV[i], fZposV[i],
+         fXdirV[i], fYdirV[i], fZdirV[i], oldMag, newMag, newMag-1.0 );
+         // DirectionNew.Mag()-1.0  );
+#endif
+  const char* Msg[4]= { "After propagation in field - type Unknown(ERROR) ",
+                        "After propagation in field - with RK           ",
+                        "After propagation in field - with Helix-Bz     ",
+                        "After propagation in field - with Helix-General" };
+  CheckTrack(i, Msg[propagationType] );
 
 #if 0
   ThreeVector SimplePosition = Position + crtstep * Direction;
@@ -1728,8 +1743,11 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   BreakOnStep(prop->fDebugEvt, prop->fDebugTrk, prop->fDebugStp, prop->fDebugRep, "PropagateTracks");
 #endif
   ComputeTransportLength(ntracks, td);
-//         Printf("====== After ComputeTransportLength:");
-//         PrintTracks();
+  //     Printf("====== After ComputeTransportLength:");
+  //     PrintTracks();
+  double sumEin=0.0, sumEdep=0.0, sumEout=0.0;
+  for (int ix = 0; ix < ntracks; ix++) { sumEin += fEV[ix]; }
+  
 #ifdef BUG_HUNT
   BreakOnStep(prop->fDebugEvt, prop->fDebugTrk, prop->fDebugStp, prop->fDebugRep, "AfterCompTransLen");
 #endif
@@ -1742,6 +1760,8 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
 
   double Bfield[3], bmag= 0.0;  
 
+  unsigned int numNeutral= 0, numCharged=0, numStraight=0, numPhysics=0, numCurved=0;
+  
   // Remove dead tracks, propagate neutrals
   for (itr = 0; itr < ntracks; itr++) {
     // Mark dead tracks for copy/removal
@@ -1762,13 +1782,19 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
     
     bool straightTraj= ( fChargeV[itr] == 0 );
     if( !straightTraj ) {
+       numCharged++;
        GetFieldValue(td, itr, Bfield, &bmag);
        // td->StoreFieldValue(itr, Bfield, bmag);   // Store it in Task-Data array !?
-       straightTraj = bmag < 1.E-10;
-    } else { 
+       // constexpr double kiloGauss= 1.0e+14; // kilogauss in field units - 2016.02.04 JA
+       straightTraj = bmag < 1.E-10 * fieldUnits::kilogauss;
+       // printf("bmag = %9.3g kiloGauss\n", bmag / fieldUnits::kilogauss );
+    } else {
        // td->ClearFieldValue(itr);
+       numNeutral++;
     }
     if( straightTraj ) {
+      numStraight++;
+       
       // Do straight propagation to physics process or boundary
       if (fBoundaryV[itr]) {
         if (fNextpathV[itr]->IsOutside())
@@ -1797,13 +1823,40 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
 #ifdef USE_VECGEOM_NAVIGATOR
 //            CheckLocationPathConsistency(itr);
 #endif
+    } else {
+       numCurved++;
     }
   }
+
+  for (int ix = 0; ix < ntracks; ix++) { sumEout += fEV[ix]; }
+  for (int ix = 0; ix < output.GetNtracks(); ix++) { sumEout += output.fEV[ix]; }
+  if( sumEout - sumEin > 1e-6 * sumEin ) 
+     Printf("PropagateTracks: Ein= %8.3g           Eout= %8.3g        Edep = %8.3g       Balance= %8.3g",
+            sumEin, sumEout, sumEdep, sumEout - sumEin );
+  
   // Compact remaining tracks and move the removed oned to the output container
   if (!fCompact)
     Compact(&output);
+
   // Check if tracking the remaining tracks can be postponed
   action = PostponedAction(fNtracks);
+
+  static unsigned long totalTracks=0, totalNeutral=0, totalCharged=0, totalStraight=0, totalCurved=0, totalPhysics=0;
+
+  unsigned int numCalls=0; 
+  const unsigned modCalls = 100; 
+  if( (++numCalls) % modCalls == 0 ) {
+     Printf("\nPropagateTracks: # tracks: Neutral=%4d, Charged=%4d, numStraight=%4d, numCurved=%4d, numPhysics=%4d . Action= %2d",
+            numNeutral, numCharged, numStraight, numCurved, numPhysics, action );
+  }
+  totalTracks += numCharged + numNeutral;
+  totalNeutral += numNeutral;
+  totalCharged += numCharged;
+  totalStraight += numStraight;
+  totalCurved  += numCurved;
+  totalPhysics += numPhysics;
+
+  
   switch (action) {
   case kDone:
     return icrossed;
@@ -1932,6 +1985,11 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
   // Propagate the tracks with their selected steps in a single loop,
   // starting from a given stage.
 
+  // printf(" PropagateSingleTrack called for itr= %d -- Track: ", itr );
+  // PrintTrack(itr);
+  CheckTrack(itr, " PropagateSingleTrack called.");
+  // PrintTrack(itr);
+
   int icrossed = 0;
   double step, lmax;
   const double eps = 1.E-2; // 1 micron
@@ -1963,10 +2021,11 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
     if( !neutral ) {
        // printf( " PropagateSingleTrack> getting Field. Charge= %3d ", fChargeV[itr]);
        GetFieldValue(td, itr, Bfield, &bmag);
-       // if( bmag < 1.E-10) { printf(" Tiny field - mag = %f\n", bmag); } 
+       // if( bmag < 1.E-10) { printf(" Tiny field - mag = %g at %f %f %f\n",
+       //                             bmag,  fXposV[itr],  fYposV[itr],  fZposV[itr]); }
     }
     // if (fChargeV[itr] == 0 || bmag < 1.E-10) {
-    if ( neutral || bmag < 1.E-10) {       
+    if ( neutral ) { // || bmag < 1.E-10 * kiloGauss ) {
       // Do straight propagation to physics process or boundary
       if (fBoundaryV[itr]) {
         //*fPathV[itr] = *fNextpathV[itr];
@@ -2287,9 +2346,11 @@ bool GeantTrack_v::BreakOnStep(int evt, int trk, int stp, int nsteps, const char
   return true;
 }
 
-VECCORE_ATT_HOST_DEVICE
-void GeantTrack_v::CheckTrack(int itr, const char *msg, double epsilon ) const {
 #define IsNan(x)  ( ! ( x > 0 || x <= 0.0 ) )
+//______________________________________________________________________________
+VECCORE_ATT_HOST_DEVICE
+void GeantTrack_v::CheckTrack(int itr, const char *msg, double epsilon ) const
+{
    // Ensure that values are 'sensible' - else print msg and track
    if( epsilon <= 0.0 || epsilon > 0.01 ) { epsilon = 1.e-6; }
 
@@ -2327,6 +2388,7 @@ void GeantTrack_v::CheckTrack(int itr, const char *msg, double epsilon ) const {
    }
 }
 
+//______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
 bool GeantTrack_v::CheckDirection(int itr, double epsilon ) const
 {
@@ -2344,7 +2406,8 @@ bool GeantTrack_v::CheckDirection(int itr, double epsilon ) const
 
 #ifdef GEANT_CUDA
 #ifndef VECCORE_CUDA
-
+          
+//______________________________________________________________________________
 bool ToDevice(vecgeom::cxx::DevicePtr<cuda::GeantTrack_v> dest, cxx::GeantTrack_v *source, cudaStream_t stream) {
   // Since fPathV and fNextpathV are internal pointer, we need to fix them up.
   // assert(vecgeom::cuda::NavigationState::SizeOfInstance(fMaxDepth)
@@ -2386,7 +2449,8 @@ bool ToDevice(vecgeom::cxx::DevicePtr<cuda::GeantTrack_v> dest, cxx::GeantTrack_
 
   return true;
 }
-
+          
+//______________________________________________________________________________
 void FromDeviceConversion(cxx::GeantTrack_v *dest, vecgeom::cxx::DevicePtr<cuda::GeantTrack_v> source) {
   size_t bufferOffset = GeantTrack::round_up_align(vecgeom::cxx::DevicePtr<Geant::cuda::GeantTrack_v>::SizeOf());
   // Since fPathV and fNextpathV are internal pointer, we need to fix them up.
@@ -2404,6 +2468,7 @@ void FromDeviceConversion(cxx::GeantTrack_v *dest, vecgeom::cxx::DevicePtr<cuda:
   }
 }
 
+//______________________________________________________________________________          
 bool FromDevice(cxx::GeantTrack_v *dest, vecgeom::cxx::DevicePtr<cuda::GeantTrack_v> source, cudaStream_t stream) {
   size_t bufferOffset = GeantTrack::round_up_align(vecgeom::cxx::DevicePtr<Geant::cuda::GeantTrack_v>::SizeOf());
   // fMaxtracks, fMaxDepth and fBufSize ought to be invariant.
