@@ -79,6 +79,7 @@ public:
   int fCharge;           /** Particle charge */
   int fProcess;          /** Current process */
   int fNsteps;           /** Number of steps made */
+  int fParentId;         /** Id of parent particle */
   Species_t fSpecies;    /** Particle species */
   TrackStatus_t fStatus; /** Track status */
   double fMass;          /** Particle mass */
@@ -263,6 +264,9 @@ public:
   VECCORE_ATT_HOST_DEVICE
   GEANT_FORCE_INLINE
   int GetNsteps() const { return fNsteps; }
+
+  /** @brief Function that the id of the parent particle (if any - primary = -1) */
+  int GetParentId() const { return fParentId; }
 
   /** @brief Function that return physical step */
   VECCORE_ATT_HOST_DEVICE
@@ -535,6 +539,13 @@ public:
   VECCORE_ATT_HOST_DEVICE
   GEANT_FORCE_INLINE
   void SetNsteps(int nsteps) { fNsteps = nsteps; }
+
+  /**
+   * @brief Function that set parent id
+   *
+   * @param parent    id-number of parent particle
+   */
+  void SetParentId(int parent) { fParentId = parent; }
 
   /**
    * @brief Function that set current species
