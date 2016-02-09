@@ -526,7 +526,7 @@ int TTabPhysMgr::SampleFinalStates(int imat, int ntracks, GeantTrack_v &tracks, 
       mxs = ((TOMXsec *)((TGeoRCExtension *)tracks.GetMaterial(t)->GetFWExtension())->GetUserObject())->MXsec();
 #endif
 
-    // firts check the results of interaction sampling:
+    // first check the results of interaction sampling:
     if (tracks.fProcessV[t] == 3) {
       // decay : in-flight decay was selected
       // kill the primary tarck
@@ -669,12 +669,13 @@ int TTabPhysMgr::SampleFinalStates(int imat, int ntracks, GeantTrack_v &tracks, 
         py *= corFactor;
         pz *= corFactor;
         double secPtot2 = px * px + py * py + pz * pz;       // total P^2 [GeV^2]
-        double secPtot = sqrt(secPtot2);                     // total P [GeV]
         double secEtot = sqrt(secPtot2 + secMass * secMass); // total energy in [GeV]
         double secEkin = secEtot - secMass;                  // kinetic energy in [GeV]
         // Ekin of the i-th secondary is higher than the threshold
         if (secEkin >= energyLimit) { // insert secondary into OUT tracks_v and rotate
           GeantTrack &track = td->GetTrack();
+          double secPtot = sqrt(secPtot2);                     // total P [GeV]
+          double inv_secPtot = 1.0 / secPtot;
           //          GeantTrack track;
           // set the new track properties
           track.fEvent = tracks.fEventV[t];
@@ -687,18 +688,19 @@ int TTabPhysMgr::SampleFinalStates(int imat, int ntracks, GeantTrack_v &tracks, 
 #ifndef USE_VECGEOM_NAVIGATOR
 	  track.fCharge /=3.;
 #endif
-          track.fProcess = 0;
+          track.fProcess = tracks.fProcessV[t]; // Record id of creating process -- Was 0
           track.fVindex = tracks.fVindexV[t];
           track.fNsteps = 0;
+          track.fParentId= tracks.fParticleV[t]; // Identity of parent particle
           //          track.fSpecies  = 0;
           track.fStatus = kNew;           // status of this particle
           track.fMass = secMass;          // mass of this particle
           track.fXpos = tracks.fXposV[t]; // rx of this particle (same as parent)
           track.fYpos = tracks.fYposV[t]; // ry of this particle (same as parent)
           track.fZpos = tracks.fZposV[t]; // rz of this particle (same as parent)
-          track.fXdir = px / secPtot;     // dirx of this particle (before transform.)
-          track.fYdir = py / secPtot;     // diry of this particle before transform.)
-          track.fZdir = pz / secPtot;     // dirz of this particle before transform.)
+          track.fXdir = px * inv_secPtot;     // dirx of this particle (before transform.)
+          track.fYdir = py * inv_secPtot;     // diry of this particle before transform.)
+          track.fZdir = pz * inv_secPtot;     // dirz of this particle before transform.)
           track.fP = secPtot;             // momentum of this particle
           track.fE = secEtot;             // total E of this particle
           track.fTime = tracks.fTimeV[t]; // global time
