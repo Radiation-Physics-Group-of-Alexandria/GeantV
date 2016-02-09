@@ -96,6 +96,7 @@ public:
   int fProcess;          /** Current process */
   int fVindex;           /** Current volume index */
   int fNsteps;           /** Number of steps made */
+  int fParentId;         /** Id of parent particle */
   Species_t fSpecies;    /** Particle species */
   TrackStatus_t fStatus; /** Track status */
   double fMass;          /** Particle mass */
@@ -218,6 +219,9 @@ public:
 
   /** @brief Function that return number of physical step made */
   int GetNsteps() const { return fNsteps; }
+
+  /** @brief Function that the id of the parent particle (if any - primary = -1) */
+  int GetParentId() const { return fParentId; }
 
   /** @brief Function that return physical step */
   double GetStep() const { return fStep; }
@@ -403,6 +407,13 @@ public:
   void SetNsteps(int nsteps) { fNsteps = nsteps; }
 
   /**
+   * @brief Function that set parent id
+   *
+   * @param parent    id-number of parent particle
+   */
+  void SetParentId(int parent) { fParentId = parent; }
+
+  /**
    * @brief Function that set current species
    *
    * @param species Current species hat should be set as fSpecies
@@ -579,6 +590,7 @@ public:
   int *fProcessV;          /** Current process */
   int *fVindexV;           /** Volume index */
   int *fNstepsV;           /** Number of steps made */
+  int *fParentIdV;         /** Id of parent particle */
   Species_t *fSpeciesV;    /** Particle species */
   TrackStatus_t *fStatusV; /** Track statuses */
   double *fMassV;          /** Particle masses */

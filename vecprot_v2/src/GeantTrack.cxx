@@ -206,6 +206,7 @@ void GeantTrack::ReadFromVector(const GeantTrack_v &arr, int i) {
   fProcess = arr.fProcessV[i];
   fVindex = arr.fVindexV[i];
   fNsteps = arr.fNstepsV[i];
+  fParentId = arr.fParentIdV[i];
   fSpecies = arr.fSpeciesV[i];
   fStatus = arr.fStatusV[i];
   fMass = arr.fMassV[i];
@@ -246,6 +247,7 @@ void GeantTrack::Clear(const char *) {
   fProcess = -1;
   fVindex = 0;
   fNsteps = 0;
+  fParentId = -1;
   fSpecies = kHadron;
   fStatus = kAlive;
   fMass = 0.;
@@ -352,7 +354,7 @@ void GeantTrack::Print(const char *location) const {
 GeantTrack_v::GeantTrack_v()
     : fNtracks(0), fNselected(0), fCompact(true), fMixed(false), fMaxtracks(0), fHoles(0), fSelected(0), fMaxDepth(0),
       fBufSize(0), fVPstart(0), fBuf(0), fEventV(0), fEvslotV(0), fParticleV(0), fPDGV(0), fGVcodeV(0), fEindexV(0),
-      fChargeV(0), fProcessV(0), fVindexV(0), fNstepsV(0), fSpeciesV(0), fStatusV(0), fMassV(0), fXposV(0), fYposV(0),
+      fChargeV(0), fProcessV(0), fVindexV(0), fNstepsV(0), fParentIdV(0), fSpeciesV(0), fStatusV(0), fMassV(0), fXposV(0), fYposV(0),
       fZposV(0), fXdirV(0), fYdirV(0), fZdirV(0), fPV(0), fEV(0), fTimeV(0), fEdepV(0), fPstepV(0), fStepV(0),
       fSnextV(0), fSafetyV(0), fNintLenV(0), fIntLenV(0), fBoundaryV(0), fPendingV(0), fPathV(0), fNextpathV(0) {
   // Dummy ctor.
@@ -362,7 +364,7 @@ GeantTrack_v::GeantTrack_v()
 GeantTrack_v::GeantTrack_v(int size, int maxdepth)
     : fNtracks(0), fNselected(0), fCompact(true), fMixed(false), fMaxtracks(0), fHoles(0), fSelected(0),
       fMaxDepth(maxdepth), fBufSize(0), fVPstart(0), fBuf(0), fEventV(0), fEvslotV(0), fParticleV(0), fPDGV(0),
-      fGVcodeV(0), fEindexV(0), fChargeV(0), fProcessV(0), fVindexV(0), fNstepsV(0), fSpeciesV(0), fStatusV(0),
+      fGVcodeV(0), fEindexV(0), fChargeV(0), fProcessV(0), fVindexV(0), fNstepsV(0), fParentIdV(0), fSpeciesV(0), fStatusV(0),
       fMassV(0), fXposV(0), fYposV(0), fZposV(0), fXdirV(0), fYdirV(0), fZdirV(0), fPV(0), fEV(0), fTimeV(0), fEdepV(0),
       fPstepV(0), fStepV(0), fSnextV(0), fSafetyV(0), fNintLenV(0), fIntLenV(0), fBoundaryV(0), fPendingV(0), fPathV(0), fNextpathV(0) {
   // Constructor with maximum capacity.
@@ -380,7 +382,7 @@ GEANT_CUDA_BOTH_CODE
 GeantTrack_v::GeantTrack_v(void *addr, unsigned int nTracks, int maxdepth)
     : fNtracks(0), fNselected(0), fCompact(true), fMixed(false), fMaxtracks(round_up_align(nTracks)), fHoles(0),
       fSelected(0), fMaxDepth(maxdepth), fBufSize(0), fVPstart(0), fBuf(0), fEventV(0), fEvslotV(0), fParticleV(0),
-      fPDGV(0), fGVcodeV(0), fEindexV(0), fChargeV(0), fProcessV(0), fVindexV(0), fNstepsV(0), fSpeciesV(0),
+      fPDGV(0), fGVcodeV(0), fEindexV(0), fChargeV(0), fProcessV(0), fVindexV(0), fNstepsV(0), fParentIdV(0), fSpeciesV(0),
       fStatusV(0), fMassV(0), fXposV(0), fYposV(0), fZposV(0), fXdirV(0), fYdirV(0), fZdirV(0), fPV(0), fEV(0),
       fTimeV(0), fEdepV(0), fPstepV(0), fStepV(0), fSnextV(0), fSafetyV(0), fNintLenV(0), fIntLenV(0), fBoundaryV(0), fPendingV(0), 
       fPathV(0), fNextpathV(0) {
@@ -399,7 +401,7 @@ GeantTrack_v::GeantTrack_v(const GeantTrack_v &track_v)
     : fNtracks(0), fNselected(track_v.fNselected), fCompact(track_v.fCompact), fMixed(track_v.fMixed),
       fMaxtracks(track_v.fMaxtracks), fHoles(0), fSelected(0), fMaxDepth(track_v.fMaxDepth), fBufSize(track_v.fBufSize),
       fVPstart(0), fBuf(0), fEventV(0), fEvslotV(0), fParticleV(0), fPDGV(0), fGVcodeV(0), fEindexV(0), fChargeV(0),
-      fProcessV(0), fVindexV(0), fNstepsV(0), fSpeciesV(0), fStatusV(0), fMassV(0), fXposV(0), fYposV(0), fZposV(0),
+      fProcessV(0), fVindexV(0), fNstepsV(0), fParentIdV(0), fSpeciesV(0), fStatusV(0), fMassV(0), fXposV(0), fYposV(0), fZposV(0),
       fXdirV(0), fYdirV(0), fZdirV(0), fPV(0), fEV(0), fTimeV(0), fEdepV(0), fPstepV(0), fStepV(0), fSnextV(0),
       fSafetyV(0), fNintLenV(0), fIntLenV(0), fBoundaryV(0), fPendingV(0), fPathV(0), fNextpathV(0) {
 // Copy constructor
@@ -481,6 +483,8 @@ void GeantTrack_v::AssignInBuffer(char *buff, int size) {
   fVindexV = (int *)buf;
   buf += size_intn;
   fNstepsV = (int *)buf;
+  buf += size_intn;
+  fParentIdV = (int *)buf;
   buf += size_intn;
   fSpeciesV = (Species_t *)buf;
   buf += size * sizeof(Species_t);
@@ -587,6 +591,9 @@ void GeantTrack_v::CopyToBuffer(char *buff, int size) {
   buf += size_intn;
   memcpy(buf, fNstepsV, size_int);
   fNstepsV = (int *)buf;
+  buf += size_intn;
+  memcpy(buf, fParentIdV, size_int);
+  fParentIdV = (int *)buf;
   buf += size_intn;
   memcpy(buf, fSpeciesV, ntracks * sizeof(Species_t));
   fSpeciesV = (Species_t *)buf;
@@ -822,6 +829,7 @@ int GeantTrack_v::AddTrack(GeantTrack &track, bool /*import*/) {
   fProcessV[itrack] = track.fProcess;
   fVindexV[itrack] = track.fVindex;
   fNstepsV[itrack] = track.fNsteps;
+  fParentIdV[itrack] = track.fParentId;
   fSpeciesV[itrack] = track.fSpecies;
   fStatusV[itrack] = track.fStatus;
   fMassV[itrack] = track.fMass;
@@ -873,6 +881,7 @@ int GeantTrack_v::AddTrackSync(GeantTrack &track) {
   fProcessV[itrack] = track.fProcess;
   fVindexV[itrack] = track.fVindex;
   fNstepsV[itrack] = track.fNsteps;
+  fParentIdV[itrack] = track.fParentId;
   fSpeciesV[itrack] = track.fSpecies;
   fStatusV[itrack] = track.fStatus;
   fMassV[itrack] = track.fMass;
@@ -942,6 +951,7 @@ int GeantTrack_v::AddTrack(GeantTrack_v &arr, int i, bool /*import*/) {
   fProcessV[itrack] = arr.fProcessV[i];
   fVindexV[itrack] = arr.fVindexV[i];
   fNstepsV[itrack] = arr.fNstepsV[i];
+  fParentIdV[itrack] = arr.fParentIdV[i];
   fSpeciesV[itrack] = arr.fSpeciesV[i];
   fStatusV[itrack] = arr.fStatusV[i];
   fMassV[itrack] = arr.fMassV[i];
@@ -998,6 +1008,7 @@ int GeantTrack_v::AddTrackSync(GeantTrack_v &arr, int i) {
   fProcessV[itrack] = arr.fProcessV[i];
   fVindexV[itrack] = arr.fVindexV[i];
   fNstepsV[itrack] = arr.fNstepsV[i];
+  fParentIdV[itrack] = arr.fParentIdV[i];
   fSpeciesV[itrack] = arr.fSpeciesV[i];
   fStatusV[itrack] = arr.fStatusV[i];
   fMassV[itrack] = arr.fMassV[i];
@@ -1073,6 +1084,7 @@ int GeantTrack_v::AddTrackSyncAt(int itrack, GeantTrack_v &arr, int i) {
   fProcessV[itrack] = arr.fProcessV[i];
   fVindexV[itrack] = arr.fVindexV[i];
   fNstepsV[itrack] = arr.fNstepsV[i];
+  fParentIdV[itrack] = arr.fParentIdV[i];
   fSpeciesV[itrack] = arr.fSpeciesV[i];
   fStatusV[itrack] = arr.fStatusV[i];
   fMassV[itrack] = arr.fMassV[i];
@@ -1120,6 +1132,7 @@ void GeantTrack_v::AddTracks(GeantTrack_v &arr, int istart, int iend, bool /*imp
   memcpy(&fProcessV[ntracks], &arr.fProcessV[istart], ncpy * sizeof(int));
   memcpy(&fVindexV[ntracks], &arr.fVindexV[istart], ncpy * sizeof(int));
   memcpy(&fNstepsV[ntracks], &arr.fNstepsV[istart], ncpy * sizeof(int));
+  memcpy(&fParentIdV[ntracks], &arr.fParentIdV[istart], ncpy * sizeof(int));
   memcpy(&fSpeciesV[ntracks], &arr.fSpeciesV[istart], ncpy * sizeof(Species_t));
   memcpy(&fStatusV[ntracks], &arr.fStatusV[istart], ncpy * sizeof(TrackStatus_t));
   memcpy(&fMassV[ntracks], &arr.fMassV[istart], ncpy * sizeof(double));
@@ -1191,6 +1204,9 @@ void GeantTrack_v::SwapTracks(int i, int j) {
   tint = fNstepsV[i];
   fNstepsV[i] = fNstepsV[j];
   fNstepsV[j] = tint;
+  tint = fParentIdV[i];
+  fParentIdV[i] = fParentIdV[j];
+  fParentIdV[j] = tint;
   Species_t tspec = fSpeciesV[i];
   fSpeciesV[i] = fSpeciesV[j];
   fSpeciesV[j] = tspec;
@@ -1279,6 +1295,7 @@ void GeantTrack_v::ReplaceTrack(int i, int j) {
   fProcessV[i] = fProcessV[j];
   fVindexV[i] = fVindexV[j];
   fNstepsV[i] = fNstepsV[j];
+  fParentIdV[i] = fParentIdV[j];
   fSpeciesV[i] = fSpeciesV[j];
   fStatusV[i] = fStatusV[j];
   fMassV[i] = fMassV[j];
@@ -1343,6 +1360,7 @@ void GeantTrack_v::RemoveTracks(int from, int to) {
   memmove(&fProcessV[from], &fProcessV[to + 1], ncpy * sizeof(int));
   memmove(&fVindexV[from], &fVindexV[to + 1], ncpy * sizeof(int));
   memmove(&fNstepsV[from], &fNstepsV[to + 1], ncpy * sizeof(int));
+  memmove(&fParentIdV[from], &fParentIdV[to + 1], ncpy * sizeof(int));
   memmove(&fSpeciesV[from], &fSpeciesV[to + 1], ncpy * sizeof(Species_t));
   memmove(&fStatusV[from], &fStatusV[to + 1], ncpy * sizeof(TrackStatus_t));
   memmove(&fMassV[from], &fMassV[to + 1], ncpy * sizeof(double));
@@ -1578,7 +1596,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
 
   // But use RK as fall back - until 'General Helix' is robust
   bool dominantBz =  std::fabs( std::fabs(BfieldInitial[1]) )
-         > 1e6 *
+         > 1.e3 *
      std::max( std::fabs( BfieldInitial[0]), std::fabs(BfieldInitial[1]) );
   if( !dominantBz )
      useRungeKutta = true;
@@ -1629,6 +1647,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
 #endif
   } else {
      constexpr double toKiloGauss= 1.0e+14; // Converts to kilogauss -- i.e. 1 / Unit::kilogauss
+     assert ( toKiloGauss * fieldUnits::kilogauss == 1.0 );
                                             // Must agree with values in magneticfield/inc/Units.h
      // double Bx = BfieldInitial[0] * toKiloGauss;
      // double By = BfieldInitial[1] * toKiloGauss;
@@ -1646,7 +1665,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                                PositionNewHlx, DirectionNewHlx);
      }
-  /* GENERAL_HELIX method - to be made more robust 
+  /* GENERAL_HELIX method - to be made more robust
      else {
         propagationType= 3;
         printf("H"); std::cout << "H";
@@ -1796,10 +1815,10 @@ void GeantTrack_v::PrintTrack(int itr, const char *msg) const {
   const char *status[8] = {"alive", "killed", "inflight", "boundary", "exitSetup", "physics", "postponed", "new"};
 #ifdef USE_VECGEOM_NAVIGATOR
   Geant::Print(msg,
-      "== Track %d: evt=%d slt=%d part=%d pdg=%d gVc=%d chg=%d proc=%d vid=%d nstp=%d spc=%d status=%s mass=%g "
-      "xpos=%g ypos=%g zpos=%g xdir=%g ydir=%g zdir=%g mom=%g ene=%g time=%g pstp=%g stp=%g snxt=%g saf=%g nil=%g ile=%g bdr=%d\n",
+      "== Track %d: evt=%d slt=%d part=%d pdg=%d gVc=%d chg=%d proc=%d vid=%d nstp=%d parent=%d spc=%d status=%s mass=%g\
+              xpos=%g ypos=%g zpos=%g xdir=%g ydir=%g zdir=%g mom=%g ene=%g time=%g pstp=%g stp=%g snxt=%g saf=%g bdr=%d\n\n",
       itr, fEventV[itr], fEvslotV[itr], fParticleV[itr], fPDGV[itr], fGVcodeV[itr],
-      fChargeV[itr], fProcessV[itr], fVindexV[itr], fNstepsV[itr], (int)fSpeciesV[itr], status[int(fStatusV[itr])],
+      fChargeV[itr], fProcessV[itr], fVindexV[itr], fNstepsV[itr], fParentIdV[itr], (int)fSpeciesV[itr], status[int(fStatusV[itr])],
       fMassV[itr], fXposV[itr], fYposV[itr], fZposV[itr], fXdirV[itr], fYdirV[itr], fZdirV[itr], fPV[itr], fEV[itr],
       fTimeV[itr], fPstepV[itr], fStepV[itr], fSnextV[itr], fSafetyV[itr], fNintLenV[itr], fIntLenV[itr], fBoundaryV[itr]);
   
@@ -1813,11 +1832,11 @@ void GeantTrack_v::PrintTrack(int itr, const char *msg) const {
   TString nextpath;
   fNextpathV[itr]->GetPath(nextpath);
 
-  Geant::Print(msg, "== Track %d: evt=%d slt=%d part=%d pdg=%d gVc=%d eind=%d chg=%d proc=%d vid=%d nstp=%d "
+  Geant::Print(msg, "== Track %d: evt=%d slt=%d part=%d pdg=%d gVc=%d eind=%d chg=%d proc=%d vid=%d parent=%d nstp=%d "
          "spc=%d status=%s mass=%g xpos=%g ypos=%g zpos=%g xdir=%g ydir=%g zdir=%g mom=%g ene=%g "
          "time=%g edep=%g pstp=%g stp=%g snxt=%g saf=%g nil=%g ile=%g bdr=%d\n pth=%s npth=%s\n",
          itr, fEventV[itr], fEvslotV[itr], fParticleV[itr], fPDGV[itr], fEindexV[itr], fGVcodeV[itr],
-         fChargeV[itr], fProcessV[itr], fVindexV[itr], fNstepsV[itr], (int)fSpeciesV[itr], status[int(fStatusV[itr])],
+         fChargeV[itr], fProcessV[itr], fVindexV[itr], fNstepsV[itr], fParentIdV[itr], (int)fSpeciesV[itr], status[int(fStatusV[itr])],
          fMassV[itr], fXposV[itr], fYposV[itr], fZposV[itr], fXdirV[itr], fYdirV[itr], fZdirV[itr], fPV[itr], fEV[itr],
          fTimeV[itr], fEdepV[itr], fPstepV[itr], fStepV[itr], fSnextV[itr], fSafetyV[itr], fNintLenV[itr], fIntLenV[itr], fBoundaryV[itr], path.Data(),
          nextpath.Data());
@@ -2031,9 +2050,9 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   ComputeTransportLength(ntracks, td);
   //     Printf("====== After ComputeTransportLength:");
   //     PrintTracks();
-  double sumEin=0.0, sumEdep=0.0, sumEout=0.0;
+  double sumEin=0.0, sumEout=0.0; // , sumEdep=0.0
   for (int ix = 0; ix < ntracks; ix++) { sumEin += fEV[ix]; }
-  
+
 #ifdef BUG_HUNT
   BreakOnStep(prop->fDebugEvt, prop->fDebugTrk, prop->fDebugStp, prop->fDebugRep, "AfterCompTransLen");
 #endif
@@ -2047,7 +2066,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   double Bfield[3], bmag= 0.0;
 
   unsigned int numNeutral= 0, numCharged=0, numStraight=0, numPhysics=0, numCurved=0;
-  
+
   // Remove dead tracks, propagate neutrals
   for (itr = 0; itr < ntracks; itr++) {
     // Mark dead tracks for copy/removal
@@ -2071,7 +2090,6 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
        numCharged++;
        GetFieldValue(td, itr, Bfield, &bmag);
        // td->StoreFieldValue(itr, Bfield, bmag);   // Store it in Task-Data array !?
-       // constexpr double kiloGauss= 1.0e+14; // kilogauss in field units - 2016.02.04 JA
        straightTraj = bmag < 1.E-10 * fieldUnits::kilogauss;
        // printf("bmag = %9.3g kiloGauss\n", bmag / fieldUnits::kilogauss );
     } else {
@@ -2080,7 +2098,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
     }
     if( straightTraj ) {
       numStraight++;
-       
+
       // Do straight propagation to physics process or boundary
       if (fBoundaryV[itr]) {
         if (fNextpathV[itr]->IsOutside())
@@ -2116,10 +2134,10 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
 
   for (int ix = 0; ix < ntracks; ix++) { sumEout += fEV[ix]; }
   for (int ix = 0; ix < output.GetNtracks(); ix++) { sumEout += output.fEV[ix]; }
-  if( sumEout - sumEin > 1e-6 * sumEin ) 
+  if( sumEout - sumEin > 0.001 * sumEin )
      Printf("PropagateTracks: Ein= %8.3g                      Eout= %8.3g                      Balance= %8.3g",
-            sumEin, sumEout, sumEout - sumEin );  
-  
+            sumEin, sumEout, sumEout - sumEin );
+
   // Compact remaining tracks and move the removed oned to the output container
   if (!fCompact)
     Compact(&output);
@@ -2127,10 +2145,10 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   // Check if tracking the remaining tracks can be postponed
   action = PostponedAction(fNtracks);
 
-  static unsigned long totalTracks=0, totalNeutral=0, totalCharged=0, totalStraight=0, totalCurved=0, totalPhysics=0;
+  // static unsigned long totalTracks=0, totalNeutral=0, totalCharged=0, totalStraight=0, totalCurved=0, totalPhysics=0;
 
-  unsigned int numCalls=0; 
-  const unsigned modCalls = 100; 
+  unsigned int numCalls=0;
+  const unsigned modCalls = 100;
   if( (++numCalls) % modCalls == 0 ) {
      Printf("\nPropagateTracks: # tracks: Neutral=%4d, Charged=%4d, numStraight=%4d, numCurved=%4d, numPhysics=%4d . Action= %2d",
             numNeutral, numCharged, numStraight, numCurved, numPhysics, action );
@@ -2469,9 +2487,10 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
   // Field value at position of particle 'i'
   if( bmag ) *bmag= 0.0;
   ThreeVector_d MagFldD;  //  Transverse wrt direction of B
-  static const double kiloGauss= fieldUnits::kilogauss;
+  // static const double kiloGauss= fieldUnits::kilogauss;
 
-#if CONFIG_CONST_FIELD  
+#if CONFIG_CONST_FIELD
+  // New code to avoid call to field method -- not yet integrated (need to push information to TaskData.)
   if( td->fBfieldIsConst ) {
     MagFldD= td->fConstFieldValue;
     if( bmag ) *bmag= td->fBfieldMag;
