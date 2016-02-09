@@ -30,6 +30,27 @@ target_link_libraries(testVectorMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_L
 add_executable(testTemplateMagFieldEquation testTemplateMagFieldEquation.cxx) ## ${sources} ${headers})
 target_link_libraries(testTemplateMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
+add_executable(testStepperFixedCashKarp testStepperFixedCashKarp.cxx) ## ${sources} ${headers})
+target_link_libraries(testStepperFixedCashKarp Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS "Created target for testStepperFixedCashKarp")
+
+add_executable(testTemplateStepperFixedCashKarp testTemplateStepperFixedCashKarp.cxx) ## ${sources} ${headers})
+target_link_libraries(testTemplateStepperFixedCashKarp Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+#message(STATUS "Created target for testTemplateStepperFixedCashKarp")
+
+add_executable(testTemplateStepperFixedCashKarp2 testTemplateStepperFixedCashKarp2.cxx) ## ${sources} ${headers})
+target_link_libraries(testTemplateStepperFixedCashKarp2 Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+#message(STATUS "Created target for testTemplateStepperFixedCashKarp2")
+
+#add_executable(testIntegrationDriverCashKarp testIntegrationDriverCashKarp.cxx) ## ${sources} ${headers})
+#target_link_libraries(testIntegrationDriverCashKarp Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+#message(STATUS "Created target for testIntegrationDriverCashKarp")
+
+
+add_executable(testToyClass testToyClass.cxx) ## ${sources} ${headers})
+target_link_libraries(testToyClass Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS "Created target for testToyClass")
+
 #add_executable(TestConstBzStepper TestConstBzStepper.cxx) ## ${sources} ${headers})
 #target_link_libraries(TestConstBzStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
