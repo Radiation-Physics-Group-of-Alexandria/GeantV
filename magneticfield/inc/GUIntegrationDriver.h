@@ -229,11 +229,11 @@ class GUIntegrationDriver
      // ---------------------------------------------------------------
      //  STATE
 
-     int  fNoTotalSteps, fNoBadSteps, fNoSmallSteps, fNoInitialSmallSteps; 
-     double fDyerr_max, fDyerr_mx2;
-     double fDyerrPos_smTot, fDyerrPos_lgTot, fDyerrVel_lgTot; 
-     double fSumH_sm, fSumH_lg; 
-        // Step Statistics 
+     int  fNoTotalSteps, fNoBadSteps, fNoSmallSteps, fNoInitialSmallSteps;
+     double fDyerrPosMaxSq, fDyerrDirMaxSq;
+     double fDyerrPos_smTot, fDyerrPos_lgTot, fDyerrVel_lgTot;
+     double fSumH_sm, fSumH_lg;
+        // Step Statistics
 
      int  fVerboseLevel;   // Verbosity level for printing (debug, ..)
         // Could be varied during tracking - to help identify issues
