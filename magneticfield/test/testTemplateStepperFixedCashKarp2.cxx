@@ -27,7 +27,7 @@ using fieldUnits::degree;
 #include "TemplateGUVIntegrationStepper.h"
 
 #include "TemplateGUTCashKarpRKF45.h"
-
+#include "TemplateGUIntegrationDriver.h"
 
 using namespace std;
 
@@ -147,20 +147,18 @@ int main(int argc, char *args[])
 
     TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-
-
     myStepper->InitializeCharge( particleCharge );
-    
+
     //Initialising coordinates
     const double mmGVf = fieldUnits::millimeter;
     const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
                                          //   Else it must be divided by fieldUnits::c_light;
     // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
-/*    Double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-                    x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};*/
+    Double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                    x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
-    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
+/*    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
 
     for (int i = 0; i < 4; ++i)
     {
@@ -175,7 +173,7 @@ int main(int argc, char *args[])
     cout<<"New X position is: "<<X_pos<<endl;
 
     Double yIn[] = {X_pos * mmGVf, Y_pos * mmGVf ,Z_pos * mmGVf,
-                    X_mom * ppGVf ,Y_mom * ppGVf ,Z_mom * ppGVf};
+                    X_mom * ppGVf ,Y_mom * ppGVf ,Z_mom * ppGVf};*/
 
 
     #ifdef DEBUGAnanya
@@ -202,6 +200,23 @@ int main(int argc, char *args[])
     /*-----------------------END PREPARING STEPPER---------------------------*/
 
 
+    //=======================Test part for Integration driver====================
+    auto testDriver = new TemplateGUIntegrationDriver<Backend>(0.2, myStepper);
+
+    const ThreeVectorSimd  startPosition( yIn[0], yIn[1], yIn[2]);
+    const ThreeVectorSimd  startMomentum( yIn[3], yIn[4], yIn[5]);
+    TemplateGUFieldTrack<Backend>  yTrackIn(  startPosition, startMomentum );  // yStart
+    TemplateGUFieldTrack<Backend>  yTrackOut( startPosition, startMomentum );  // yStart
+    Double total_step = 0.;
+
+    typedef typename Backend::bool_v Bool;
+    Bool goodAdvance(true);
+    double epsTol = 1.0e-5;
+
+    // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
+
+
+    //========================End testing IntegrationDriver=======================
 
 
 
