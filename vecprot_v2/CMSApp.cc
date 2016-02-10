@@ -34,6 +34,8 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"learn-steps", required_argument, 0, 'l'},
                                   {"max-tracks-per-basket", required_argument, 0, 'B'},
                                   {"use-Runge-Kutta", no_argument, 0, 'K'},
+                                  {"use-CMS-field", no_argument, 0, 'c'},
+                                  {"use-Uniform-field", no_argument, 0, 'u'},
                                   {"monitor", no_argument, 0, 'm'},
                                   {"debug", no_argument, 0, 'd'},
                                   {"max-memory", required_argument, 0, 'M'},
@@ -61,6 +63,7 @@ int main(int argc, char *argv[]) {
   std::string hepmc_event_filename("pp14TeVminbias.root");
   std::string field_filename("CMSmagneticField.txt");
   bool useRungeKutta= false;
+  bool useCMSfield=   false;   //  If false, use a constant magnetic field
 
   if (argc == 1) {
     help();
@@ -70,7 +73,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "E:e:f:F:g:Kl:B:mM:b:t:x:r:K", options, &optidx);
+    c = getopt_long(argc, argv, "cE:e:f:F:g:l:B:mM:b:t:x:r:Ku", options, &optidx);
 
     if (c == -1)
       break;
@@ -92,6 +95,14 @@ int main(int argc, char *argv[]) {
 
       if (n_track_max < 1)
         errx(1, "max number of tracks per basket must be positive");
+      break;
+
+    case 'c':
+      useCMSfield = true;
+      break;
+
+    case 'u':  // Uniform field
+      useCMSfield = false;
       break;
 
     case 'e':
@@ -217,8 +228,12 @@ int main(int argc, char *argv[]) {
   // Maximum user memory limit [MB]
   propagator->fMaxRes = max_memory;
   if (performance) propagator->fMaxRes = 0;
-  propagator->fEmin = 0.001; // [1 MeV] energy cut
-  propagator->fEmax = 0.01;  // 10 MeV
+
+  // CRITICAL: the energy cut must correspond to xsec/final state files !
+  propagator->fEmin = 0.001; // [  1 MeV ] energy cut
+  propagator->fEmax = 1.00;  // [  1 GeV ] -- energy of particle gun - if used.
+
+  printf("CMSApp> Production threshold set to %7.2g GeV\n", propagator->fEmin);
 
   // CMS magnetic field
   // propagator->fBmag = 40.; // 4 Tesla
@@ -229,12 +244,21 @@ int main(int argc, char *argv[]) {
 
   propagator->fEpsilonRK = 0.0003;  // Revised / reduced accuracy - vs. 0.0003 default 
 
-  CMSDetectorConstruction* CMSdetector= new CMSDetectorConstruction();
-  CMSdetector->SetFileForField(field_filename);
-  printf("CMSApp: Setting CMS-detector-construction to GeantPropagator\n");
-  propagator->SetUserDetectorConstruction(CMSdetector);
-  // printf("Calling CreateFieldAndSolver from runCMS_new.C");
-  // CMSDetector->CreateFieldAndSolver(propagator->fUseRungeKutta);
+  if( useCMSfield ) {
+     CMSDetectorConstruction* CMSdetector= new CMSDetectorConstruction();
+     CMSdetector->SetFileForField(field_filename);
+     printf("CMSApp: Setting CMS-detector-construction to GeantPropagator\n");
+     propagator->SetUserDetectorConstruction(CMSdetector);
+     // printf("Calling CreateFieldAndSolver from runCMS_new.C");
+     // CMSDetector->CreateFieldAndSolver(propagator->fUseRungeKutta);
+  } else {
+     UserDetectorConstruction* detectorCt= new UserDetectorConstruction();
+     float fieldVec[3] = { 0.0f, 0.0f, 38.0f };
+     detectorCt->UseConstantMagField( fieldVec, "kilogauss" );
+     printf("CMSApp: Setting generic detector-construction to GeantPropagator - created field= %f %f %f.\n",
+            fieldVec[0], fieldVec[1], fieldVec[2] );
+     propagator->SetUserDetectorConstruction(detectorCt);
+  }
 
 #ifdef USE_VECGEOM_NAVIGATOR
 #ifdef USE_ROOT
