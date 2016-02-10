@@ -275,7 +275,7 @@ TemplateGUVHelicalStepper<Backend>::
 
   typedef typename Backend::precision_v Double_v;
   typedef vecgeom::Vector3D<typename Backend::precision_v > ThreeVectorSimd;
-  typedef typename Backend::bool_v Bool_v;
+  // typedef typename Backend::bool_v Bool_v;
 
 
   Double_v R_Helix;

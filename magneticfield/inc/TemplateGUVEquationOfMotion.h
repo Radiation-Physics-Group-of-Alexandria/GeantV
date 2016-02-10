@@ -214,6 +214,11 @@ TemplateGUVEquationOfMotion<Backend>::RightHandSide( const typename Backend::pre
 
    GetFieldValue    ( Position, Field_3vf );
    EvaluateRhsGivenB( y, Field_3vf, charge, dydx );
+/*
+   #ifdef DEBUGAnanya
+    std::cout<<"\n----Field_3vf is: "<<Field_3vf[0]<<std::endl;
+    std::cout<<"----dydx is: "<<dydx[0]<<std::endl;
+   #endif */
 }
 
 #include <iostream>
