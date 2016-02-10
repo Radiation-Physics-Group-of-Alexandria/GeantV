@@ -410,9 +410,8 @@ void GeantPropagator::InitializeAfterGeom() {
 
 void GeantPropagator::PrepareRkIntegration() {
 
-  // using GUFieldPropagatorPool = ::GUFieldPropagatorPool;
-  Printf(" GV-Propagator calling Detector's CreateFieldAndSolver");
-  Printf("    fUserDetectorCtion= %p ", fUserDetectorCtion );
+  // Printf(" GV-Propagator calling Detector's CreateFieldAndSolver");
+  // Printf("    fUserDetectorCtion= %p ", fUserDetectorCtion );
   
   // bool createdField= 
   if( fUserDetectorCtion ) {
@@ -593,9 +592,9 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
     return;
   }
 
-  //  Read and create field early - to check, as it is failing ... 
+  //  Read and create field early - it is faster than reading a large geometry
   if( !fInitialisedRKIntegration ) {
-    Printf("- GeantPropagator::PropagatorGeom> Reading and creating field early - to check"); 
+    Printf("- GeantPropagator::PropagatorGeom> Reading and creating field."); 
     GeantPropagator::PrepareRkIntegration();
     fInitialisedRKIntegration= true;
   }
