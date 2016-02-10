@@ -131,7 +131,7 @@ CreateFieldAndSolver(bool /*useRungeKutta*/ )
   static const char *method="UserDetectorConstruction::CreateFieldAndSolver";
   bool rtv= false;
    
-  Geant::Print(method, " - method called.  Uniform= %d  Zero-value= %d.", fUseUniformField, fZeroField );
+  // Geant::Print(method, "%s - method called.  Uniform= %d  Zero-value= %d.", method, fUseUniformField, fZeroField );
 
   if( fUseUniformField )
   {
@@ -141,7 +141,7 @@ CreateFieldAndSolver(bool /*useRungeKutta*/ )
     if (fZeroField) {
       Geant::Print(method," Zero Magnetic Field configured.");
     } else {
-      printf("Creating uniform B-field: %8.2g  %8.2g  %8.2g kilo-gauss\n",
+      printf("Creating uniform B-field: %6.2g  %6.2g  %6.2g kilo-gauss\n",
            fUniformMagField[0]/fieldUnits::kilogauss,
            fUniformMagField[1]/fieldUnits::kilogauss,
            fUniformMagField[2]/fieldUnits::kilogauss );
