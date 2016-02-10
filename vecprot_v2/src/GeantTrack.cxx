@@ -1543,7 +1543,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   useRungeKutta = useRungeKutta && (mediumAngle);
 
   // But use RK as fall back - until 'General Helix' is robust
-  bool dominantBz =  std::fabs( std::fabs(BfieldInitial[1]) )
+  bool dominantBz =  std::fabs( std::fabs(BfieldInitial[2]) )
          > 1.e3 *
      std::max( std::fabs( BfieldInitial[0]), std::fabs(BfieldInitial[1]) );
   if( !dominantBz )
@@ -1594,22 +1594,17 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
      // CheckDirection(DirectionNew);
 #endif
   } else {
-     constexpr double toKiloGauss= 1.0e+14; // Converts to kilogauss -- i.e. 1 / Unit::kilogauss
-     assert ( toKiloGauss * fieldUnits::kilogauss == 1.0 );
-                                            // Must agree with values in magneticfield/inc/Units.h
-     // double Bx = BfieldInitial[0] * toKiloGauss;
-     // double By = BfieldInitial[1] * toKiloGauss;
+     constexpr double toKiloGauss= 1.0 / fieldUnits::kilogauss;
      double Bz = BfieldInitial[2] * toKiloGauss;
      if ( dominantBz ) {
         // printf("h"); std::cout << "h";
-        // if( std::fabs( Bz ) > 1e6 *
-        //  std::max( std::fabs(Bx), std::fabs(By)) ){ // BfieldInitial[0]), std::fabs(BfieldInitial[1]) ) ) {
         propagationType= 2;
-        // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g )", Bz, Bx, By );
-        Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g )", Bz,  BfieldInitial[0] * toKiloGauss,
-               BfieldInitial[0] * toKiloGauss );
-        // Old - constant field in Z-direction
-        Geant::ConstBzFieldHelixStepper stepper( Bz ); // * toKiloGauss ); // z-component
+        // double Bx = BfieldInitial[0] * toKiloGauss;
+        // double By = BfieldInitial[1] * toKiloGauss;
+        // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g ) Kilo Gauss\n", Bz, Bx, By );
+
+        // Constant field in Z-direction
+        Geant::ConstBzFieldHelixStepper stepper( Bz ); //
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                                PositionNewHlx, DirectionNewHlx);
      }
@@ -1652,12 +1647,13 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
          fXposV[i], fYposV[i], fZposV[i],
          fXdirV[i], fYdirV[i], fZdirV[i], oldMag, newMag, newMag-1.0 );
          // DirectionNew.Mag()-1.0  );
-#endif
+
   const char* Msg[4]= { "After propagation in field - type Unknown(ERROR) ",
                         "After propagation in field - with RK           ",
                         "After propagation in field - with Helix-Bz     ",
                         "After propagation in field - with Helix-General" };
   CheckTrack(i, Msg[propagationType] );
+#endif
 
 #if 0
   ThreeVector SimplePosition = Position + crtstep * Direction;
@@ -2231,15 +2227,17 @@ void GeantTrack_v::CheckTrack(int itr, const char *msg, double epsilon ) const {
 
    double x= fXposV[itr], y = fYposV[itr], z= fZposV[itr];
    bool badPosition = IsNan(x) || IsNan(y) || IsNan(z);
-   const double maxRadius = 10000.0;   // Should be a property of the geometry
+   // const double maxRadius = 20000.0;   // Should be a property of the geometry
    const double maxRadXY  =  5000.0;   // Should be a property of the geometry
+   const double maxZ      = 20000.0;   // Should be a property of the geometry
 
    // const double maxUnitDev =  1.0e-4;  // Deviation from unit of the norm of the direction
    double radiusXy2= x*x + y*y;
-   double radius2=  radiusXy2 + z*z;
+   // double radius2=  radiusXy2 + z*z;
    badPosition = badPosition
                 || (radiusXy2 > maxRadXY  * maxRadXY )
-                || (radius2   > maxRadius * maxRadius ) ;
+                || (std::fabs(z) > maxZ ) ; 
+    //          || (radius2   > maxRadius * maxRadius ) ;
 
    const double maxUnitDev = epsilon;  // Use epsilon for max deviation of direction norm from 1.0
 
@@ -2501,8 +2499,8 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   ComputeTransportLength(ntracks, td);
   //     Printf("====== After ComputeTransportLength:");
   //     PrintTracks();
-  double sumEin=0.0, sumEout=0.0; // , sumEdep=0.0
-  for (int ix = 0; ix < ntracks; ix++) { sumEin += fEV[ix]; }
+  // double sumEin=0.0, sumEout=0.0; // , sumEdep=0.0
+  // for (int ix = 0; ix < ntracks; ix++) { sumEin += fEV[ix]; }
 
 #ifdef BUG_HUNT
   BreakOnStep(prop->fDebugEvt, prop->fDebugTrk, prop->fDebugStp, prop->fDebugRep, "AfterCompTransLen");
@@ -2516,7 +2514,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
 
   double Bfield[3], bmag= 0.0;
 
-  unsigned int numNeutral= 0, numCharged=0, numStraight=0, numPhysics=0, numCurved=0;
+  unsigned int numNeutral= 0, numCharged=0, numStraight=0, numCurved=0; // numPhysics=0,
 
   // Remove dead tracks, propagate neutrals
   for (itr = 0; itr < ntracks; itr++) {
@@ -2583,12 +2581,13 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
     }
   }
 
+  /**
   for (int ix = 0; ix < ntracks; ix++) { sumEout += fEV[ix]; }
   for (int ix = 0; ix < output.GetNtracks(); ix++) { sumEout += output.fEV[ix]; }
   if( sumEout - sumEin > 0.001 * sumEin )
      Printf("PropagateTracks: Ein= %8.3g                      Eout= %8.3g                      Balance= %8.3g",
             sumEin, sumEout, sumEout - sumEin );
-
+   **/
   // Compact remaining tracks and move the removed oned to the output container
   if (!fCompact)
     Compact(&output);
@@ -2598,13 +2597,14 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
 
   // static unsigned long totalTracks=0, totalNeutral=0, totalCharged=0, totalStraight=0, totalCurved=0, totalPhysics=0;
 
+  /*****
   unsigned int numCalls=0;
-  const unsigned modCalls = 100;
+  const unsigned modCalls = 1000;
   if( (++numCalls) % modCalls == 0 ) {
      Printf("\nPropagateTracks: # tracks: Neutral=%4d, Charged=%4d, numStraight=%4d, numCurved=%4d, numPhysics=%4d . Action= %2d",
             numNeutral, numCharged, numStraight, numCurved, numPhysics, action );
   }
-
+  *****/
 
 
   switch (action) {
@@ -2721,7 +2721,7 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
 
   // printf(" PropagateSingleTrack called for itr= %d -- Track: ", itr );
   // PrintTrack(itr);
-  CheckTrack(itr, " PropagateSingleTrack called.");
+  // CheckTrack(itr, " PropagateSingleTrack called.");
   // PrintTrack(itr);
 
   int icrossed = 0;
