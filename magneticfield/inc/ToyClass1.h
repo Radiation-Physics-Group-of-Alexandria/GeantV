@@ -44,6 +44,12 @@ public:
 
   Bool_v IsGoodStep(Double_v outputSimpleMethod);
 
+  void InsertNewTrack(double nTracks[], int trackNextInput, int currIndex);
+
+  void StoreOutput(double   finalResults[],
+                   Double_v outputSimpleMethod,
+                   int      currIndex         );
+
   //Print statements for debugging
   void PrintCurrentData(Double_v fPreProcLane, 
                         Double_v outputSimpleMethod,
@@ -148,9 +154,32 @@ void ToyClass1::SimpleMethod(typename vecgeom::kVc::precision_v &fPreProcLane,
 typename Backend::bool_v 
 ToyClass1::IsGoodStep(typename vecgeom::kVc::precision_v outputSimpleMethod)
 {
-  Bool_v isGoodStep = (outputSimpleMethod > fStepStateLane - kStep ) && (outputSimpleMethod < fStepStateLane);
+  Bool_v isGoodStep = (outputSimpleMethod > fStepStateLane - kStep ) && 
+                      (outputSimpleMethod < fStepStateLane);
   return isGoodStep;
 }
+
+
+void ToyClass1::InsertNewTrack(double nTracks[], int trackNextInput, int currIndex)
+{
+   cout<<"\n----trackNextInput is: "<<trackNextInput<<endl;
+  //insert new track
+  //And store output of this one in finalResults (in scalar array for now)
+  //Probably need to define an index to take care of these random pickups and drops
+  fPreProcLane    [currIndex]  = nTracks[trackNextInput]; //sending in next one
+  fIndex          [currIndex]  = trackNextInput;
+  fStepStateLane  [currIndex]  = kStep;
+  fNoGoodStepsLane[currIndex]  = 0;
+}
+
+
+void ToyClass1::StoreOutput(double   finalResults[],
+                            Double_v outputSimpleMethod,
+                            int      currIndex         )
+{
+  finalResults[fIndex[currIndex]] = outputSimpleMethod[currIndex];
+}
+
 
 void ToyClass1::ToyMethod(double nTracks[], double finalResults[])
 {
@@ -189,9 +218,9 @@ void ToyClass1::ToyMethod(double nTracks[], double finalResults[])
     isDone = (fNoGoodStepsLane >=10);
 
     PrintCurrentData(outputSimpleMethod, isDone);
-    cout<<"----isGoodStep is      : "<<isGoodStep      <<endl;
-    cout<<"----fStepStateLane is  : "<<fStepStateLane  <<endl;
-    cout<<"----fNoGoodStepsLane is: "<<fNoGoodStepsLane<<endl;
+    cout<<"----isGoodStep is        : "<<isGoodStep      <<endl;
+    cout<<"----fStepStateLane is    : "<<fStepStateLane  <<endl;
+    cout<<"----fNoGoodStepsLane is  : "<<fNoGoodStepsLane<<endl;
 
     //what if all are not done?
     //if none is done, then simply continue
@@ -209,19 +238,15 @@ void ToyClass1::ToyMethod(double nTracks[], double finalResults[])
         if(isDone[i]==1 && fIndex[i] != -1) 
         {
           cout<<"here3"<<endl;
-          finalResults[fIndex[i]] = outputSimpleMethod[i]; //store the output
+
+          StoreOutput(finalResults, outputSimpleMethod, i);
+          // finalResults[fIndex[i]] = outputSimpleMethod[i]; //store the output
 
           if(trackNextInput < fInputTotalTracks)
           { 
-            cout<<"\n----trackNextInput is: "<<trackNextInput<<endl;
-            //insert new track
-            //And store output of this one in finalResults (in scalar array for now)
-            //Probably need to define an index to take care of these random pickups and drops
-            fPreProcLane    [i]  = nTracks[trackNextInput]; //sending in next one
-            fIndex          [i]  = trackNextInput;
-            fStepStateLane  [i]  = kStep;
-            fNoGoodStepsLane[i]  = 0;
-            isDone          [i]  = 0;
+            InsertNewTrack(nTracks, trackNextInput, i);
+
+            isDone [i] = 0;
             trackNextInput++;
           }
           else

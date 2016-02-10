@@ -131,6 +131,9 @@ void TemplateGUVIntegrationStepper<Backend>::
                            typename Backend::precision_v dydx[] )
 {
    fAbstrEquation-> RightHandSide(y, charge, dydx);
+/*   #ifdef DEBUGAnanya
+   std::cout<<"\n----y to RightHandSideVIS is: "<<y[3]<<std::endl;
+   #endif */
 }
 
 template <class Backend> 
