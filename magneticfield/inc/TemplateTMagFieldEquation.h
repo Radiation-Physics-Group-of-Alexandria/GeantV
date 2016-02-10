@@ -26,6 +26,8 @@
 #include "Constants.h"
 //  Update to GeantV units ASAP
 
+#define DEBUGAnanya
+
 template
 <class Backend, class Field, unsigned int Size>
 class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
@@ -61,7 +63,10 @@ class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
      void RightHandSide(const Double_v y[],  
                               Double_v dydx[]) const
      { Double_v charge  = -1.0;
-       RightHandSide(y, charge, dydx);  };
+       RightHandSide(y, charge, dydx);  }; //Ananya
+       //added this function to get RightHandSide functions compatible irrespecitive of 
+       //whether charge is given in input or not. 
+       //Assumed that in final version, charge will be included everywhere.
 
      REALLY_INLINE
      void TEvaluateRhsGivenB( const Double_v y[],
@@ -155,7 +160,15 @@ REALLY_INLINE
     
     Double_v momentum_mag_square = y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
     Double_v inv_momentum_magnitude = 1. / vecgeom::VECGEOM_IMPL_NAMESPACE::Sqrt( momentum_mag_square );
+/*
+    #ifdef DEBUGAnanya
+      std::cout<<"\n----y is: "<<y[3]<<" "<<y[4]<<" " <<y[5]<<std::endl;
+      std::cout<<"----inv_momentum is: "<<inv_momentum_magnitude<<std::endl;
+      std::cout<<"----momentum is: "<< momentum_mag_square <<std::endl;
+    #endif*/
 
+
+    // std::cout<<"\n\n\n AM I BEING CALLED SOMEHOW?"<<std::endl;
     // vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
 
     Double_v cof = fParticleCharge*fCof*inv_momentum_magnitude;

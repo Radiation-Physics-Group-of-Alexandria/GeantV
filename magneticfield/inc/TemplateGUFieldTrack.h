@@ -347,8 +347,8 @@ void TemplateGUFieldTrack<Backend>::
   // valArr[6]= fKineticEnergy; 
 
   // valArr[6]=fEnergy;  // When it is integrated over, do this ...
-  valArr[7]=fLabTimeOfFlight;
-  valArr[8]=fProperTimeOfFlight;
+  valArr[7] = fLabTimeOfFlight;
+  valArr[8] = fProperTimeOfFlight;
   // valArr[9]=fPolarization.x();
   // valArr[10]=fPolarization.y();
   // valArr[11]=fPolarization.z();
