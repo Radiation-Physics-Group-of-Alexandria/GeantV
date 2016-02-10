@@ -40,7 +40,7 @@ class GUTCashKarpRKF45 : public GUVIntegrationStepper
     inline
     GUTCashKarpRKF45( T_Equation *EqRhs,
                       unsigned int numStateVariables=0,
-                      bool primary=true);
+                      bool verbose=false);
 
     GUTCashKarpRKF45( const GUTCashKarpRKF45& );
     
@@ -120,7 +120,7 @@ class GUTCashKarpRKF45 : public GUVIntegrationStepper
         // for DistChord calculations
 
         // Parameters - for debugging etc
-        bool    fVerbose = false;
+        bool    fVerbose;
 };
 
 template <class T_Equation, unsigned int Nvar>
@@ -129,15 +129,16 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
    GUTCashKarpRKF45( T_Equation *EqRhs,
                      // unsigned int noIntegrationVariables,
                      unsigned int numStateVariables,
-                     bool primary)
+                     bool verbose)
    : GUVIntegrationStepper( EqRhs,    // dynamic_cast<GUVEquationOfMotion*>(EqRhs),
                             sOrderMethod,
                             Nvar,
                             ((numStateVariables>0) ? numStateVariables : sNstore) ),
      fEquation_Rhs(EqRhs),
-     fOwnTheEquation(primary),
+     fOwnTheEquation(true),
      fAuxStepper(0),
-     fLastStepLength(0.)
+     fLastStepLength(0.),
+     fVerbose(verbose)
 {
    assert( dynamic_cast<GUVEquationOfMotion*>(EqRhs) != 0 );
    assert( (numStateVariables == 0) || (numStateVariables >= Nvar) );
@@ -148,17 +149,10 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
    
    fMidVector = new double[sNstore];
    fMidError =  new double[sNstore];
-#if 0
    if( verbose )
       std::cout << " GUTCashKarpRKF45 - constructed class. " << std::endl
                 << " Nvar = " << Nvar << " Nstore= " << sNstore 
-                << " Primary = " << primary << std::endl;
-#endif   
-   if( primary )
-   {
-      // Reuse the Equation of motion in the Auxiliary Stepper      
-      fAuxStepper = new GUTCashKarpRKF45(EqRhs, numStateVariables, false);
-   }
+                << std::endl;
 }
 
 template <class T_Equation, unsigned int Nvar>
@@ -182,10 +176,9 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
      fEquation_Rhs( (T_Equation*) 0 ),
      fOwnTheEquation(true),
      fAuxStepper(0),   //  May overwrite below
-     fLastStepLength(0.)
-     // fPrimary( right.fPrimary )
+     fLastStepLength(0.),
+     fVerbose(right.fVerbose)
 {
-   // if( primary )
    SetEquationOfMotion( new T_Equation( *(right.fEquation_Rhs)) );
    fOwnTheEquation=true;
     // fEquation_Rhs= right.GetEquationOfMotion()->Clone());
@@ -199,20 +192,18 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
    
    fMidVector = new double[sNstore];
    fMidError =  new double[sNstore];
-#if 1
-   // if( verbose )
+
+   if( fVerbose )
       std::cout << " GUTCashKarpRKF45 - copy constructor: " << std::endl
                 << " Nvar = " << Nvar << " Nstore= " << sNstore 
                 << " Own-the-Equation = " << fOwnTheEquation << std::endl;
-#endif   
+
    if( right.fAuxStepper )
    {
       // Reuse the Equation of motion in the Auxiliary Stepper
       fAuxStepper = new GUTCashKarpRKF45(fEquation_Rhs, GetNumberOfStateVariables(), false);
    }
 }
-
-
 
 template <class T_Equation,unsigned int Nvar>
 // inline
