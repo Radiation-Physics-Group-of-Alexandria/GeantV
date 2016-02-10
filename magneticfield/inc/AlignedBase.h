@@ -29,40 +29,40 @@ class AlignedBase {
 
 public:
 
-  VECGEOM_INLINE
+  inline
   void *operator new(size_t size) {
     return _mm_malloc(size, kAlignmentBoundary);
   }
 
-  VECGEOM_INLINE
+  inline
   void *operator new(size_t, void *p) {
     return p;
   }
 
-  VECGEOM_INLINE
+  inline
   void *operator new[](size_t size) {
     return _mm_malloc(size, kAlignmentBoundary);
   }
 
-  VECGEOM_INLINE
+  inline
   void *operator new[](size_t , void *p) {
     return p;
   }
   
-  VECGEOM_INLINE
+  inline
   void operator delete(void *ptr, size_t) {
     _mm_free(ptr);
   }
 
-  VECGEOM_INLINE
+  inline
   void operator delete(void *, void *) {}
 
-  VECGEOM_INLINE
+  inline
   void operator delete[](void *ptr, size_t) {
     _mm_free(ptr);
   }
 
-  VECGEOM_INLINE
+  inline
   void operator delete[](void *, void *) {}
 
 };
