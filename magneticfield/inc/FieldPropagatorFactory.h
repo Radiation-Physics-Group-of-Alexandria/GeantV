@@ -74,7 +74,7 @@ FieldPropagatorFactory::CreatePropagator( // Field_t&              gvField,
 
   // cout << " - Integration constraint:  eps_tol= " << relEpsilonTolerance << endl;
   Geant::Print("FieldPropagatorFactory::CreatePropagator",  
-               "Parameters for RK integration in magnetic field: - Integration constraint:  eps_tol=  %8.3g\n",
+               "Parameters for RK integration in magnetic field: \n - Integration constraint:  eps_tol=  %8.3g\n",
                relEpsilonTolerance); 
         
   RegisterPropagator(fieldPropagator);
@@ -96,7 +96,8 @@ FieldPropagatorFactory::CreatePropagator(Field_t& gvField,
   // cout << " - Driver minimum step (h_min) = " << minStepSize << endl;
 
   Geant::Print("FieldPropagatorFactory::CreatePropagator",  
-               "Parameters for RK integration in magnetic field: - Driver minimum step (h_min) = %8.3g\n",
+               // "Parameters for RK integration in magnetic field: "
+               " - Driver minimum step (h_min) = %8.3g\n",
                minStepSize); 
   
   auto // GUVIntegrationStepper*
