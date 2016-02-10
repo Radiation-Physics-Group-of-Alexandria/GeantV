@@ -61,11 +61,15 @@ GUIntegrationDriver::GUIntegrationDriver( double        hminimum,
      fDyerrPosMaxSq(0.0), fDyerrDirMaxSq(0.0),      
      fDyerrPos_smTot(0.0), fDyerrPos_lgTot(0.0), fDyerrVel_lgTot(0.0), 
      fSumH_sm(0.0), fSumH_lg(0.0),
-     fVerboseLevel(3)
+     fVerboseLevel(0)
 {  
   // In order to accomodate "Laboratory Time", which is [7], fMinNoVars=8
   // is required. For proper time of flight and spin,  fMinNoVars must be 12
   assert( pStepper != nullptr );
+  bool  statsEnabled= false;
+#ifdef GVFLD_STATS
+  statsEnabled= true;
+#endif
   
   RenewStepperAndAdjust( pStepper );
   fMaxNoSteps = fMaxStepBase / fpStepper->IntegratorOrder();
@@ -76,13 +80,8 @@ GUIntegrationDriver::GUIntegrationDriver( double        hminimum,
   if( (fVerboseLevel > 0) || (fStatisticsVerboseLevel > 1) )
   {
      std::cout << "MagIntDriver version: Accur-Adv: "
-           << "invE_nS, QuickAdv-2sqrt with Statistics "
-#ifdef GVFLD_STATS
-           << " enabled "
-#else
-           << " disabled "
-#endif
-           << std::endl;
+               << "invE_nS, QuickAdv-2sqrt with Statistics "
+               << (statsEnabled ? " enabled " : " disabled " ) << std::endl;
   }
 
 #ifdef GVFLD_STATS
@@ -120,6 +119,10 @@ GUIntegrationDriver::GUIntegrationDriver( const GUIntegrationDriver& right )
   // In order to accomodate "Laboratory Time", which is [7], fMinNoVars=8
   // is required. For proper time of flight and spin,  fMinNoVars must be 12
    const GUVIntegrationStepper *protStepper = right.GetStepper();
+   bool  statsEnabled= false;
+#ifdef GVFLD_STATS
+   statsEnabled= true;
+#endif
    fpStepper= protStepper->Clone();
    
    RenewStepperAndAdjust( fpStepper );
@@ -128,13 +131,9 @@ GUIntegrationDriver::GUIntegrationDriver( const GUIntegrationDriver& right )
   if( (fVerboseLevel > 0) || (fStatisticsVerboseLevel > 1) )
   {
      std::cout << "MagIntDriver version: Accur-Adv: "
-           << "invE_nS, QuickAdv-2sqrt with Statistics "
-#ifdef GVFLD_STATS
-           << " enabled "
-#else
-           << " disabled "
-#endif
-           << std::endl;
+               << "invE_nS, QuickAdv-2sqrt with Statistics "
+               << (statsEnabled ? " enabled " : " disabled " )
+               << std::endl;
   }
 }
 
@@ -491,10 +490,11 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
   }
 #endif
 
-  constexpr int NumCallsPerReport= 100000;
-  if( fNoTotalSteps % NumCallsPerReport == 0 ) 
-     PrintStatisticsReport();
-  
+#ifdef GVFLD_STATS
+  constexpr int NumCallsPerReport= 1000000;
+  if( fNoTotalSteps % NumCallsPerReport == 0 ) PrintStatisticsReport();
+#endif
+
   // No longer relevant -- IntDriver does not control charge anymore
   // OLD: Finished for now - value of charge is 'revoked'
   //  fpStepper->GetEquationOfMotion()->InformDone();  

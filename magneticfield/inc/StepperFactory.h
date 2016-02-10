@@ -42,14 +42,16 @@ class StepperFactory
      template<typename EquationType>
         static
         GUVIntegrationStepper *          
-            CreateStepper(EquationType *equation, int StepperCode = DefaultStepperCode);
+          CreateStepper(EquationType *equation, 
+                        int           StepperCode = DefaultStepperCode, 
+                        bool          verbose = false );
 
      // static StepperFactory* Instance();
 };
 
 template<typename EquationType>
   GUVIntegrationStepper *          
-StepperFactory::CreateStepper(EquationType *equation, int StepperCode )
+StepperFactory::CreateStepper(EquationType *equation, int StepperCode, bool verbose )
 {
     GUVIntegrationStepper *stepper; // , *exactStepper;
 
@@ -86,7 +88,7 @@ StepperFactory::CreateStepper(EquationType *equation, int StepperCode )
          std::cerr << " ERROR> StepperFactory: No stepper selected. " << endl;
          // exit(1); 
     }
-    if( stepperName )
+    if( stepperName && verbose )
        std::cout << "StepperFactory: Chosen the  " << stepperName << " stepper." << std::endl;
 
     return stepper;
