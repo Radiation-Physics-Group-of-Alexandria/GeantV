@@ -59,6 +59,7 @@ public:
   int *fChargeV;           /** Particle charges */
   int *fProcessV;          /** Current process */
   int *fNstepsV;           /** Number of steps made */
+  int *fParentIdV;         /** Id of parent particle */  
   Species_t *fSpeciesV;    /** Particle species */
   TrackStatus_t *fStatusV; /** Track statuses */
   double *fMassV;          /** Particle masses */
