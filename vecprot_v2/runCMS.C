@@ -63,11 +63,10 @@ void runCMS(const int ncputhreads=4,
    }
 
    GeantPropagator *prop = GeantPropagator::Instance(ntotal, nbuffered, nthreads);
-   // prop->fBmag = magfield; // 4 Tesla
    prop->fBfieldArr[0] = 0.0; 
    prop->fBfieldArr[1] = 0.0; 
    prop->fBfieldArr[2] = magfield; // 4 Tesla      
-
+   
    //  Enable use of RK integration in field for charged particles
    prop->fUseRungeKutta = false;
    // prop->fEpsilonRK = 0.001;  // Revised / reduced accuracy - vs. 0.0003 default 
