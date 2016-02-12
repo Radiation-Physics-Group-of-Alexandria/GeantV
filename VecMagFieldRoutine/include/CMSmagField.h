@@ -235,8 +235,7 @@ CMSmagField::~CMSmagField(){
 INLINE_CHOICE
 bool CMSmagField::ReadVectorData(std::string inputMap)
 {
-   std::cout<< "- CMSmagField::ReadVectorData called with filename= " << inputMap << std::endl;
-   // printf( "- CMSmagField::ReadVectorData called with filename= %s\n", inputMap );
+   std::cout << "CMSmagField::ReadVectorData called with filename= " << inputMap << std::endl;
    std::string line;
    std::string s1,s2,s3,s4,s5,s0;
    float d1,d2,d3,d4,d5,d0;
