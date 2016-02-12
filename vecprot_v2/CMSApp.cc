@@ -198,7 +198,7 @@ int main(int argc, char *argv[]) {
   GeantPropagator *propagator = GeantPropagator::Instance(n_events, n_buffered);
 
   // Default value is 1. (0.1 Tesla)
-  propagator->fBmag = 40.; // 4 Tesla
+  // propagator->fBmag = 40.; // 4 Tesla
 
   // Enable use of RK integration in field for charged particles
   propagator->fUseRungeKutta = false;
