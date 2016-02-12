@@ -19,7 +19,7 @@ include_directories(${VECGEOM_INCLUDE_DIR} ${ROOT_INCLUDE_DIR})
 link_directories(${ROOT_LIBRARY_DIR})
 
 #Copies cms2015.txt to build/VecMagFieldRoutine at runtime 
-configure_file(${CMAKE_SOURCE_DIR}/VecMagFieldRoutine/cms2015.txt cms2015.txt COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/VecMagFieldRoutine/cmsmagfield2015.txt cmsmagfield2015.txt COPYONLY)
 message(STATUS "CMake source directory is: " ${CMAKE_SOURCE_DIR})
 
 include_directories(include)

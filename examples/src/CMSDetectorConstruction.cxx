@@ -38,8 +38,7 @@ CreateFieldAndSolver(bool useRungeKutta)
 
 #if 1
   using FieldType = CMSmagField;  
-  // Printf("    Calling CMSmagField constructor with filename= %s\n", fFieldFilename );
-  std::cout << "    Calling CMSmagField constructor with filename= %s" << fFieldFilename << std::endl;
+  std::cout << "    Calling CMSmagField constructor with filename= " << fFieldFilename << std::endl;
   fCMSfield= new CMSmagField(fFieldFilename);
   fUniformField= nullptr;
   

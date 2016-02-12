@@ -8,6 +8,9 @@
 // Autoload the library early so that GeantPropagator is defined when applicable.
 class TaskBroker;
 class GeantPropagator;
+class CMSDetectorConstruction;
+
+#include "CMSDetectorConstruction.h"
 
 void runCMS(const int ncputhreads=4,
             const bool performance=true,
@@ -16,8 +19,11 @@ void runCMS(const int ncputhreads=4,
             const char *fstate="fstate_FTFP_BERT_G496p02_1mev.root",
             bool coprocessor = COPROCESSOR_REQUEST,
 	    const char *eventfile="pp14TeVminbias.root",
-	    const float magfield=40.,
 	    const int ntotal=10                                    // Number of events to be transported
+	    // const float magfield=40.,
+	    const char* fieldfile = "cmsmagfield2015.txt",
+	    const bool useRungeKutta = false,
+	    const bool useCMSfield   = false   //  If false, use a constant magnetic field
 )
 {
    // gSystem->Load("libPhysics");
@@ -45,6 +51,7 @@ void runCMS(const int ncputhreads=4,
 //=============================================================================
 //   bool performance = true;
 
+
    int nthreads = ncputhreads;
    int nbuffered  = 5;   // Number of buffered events (tunable [1,ntotal])
    TGeoManager::Import(geomfile);
@@ -63,6 +70,7 @@ void runCMS(const int ncputhreads=4,
    }
 
    GeantPropagator *prop = GeantPropagator::Instance(ntotal, nbuffered, nthreads);
+   // prop->fBmag = magfield; // 4 Tesla
    prop->fBfieldArr[0] = 0.0; 
    prop->fBfieldArr[1] = 0.0; 
    prop->fBfieldArr[2] = magfield; // 4 Tesla      
@@ -111,6 +119,28 @@ void runCMS(const int ncputhreads=4,
    prop->fEmin = 0.001; // [1 MeV] energy cut
 
    prop->fEmax = 0.01; // 10 MeV
+
+   //  Enable use of RK integration in field for charged particles
+   // propagator->fUseRungeKutta = false;
+   prop->fUseRungeKutta = useRungeKutta;
+   prop->fEpsilonRK = 0.0003;  // Revised / reduced accuracy - vs. 0.0003 default
+
+   if( useCMSfield ) {
+      CMSDetectorConstruction* CMSdetector= new CMSDetectorConstruction();
+      CMSdetector->SetFileForField(fieldfile);
+      printf("CMSApp: Setting CMS-detector-construction to GeantPropagator with file %s\n",fieldfile);
+      prop->SetUserDetectorConstruction(CMSdetector);
+      // printf("Calling CreateFieldAndSolver from runCMS_new.C");
+      // CMSDetector->CreateFieldAndSolver(propagator->fUseRungeKutta);
+   } else {
+      UserDetectorConstruction* detectorCt= new UserDetectorConstruction();
+      float fieldVec[3] = { 0.0f, 0.0f, 38.0f };
+      detectorCt->UseConstantMagField( fieldVec, "kilogauss" );
+      printf("CMSApp: Setting generic detector-construction to GeantPropagator - created field= %f %f %f.\n",
+	     fieldVec[0], fieldVec[1], fieldVec[2] );
+      prop->SetUserDetectorConstruction(detectorCt);
+   }
+
    // Create the tab. phys process.
    prop->fProcess = new TTabPhysProcess("tab_phys", xsec, fstate);
 //   prop->fPrimaryGenerator = new GunGenerator(prop->fNaverage, 11, prop->fEmax, -8, 0, 0, 1, 0, 0);
