@@ -98,7 +98,7 @@ GeantPropagator::GeantPropagator()
       // fBmag(0.),
       fUsePhysics(true), fUseRungeKutta(false), fInitialisedRKIntegration(false), fUseDebug(false), fUseGraphics(false), fUseStdScoring(false),
       fTransportOngoing(false), fSingleTrack(false), fFillTree(false), fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(false), fUseAppMonitoring(false), fTracksLock(),  
-      fWMgr(0), fApplication(0), fStdApplication(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0), fStoredTracks(0),
+      fUserDetectorCtion(0), fWMgr(0), fApplication(0), fStdApplication(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0), fStoredTracks(0),
       fPrimaryGenerator(0), fNtracks(0), fEvents(0), fThreadData(0) {
   // Constructor
   fVertex[0] = fVertex[1] = fVertex[2] = 0.;
