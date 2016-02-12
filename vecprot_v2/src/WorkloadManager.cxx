@@ -581,7 +581,7 @@ void *WorkloadManager::TransportTracks() {
   #ifdef USE_ROOT
   if(concurrentWrite)
     {
-      file.Write();
+      file->Write();
     }
    #endif
   wm->DoneQueue()->push(0);
