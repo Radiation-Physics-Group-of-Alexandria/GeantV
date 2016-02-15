@@ -1,19 +1,21 @@
 #include <TPartIndex.h>
 #include <string>
 #include <algorithm>
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include <TBuffer.h>
 #endif
+#endif
 #include <iostream>
 
+#ifndef GEANT_NVCC
 using std::transform;
 using std::string;
-#ifndef GEANT_NVCC
 using std::map;
-#endif
 
 #ifdef USE_ROOT
 ClassImp(TPartIndex)
+#endif
 #endif
 
     const
@@ -62,9 +64,14 @@ const float TPartIndex::fgWElem[NELEM] = {
     252.08, 257.10, 258.10, 259.10, 262.11, 265.12, 268.13, 271.13, 270,    277.15, 276.15, 281.16, 280.16, 285.17,
     284.18, 289.19, 288.19, 293,    294,    294};
 
+#ifndef GEANT_NVCC
 TPartIndex *TPartIndex::fgPartIndex = 0;
+#else
+GEANT_CUDA_DEVICE_CODE TPartIndex *fgPartIndexDev = 0;
+#endif
 
 //___________________________________________________________________
+ GEANT_CUDA_BOTH_CODE
 TPartIndex::TPartIndex() :
    fEilDelta(0), fNPart(0), fNEbins(0), fEGrid(nullptr), fPDG(nullptr), fNpReac(0), fNpCharge(0),
 #ifndef USE_VECGEOM_NAVIGATOR
@@ -74,16 +81,20 @@ TPartIndex::TPartIndex() :
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 TPartIndex::~TPartIndex() {
   delete[] fPDG;
   delete[] fEGrid;
 #ifndef USE_VECGEOM_NAVIGATOR
   delete fDBPdg;
 #endif
+#ifndef GEANT_NVCC
   fgPartIndex = 0;
+#endif
 }
 
 //___________________________________________________________________
+ GEANT_CUDA_BOTH_CODE
 void TPartIndex::SetEnergyGrid(double emin, double emax, int nbins) {
   fNEbins = nbins;
   fEilDelta = (fNEbins - 1) / log(emax / emin);
@@ -114,6 +125,7 @@ const char *TPartIndex::ProcName(int proc) const {
 }
 
 //_____________________________________________________________________________
+ GEANT_CUDA_BOTH_CODE
 void TPartIndex::SetPartTable(const int *vpdg, int np) {
   fNPart = np;
   delete[] fPDG;
@@ -125,6 +137,7 @@ void TPartIndex::SetPartTable(const int *vpdg, int np) {
 }
 
 //______________________________________________________________________________
+#ifndef GEANT_NVCC
 int TPartIndex::PDG(const char *pname) const {
   int nr = fNPart;
 #ifdef USE_VECGEOM_NAVIGATOR
@@ -138,6 +151,7 @@ int TPartIndex::PDG(const char *pname) const {
 #endif
   return -12345678;
 }
+#endif
 
 //______________________________________________________________________________
 int TPartIndex::PartIndex(int pdg) const {
@@ -160,6 +174,7 @@ int TPartIndex::PartIndex(int pdg) const {
 }
 
 //______________________________________________________________________________
+#ifndef GEANT_NVCC
 void TPartIndex::Print(const char *option) const {
   char line[120];
   string opt = option;
@@ -202,7 +217,7 @@ void TPartIndex::Print(const char *option) const {
     printf("Xsec database version %d.%d.%d\n", VersionMajor(), VersionMinor(), VersionSub());
   }
 }
-
+#endif
 //______________________________________________________________________________
 #ifdef GEANT_NVCC
 void TPartIndex::SetPDGToGVMap(vecgeom::map<int, int> &theMap) {
@@ -216,7 +231,7 @@ void TPartIndex::SetPDGToGVMap(std::map<int, int> &theMap) {
   fSpecGVIndices[2] = fPDGToGVMap.find(22)->second;   // gamma
   fSpecGVIndices[3] = fPDGToGVMap.find(2212)->second; // proton
 }
-
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 //______________________________________________________________________________
 void TPartIndex::Streamer(TBuffer &R__b) {
@@ -256,8 +271,9 @@ void TPartIndex::Streamer(TBuffer &R__b) {
   }
 }
 #endif
-
+#endif
 //______________________________________________________________________________
+ GEANT_CUDA_BOTH_CODE
 void TPartIndex::CreateReferenceVector() {
     // create the particle reference vector
     fGVParticle.resize(fPDGToGVMap.size(), 0);
@@ -274,13 +290,17 @@ void TPartIndex::CreateReferenceVector() {
       if (pp->Mass() >= 0)
         fGVParticle[p->second] = pp;
       else
+       #ifndef GEANT_NVCC
         std::cout << ClassName() << "::" << __func__ << ":"
                   << " particle PDG " << p->first << " not found !" << std::endl;
+       #else  
+         printf(" particle PDG %d not found\n", p->first);
+       #endif
 #else
     for (map<int, int>::iterator p = fPDGToGVMap.begin(); p != fPDGToGVMap.end(); ++p) {
       const Particle_t *pp = fDBPdg->GetParticle(p->first);
       if (!pp)
-        std::cout << " Particle " << p->first << " does not exist " << std::endl;
+        printf(" Particle %d does not exist\n", p->first);
       fGVParticle[p->second] = pp;
 #ifdef SPECIAL_FCA_HACK
       //
@@ -397,7 +417,11 @@ void TPartIndex::CreateReferenceVector() {
                 break;
               }
             if (ap == 0)
+            #ifndef GEANT_NVCC
               exit(1);
+            #else
+              return; 
+            #endif
             int index = name.find("Anti");
             if (index != std::string::npos)
               name.replace(index, 4, "");
@@ -474,6 +498,7 @@ double TPartIndex::GetAprxNuclearMass(int Z, int A) {
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 int TPartIndex::SizeOf() const {
   size_t size = 2 * sizeof(double) + 4 * sizeof(int);
   size += fNPart * sizeof(int);
@@ -483,10 +508,15 @@ int TPartIndex::SizeOf() const {
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 void TPartIndex::RebuildClass(char *b) {
   if(((unsigned long) this) % sizeof(double) != 0) {
-      cout << "TPartIndex::RebuildClass: the class is misaligned" << endl;
+      printf("TPartIndex::RebuildClass: the class is misaligned\n");
+  #ifndef GEANT_NVCC 
       exit(1);
+  #else
+     return; 
+  #endif
   }
    double emin = 0;
    double emax = 0;
