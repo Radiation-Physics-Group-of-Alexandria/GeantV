@@ -1,38 +1,14 @@
 //
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
+// Create Detector geometry, sensitive detectors and (magnetic) field
 //
-/// \file persistency/gdml/G01/include/G01DetectorConstruction.hh
-/// \brief Definition of the G01DetectorConstruction class
+// Started from the following Geant4 class
+//    examples/extended/persistency/gdml/G01/include/G01DetectorConstruction.hh
+// and adjusted substanially to accommodate:
+//    i) preconstructed geometry
+//   ii) uniform or class-defined magnetic field
 //
-//
-// $Id: G01DetectorConstruction.hh 68025 2013-03-13 13:43:46Z gcosmo $
-//
-//
-// Original Geant4 was calss: 
-//  examples/extended/persistency/gdml/G01/include/G01DetectorConstruction.hh
-
+//    Authors: Mihaly Novak, CERN            March 2015
+//             John Apostolakis, CERN        February 2016
 
 #ifndef DETECTORCONSTRUCTION_H
 #define DETECTORCONSTRUCTION_H 1
@@ -40,15 +16,17 @@
 #include "G4VUserDetectorConstruction.hh"
 
 class TGeoManager;
+class G4MagneticField;
 class G4UniformMagField;
+class CMSMagneticFieldG4;
 
 /// Detector construction allowing to use the geometry read from the GDML file
 
 class DetectorConstruction : public G4VUserDetectorConstruction
 {
   public:
- 
-    DetectorConstruction(G4VPhysicalVolume *setWorld = 0);
+
+    DetectorConstruction(G4VPhysicalVolume *setWorld = 0, bool useUniformField= true );
     ~DetectorConstruction();
 
     virtual G4VPhysicalVolume *Construct()
@@ -56,16 +34,28 @@ class DetectorConstruction : public G4VUserDetectorConstruction
       return fWorld;
     }
 
-   void SetMagField(G4double);
+   virtual void ConstructSDandField();
 
+   void SetUniformBzMagField(G4double);               // Set uniform magnetic field
+   // static G4ThreadLocal G4GlobalMagFieldMessenger*  fMagFieldMessenger; 
+
+   // void SetMagField(G4MagneticField* pFld);  // Set non-uniform magnetic field
+   void UseInterpolatedField() { fUseUniformField = false; }
+
+   // void SetDistanceConst( double dist ){ fDistanceConst= dist; }
 
   private:
 
     G4VPhysicalVolume  *fWorld;
     static TGeoManager *fgGeomMgrRoot;
 
-    G4UniformMagField* magField;      //pointer to the magnetic field
+    bool                fUseUniformField;
+    double              fBzFieldValue;
+    G4MagneticField    *fpMagField;           //pointer to the magnetic field
 
+    std::string         fFieldFilename;
+    // double              fDistanceConst;   // Field is assumed to be uniform over this distance
+    static CMSMagneticFieldG4* fpMasterCmsField;  // Object in the master -- others are its 'clones'
 };
 
 #endif
