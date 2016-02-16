@@ -20,14 +20,13 @@ using fieldUnits::degree;
 #include "base/Vector3D.h"
 
 #include "TemplateTUniformMagField.h"
-
 #include "TemplateTMagFieldEquation.h"
 #include "TemplateFieldEquationFactory.h"
-
 #include "TemplateGUVIntegrationStepper.h"
-
 #include "TemplateGUTCashKarpRKF45.h"
+
 #include "TemplateGUIntegrationDriver.h"
+#include "FieldTrack.h"
 
 using namespace std;
 
@@ -214,6 +213,13 @@ int main(int argc, char *args[])
     double epsTol = 1.0e-5;
 
     // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
+
+    int nTracks = 16;
+    FieldTrack yInput[nTracks], yOutput[nTracks];
+    double hstep[nTracks];
+    bool   succeeded[nTracks];
+    // testDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
+
 
 
     //========================End testing IntegrationDriver=======================
