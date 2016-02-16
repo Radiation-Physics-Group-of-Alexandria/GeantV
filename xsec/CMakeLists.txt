@@ -90,7 +90,7 @@ if (CUDA)
      xsec/src/TPartIndex.cxx
 #     xsec/src/TEFstate.cxx
 #     xsec/src/TFinState.cxx
-#     xsec/src/TEXsec.cxx
+     xsec/src/TEXsec.cxx
 #     xsec/src/TMXsec.cxx
 #     xsec/src/TPDecay.cxx
 #     xsec/src/TPFstate.cxx

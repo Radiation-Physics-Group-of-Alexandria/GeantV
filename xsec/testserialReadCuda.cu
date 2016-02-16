@@ -1,9 +1,11 @@
+
+
 #include "backend/cuda/Interface.h"
-//#include "TPartIndex.h"
+#include "TPartIndex.h"
 #include "materials/Particle.h"
 using vecgeom::Particle; 
-/*
 #include "TEXsec.h"
+/*
 #include "TEFstate.h"
 #include "TPDecay.h"
 
@@ -13,7 +15,6 @@ __global__
 void expandPhysics(char *buf) {
    printf("Rebuilding TPartIndex store\n");
    Particle::CreateParticles();
-/*
    TPartIndex::I()->RebuildClass(buf);
 
    int sizet = TPartIndex::I()->SizeOf();
@@ -23,6 +24,7 @@ void expandPhysics(char *buf) {
    TEXsec::RebuildStore(buf);
    int sizex = TEXsec::SizeOfStore();
    printf("Number of bytes for x-sec %d\n",sizex);
+/*
    buf += sizex;
    printf("Rebuilding decay store\n");
    TPDecay *dec = (TPDecay *) buf;
@@ -53,3 +55,5 @@ void launchExpandPhysicsOnDevice(vecgeom::cxx::DevicePtr<char> devBuf, int nBloc
  expandPhysics<<< blocksPerGrid, threadsPerBlock >>>(devBuf);
 
 }
+
+

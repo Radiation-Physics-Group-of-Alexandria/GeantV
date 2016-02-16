@@ -68,9 +68,9 @@ extern GEANT_CUDA_DEVICE_CODE TPartIndex *fgPartIndexDev;
 class TPartIndex {
 
 public:
-#ifndef GEANT_NVCC
-  GEANT_CUDA_HOST_CODE
+  GEANT_CUDA_BOTH_CODE
   static TPartIndex *I() {
+#ifndef GEANT_CUDA_DEVICE_BUILD
      if (!fgPartIndex) {
 #ifdef USE_VECGEOM_NAVIGATOR
       Particle::CreateParticles();
@@ -78,10 +78,7 @@ public:
       fgPartIndex = new TPartIndex();
      }
     return fgPartIndex;
- }
 #else
-  GEANT_CUDA_DEVICE_CODE
-  static TPartIndex *I() {
      if (!fgPartIndexDev) {
 #ifdef USE_VECGEOM_NAVIGATOR
       Particle::CreateParticles();
@@ -90,8 +87,9 @@ public:
      }
     return fgPartIndexDev;
 
-}
+
 #endif 
+}
   GEANT_CUDA_BOTH_CODE
   TPartIndex();
   GEANT_CUDA_BOTH_CODE
@@ -170,10 +168,15 @@ public:
 
  GEANT_CUDA_BOTH_CODE
   void SetEnergyGrid(double emin, double emax, int nbins);
+GEANT_CUDA_BOTH_CODE
   int NEbins() const { return fNEbins; }
+GEANT_CUDA_BOTH_CODE
   double Emin() const { return fEGrid[0]; }
+GEANT_CUDA_BOTH_CODE
   double Emax() const { return fEGrid[fNEbins - 1]; }
+GEANT_CUDA_BOTH_CODE
   double EilDelta() const { return fEilDelta; }
+ GEANT_CUDA_BOTH_CODE
   const double *EGrid() const { return fEGrid; }
 
   static const char *EleSymb(int z) { return fgEleSymbol[z - 1]; }
@@ -206,7 +209,7 @@ private:
 
  GEANT_CUDA_BOTH_CODE
   void CreateReferenceVector();
-  #ifndef GEANT_NVCC
+  #ifndef GEANT_CUDA_DEVICE_BUILD
   static TPartIndex *fgPartIndex;
   #endif
   const int fVersion = 1000002;
@@ -214,7 +217,6 @@ private:
   static const int fgNProc = FNPROC;   // Number of processes
   static const char *fgPrName[FNPROC]; // Process name
   static const short fgPCode[FNPROC];  // G4 process codes
-
   static const int fgNElem = NELEM;      // Number of Elements
   static const char *fgEleSymbol[NELEM]; // Symbol of Element
   static const char *fgEleName[NELEM];   // Name of Element

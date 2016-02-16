@@ -29,13 +29,19 @@ class TRootEmbeddedCanvas;
 #endif
 class TFile;
 #include "TPXsec.h"
+#ifdef GEANT_CUDA_DEVICE_BUILD
+class TEXsec;
+extern GEANT_CUDA_DEVICE_CODE int fNLdElemsDev;            //! number of loaded elements
+extern GEANT_CUDA_DEVICE_CODE TEXsec *fElementsDev[NELEM]; //! databases of elements
+#endif
 
 class TEXsec {
 public:
   enum { kCutGamma, kCutElectron, kCutPositron, kCutProton };
-
+GEANT_CUDA_BOTH_CODE
   TEXsec();
   TEXsec(int z, int a, float dens, int np);
+GEANT_CUDA_BOTH_CODE
   TEXsec(const TEXsec &other);
   virtual ~TEXsec();
   static const char *ClassName() { return "TEXsec"; }
@@ -44,12 +50,18 @@ public:
   bool AddPartIon(int kpart, const float dedx[]);
   bool AddPartMS(int kpart, const float angle[], const float ansig[], const float length[], const float lensig[]);
 
+GEANT_CUDA_BOTH_CODE
   int Ele() const { return fEle; }
+GEANT_CUDA_BOTH_CODE
   int Index() const { return fIndex; }
   void SetIndex(int index) { fIndex = index; }
+GEANT_CUDA_BOTH_CODE
   double Emin() const { return fEmin; }
+GEANT_CUDA_BOTH_CODE
   double Emax() const { return fEmax; }
+GEANT_CUDA_BOTH_CODE
   int NEbins() const { return fNEbins; }
+GEANT_CUDA_BOTH_CODE
   double EilDelta() const { return fEilDelta; }
   float XS(int pindex, int rindex, float en) const;
   float DEdx(int pindex, float en) const;
@@ -76,6 +88,7 @@ public:
   }
 
   void DumpPointers() const;
+#ifndef GEANT_NVCC
   void Draw(const char *option);
   void Viewer(); // *MENU*
   void UpdateReactions();
@@ -83,54 +96,78 @@ public:
   void DeselectAll();
   void PreDraw();
   void ResetFrame();
+#endif
 
+GEANT_CUDA_BOTH_CODE
   int SizeOf() const;
+GEANT_CUDA_BOTH_CODE
   void Compact();
+GEANT_CUDA_BOTH_CODE
   void RebuildClass();
+GEANT_CUDA_BOTH_CODE
   static int SizeOfStore();
+GEANT_CUDA_BOTH_CODE
   static size_t MakeCompactBuffer(char* &b);
+GEANT_CUDA_BOTH_CODE
   static void RebuildStore(char *b);
 #ifdef MAGIC_DEBUG
+GEANT_CUDA_BOTH_CODE
   int GetMagic() const {return fMagic;}
 #endif
+#ifdef GEANT_NVCC
+GEANT_CUDA_BOTH_CODE
+char *strncpy(char *dest, const char *src, size_t n);
+#endif
 
+GEANT_CUDA_BOTH_CODE
 bool CheckAlign() {
   bool isaligned=true;
-  if(((unsigned long) fEGrid) % sizeof(fEGrid[0]) != 0) {std::cout << "TEXsec::fEGrid misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fAtcm3) % sizeof(fAtcm3) != 0) {std::cout << "TEXsec::fAtcm3 misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fEmin) % sizeof(fEmin) != 0) {std::cout << "TEXsec::fEmin misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fEmax) % sizeof(fEmax) != 0) {std::cout << "TEXsec::fEmax misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fEilDelta) % sizeof(fEilDelta) != 0) {std::cout << "TEXsec::fEilDelta misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) fCuts) % sizeof(fCuts[0]) != 0) {std::cout << "TEXsec::fCuts misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fEle) % sizeof(fEle) != 0) {std::cout << "TEXsec::fEle misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fIndex) % sizeof(fIndex) != 0) {std::cout << "TEXsec::fIndex misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fNEbins) % sizeof(fNEbins) != 0) {std::cout << "TEXsec::fNEbins misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fNRpart) % sizeof(fNRpart) != 0) {std::cout << "TEXsec::fNRpart misaligned" << std::endl;isaligned=false;}
+  if(((unsigned long) fEGrid) % sizeof(fEGrid[0]) != 0) {printf("TEXsec::fEGrid misaligned\n");isaligned=false;}
+  if(((unsigned long) &fAtcm3) % sizeof(fAtcm3) != 0) {printf("TEXsec::fAtcm3 misaligned\n");isaligned=false;}
+  if(((unsigned long) &fEmin) % sizeof(fEmin) != 0) {printf("TEXsec::fEmin misaligned\n");isaligned=false;}
+  if(((unsigned long) &fEmax) % sizeof(fEmax) != 0) {printf("TEXsec::fEmax misaligned\n");isaligned=false;}
+  if(((unsigned long) &fEilDelta) % sizeof(fEilDelta) != 0) {printf("TEXsec::fEilDelta misaligned\n");isaligned=false;}
+  if(((unsigned long) fCuts) % sizeof(fCuts[0]) != 0) {printf("TEXsec::fCuts misaligned\n");isaligned=false;}
+  if(((unsigned long) &fEle) % sizeof(fEle) != 0) {printf("TEXsec::fEle misaligned\n");isaligned=false;}
+  if(((unsigned long) &fIndex) % sizeof(fIndex) != 0) {printf("TEXsec::fIndex misaligned\n");isaligned=false;}
+  if(((unsigned long) &fNEbins) % sizeof(fNEbins) != 0) {printf("TEXsec::fNEbins misaligned\n");isaligned=false;}
+  if(((unsigned long) &fNRpart) % sizeof(fNRpart) != 0) {printf("TEXsec::fNRpart misaligned\n");isaligned=false;}
   for(auto i=0; i< fNRpart; ++i)
-    if(((unsigned long) fPXsecP[i]) % sizeof(double) != 0) {std::cout << "TEXsec::fPXsecP[" << i << "] misaligned" << std::endl;isaligned=false;}
+    if(((unsigned long) fPXsecP[i]) % sizeof(double) != 0) {printf("TEXsec::fPXsecP[%d] misaligned\n",i);isaligned=false;}
 #ifdef MAGIC_DEBUG
-  if(((unsigned long) &fMagic) % sizeof(fMagic) != 0) {std::cout << "TEXsec::fMagic misaligned" << std::endl;isaligned=false;}
+  if(((unsigned long) &fMagic) % sizeof(fMagic) != 0) {printf("TEXsec::fMagic misaligned\n");isaligned=false;}
 #endif
-  if(((unsigned long) &fStore) % sizeof(double) != 0) {std::cout << "TEXsec::fStore misaligned" << std::endl;isaligned=false;}
+  if(((unsigned long) &fStore) % sizeof(double) != 0) {printf("TEXsec::fStore misaligned\n");isaligned=false;}
   return isaligned;
 }
 
   bool Resample();
 
   bool Prune();
-
+#ifndef GEANT_CUDA_DEVICE_BUILD
   static int NLdElems() { return fNLdElems; }
   static TEXsec *Element(int i) {
     if (i < 0 || i >= fNLdElems)
       return 0;
     return fElements[i];
   }
+ #else
 
+ GEANT_CUDA_DEVICE_CODE int NLdElems() { return fNLdElemsDev; }
+ GEANT_CUDA_DEVICE_CODE TEXsec *Element(int i) {
+    if (i < 0 || i >= fNLdElemsDev)
+      return 0;
+    return fElementsDev[i];
+  }
+#endif
   const char *GetName() const { return fName; }
   const char *GetTitle() const { return fTitle; }
-
+#ifndef GEANT_DEVICE_BUILD
   static TEXsec *GetElement(int z, int a = 0, TFile *f = 0);
   static TEXsec **GetElements() { return fElements; }
+#else
+  GEANT_CUDA_DEVICE_CODE TEXsec **GetElements() { return fElementsDev; }
+#endif
 
 private:
   TEXsec &operator=(const TEXsec &); // Not implemented
@@ -150,9 +187,10 @@ private:
   int fNRpart;          // Number of particles with reaction
   TPXsec *fPXsec;       // [fNRpart] Cross section table per particle
   TPXsec **fPXsecP;     // [fNRpart] Cross section table per particle
-
+#ifndef GEANT_DEVICE_BUILD
   static int fNLdElems;            //! number of loaded elements
   static TEXsec *fElements[NELEM]; //! databases of elements
+#endif
 #ifdef MAGIC_DEBUG
   const int fMagic = -777777;
 #endif
@@ -163,7 +201,9 @@ private:
   static TGListBox *fReactionBox;      //! Reaction list
   static TGListBox *fParticleBox;      //! Particle list
 
+#ifndef GEANT_NVCC
   ClassDefNV(TEXsec, 7) // Element X-secs
+#endif
 #endif
 
 private:
