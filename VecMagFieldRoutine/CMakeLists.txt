@@ -18,6 +18,8 @@ find_package(ROOT)
 include_directories(${VECGEOM_INCLUDE_DIR} ${ROOT_INCLUDE_DIR})
 link_directories(${ROOT_LIBRARY_DIR})
 
+include_directories(${CMAKE_SOURCE_DIR}/magneticfield/inc)
+
 #Copies cms2015.txt to build/VecMagFieldRoutine at runtime 
 configure_file(${CMAKE_SOURCE_DIR}/VecMagFieldRoutine/cmsmagfield2015.txt cmsmagfield2015.txt COPYONLY)
 message(STATUS "CMake source directory is: " ${CMAKE_SOURCE_DIR})
@@ -58,3 +60,7 @@ target_link_libraries(TestAOS3D  ${ALL_LIBRARIES}) # ${VECGEOM_LIBRARIES} ${VECG
 
 #add_executable(VecBoundariesGraph ${CMAKE_CURRENT_SOURCE_DIR}/test/visualizations/GraphsForBoundaries.cpp ${sources})
 #target_link_libraries(VecBoundariesGraph ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB})
+
+
+add_executable(smallTest ${CMAKE_CURRENT_SOURCE_DIR}/test/smallTest.cpp ${sources})
+target_link_libraries(smallTest ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB})
