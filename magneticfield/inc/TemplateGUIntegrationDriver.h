@@ -22,7 +22,7 @@
 
 #include "base/Vector.h"
 
-// #define NEWACCURATEADVANCE
+#define NEWACCURATEADVANCE
 
 template <class Backend>
 class TemplateGUIntegrationDriver : public AlignedBase
@@ -30,7 +30,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
    public:  // with description
 
      typedef                   typename Backend::precision_v  Double_v;
-     typedef                   typename Backend::bool_v      Bool_v;
+     typedef                   typename Backend::bool_v       Bool_v;
      typedef vecgeom::Vector3D<typename Backend::precision_v> ThreeVectorSimd; 
 
      TemplateGUIntegrationDriver( double hminimum,  //same 
@@ -297,6 +297,11 @@ class TemplateGUIntegrationDriver : public AlignedBase
 
 // #include "GUIntegratorDriver.icc"
 
+template<class Backend>
+constexpr double TemplateGUIntegrationDriver<Backend>::fMaxSteppingIncrease;
+
+template<class Backend>
+constexpr double TemplateGUIntegrationDriver<Backend>::fMaxSteppingDecrease;
 
 
 template <class Backend>
@@ -679,7 +684,7 @@ TemplateGUIntegrationDriver<Backend>
     const Double_v edx= y[0] - StartPosAr[0];
     const Double_v edy= y[1] - StartPosAr[1];
     const Double_v edz= y[2] - StartPosAr[2];
-    Double_v endPointDist2= vecgeom::VECGEOM_IMPL_NAMESPACE::Sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); 
+    Double_v endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); 
 #ifdef COLLECT_STATISTICS
     if ( endPointDist2 >= hdid*hdid*(1.+2.*perMillion) )
     {
@@ -711,7 +716,7 @@ TemplateGUIntegrationDriver<Backend>
     vecgeom::MaskedAssign(avoidNumerousSmallSteps, true, &lastStep);
 
     //For rest, check the proposed next stepsize 
-    h = vecgeom::VECGEOM_IMPL_NAMESPACE::Max(hnext, fMinimumStep);
+    h = vecgeom::Max(hnext, fMinimumStep);
 
     // Ensure that the next step does not overshoot
     vecgeom::MaskedAssign( x+h > x2, x2 - x, &h);
@@ -920,63 +925,70 @@ TemplateGUIntegrationDriver<Backend>
 
   for (iter=0; iter<max_trials ;iter++)
   {
-    tot_no_trials++;
-    fpStepper-> StepWithErrorEstimate(y,dydx,h,ytemp,yerr);
-
-    Double_v eps_pos = eps_rel_max * vecgeom::VECGEOM_IMPL_NAMESPACE::Max(h, fMinimumStep);  // Uses remaining step 'h'
-    Double_v inv_eps_pos_sq = 1.0 / (eps_pos*eps_pos);
-
-    // Evaluate accuracy
-    errpos_sq =  yerr[0]*yerr[0] + yerr[1]*yerr[1] + yerr[2]*yerr[2] ; 
-    errpos_sq *= inv_eps_pos_sq; // Scale relative to required tolerance
-
-    // Accuracy for momentum
-    Double_v magmom_sq=  y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
-    Double_v sumerr_sq=  yerr[3]*yerr[3] + yerr[4]*yerr[4] + yerr[5]*yerr[5]; 
-
-    vecgeom::CondAssign(magmom_sq > 0.0, sumerr_sq/magmom_sq, sumerr_sq, &errmom_sq);
-
-    errmom_sq *= inv_eps_vel_sq;
-    errmax_sq = vecgeom::Max( errpos_sq, errmom_sq ); // Square of maximum error
-
-    //Ananya : how to break in MaskedAssign? Also, now will need to break for only one track out of 4.
-    //maybe make a done? and then use that Done for every other MaskedAssign etc.. .. or wherever final
-    //value assignment is being done
-
-    // Ananya : Need to change things here too.... As of now commenting the line below, but 
-    // it is not appropriate
-    // if ( errmax_sq <= 1.0 )  { break; } // Step succeeded. 
-
-    // Step failed; compute the size of retrial Step.
-    // Ananya : adding a statement. Later check the sanity or work around
-    Double_v exponentPower = 0.5*fPowerShrink;
-    htemp = fSafetyFactor *h* vecgeom::VECGEOM_IMPL_NAMESPACE::Pow( errmax_sq, 0.5*fPowerShrink );
-
-    //Can also use a max here
-    h = vecgeom::Max(htemp, 0.1*h);
-    // vecgeom::CondAssign(htemp >= 0.1*h, htemp, 0.1*h, &h);
-/*    if (htemp >= 0.1*h)  { h = htemp; }  // Truncation error too large,
-    else  { h = 0.1*h; }                 // reduce stepsize, but no more
-                                         // than a factor of 10*/
-    
-    xnew = x + h;
-
-    //Ananya: Seems like using even Done won't resolve it. Can use IsFull to break 
-    //if all particles happen to be stuck or something 
-    //Confirm though
-    if(vecgeom::IsFull(xnew==x)) {
-      std::cerr << "GVIntegratorDriver::OneGoodStep:" << std::endl
-       << "  Stepsize underflow in Stepper " << std::endl ;
-      std::cerr << "  Step's start x=" << x << " and end x= " << xnew 
-             << " are equal !! " << std::endl
-             <<"  Due to step-size= " << h 
-             << " . Note that input step was " << htry << std::endl;
-      break;
-    }
-/*    if(xnew == x)
+    if (true)
     {
-      break;
-    }*/
+      tot_no_trials++;
+      fpStepper-> StepWithErrorEstimate(y,dydx,h,ytemp,yerr);
+
+      Double_v eps_pos = eps_rel_max * vecgeom::Max(h, fMinimumStep);  // Uses remaining step 'h'
+      Double_v inv_eps_pos_sq = 1.0 / (eps_pos*eps_pos);
+
+      // Evaluate accuracy
+      errpos_sq =  yerr[0]*yerr[0] + yerr[1]*yerr[1] + yerr[2]*yerr[2] ; 
+      errpos_sq *= inv_eps_pos_sq; // Scale relative to required tolerance
+
+      // Accuracy for momentum
+      Double_v magmom_sq=  y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
+      Double_v sumerr_sq=  yerr[3]*yerr[3] + yerr[4]*yerr[4] + yerr[5]*yerr[5]; 
+
+      vecgeom::CondAssign(magmom_sq > 0.0, sumerr_sq/magmom_sq, sumerr_sq, &errmom_sq);
+
+      errmom_sq *= inv_eps_vel_sq;
+      errmax_sq = vecgeom::Max( errpos_sq, errmom_sq ); // Square of maximum error
+
+      // Ananya : how to break in MaskedAssign? 
+      // Also, now will need to break for only one track out of 4.
+      // maybe make a done? and then use that Done for every other MaskedAssign etc.. .. 
+      // or wherever final value assignment is being done
+
+      // Ananya : Need to change things here too.... As of now commenting the line below, but 
+      // it is not appropriate
+      // if ( errmax_sq <= 1.0 )  { break; } // Step succeeded. 
+
+      // Step failed; compute the size of retrial Step.
+      // Ananya : adding a statement. Later check the sanity or work around
+      Double_v errPower = Vc::exp( (0.5*fPowerShrink)*vecgeom::Log(errmax_sq) );
+      htemp = fSafetyFactor *h* errPower;
+
+      // htemp = fSafetyFactor *h* vecgeom::Pow( errmax_sq, 0.5*fPowerShrink );
+
+      //Can also use a max here
+      h = vecgeom::Max(htemp, 0.1*h);
+      // vecgeom::CondAssign(htemp >= 0.1*h, htemp, 0.1*h, &h);
+  /*    if (htemp >= 0.1*h)  { h = htemp; }  // Truncation error too large,
+      else  { h = 0.1*h; }                 // reduce stepsize, but no more
+                                           // than a factor of 10*/
+      
+      xnew = x + h;
+
+      //Ananya: Seems like using even Done won't resolve it. Can use IsFull to break 
+      //if all particles happen to be stuck or something 
+      //Confirm though
+      if(vecgeom::IsFull(xnew==x)) {
+        std::cerr << "GVIntegratorDriver::OneGoodStep:" << std::endl
+         << "  Stepsize underflow in Stepper " << std::endl ;
+        std::cerr << "  Step's start x=" << x << " and end x= " << xnew 
+               << " are equal !! " << std::endl
+               <<"  Due to step-size= " << h 
+               << " . Note that input step was " << htry << std::endl;
+        break;
+      }
+  /*    if(xnew == x)
+      {
+        break;
+      }*/     
+    }
+
   }
   std::cout << "GUIntDrv: 1-good-step - Loop done at iter = " << iter << std::endl;
 
@@ -988,7 +1000,9 @@ TemplateGUIntegrationDriver<Backend>
 #endif
 
   // Compute size of next Step
-  hnext = GetSafety()*vecgeom::VECGEOM_IMPL_NAMESPACE::Pow(errmax_sq, 0.5*GetPowerGrow());
+  Double_v errPower = Vc::exp( (0.5*GetPowerGrow())* vecgeom::Log(errmax_sq));
+  hnext = GetSafety()*errPower;
+  // hnext = GetSafety()*vecgeom::Pow(errmax_sq, 0.5*GetPowerGrow());
   vecgeom::MaskedAssign(errmax_sq <= fErrcon*fErrcon, fMaxSteppingIncrease*h, &hnext); // No more than a factor of 5 increase
 
   x += (hdid = h);
@@ -1063,7 +1077,7 @@ TemplateGUIntegrationDriver<Backend>
 
 #ifdef RETURN_A_NEW_STEP_LENGTH
   // The following step cannot be done here because "eps" is not known.
-  dyerr_len = vecgeom::VECGEOM_IMPL_NAMESPACE::Sqrt( dyerr_len_sq ); 
+  dyerr_len = vecgeom::Sqrt( dyerr_len_sq ); 
   dyerr_len_sq /= epsilon ;
 
   // Set suggested new step
@@ -1098,7 +1112,7 @@ TemplateGUIntegrationDriver<Backend>
 // --------------------------------------------------------------------------
 
 //  This method computes new step sizes - but does not limit changes to
-//   within  certain factors
+//  within  certain factors
 // 
 template <class Backend>
 typename Backend::precision_v 
@@ -1109,9 +1123,9 @@ TemplateGUIntegrationDriver<Backend>
   typename Backend::precision_v hnew;
 
   // Compute size of next Step for a failed step
-  hnew = GetSafety()*hstepCurrent*vecgeom::VECGEOM_IMPL_NAMESPACE::Pow(errMaxNorm,GetPowerShrink()) ;
+  hnew = GetSafety()*hstepCurrent*vecgeom::Pow(errMaxNorm,GetPowerShrink()) ;
   
-  vecgeom::MaskedAssign(errMaxNorm <= 1.0 /*&& errMaxNorm >0.0*/, GetSafety()*hstepCurrent*vecgeom::VECGEOM_IMPL_NAMESPACE::Pow(errMaxNorm,GetPowerGrow()), &hnew );
+  vecgeom::MaskedAssign(errMaxNorm <= 1.0 /*&& errMaxNorm >0.0*/, GetSafety()*hstepCurrent*vecgeom::Pow(errMaxNorm,GetPowerGrow()), &hnew );
 
   vecgeom::MaskedAssign(errMaxNorm <= 0.0, fMaxSteppingIncrease * hstepCurrent, &hnew);
 
@@ -1149,11 +1163,11 @@ TemplateGUIntegrationDriver<Backend>
 
   hnew  = fMaxSteppingIncrease * hstepCurrent;
 
-  htemp = GetSafety()*hstepCurrent*vecgeom::VECGEOM_IMPL_NAMESPACE::Pow(errMaxNorm,GetPowerShrink()) ; 
+  htemp = GetSafety()*hstepCurrent*vecgeom::Pow(errMaxNorm,GetPowerShrink()) ; 
   //Size of next step for failed step
   vecgeom::MaskedAssign(errMaxNorm>1.0 && htemp > hnew, htemp, &hnew);
 
-  htemp= GetSafety()*hstepCurrent*vecgeom::VECGEOM_IMPL_NAMESPACE::Pow(errMaxNorm,GetPowerGrow());
+  htemp= GetSafety()*hstepCurrent*vecgeom::Pow(errMaxNorm,GetPowerGrow());
   //Size of next step for successful step
   vecgeom::MaskedAssign(errMaxNorm<=1.0 && errMaxNorm > fErrcon, htemp, &hnew);
 
@@ -1643,8 +1657,8 @@ TemplateGUIntegrationDriver<Backend>
 
   Double_v  y     [ncompSVEC], 
             dydx  [ncompSVEC];
-  Double_v  ystart[ncompSVEC], 
-            yEnd  [ncompSVEC]; 
+/*  Double_v  ystart[ncompSVEC], 
+            yEnd  [ncompSVEC]; */
   Double_v  x1, x2;
   // bool succeeded[]; // passed into the function as a parameter 
   std::fill_n(succeeded, nTracks, 1); //Bool_v succeeded(true);
@@ -1763,7 +1777,7 @@ TemplateGUIntegrationDriver<Backend>
     const Double_v edx= y[0] - StartPosAr[0];
     const Double_v edy= y[1] - StartPosAr[1];
     const Double_v edz= y[2] - StartPosAr[2];
-    Double_v endPointDist2= vecgeom::VECGEOM_IMPL_NAMESPACE::Sqrt(edx*edx+edy*edy+edz*edz) ; 
+    Double_v endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; 
 
     // Ananya: discuss. What exactly is happening here?
     // h<=0 case: first condition false, second condition always true assuming smallest fraction and 
@@ -1772,18 +1786,20 @@ TemplateGUIntegrationDriver<Backend>
     // If below bool is always true for h<=0 --> lastStep is true, hence the lane will be sent to 
     // StoreOutput.
     Bool_v avoidNumerousSmallSteps = (h < epsilon * hStepLane) || (h < fSmallestFraction * startCurveLength);
-    vecgeom::MaskedAssign(avoidNumerousSmallSteps, true, &lastStep);
+    // vecgeom::MaskedAssign(avoidNumerousSmallSteps, true, &lastStep);
+    lastStep = avoidNumerousSmallSteps || lastStep;
 
     // For rest, check the proposed next stepsize 
-    h = vecgeom::VECGEOM_IMPL_NAMESPACE::Max(hnext, fMinimumStep);
+    h = vecgeom::Max(hnext, fMinimumStep);
 
     // Ensure that the next step does not overshoot
     vecgeom::MaskedAssign( x+h > x2, x2 - x, &h);
     // When stepsize overshoots, decrease it!
     // Must cope with difficult rounding-error issues if hstep << x2
-    Bool_v True(true);
+    // Bool_v True(true);
 
-    vecgeom::MaskedAssign(h==0, True, &lastStep);
+    lastStep = (h==0) || lastStep ;
+    // vecgeom::MaskedAssign(h==0, true, &lastStep);
 
     nstp++;
 
@@ -1796,8 +1812,9 @@ TemplateGUIntegrationDriver<Backend>
     bool condXLessThanx2   = vecgeom::IsFull(CondXLessThanx2  ); 
     bool condIsNotLastStep = vecgeom::IsFull(CondIsNotLastStep);
 
-    // vecgeom::Vector<int> indicesOfNewTracks;
-    int indicesOfNewTracks[kVectorSize];
+    // vecgeom::Vector<int> finishedLane;
+    // int finishedLane[kVectorSize];
+    Bool_v finishedLane;
 
     // succeeded = (x>=x2);  // If it was a "forced" last step
     succeededLane = (x>=x2); 
@@ -1806,70 +1823,12 @@ TemplateGUIntegrationDriver<Backend>
     // Condition inside if can be stored in a variable and used for while condition. 
     // Saves some evaluations
     {
-
-#define LOOP1
-#ifdef LOOP1
-      if (!condNoOfSteps)
-      {
-        for (int i = 0; i < kVectorSize; ++i)
-        {
-          if (CondNoOfSteps[i]==1)
-          {
-            // indicesOfNewTracks.push_back(i);
-            indicesOfNewTracks[i] = 1;
-          }
-        }
-      }
-      else if (!condXLessThanx2)
-      {
-        for (int i = 0; i < kVectorSize; ++i)
-        {
-          if (CondXLessThanx2[i]==1)
-          {
-            indicesOfNewTracks[i] = 1;
-          }
-        }
-      }
-      else  // (!condIsNotLastStep)
-      {
-        if(CondIsNotLastStep[i] == 1)
-        {
-          indicesOfNewTracks[i] = 1;
-        }
-      }
-
-
-
-#else
-      // in place of the above big if else loop
-      // use smaller loop, with more check conditions 
-      // as illustrated below
+      finishedLane =  
+              ( !CondNoOfSteps || !CondXLessThanx2 || !CondIsNotLastStep );
 
       for (int i = 0; i < kVectorSize; ++i)
       {
-        if (CondNoOfSteps[i]==0 || CondXLessThanx2[i] ==0 || CondIsNotLastStep[i] ==0)
-        {
-          // indicesOfNewTracks not needed if we put storeoutput inside this loop
-          // else put StoreOutput in a different loop like in LOOP1 above
-          indicesOfNewTracks[i] =1;
-          // Can also use vector.push_back because no checking needed
-/*          StoreOutput();
-          if(trackNextInput < nTracks)
-          {
-            InsertNewTrack();
-            // set some more indices to true or false 
-          }
-          else
-          {
-
-          }*/
-        }
-      }
-#endif
-
-      for (int i = 0; i < kVectorSize; ++i)
-      {
-        if (indicesOfNewTracks[i] ==1 &&  fIndex[i] != -1)
+        if (finishedLane[i] ==1 &&  fIndex[i] != -1)
         {
           // StoreOutput();
 
@@ -1928,7 +1887,7 @@ TemplateGUIntegrationDriver<Backend>
   // succeeded=  (x>=x2);  // If it was a "forced" last step
 
   // Steps below need to be incorporated in StoreOutput
-  for (i=0;i<nvar;i++)  { yEnd[i] = y[i]; }// Why is copy being made? Ask : Ananya
+  // for (i=0;i<nvar;i++)  { yEnd[i] = y[i]; }// Why is copy being made? Ask : Ananya
   // yOutput.LoadFromArray( yEnd, fNoVars );
   // yOutput.SetCurveLength( x );
 
