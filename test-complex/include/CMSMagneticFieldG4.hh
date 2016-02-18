@@ -77,10 +77,13 @@ inline void CMSMagneticFieldG4::CartesianToCylindrical(const Vector3D &cart, dou
     cyl[1] = cart[2]; //z = z 
 }
 
-inline void CMSMagneticFieldG4::CylindricalToCartesian(const Vector3D &rzField,
-                                                     const double    sinTheta,
-                                                     const double    cosTheta,
-                                                           Vector3D &xyzField) const
+
+inline
+void
+CMSMagneticFieldG4::CylindricalToCartesian(const Vector3D &rzField,
+                                           const double    sinTheta,
+                                           const double    cosTheta,
+                                                 Vector3D &xyzField) const
 {
     //B_cyl[] has r, phi and z
     xyzField[0] = rzField[0]*cosTheta - rzField[1]*sinTheta; // Bx= Br cos(theta) - Bphi sin(theta)
@@ -90,13 +93,13 @@ inline void CMSMagneticFieldG4::CylindricalToCartesian(const Vector3D &rzField,
 
 inline void
 CMSMagneticFieldG4::GetFieldValue( const G4double  Point[4],
-                                       G4double *Bfield ) const
+                                         G4double *Bfield ) const
 {
    G4ThreeVector Position3v( Point[0], Point[1], Point[2] );
    G4ThreeVector Bfield3v( 0.0, 0.0, 0.0 );
    GetFieldValueXYZ( Position3v, Bfield3v );
-   Bfield[0]= Bfield3v.x();
-   Bfield[1]= Bfield3v.y();
-   Bfield[2]= Bfield3v.z();   
+   Bfield[0]= Bfield3v.x() * CLHEP::tesla;
+   Bfield[1]= Bfield3v.y() * CLHEP::tesla;
+   Bfield[2]= Bfield3v.z() * CLHEP::tesla;
 }
 #endif
