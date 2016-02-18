@@ -1456,6 +1456,7 @@ TemplateGUIntegrationDriver<Backend>
   fNTracks = nTracks;
 }
 
+// #define DEBUG
 
 template <class Backend>
 void 
@@ -1466,7 +1467,9 @@ TemplateGUIntegrationDriver<Backend>
                                     typename Backend::precision_v &hStepLane,
                                     typename Backend::precision_v &startCurveLength)
 {
+#ifdef DEBUG
   std::cout<<"----Initializing AccurateAdvance----"<<std::endl;
+#endif
   // 4 DumpToArray -> 4 yStartScalar
   // gives double yStartScalar[6/12]
   // Double_v ystart 
@@ -1504,7 +1507,9 @@ TemplateGUIntegrationDriver<Backend>
                           typename Backend::precision_v &hStepLane,
                           typename Backend::precision_v &startCurveLength )
 {
+#ifdef DEBUG
   std::cout<<"----Inserting New Track "<< trackNextInput << " at position "<< currIndex <<std::endl;
+#endif 
   // Try to absorb isDoneLane as well
   // if h<=0, set it to true but then insert new track again
   // else set it to false
@@ -1589,7 +1594,9 @@ TemplateGUIntegrationDriver<Backend>
                       double                        hstep[],
                       bool                          succeeded[] )
 {
+#ifdef DEBUG
   cout<<"----Storing Output at position: "<< currIndex << std::endl;
+#endif 
   // Should be easier to implement compared to InsertNewTrack
 
   // Take care of h<=0 case
@@ -1667,15 +1674,19 @@ TemplateGUIntegrationDriver<Backend>
   static int nStpPr=50;   // For debug printing of long integrations
   Double_v ySubStepStart[ncompSVEC];
 
-  std::cout << " AccurateAdvance called with hstep= " << hstep << std::endl;
+  std::cout << " AccurateAdvance called with hstep= " ;
+  for (int i = 0; i < nTracks; ++i)
+  {
+    std::cout<<hstep[i]<<" ";
+  }
+  std::cout<<std::endl;
 #endif
 
-  Double_v  y     [ncompSVEC], 
-            dydx  [ncompSVEC];
+  Double_v  y   [ncompSVEC], 
+            dydx[ncompSVEC];
 /*  Double_v  ystart[ncompSVEC], 
             yEnd  [ncompSVEC]; */
   Double_v  x1, x2;
-  // bool succeeded[]; // passed into the function as a parameter 
   std::fill_n(succeeded, nTracks, 1); //Bool_v succeeded(true);
 
   Bool_v lastStepSucceeded;
@@ -1774,6 +1785,9 @@ TemplateGUIntegrationDriver<Backend>
            !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) ) || 
            trackNextInput < nTracks  )
   {
+#ifdef DEBUG
+    std::cout<<"----hStepLane is: "<<hStepLane<<std::endl;
+#endif 
     StartPosAr[0]= y[0]; StartPosAr[1]= y[1];  StartPosAr[2]= y[2]; 
     
     fpStepper->RightHandSideVIS( y, charge, dydx );   // TODO: change to inline
@@ -1811,13 +1825,10 @@ TemplateGUIntegrationDriver<Backend>
     vecgeom::MaskedAssign( x+h > x2, x2 - x, &h);
     // When stepsize overshoots, decrease it!
     // Must cope with difficult rounding-error issues if hstep << x2
-    // Bool_v True(true);
 
     lastStep = (h==0) || lastStep ;
-    // vecgeom::MaskedAssign(h==0, true, &lastStep);
 
     nstp++;
-
 
     Bool_v CondNoOfSteps     = nstp<=fMaxNoSteps;
     Bool_v CondXLessThanx2   = x < x2;
@@ -1845,8 +1856,6 @@ TemplateGUIntegrationDriver<Backend>
       {
         if (finishedLane[i] ==1 &&  fIndex[i] != -1)
         {
-          // StoreOutput();
-
           // can be replaced with succeeded[fIndex[i]] = x[i] >= x2[i], one Vc vector reduced thus
           succeeded[fIndex[i]] = succeededLane[i]; //Final succeeded bool // might be absorbed in StoreOutput
           
@@ -1855,7 +1864,6 @@ TemplateGUIntegrationDriver<Backend>
           // If succeeded is completely absorbed in StoreOutput, then succeededLane also needs
           // to be passed, which we do not want to do. 
           StoreOutput( y, x, yOutput, i, hstep, succeeded );
-
 
           // Store also the value of succeeded to be returned 
           // Assuming we are returning a bool[nTracks]
@@ -1868,22 +1876,19 @@ TemplateGUIntegrationDriver<Backend>
           // Will look cleaner. 
           if (trackNextInput<nTracks)
           {
-            
             // Might not be needed. `probably taken care of by InsertNewTrack. Check: Ananya
             isDoneLane[i] = false; // the lane needs to go back in the while loop 
                                    // with a new track
 
             // InsertNewTrack needs to be positioned after isDoneLane because
             // it might set isDoneLane to true in case only tracks with h<=0 are left
-            isDoneLane[i] = InsertNewTrack( yInput, hstep, i, trackNextInput, succeeded, y, hStepLane, startCurveLength ); 
+            isDoneLane[i] = InsertNewTrack( yInput, hstep, i, trackNextInput, 
+                                            succeeded, y, hStepLane, startCurveLength ); 
 
             nstp     [i] = 1;     // logically part of InsertNewTrack, not done so to reduce
             lastStep [i] = false; // number of parameters to be passed to the function
-            x[i] = x1[i]; // ?? Needed? Find something to set x<x2 
-            // succeeded[i] = true; // not needed because bool[nTracks] initialized with true
-            // fIndex   [i] = trackNextInput; // absorb in InsertNewTrack // absorbed
-            trackNextInput++; // absorb in insertnewtrack otherwise might create an issue 
-                              // if several tracks inserted because of recursive calls (h<=0)
+            x        [i] = x1[i]; // ?? Needed? Find something to set x<x2 
+            h        [i] = hStepLane[i];
           }
           else
           {
@@ -1954,13 +1959,6 @@ TemplateGUIntegrationDriver<Backend>
 
   int finished[kVectorSize] = {0,0,0,0};
 
-  Double_v hnextForLoop = hnext;
-  Double_v xForLoop     = x;
-  // Double_v yForLoop     = y;
-  Double_v hdidForLoop  = hdid;
-  Double_v hForLoop     = h;
-  Double_v errmax_sqForLoop = errmax_sq;
-
   Double_v hFinal, hnextFinal, xFinal, hdidFinal, errmax_sqFinal;
   Double_v yFinal[TemplateGUFieldTrack<Backend>::ncompSVEC];
   Bool_v errMaxLessThanOne(false), hIsZeroCond(false);
@@ -1971,12 +1969,18 @@ TemplateGUIntegrationDriver<Backend>
     {
       tot_no_trials++;
       fpStepper-> StepWithErrorEstimate(y,dydx,h,ytemp,yerr);
-
+#
+#ifdef DEBUG
+      std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
+#endif 
       Double_v eps_pos = eps_rel_max * vecgeom::Max(h, fMinimumStep);  // Uses remaining step 'h'
       Double_v inv_eps_pos_sq = 1.0 / (eps_pos*eps_pos);
 
       // Evaluate accuracy
       errpos_sq =  yerr[0]*yerr[0] + yerr[1]*yerr[1] + yerr[2]*yerr[2] ; 
+#ifdef DEBUG
+      std::cout<< "----errmom_sq is: "<< errmom_sq << std::endl;
+#endif
       errpos_sq *= inv_eps_pos_sq; // Scale relative to required tolerance
 
       // Accuracy for momentum
@@ -1985,10 +1989,16 @@ TemplateGUIntegrationDriver<Backend>
 
       vecgeom::CondAssign(magmom_sq > 0.0, sumerr_sq/magmom_sq, sumerr_sq, &errmom_sq);
 
+
       errmom_sq *= inv_eps_vel_sq;
       errmax_sq = vecgeom::Max( errpos_sq, errmom_sq ); // Square of maximum error
-
-
+#ifdef DEBUG
+      std::cout<< "----eps_pos is: "<< eps_pos << std::endl;
+      std::cout<< "----inv_eps_pos_sq is: "<< eps_pos << std::endl;
+      std::cout<< "----errmom_sq is: "<< errmom_sq << std::endl;
+      std::cout<< "----errpos_sq is: "<< errpos_sq << std::endl;
+      std::cout<< "----errmax_sq is: "<< errmax_sq << std::endl;
+#endif 
       errMaxLessThanOne = ( errmax_sq <=1.0 );
       if ( !vecgeom::IsEmpty(errMaxLessThanOne) )
       {
@@ -2011,8 +2021,7 @@ TemplateGUIntegrationDriver<Backend>
           }
         }
       }
-      if ( vecgeom::IsFull(errmax_sq <= 1.0) )  { break; } // Step succeeded. 
-
+      if ( vecgeom::IsFull(errMaxLessThanOne) )  { break; } // Step succeeded. 
 
       // Step failed; compute the size of retrial Step.
       // Ananya : adding a statement. Later check the sanity or work around
@@ -2057,8 +2066,9 @@ TemplateGUIntegrationDriver<Backend>
       }   
     }
   }
-
+#ifdef DEBUG
   std::cout << "GUIntDrv: 1-good-step - Loop done at iter = " << iter << std::endl;
+#endif 
 
   h         = hFinal;
   hnext     = hnextFinal;
