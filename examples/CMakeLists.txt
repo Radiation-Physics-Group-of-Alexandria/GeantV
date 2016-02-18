@@ -17,9 +17,11 @@ set(sources
      
 set(headers
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ExN03Application.h 
-   ${CMAKE_CURRENT_SOURCE_DIR}/inc/CMSApplication.h 
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/CMSApplication.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/CMSdetectorConstruction.h   
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/LHCbApplication.h 
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/FastSimApplication.h 
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/CMSApplication.h
 )   
 
 ROOT_GENERATE_DICTIONARY(G__Examples ${headers} MODULE GeantExamples LINKDEF inc/LinkDef.h OPTIONS "-DVC_COMMON_SIMDIZE_H_=1")
