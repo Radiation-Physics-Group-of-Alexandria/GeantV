@@ -16,9 +16,6 @@
 
 using namespace std;
 
-// typedef vecgeom::Vector3D<double> Vector3D;
-typedef G4ThreeVector Vector3D;
-
 CMSMagneticFieldG4::CMSMagneticFieldG4()
    : fInitialised(false)
 {
@@ -53,6 +50,9 @@ void CMSMagneticFieldG4::ReadVectorData(string inputMap)
             fRadius.push_back(d1);
             fPhi.push_back(d0);
             fZ.push_back(d2);
+            d3 *= kAInverse * CLHEP::tesla;
+            d4 *= kAInverse * CLHEP::tesla;
+            d5 *= kAInverse * CLHEP::tesla;            
             fBz.push_back(d3);
             fBr.push_back(d4);
             fBphi.push_back(d5);
@@ -86,7 +86,7 @@ void CMSMagneticFieldG4::ReadVectorData(string inputMap)
 }
 
 
-void CMSMagneticFieldG4::GetFieldValueRZ(const double r, const double Z, Vector3D &rzField) const
+void CMSMagneticFieldG4::GetFieldValueRZ(const double r, const double Z, G4ThreeVector &rzField) const
 {
     //Take care that radius and z for out of limit values take values at end points 
     double radius = min(r, kRMax);
@@ -119,9 +119,9 @@ void CMSMagneticFieldG4::GetFieldValueRZ(const double r, const double Z, Vector3
     double a3 = (radius - radiusLow)*(zHigh - z);
     double a4 = (radius - radiusLow)*(z- zLow);
 
-    double BR   = (fBr[i1]  *a1 + fBr[i2]  *a2 + fBr[i3]  *a3 + fBr[i4]  *a4)*kAInverse;
-    double BZ   = (fBz[i1]  *a1 + fBz[i2]  *a2 + fBz[i3]  *a3 + fBz[i4]  *a4)*kAInverse;
-    double BPhi = (fBphi[i1]*a1 + fBphi[i2]*a2 + fBphi[i3]*a3 + fBphi[i4]*a4)*kAInverse;
+    double BR   = (fBr[i1]  *a1 + fBr[i2]  *a2 + fBr[i3]  *a3 + fBr[i4]  *a4); // *kAInverse;
+    double BZ   = (fBz[i1]  *a1 + fBz[i2]  *a2 + fBz[i3]  *a3 + fBz[i4]  *a4); // *kAInverse;
+    double BPhi = (fBphi[i1]*a1 + fBphi[i2]*a2 + fBphi[i3]*a3 + fBphi[i4]*a4); // *kAInverse;
 
     //To make it thread safe. Because the previous predicted_B* vectors weren't threadsafe
     rzField.set( BR, BPhi, BZ ); 
@@ -129,12 +129,12 @@ void CMSMagneticFieldG4::GetFieldValueRZ(const double r, const double Z, Vector3
 
 //Sidenote: For theta =0; xyzField = rzField. 
 //theta =0 corresponds to y=0
-void CMSMagneticFieldG4::GetFieldValueXYZ(const Vector3D &pos, Vector3D &xyzField) const
+void CMSMagneticFieldG4::GetFieldValueXYZ(const G4ThreeVector &pos, G4ThreeVector &xyzField) const
 {
 
     double cyl[2];
     CartesianToCylindrical(pos, cyl); 
-    Vector3D rzField;
+    G4ThreeVector rzField;
     GetFieldValueRZ(cyl[0], cyl[1], rzField); //cyl[2] =[r,z]
     
     double sinTheta=0.0, cosTheta=1.0; //initialize as theta=0
@@ -149,7 +149,7 @@ void CMSMagneticFieldG4::GetFieldValueXYZ(const Vector3D &pos, Vector3D &xyzFiel
 }
 
 
-void CMSMagneticFieldG4::GetFieldValueTest(const Vector3D &pos, Vector3D &rzField)
+void CMSMagneticFieldG4::GetFieldValueTest(const G4ThreeVector &pos, G4ThreeVector &rzField)
 {
     double cyl[2];
     CartesianToCylindrical(pos, cyl); 
@@ -158,7 +158,7 @@ void CMSMagneticFieldG4::GetFieldValueTest(const Vector3D &pos, Vector3D &rzFiel
 
 void CMSMagneticFieldG4::GetFieldValueRZ(const std::vector<double>   & radius,
                                          const std::vector<double>   & z,
-                                               std::vector<Vector3D> & rzField ) const
+                                               std::vector<G4ThreeVector> & rzField ) const
 {
    for (size_t i = 0; i < radius.size(); ++i)
    {   
@@ -175,8 +175,8 @@ void CMSMagneticFieldG4::GetFieldValues(const vecgeom::SOA3D<double> &posVec,
 for (int i = 0; i < posVec.size(); ++i)
     {
         //fill a vector3D with ith triplet for input to getFieldValue 
-        Vector3D pos(posVec.x(i), posVec.y(i) ,posVec.z(i));
-        Vector3D xyzField;
+        G4ThreeVector pos(posVec.x(i), posVec.y(i) ,posVec.z(i));
+        G4ThreeVector xyzField;
         GetFieldValueXYZ(pos, xyzField); // runs for 1 triplet
         //Fill SOA3D field with single field values 
         fieldVec.x(i) = xyzField.x();
