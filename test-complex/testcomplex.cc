@@ -135,6 +135,11 @@ int main(int argc,char **argv)
   "-----------------------------------------------------------------------------"
   << G4endl << G4endl;
 
+  bool useUI = false;
+  // bool useUI= (g4macrofile == std::string("-");
+
+  // bool useParticleGun= (eventFile == std::string("-");
+  
   G4double tabPhysEnergyLimit     = cutvalue;              // low energy cut in tab. physics [GeV]
   G4double fTrackingCutInEnergy   = cutvalue * CLHEP::GeV; // same used in Geant4
   G4double fProductionCutInEnergy = cutvalue * CLHEP::GeV; // same used in Geant4 as production cut
@@ -142,7 +147,8 @@ int main(int argc,char **argv)
   //
   // Choose the Random engine
   //
-  CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
+  CLHEP::HepRandom::setTheEngine(new CLHEP::MTwistEngine);
+  // CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);  
 
   //
   // Get the geometry from the GDML file
@@ -169,16 +175,20 @@ int main(int argc,char **argv)
   // WITH G4 10.x
   if(std::string("TABPHYS") == physListName) {
     runManager->SetUserInitialization(new SimplePhysicsList);
+    printf("Physics: Using TABPHYS - ie SimplePhysicsList");
     RunAction::isTabPhys = TRUE;
   } else {
     RunAction::isTabPhys = FALSE;
     G4VModularPhysicsList* physicsList = 0;
     if(std::string("QBBC") == physListName) {
       physicsList = new QBBC;
+      printf("Physics: Using      QBBC    Physics List");      
     } else if(std::string("FTFP_BERT") == physListName) {
       physicsList = new FTFP_BERT;
+      printf("Physics: Using FTFP_BERT    Physics List");            
     } else if(std::string("FTFP_BERT_HP") == physListName) {
       physicsList = new FTFP_BERT_HP;
+      printf("Physics: Using FTFP_BERT_HP Physics List");                  
     } else {
       G4cout << G4endl <<
       "**************************************************************************"
@@ -223,6 +233,13 @@ int main(int argc,char **argv)
   //
   runManager->SetUserAction(new SteppingAction);
 
+  G4UImanager* UImanager = G4UImanager::GetUIpointer();
+  G4String command_ls = "ls /gun";
+  UImanager->ApplyCommand(command_ls);
+
+  G4String command_query = "cd /gun ; ?particle";
+  UImanager->ApplyCommand(command_query);
+  
   //
   // Initialize Geant4 run manager
   // 
@@ -257,10 +274,29 @@ int main(int argc,char **argv)
     "      ......You have time for a coffee....!" << 
     G4endl;  
   }
-  G4UImanager* UImanager = G4UImanager::GetUIpointer();
-  G4String command = "/control/execute ";
-  UImanager->ApplyCommand(command+g4macroFile);
+  // G4UImanager* UImanager = G4UImanager::GetUIpointer();
 
+  G4UIExecutive* ui = 0;
+  if ( useUI ) {
+    ui = new G4UIExecutive(argc, argv);
+  }
+
+  // Process macro or start UI session
+  //
+  if ( ! ui ) { 
+    // batch mode
+    G4cout << "Batch mode - no UI exec" << G4endl;
+    G4String command = "/control/execute ";
+    G4cout << "Macro file name= " << g4macroFile << G4endl;
+     
+    UImanager->ApplyCommand(command+g4macroFile);
+  }  
+  else {
+    // interactive mode
+    ui->SessionStart();
+    delete ui;
+  }
+  
   //
   // End of story
   //
