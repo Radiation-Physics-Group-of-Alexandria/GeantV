@@ -56,11 +56,11 @@ class TemplateGUIntegrationDriver : public AlignedBase
      // invovles track insertion etc 
      // succeeded[] of length nTracks
      void AccurateAdvance( /*const*/ FieldTrack yInput[],
-                                 double     hstep[],
-                                 double     epsilon,
-                                 FieldTrack yOutput[],
-                                 int        nTracks,
-                                 bool       succeeded[] );
+                                 double      hstep[],
+                                 double      epsilon,
+                                 FieldTrack  yOutput[],
+                                 int         nTracks,
+                                 bool        succeeded[] );
 
      void  OneStep(       Double_v  ystart[], // Like old RKF45step()
                     const Double_v  dydx[],
@@ -71,27 +71,28 @@ class TemplateGUIntegrationDriver : public AlignedBase
                           Double_v& hnext ) ;
 #endif
      void InitializeAccurateAdvance( /*const*/ FieldTrack yInput[],
-                                     const double     hstep [],
-                                           typename Backend::precision_v y[],
-                                           typename Backend::precision_v &hStepLane,
-                                           typename Backend::precision_v &startCurveLength);
+                                     const double      hstep [],
+                                           Double_v    y[],
+                                           Double_v    &hStepLane,
+                                           Double_v    &startCurveLength);
 
      // Returns isDoneThisLane value i.e. whether the lane is done or not
      // True if the last lane left is an h<=0 lane, false for all else
-     bool InsertNewTrack( /*const*/ FieldTrack                    yInput[],
-                          const double                        hstep[],
-                          const int                           currIndex,
-                                int&                          trackNextInput,
-                                bool                          succeeded[],
-                                typename Backend::precision_v y[],
-                                typename Backend::precision_v &startCurveLength );
+     bool InsertNewTrack( /*const*/ FieldTrack yInput[],
+                          const double     hstep[],
+                          const int        currIndex,
+                                int&       trackNextInput,
+                                bool       succeeded[],
+                                Double_v   y[],
+                                Double_v   &hStepLane,
+                                Double_v   &startCurveLength );
 
-     void StoreOutput( const typename Backend::precision_v y[],
-                       const typename Backend::precision_v x,
-                             FieldTrack                    yOutput[],
-                             int                           currIndex,
-                             double                        hstep[],
-                             bool                          succeeded[]);
+     void StoreOutput( const Double_v   y[],
+                       const Double_v   x,
+                             FieldTrack yOutput[],
+                             int        currIndex,
+                             double     hstep[],
+                             bool       succeeded[]);
 
      void SetNTracks( int nTracks );
 
@@ -1500,6 +1501,7 @@ TemplateGUIntegrationDriver<Backend>
                           int&                          trackNextInput,
                           bool                          succeeded[],
                           typename Backend::precision_v y[],
+                          typename Backend::precision_v &hStepLane,
                           typename Backend::precision_v &startCurveLength )
 {
   std::cout<<"----Inserting New Track "<< trackNextInput << " at position "<< currIndex <<std::endl;
@@ -1559,12 +1561,14 @@ TemplateGUIntegrationDriver<Backend>
       isDoneThisLane = false;
       double yScalar[fNoVars];
       yInput[trackNextInput].DumpToArray(yScalar);
-      startCurveLength[currIndex] = yInput[trackNextInput].GetCurveLength();
       for (int i = 0; i < fNoVars; ++i)
       {
         y[i][currIndex] = yScalar[i];
       }
-      fIndex[currIndex] = trackNextInput;
+      fIndex          [currIndex] = trackNextInput;
+      hStepLane       [currIndex] = hstep[trackNextInput];
+      startCurveLength[currIndex] = yInput[trackNextInput].GetCurveLength();
+
     }
 
     trackNextInput++;
@@ -1715,7 +1719,7 @@ TemplateGUIntegrationDriver<Backend>
 
         if (trackNextInput < nTracks)
         {
-          InsertNewTrack(yInput, hstep, i, trackNextInput, succeeded, y, startCurveLength );
+          InsertNewTrack(yInput, hstep, i, trackNextInput, succeeded, y, hStepLane, startCurveLength );
           // trackNextInput++; // Absorbed in InsertNewTrack
         }
       }
@@ -1871,7 +1875,7 @@ TemplateGUIntegrationDriver<Backend>
 
             // InsertNewTrack needs to be positioned after isDoneLane because
             // it might set isDoneLane to true in case only tracks with h<=0 are left
-            isDoneLane[i] = InsertNewTrack( yInput, hstep, i, trackNextInput, succeeded, y, startCurveLength ); 
+            isDoneLane[i] = InsertNewTrack( yInput, hstep, i, trackNextInput, succeeded, y, hStepLane, startCurveLength ); 
 
             nstp     [i] = 1;     // logically part of InsertNewTrack, not done so to reduce
             lastStep [i] = false; // number of parameters to be passed to the function
@@ -2053,7 +2057,7 @@ TemplateGUIntegrationDriver<Backend>
       }   
     }
   }
-  
+
   std::cout << "GUIntDrv: 1-good-step - Loop done at iter = " << iter << std::endl;
 
   h         = hFinal;
