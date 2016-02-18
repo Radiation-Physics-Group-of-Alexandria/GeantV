@@ -206,7 +206,7 @@ int main(int argc, char *args[])
     const ThreeVectorSimd  startMomentum( yIn[3], yIn[4], yIn[5]);
     TemplateGUFieldTrack<Backend>  yTrackIn(  startPosition, startMomentum );  // yStart
     TemplateGUFieldTrack<Backend>  yTrackOut( startPosition, startMomentum );  // yStart
-    Double total_step = 0.;
+    double total_step = 0.;
 
     typedef typename Backend::bool_v Bool;
     Bool goodAdvance(true);
@@ -216,14 +216,36 @@ int main(int argc, char *args[])
 
     int nTracks = 16;
     FieldTrack yInput[nTracks], yOutput[nTracks];
-    double hstep[nTracks];
+    // double posMom[] ={0., 0., 0., 0., 0., 1.};
+    double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                       x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
+
+    for (int i = 0; i < nTracks; ++i)
+    {
+      yInput [i].LoadFromArray(posMom);
+      yOutput[i].LoadFromArray(posMom);
+    }
+    double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
+
+    total_step += step_len;
+    std::fill_n(hstep, nTracks, total_step);
     testDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
+
+    cout<<" yOutput[0] is: "<< yOutput[0]<<" for yInput: "<<yInput[0]<<  endl;
+    cout<<" yOutput[4] is: "<< yOutput[4]<<" for yInput: "<<yInput[4]<<endl;
 
     cout<<"\n----Given hstep was: "<<endl;
     for (int i = 0; i < nTracks; ++i)
     {
       cout<<hstep[i]<<" ";
+    }
+    cout<<endl;
+
+    cout<<"\n----Output succeeded is: "<<endl;
+    for (int i = 0; i < nTracks; ++i)
+    {
+      cout<<succeeded[i]<<" ";
     }
     cout<<endl;
 
