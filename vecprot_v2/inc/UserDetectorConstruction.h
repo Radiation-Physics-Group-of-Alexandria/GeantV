@@ -25,17 +25,17 @@
 class UserDetectorConstruction
 {
   public:
-    UserDetectorConstruction();
+    // UserDetectorConstruction();  // RootDL
     virtual ~UserDetectorConstruction() {};
     // virtual bool Construct(const char *geomfile);
-    virtual bool CreateFieldAndSolver(bool useRungeKutta= true);
+    // virtual bool CreateFieldAndSolver(bool useRungeKutta= true); // RootDL
 
     /** Register a constanct B-field */ 
-    void UseConstantMagField( float value[3], const char* Unit= 0 ); // Default unit is kilogauss
+    // void UseConstantMagField( float value[3], const char* Unit= 0 ); // Default unit is kilogauss // RootDL
 
     /** Register a B-field, and create integrator for it. */ 
-    template <class Field_t>
-    bool CreateSolverForField(Field_t* field);
+    // template <class Field_t>                   // RootDL
+    // bool CreateSolverForField(Field_t* field); // RootDL
 
     void SetEpsilonRK(double val) { fEpsilonRK = val; }
     void SetMinimumStep( double v) { fMinimumStepInField = v; }
@@ -61,9 +61,14 @@ class UserDetectorConstruction
     static constexpr double   fEpsilonDefault = 3.0e-5; 
     static constexpr double   fMinimumStepInFieldDef= 1.0e-4; // GV units = cm
     // vecgeom::Vector3D<float>  fUniformMagFieldValue;
-};
 
-UserDetectorConstruction::UserDetectorConstruction() : 
+// };   // RootComm
+
+// --> Changed to accomodate Root needs for 
+public: // RootAdded
+   
+// UserDetectorConstruction:: // RootComm
+UserDetectorConstruction() : 
    fEpsilonRK(fEpsilonDefault), 
    fMinimumStepInField(fMinimumStepInFieldDef),
    fUseUniformField(false),
@@ -78,7 +83,9 @@ UserDetectorConstruction::UserDetectorConstruction() :
 // }
 
 template <class Field_t>
-bool UserDetectorConstruction::CreateSolverForField(Field_t* ptrField)
+bool
+// UserDetectorConstruction:: // RootComm
+CreateSolverForField(Field_t* ptrField)
 {
   FieldPropagatorFactory::CreatePropagator<Field_t>( *ptrField,
                                                      fEpsilonRK,
@@ -87,8 +94,9 @@ bool UserDetectorConstruction::CreateSolverForField(Field_t* ptrField)
   return true;
 }
 
-void UserDetectorConstruction::
-UseConstantMagField( float fieldVal[3],  const char* Units ) // vecgeom::Vector3D<float> value )
+void
+// UserDetectorConstruction:: // RootComm
+UseConstantMagField( float fieldVal[3],  const char* Units =0 )
 {
   const char *methodName= "UserDetectorConstruction::UseConstantMagField";
   bool defaultUsed= false;
@@ -125,7 +133,7 @@ UseConstantMagField( float fieldVal[3],  const char* Units ) // vecgeom::Vector3
   *    and must call CreateSolverForField() for concrete field class
   */
 bool
-UserDetectorConstruction::
+// UserDetectorConstruction:: // RootComm
 CreateFieldAndSolver(bool /*useRungeKutta*/ )
 {
   static const char *method="UserDetectorConstruction::CreateFieldAndSolver";
@@ -154,4 +162,6 @@ CreateFieldAndSolver(bool /*useRungeKutta*/ )
   }
   return rtv;
 }
+
+}; // RootAdded   
 #endif
