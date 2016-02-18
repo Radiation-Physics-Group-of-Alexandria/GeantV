@@ -1888,7 +1888,9 @@ TemplateGUIntegrationDriver<Backend>
             nstp     [i] = 1;     // logically part of InsertNewTrack, not done so to reduce
             lastStep [i] = false; // number of parameters to be passed to the function
             x        [i] = x1[i]; // ?? Needed? Find something to set x<x2 
-            h        [i] = hStepLane[i];
+            h        [i] = hStepLane[i];// Can absorb in InsertNewTrack as well, leads to too many variables though
+                                        // Maybe ask John interpretation of this h and then put in InsertNewTrack
+                                        // with appropriate name 
           }
           else
           {
@@ -1942,8 +1944,9 @@ TemplateGUIntegrationDriver<Backend>
 
   Double_v yerr [TemplateGUFieldTrack<Backend>::ncompSVEC], 
            ytemp[TemplateGUFieldTrack<Backend>::ncompSVEC];
-
+#ifdef DEBUG
   std::cout << "OneStep called with htry= " << htry << std::endl;
+#endif 
   
   h = htry ; // Set stepsize to the initial trial value
 
