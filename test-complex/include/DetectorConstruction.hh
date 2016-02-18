@@ -53,7 +53,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
                       G4MagIntegratorStepper* stepper= nullptr );
    // Configure to utilise alternative Stepper
 
-   // void SetDistanceConst( double dist ){ fDistanceConst= dist; }
+   void SetDistanceConst( double dist ){ fDistanceConst= dist; }
 
   private:
 
@@ -70,7 +70,7 @@ class DetectorConstruction : public G4VUserDetectorConstruction
 
     G4MagIntegratorStepper*  fAllocatedStepper;
     double                   fMinStepField;      // For smaller steps, any error is accepted
-    // double                   fDistanceConst;     // Field value will be considered constant inside this radius
+    double                   fDistanceConst;     // Field value will be considered constant inside this radius
 };
 
 #endif
