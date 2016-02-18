@@ -66,7 +66,9 @@ RunAction::RunAction():
   fNumTotalStepsRun(0),    // total number of steps   
   fNumAllStepsRun(0),      // number of ALL steps
   fCMSApp(0)
-{}
+{
+  fRunTime=clock();
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -95,7 +97,11 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
   fNumTotalStepsRun   = 0;   // total number of steps   
   fNumAllStepsRun     = 0;   // number of ALL steps
 
-  fRunTime=clock();
+  clock_t startClock= clock();
+  G4cout << " Run started - " << ((G4double) (startClock - fRunTime)) / CLOCKS_PER_SEC
+         << " [sec] since RunAction was created." << G4endl;
+  
+  fRunTime= clock(); // startClock;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
