@@ -65,7 +65,7 @@ RunAction::RunAction():
   fNumSecsRun(0),          // number of secondaries
   fNumTotalStepsRun(0),    // total number of steps   
   fNumAllStepsRun(0),      // number of ALL steps
-  fSumTime(0),
+  // fSumTime(0),
   fCMSApp(0)
 {
   fRunTime=clock();
