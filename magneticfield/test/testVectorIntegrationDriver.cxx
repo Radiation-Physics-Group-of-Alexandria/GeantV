@@ -19,6 +19,13 @@ using fieldUnits::degree;
 #include <Vc/Vc>
 #include "base/Vector3D.h"
 
+#include "TUniformMagField.h"
+#include "TMagFieldEquation.h"
+#include "GUVIntegrationStepper.h"
+#include "StepperFactory.h"
+#include "GUFieldTrack.h"
+#include "GUIntegrationDriver.h"
+
 #include "TemplateTUniformMagField.h"
 #include "TemplateTMagFieldEquation.h"
 #include "TemplateFieldEquationFactory.h"
@@ -29,8 +36,6 @@ using fieldUnits::degree;
 #include "FieldTrack.h"
 
 using namespace std;
-
-// #define DEBUGAnanya
 
 int main(int argc, char *args[])
 {
@@ -48,7 +53,7 @@ int main(int argc, char *args[])
     /* Parameters of test
      - Modify values  */
     
-    int no_of_steps = 250;         // No. of Steps for the stepper
+    int no_of_steps = 20;         // No. of Steps for the stepper
     int stepper_no =  5;         // Choose stepper no., for refernce see above
     double step_len_mm = 200.;    // meant as millimeter;  //Step length 
     double z_field_in = DBL_MAX;
@@ -154,7 +159,7 @@ int main(int argc, char *args[])
                                          //   Else it must be divided by fieldUnits::c_light;
     // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
-    Double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+    double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                     x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
 /*    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
@@ -200,12 +205,27 @@ int main(int argc, char *args[])
 
 
     //=======================Test part for Integration driver====================
-    auto testDriver = new TemplateGUIntegrationDriver<Backend>(0.2, myStepper);
+    double hminimum = 0.2;
+    auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
 
-    const ThreeVectorSimd  startPosition( yIn[0], yIn[1], yIn[2]);
-    const ThreeVectorSimd  startMomentum( yIn[3], yIn[4], yIn[5]);
-    TemplateGUFieldTrack<Backend>  yTrackIn(  startPosition, startMomentum );  // yStart
-    TemplateGUFieldTrack<Backend>  yTrackOut( startPosition, startMomentum );  // yStart
+    // Preparing scalar Integration Driver
+    using  GvEquationTypeScalar=  TMagFieldEquation<TUniformMagField, Nposmom>;
+    
+    auto gvFieldScalar    = new TUniformMagField( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+    auto gvEquationScalar = new GvEquationTypeScalar(gvFieldScalar);
+
+    GUVIntegrationStepper *myStepperScalar; 
+    myStepperScalar= StepperFactory::CreateStepper<GvEquationTypeScalar>(gvEquationScalar, stepper_no);
+
+    int statisticsVerbosity = 1;
+    auto testScalarDriver= new GUIntegrationDriver( hminimum,
+                                                    myStepperScalar,
+                                                    Nposmom,
+                                                    statisticsVerbosity); 
+    testScalarDriver->InitializeCharge( particleCharge );
+
+
+
     double total_step = 0.;
 
     typedef typename Backend::bool_v Bool;
@@ -220,6 +240,11 @@ int main(int argc, char *args[])
     double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                        x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
+    const ThreeVector_d  startPosition( posMom[0], posMom[1], posMom[2]);
+    const ThreeVector_d  startMomentum( posMom[3], posMom[4], posMom[5]);
+    GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
+    GUFieldTrack yTrackOut( startPosition, startMomentum );  // yStart
+
     for (int i = 0; i < nTracks; ++i)
     {
       yInput [i].LoadFromArray(posMom);
@@ -228,26 +253,32 @@ int main(int argc, char *args[])
     double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
 
-    total_step += step_len;
-    std::fill_n(hstep, nTracks, total_step);
-    testDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
-
-    cout<<" yOutput[0] is: "<< yOutput[0]<<" for yInput: "<<yInput[0]<<  endl;
-    cout<<" yOutput[4] is: "<< yOutput[4]<<" for yInput: "<<yInput[4]<<endl;
-
-    cout<<"\n----Given hstep was: "<<endl;
-    for (int i = 0; i < nTracks; ++i)
+    for (int i = 0; i < no_of_steps; ++i)
     {
-      cout<<hstep[i]<<" ";
-    }
-    cout<<endl;
+      total_step += step_len;
+      std::fill_n(hstep, nTracks, total_step);
 
-    cout<<"\n----Output succeeded is: "<<endl;
-    for (int i = 0; i < nTracks; ++i)
-    {
-      cout<<succeeded[i]<<" ";
+      testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
+      testScalarDriver      ->AccurateAdvance( yTrackIn, hstep[0], epsTol, yTrackOut );
+
+      cout<<" yOutput[0] is: "  << yOutput[0]<<" for yInput: "  <<yInput[0]<< endl;
+      cout<<" yTrackOut[0] is: "<< yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
+
+/*      cout<<"\n----Given hstep was: "<<endl;
+      for (int i = 0; i < nTracks; ++i)
+      {
+        cout<<hstep[i]<<" ";
+      }
+      cout<<endl;
+
+      cout<<"\n----Output succeeded is: "<<endl;
+      for (int i = 0; i < nTracks; ++i)
+      {
+        cout<<succeeded[i]<<" ";
+      }
+      cout<<endl;*/
     }
-    cout<<endl;
+
 
 
 
@@ -260,7 +291,8 @@ int main(int argc, char *args[])
     delete gvField;
 
     // deleting IntegrationDriver
-    delete testDriver;
+    delete testVectorDriver;
+    delete testScalarDriver;      
     
     cout<<"\n\n#-------------End of output-----------------\n";
 }
