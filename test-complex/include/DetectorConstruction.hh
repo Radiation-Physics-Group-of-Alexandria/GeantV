@@ -19,6 +19,8 @@ class TGeoManager;
 class G4MagneticField;
 class G4UniformMagField;
 class CMSMagneticFieldG4;
+class G4MagIntegratorStepper;
+class G4ChordFinder;
 
 /// Detector construction allowing to use the geometry read from the GDML file
 
@@ -29,18 +31,27 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     DetectorConstruction(G4VPhysicalVolume *setWorld = 0, bool useUniformField= true );
     ~DetectorConstruction();
 
-    virtual G4VPhysicalVolume *Construct()
+    G4VPhysicalVolume *Construct() override
     {
+      ConstructSDandField();
       return fWorld;
     }
 
-   virtual void ConstructSDandField();
+   void ConstructSDandField() override;
 
    void SetUniformBzMagField(G4double);               // Set uniform magnetic field
    // static G4ThreadLocal G4GlobalMagFieldMessenger*  fMagFieldMessenger; 
 
    // void SetMagField(G4MagneticField* pFld);  // Set non-uniform magnetic field
    void UseInterpolatedField() { fUseUniformField = false; }
+
+   void CreateAndRegisterCMSfield();
+   // Created and Register CMS magnetic field
+
+   G4ChordFinder*
+   CreateChordFinder( G4MagneticField*        magField,
+                      G4MagIntegratorStepper* stepper= nullptr );
+   // Configure to utilise alternative Stepper
 
    // void SetDistanceConst( double dist ){ fDistanceConst= dist; }
 
@@ -56,6 +67,10 @@ class DetectorConstruction : public G4VUserDetectorConstruction
     std::string         fFieldFilename;
     // double              fDistanceConst;   // Field is assumed to be uniform over this distance
     static CMSMagneticFieldG4* fpMasterCmsField;  // Object in the master -- others are its 'clones'
+
+    G4MagIntegratorStepper*  fAllocatedStepper;
+    double                   fMinStepField;      // For smaller steps, any error is accepted
+    // double                   fDistanceConst;     // Field value will be considered constant inside this radius
 };
 
 #endif

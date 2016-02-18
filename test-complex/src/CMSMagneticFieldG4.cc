@@ -35,10 +35,13 @@ CMSMagneticFieldG4::~CMSMagneticFieldG4()
 {
 }
 
-void CMSMagneticFieldG4::ReadVectorData(string inputMap) {
+void CMSMagneticFieldG4::ReadVectorData(string inputMap)
+{
     string line;
     string s1,s2,s3,s4,s5,s0;
     double d1,d2,d3,d4,d5,d0;
+    int ind =0;
+
     ifstream pFile(inputMap);
     if (pFile.is_open()){
         // getline() returns the stream. testing the stream with while returns error such as EOF
@@ -53,13 +56,32 @@ void CMSMagneticFieldG4::ReadVectorData(string inputMap) {
             fBz.push_back(d3);
             fBr.push_back(d4);
             fBphi.push_back(d5);
+            ind++;
+            /***
+            if( ind % 10 == 0 ) std::cout << "  Read in line " << ind
+                                          << " B-field values= " << d3 << " " << d4 << " "
+                                          << d5 << std::endl;
+            ***/
         }
         pFile.close();
-        fInitialised = true;;
+        const int linesExpected = kNoZValues * kNoRValues;
+        G4bool  finished = ( ind == linesExpected );
+        if( ! finished ) {
+           std::cout<<"CMSMagneticField::ReadVectorData> "
+                    << "Did not find all data for CMS Magnetic Field."
+                    << std::endl
+                    << "     Read  " << ind << " lines vs " << linesExpected << " expected. "
+                    << std::endl;
+        }
+        fInitialised = finished;
     }
     else{
-        cout<<"Unable to open file";
-        fInitialised = false;        
+       std::cout<<"Unable to open file" << inputMap << " for CMS Magnetic Field."<< std::endl;
+       fInitialised = false;        
+    }
+    if( !fInitialised ) {
+       std::cout<<"FATAL ERROR: unable to read (all) data for CMS Magnetic Field."<< std::endl;
+       exit(1);
     }
 }
 
