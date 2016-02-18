@@ -5,12 +5,14 @@
 #include "materials/Particle.h"
 using vecgeom::Particle; 
 #include "TEXsec.h"
-/*
-#include "TEFstate.h"
 #include "TPDecay.h"
 
+#include "TEFstate.h"
+
+/*
 #include "TTabPhysMgr.h"
 */
+
 __global__
 void expandPhysics(char *buf) {
    printf("Rebuilding TPartIndex store\n");
@@ -24,7 +26,6 @@ void expandPhysics(char *buf) {
    TEXsec::RebuildStore(buf);
    int sizex = TEXsec::SizeOfStore();
    printf("Number of bytes for x-sec %d\n",sizex);
-/*
    buf += sizex;
    printf("Rebuilding decay store\n");
    TPDecay *dec = (TPDecay *) buf;
@@ -37,9 +38,7 @@ void expandPhysics(char *buf) {
    TEFstate::RebuildStore(buf);
    int sizef = TEFstate::SizeOfStore();
    printf("Number of bytes for final state %d\n",sizef);
-*/
 }
-
 namespace vecgeom {
 namespace cxx {
 
@@ -49,11 +48,13 @@ template void DevicePtr<char>::Construct() const;
 } // End cxx namespace
 }
 
-void launchExpandPhysicsOnDevice(vecgeom::cxx::DevicePtr<char> devBuf, int nBlocks, int nThreads) {
+void launchExpandPhysicsOnDevice(vecgeom::cxx::DevicePtr<char> &devBuf, int nBlocks, int nThreads) {
  int threadsPerBlock = nThreads;
  int blocksPerGrid   = nBlocks;
- expandPhysics<<< blocksPerGrid, threadsPerBlock >>>(devBuf);
+   printf("Launching expandPhysics threads: %d, blocks: %d\n",nThreads,nBlocks);
 
+  expandPhysics<<< blocksPerGrid, threadsPerBlock >>>(devBuf);
+   cudaDeviceSynchronize();
 }
 
 

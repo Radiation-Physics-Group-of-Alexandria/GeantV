@@ -1,6 +1,8 @@
 #include "TFinState.h"
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include "TRandom.h"
+#endif
 #endif
 #ifdef USE_VECGEOM_NAVIGATOR
 #include "base/RNG.h"
@@ -9,8 +11,10 @@ using vecgeom::RNG;
 
 int TFinState::fVerbose = 0;
 
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 ClassImp(TFinState)
+#endif
 #endif
 
 //_________________________________________________________________________
@@ -334,6 +338,7 @@ bool TFinState::GetReac(int finstat, int &npart, float &weight, float &kerma, fl
 }
 
 //_________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 int TFinState::SizeOf() const {
    size_t size = sizeof(*this);
    size += 3 * fNFstates * sizeof(float);
@@ -401,10 +406,15 @@ void TFinState::Compact() {
 }
 
 //______________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 void TFinState::RebuildClass() {
   if(((unsigned long) this) % sizeof(double) != 0) {
-      cout << "TFinState::RebuildClass: the class is misaligned" << endl;
+      printf("TFinState::RebuildClass: the class is misaligned\n");
+#ifndef GEANT_NVCC
       exit(1);
+#else
+      return;
+#endif
   }
    int size = 0;
    char *start = fStore;

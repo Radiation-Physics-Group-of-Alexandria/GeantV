@@ -1,10 +1,11 @@
 #include "TPDecay.h"
 #include "TFinState.h"
 #include "TPartIndex.h"
-
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include "TBuffer.h"
 ClassImp(TPDecay)
+#endif
 #endif
 
 //___________________________________________________________________
@@ -72,7 +73,7 @@ void TPDecay::SetCTauPerMass(double *ctaupermass, int np) {
   for (int ip = 0; ip < np; ++ip)
     fCTauPerMass[ip] = ctaupermass[ip];
 }
-
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 //______________________________________________________________________________
 void TPDecay::Streamer(TBuffer &R__b) {
@@ -93,8 +94,10 @@ void TPDecay::Streamer(TBuffer &R__b) {
   }
 }
 #endif
+#endif
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 int TPDecay::SizeOf() const {
    size_t size = sizeof(*this);
    size += fNPart * sizeof(double);
@@ -123,10 +126,15 @@ void TPDecay::Compact() {
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 void TPDecay::RebuildClass() {
   if(((unsigned long) this) % sizeof(double) != 0) {
-      cout << "TPDecay::RebuildClass: the class is misaligned" << endl;
+      printf("TPDecay::RebuildClass: the class is misaligned\n");
+   #ifndef GEANT_NVCC
       exit(1);
+   #else 
+      return;
+   #endif
   }
    char *start = fStore;
    // we consider that the pointer to the final states is stale because it has been read from
@@ -139,13 +147,23 @@ void TPDecay::RebuildClass() {
    for(auto i=0; i<fNPart; ++i) {
 #ifdef MAGIC_DEBUG
       if(((TFinState*) start)->GetMagic() != -777777) {
-	 cout << "TFinState::Broken magic 2 " << ((TFinState*) start)->GetMagic() << endl;
+	 printf("TFinState::Broken magic 2 %d\n",((TFinState*) start)->GetMagic());
+#ifndef GEANT_NVCC
 	 exit(1);
+#else
+         return;
+#endif
       }
 #endif
       ((TFinState *) start)->RebuildClass();
       fDecayP[i] = (TFinState *) start;
-      if(!fDecayP[i]->CheckAlign()) exit(1);
+      if(!fDecayP[i]->CheckAlign()) 
+#ifndef GEANT_NVCC
+         exit(1);
+#else
+         return; 
+#endif
+
       start += ((TFinState*) start)->SizeOf();
    }
    CheckAlign();

@@ -21,8 +21,10 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TPartIndex.h"
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include "Rtypes.h"
+#endif
 #endif
 
 class TFinState {
@@ -57,29 +59,33 @@ public:
   static void SetVerbose(int verbose) { fVerbose = verbose; }
   static int GetVerbose() { return fVerbose; }
 
+  GEANT_CUDA_BOTH_CODE
   int SizeOf() const;
   void Compact();
+  GEANT_CUDA_BOTH_CODE
   void RebuildClass();
 #ifdef MAGIC_DEBUG
+  GEANT_CUDA_BOTH_CODE
   int GetMagic() const {return fMagic;}
 #endif
 
+  GEANT_CUDA_BOTH_CODE
 bool CheckAlign() {
   bool isaligned=true;
-  if(((unsigned long) &fNFstates) % sizeof(fNFstates) != 0) {std::cout << "TPFstate::fNFstates misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fNsecs) % sizeof(fNsecs) != 0) {std::cout << "TPFstate::fNsecs misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) &fNMom) % sizeof(fNMom) != 0) {std::cout << "TPFstate::fNMom misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) fWeight) % sizeof(fWeight[0]) != 0) {std::cout << "TPFstate::fWeight misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) fKerma) % sizeof(fKerma[0]) != 0) {std::cout << "TPFstate::fKerma misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) fEn) % sizeof(fEn[0]) != 0) {std::cout << "TPFstate::fEn misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) fMom) % sizeof(fMom[0]) != 0) {std::cout << "TPFstate::fMom misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) fPID) % sizeof(fPID[0]) != 0) {std::cout << "TPFstate::fPID misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) fNpart) % sizeof(fNpart[0]) != 0) {std::cout << "TPFstate::fNpart misaligned" << std::endl;isaligned=false;}
-  if(((unsigned long) fSurv) % sizeof(fSurv[0]) != 0) {std::cout << "TPFstate::fSurv misaligned" << std::endl;isaligned=false;}
+  if(((unsigned long) &fNFstates) % sizeof(fNFstates) != 0) {printf("TPFstate::fNFstates misaligned\n");isaligned=false;}
+  if(((unsigned long) &fNsecs) % sizeof(fNsecs) != 0) {printf("TPFstate::fNsecs misaligned\n");isaligned=false;}
+  if(((unsigned long) &fNMom) % sizeof(fNMom) != 0) {printf("TPFstate::fNMom misaligned\n");isaligned=false;}
+  if(((unsigned long) fWeight) % sizeof(fWeight[0]) != 0) {printf("TPFstate::fWeight misaligned\n");isaligned=false;}
+  if(((unsigned long) fKerma) % sizeof(fKerma[0]) != 0) {printf("TPFstate::fKerma misaligned\n");isaligned=false;}
+  if(((unsigned long) fEn) % sizeof(fEn[0]) != 0) {printf("TPFstate::fEn misaligned\n");isaligned=false;}
+  if(((unsigned long) fMom) % sizeof(fMom[0]) != 0) {printf("TPFstate::fMom misaligned\n");isaligned=false;}
+  if(((unsigned long) fPID) % sizeof(fPID[0]) != 0) {printf("TPFstate::fPID misaligned\n");isaligned=false;}
+  if(((unsigned long) fNpart) % sizeof(fNpart[0]) != 0) {printf("TPFstate::fNpart misaligned\n");isaligned=false;}
+  if(((unsigned long) fSurv) % sizeof(fSurv[0]) != 0) {printf("TPFstate::fSurv misaligned\n");isaligned=false;}
 #ifdef MAGIC_DEBUG
-  if(((unsigned long) &fMagic) % sizeof(fMagic) != 0) {std::cout << "TPFstate::fMagic misaligned" << std::endl;isaligned=false;}
+  if(((unsigned long) &fMagic) % sizeof(fMagic) != 0) {printf("TPFstate::fMagic misaligned\n");isaligned=false;}
 #endif
-  if(((unsigned long) &fStore) % sizeof(double) != 0) {std::cout << "TPFstate::fStore misaligned" << std::endl;isaligned=false;}
+  if(((unsigned long) &fStore) % sizeof(double) != 0) {printf("TPFstate::fStore misaligned\n");isaligned=false;}
   return isaligned;
 }
 
@@ -100,8 +106,10 @@ private:
 #ifdef MAGIC_DEBUG
   const int fMagic = -777777;
 #endif
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
   ClassDefNV(TFinState, 2) // Particle Final States
+#endif
 #endif
 
 private:

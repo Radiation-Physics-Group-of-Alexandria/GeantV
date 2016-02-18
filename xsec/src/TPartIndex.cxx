@@ -12,7 +12,9 @@
 using std::transform;
 using std::string;
 using std::map;
+#endif
 
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 ClassImp(TPartIndex)
 #endif
@@ -68,6 +70,7 @@ const float TPartIndex::fgWElem[NELEM] = {
 TPartIndex *TPartIndex::fgPartIndex = 0;
 #else
 GEANT_CUDA_DEVICE_CODE TPartIndex *fgPartIndexDev = 0;
+TPartIndex *fgPartIndexHost = 0;
 #endif
 
 //___________________________________________________________________
@@ -231,6 +234,8 @@ void TPartIndex::SetPDGToGVMap(std::map<int, int> &theMap) {
   fSpecGVIndices[2] = fPDGToGVMap.find(22)->second;   // gamma
   fSpecGVIndices[3] = fPDGToGVMap.find(2212)->second; // proton
 }
+
+
 #ifndef GEANT_NVCC
 #ifdef USE_ROOT
 //______________________________________________________________________________
@@ -253,7 +258,6 @@ void TPartIndex::Streamer(TBuffer &R__b) {
    // we want to avoid memory leaks, so we have to delete the data member before
    // it is overwritten by the streamer.
    //
-
   if (R__b.IsReading()) {
 #ifdef USE_VECGEOM_NAVIGATOR
     Particle::CreateParticles();

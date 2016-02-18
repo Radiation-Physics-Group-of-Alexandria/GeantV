@@ -24,7 +24,7 @@ using vecgeom::RNG;
 #include <iostream>
 #include <fstream>
 #include "backend/cuda/Interface.h"
-void launchExpandPhysicsOnDevice(vecgeom::DevicePtr<char>, int nBlocks, int nThreads);
+void launchExpandPhysicsOnDevice(vecgeom::DevicePtr<char>&, int nBlocks, int nThreads);
 
 int main()
 {
@@ -52,6 +52,7 @@ int main()
    printf("Total size of store %d\n", totsize);
 
    launchExpandPhysicsOnDevice(devBuf, 1, 1);
+
   /*  
    expandPhysicsKernel<<<>>>(devBuf);
 

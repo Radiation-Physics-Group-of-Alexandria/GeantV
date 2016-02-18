@@ -1,6 +1,8 @@
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include "TFile.h"
 #include "TError.h"
+#endif
 #endif
 
 #include <TPFstate.h>
@@ -8,9 +10,12 @@
 #include "TEFstate.h"
 #include "TPDecay.h"
 #include "base/Global.h"
+#ifndef GEANT_NVCC
 #include "base/MessageLogger.h"
+#endif
 using vecgeom::kAvogadro;
 
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 ClassImp(TEFstate)
 #endif
@@ -22,7 +27,27 @@ ClassImp(TEFstate)
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 int TEFstate::fNLdElems = 0;
+
+
 TPDecay* TEFstate::fDecay = nullptr;
+#else
+    TEFstate *fEFElementsDev[NELEM] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+int fEFNLdElemsDev = 0;
+    TEFstate *fEFElementsHost[NELEM] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+int fEFNLdElemsHost = 0;
+  TPDecay  *fDecayDev =nullptr;           //! decay table
+  TPDecay  *fDecayHost=nullptr;           //! decay table
+#endif
 
 //___________________________________________________________________
 TEFstate::TEFstate() :
@@ -83,7 +108,7 @@ TEFstate::~TEFstate()
    delete [] fPFstateP;
    delete [] fPFstate;
 }
-
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 //______________________________________________________________________________
 void TEFstate::Streamer(TBuffer &R__b)
@@ -104,6 +129,7 @@ void TEFstate::Streamer(TBuffer &R__b)
    }
 }
 #endif
+#endif
 
 //___________________________________________________________________
 bool TEFstate::AddPart(int kpart, int pdg, int nfstat, int nreac, const int dict[]) {
@@ -115,8 +141,13 @@ bool TEFstate::AddPart(int kpart, int pdg, int nfstat, int nreac, const int dict
   if (!fNEFstat)
     fNEFstat = nfstat;
   else if (fNEFstat != nfstat) {
+   #ifndef GEANT_NVCC
     log_fatal(std::cout, "AddPart", "Number of final sample states changed during run from %d to %d", fNEFstat, nfstat);
     exit(1);
+   #else
+    printf("AddPart: Number of final sample states changed during run from %d to %d", fNEFstat, nfstat);
+    return 0;
+   #endif 
   }
   return fPFstateP[kpart]->SetPart(pdg, nfstat, nreac, dict, vecfs);
 }
@@ -184,6 +215,22 @@ bool TEFstate::GetReac(int pindex, int preac, float en, int ifs, int &npart, flo
 }
 
 //___________________________________________________________________
+#ifdef GEANT_NVCC 
+GEANT_CUDA_BOTH_CODE
+TEFstate *TEFstate::GetElement(int z, int a) {
+  int ecode = z * 10000 + a * 10;
+#ifdef GEANT_CUDA_DEVICE_BUILD 
+  for (int el = 0; el < fEFNLdElemsDev; ++el)
+    if (ecode == fEFElementsDev[el]->Ele())
+      return fEFElementsDev[el];
+#else
+  for (int el = 0; el < fEFNLdElemsHost; ++el)
+    if (ecode == fEFElementsHost[el]->Ele())
+      return fEFElementsHost[el];
+#endif  
+}
+#else   
+#ifndef GEANT_NVCC
 TEFstate *TEFstate::GetElement(int z, int a, TFile *f) {
   //   printf("Getting Element %d %d %d\n",z,a,fNLdElems);
   int ecode = z * 10000 + a * 10;
@@ -216,9 +263,10 @@ TEFstate *TEFstate::GetElement(int z, int a, TFile *f) {
 #else
   log_fatal(std::cout, "Element z %d a %d not found\n", z, a);
   exit(1);
-  return 0;
 #endif
 }
+#endif
+#endif
 
 //___________________________________________________________________
 bool TEFstate::Prune() {
@@ -239,9 +287,11 @@ bool TEFstate::Resample() {
 }
 
 //___________________________________________________________________
+#ifndef GEANT_NVCC
 void TEFstate::Draw(const char * /*option*/) {}
-
+#endif
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 int TEFstate::SizeOf() const {
    size_t size = sizeof(*this);
    for(auto i=0; i<fNRpart; ++i)
@@ -265,10 +315,16 @@ void TEFstate::Compact() {
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 void TEFstate::RebuildClass() {
    if(((unsigned long) this) % sizeof(double) != 0) {
+      #ifndef GEANT_NVCC
        cout << "TEFstate::RebuildClass: the class is misaligned" << endl;
        exit(1);
+      #else
+       printf("TEFstate::RebuildClass: the class is misaligned\n");
+       return;
+      #endif
    }
    char *start = fStore;
    // we consider that the pointer to the final states is stale because it has been read from
@@ -277,22 +333,42 @@ void TEFstate::RebuildClass() {
    for(auto i=0; i<fNRpart; ++i) {
 #ifdef MAGIC_DEBUG
       if(((TPFstate*) start)->GetMagic() != -777777) {
+        #ifndef GEANT_NVCC
 	 cout << "TPFstate::Broken magic " << ((TPFstate*) start)->GetMagic() << endl;
 	 exit(1);
+        #else
+	 printf("TPFstate::Broken magic %d\n",((TPFstate*) start)->GetMagic());
+         return;
+        #endif
+
       }
 #endif
       ((TPFstate *) start)->RebuildClass();
       fPFstateP[i] = (TPFstate *) start;
-      if(!fPFstateP[i]->CheckAlign()) exit(1);
+      if(!fPFstateP[i]->CheckAlign()) 
+        #ifndef GEANT_NVCC
+        exit(1);
+        #else
+         return;
+        #endif
       start += ((TPFstate*) start)->SizeOf();
    }
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 int TEFstate::SizeOfStore() {
    // First calculate how much we need
    int totsize = 0;
+#ifndef GEANT_NVCC
    for(auto i=0; i<fNLdElems; ++i) totsize += fElements[i]->SizeOf();
+#else
+#ifdef GEANT_CUDA_DEVICE_BUILD
+   for(auto i=0; i<fEFNLdElemsDev; ++i) totsize += fEFElementsDev[i]->SizeOf();
+#else
+   for(auto i=0; i<fEFNLdElemsHost; ++i) totsize += fEFElementsHost[i]->SizeOf();
+#endif
+#endif
    return totsize + 2 * sizeof(int);
 }
 
@@ -308,6 +384,7 @@ int TEFstate::MakeCompactBuffer(char* &b) {
    char* start = b;
    memcpy(start,&totsize,sizeof(int));
    start += sizeof(int);
+#ifndef  GEANT_NVCC
    memcpy(start,&fNLdElems,sizeof(int));
    start += sizeof(int);
    // now copy and compact
@@ -316,10 +393,12 @@ int TEFstate::MakeCompactBuffer(char* &b) {
       el->Compact();
       start += el->SizeOf();
    }
+ #endif
    return totsize;
 }
 
 //___________________________________________________________________
+#ifndef GEANT_NVCC
 void TEFstate::RebuildStore(char *b) {
    char *start = b;
    int size = 0;
@@ -331,18 +410,48 @@ void TEFstate::RebuildStore(char *b) {
       TEFstate *current = (TEFstate *) start;
 #ifdef MAGIC_DEBUG
       if(current->GetMagic() != -777777) {
-	 cout << "TEFstate::Broken Magic " << current->GetMagic() << endl;
+	 printf("TEFstate::Broken Magic %d\n",current->GetMagic());
 	 exit(1);
       }
 #endif
       current->RebuildClass();
       fElements[i] = current;
-      if(!fElements[i]->CheckAlign()) exit(1);
+      if(!fElements[i]->CheckAlign())
+	 exit(1);
       start += current->SizeOf();
    }
    if((int)(start - b) != size) {
-      cout << "TEFstate::RebuildStore: expected size " << size
-	   << " found size " << start - b << endl;
+      printf("TEFstate::RebuildStore: expected size %d  found size %d\n",size,start - b);
       exit(1);
    }
 }
+#else
+//___________________________________________________________________
+GEANT_CUDA_DEVICE_CODE
+void TEFstate::RebuildStore(char *b) {
+   char *start = b;
+   int size = 0;
+   memcpy(&size,start,sizeof(int));
+   start += sizeof(int);
+   memcpy(&fEFNLdElemsDev,start,sizeof(int));
+   start += sizeof(int);
+   for(auto i=0; i<fEFNLdElemsDev; ++i) {
+      TEFstate *current = (TEFstate *) start;
+#ifdef MAGIC_DEBUG
+      if(current->GetMagic() != -777777) {
+	 printf("TEFstate::Broken Magic %d\n",current->GetMagic());
+         return;
+      }
+#endif
+      current->RebuildClass();
+      fEFElementsDev[i] = current;
+      if(!fEFElementsDev[i]->CheckAlign())
+         return;
+      start += current->SizeOf();
+   }
+   if((int)(start - b) != size) {
+      printf("TEFstate::RebuildStore: expected size %d  found size %d\n",size,start - b);
+      return;
+   }
+}
+#endif

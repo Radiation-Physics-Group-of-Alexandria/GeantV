@@ -8,7 +8,6 @@
 
 #ifndef TEXsec_H
 #define TEXsec_H
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TEXSec                                                               //
@@ -19,6 +18,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TPartIndex.h"
+#include "TPXsec.h"
+
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include "Rtypes.h"
 class TGHorizontalFrame;
@@ -28,11 +30,12 @@ class TGraph;
 class TRootEmbeddedCanvas;
 #endif
 class TFile;
-#include "TPXsec.h"
-#ifdef GEANT_CUDA_DEVICE_BUILD
+#else
 class TEXsec;
 extern GEANT_CUDA_DEVICE_CODE int fNLdElemsDev;            //! number of loaded elements
+extern  int fNLdElemsHost;            //! number of loaded elements
 extern GEANT_CUDA_DEVICE_CODE TEXsec *fElementsDev[NELEM]; //! databases of elements
+extern  TEXsec *fElementsHost[NELEM]; //! databases of elements
 #endif
 
 class TEXsec {
@@ -66,10 +69,12 @@ GEANT_CUDA_BOTH_CODE
   float XS(int pindex, int rindex, float en) const;
   float DEdx(int pindex, float en) const;
   bool MS(int index, float en, float &ang, float &asig, float &len, float &lsig) const;
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
   TGraph *XSGraph(const char *part, const char *reac, float emin, float emax, int nbin) const;
   TGraph *DEdxGraph(const char *part, float emin, float emax, int nbin) const;
   TGraph *MSGraph(const char *part, const char *what, float emin, float emax, int nbin) const;
+#endif
 #endif
 
   float Lambda(int pindex, double en) const;
@@ -133,7 +138,7 @@ bool CheckAlign() {
   if(((unsigned long) &fNEbins) % sizeof(fNEbins) != 0) {printf("TEXsec::fNEbins misaligned\n");isaligned=false;}
   if(((unsigned long) &fNRpart) % sizeof(fNRpart) != 0) {printf("TEXsec::fNRpart misaligned\n");isaligned=false;}
   for(auto i=0; i< fNRpart; ++i)
-    if(((unsigned long) fPXsecP[i]) % sizeof(double) != 0) {printf("TEXsec::fPXsecP[%d] misaligned\n",i);isaligned=false;}
+   if(((unsigned long) fPXsecP[i]) % sizeof(double) != 0) {printf("TEXsec::fPXsecP[%d] misaligned\n",i);isaligned=false;}
 #ifdef MAGIC_DEBUG
   if(((unsigned long) &fMagic) % sizeof(fMagic) != 0) {printf("TEXsec::fMagic misaligned\n");isaligned=false;}
 #endif
@@ -144,7 +149,7 @@ bool CheckAlign() {
   bool Resample();
 
   bool Prune();
-#ifndef GEANT_CUDA_DEVICE_BUILD
+#ifndef GEANT_NVCC
   static int NLdElems() { return fNLdElems; }
   static TEXsec *Element(int i) {
     if (i < 0 || i >= fNLdElems)
@@ -153,25 +158,42 @@ bool CheckAlign() {
   }
  #else
 
+#ifdef GEANT_CUDA_DEVICE_BUILD
  GEANT_CUDA_DEVICE_CODE int NLdElems() { return fNLdElemsDev; }
  GEANT_CUDA_DEVICE_CODE TEXsec *Element(int i) {
     if (i < 0 || i >= fNLdElemsDev)
       return 0;
     return fElementsDev[i];
   }
+ #else
+  static int NLdElems() { return fNLdElemsHost; }
+  static TEXsec *Element(int i) {
+    if (i < 0 || i >= fNLdElemsHost)
+      return 0;
+    return fElementsHost[i];
+  }
+#endif
 #endif
   const char *GetName() const { return fName; }
   const char *GetTitle() const { return fTitle; }
-#ifndef GEANT_DEVICE_BUILD
+#ifndef GEANT_NVCC
   static TEXsec *GetElement(int z, int a = 0, TFile *f = 0);
   static TEXsec **GetElements() { return fElements; }
 #else
+  GEANT_CUDA_BOTH_CODE
+  static TEXsec *GetElement(int z, int a = 0);
+#ifdef GEANT_DEVICE_BUILD
   GEANT_CUDA_DEVICE_CODE TEXsec **GetElements() { return fElementsDev; }
+#else
+  TEXsec **GetElements() { return fElementsHost; }
+#endif
 #endif
 
-private:
-  TEXsec &operator=(const TEXsec &); // Not implemented
 
+private:
+#ifndef GEANT_NVCC
+  TEXsec &operator=(const TEXsec &); // Not implemented
+#endif
   char fName[32];   // Name
   char fTitle[128]; // Title
 
@@ -185,15 +207,17 @@ private:
   int fIndex;           // Index of this in TTabPhysMgr::fElemXsec
   int fNEbins;          // Number of log steps in energy
   int fNRpart;          // Number of particles with reaction
+
   TPXsec *fPXsec;       // [fNRpart] Cross section table per particle
   TPXsec **fPXsecP;     // [fNRpart] Cross section table per particle
-#ifndef GEANT_DEVICE_BUILD
+#ifndef GEANT_NVCC
   static int fNLdElems;            //! number of loaded elements
   static TEXsec *fElements[NELEM]; //! databases of elements
 #endif
 #ifdef MAGIC_DEBUG
   const int fMagic = -777777;
 #endif
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
   static TGMainFrame *fMain;           //! Main window
   static TGHorizontalFrame *fSecond;   //! Window for the graph and the bar on left
@@ -201,7 +225,6 @@ private:
   static TGListBox *fReactionBox;      //! Reaction list
   static TGListBox *fParticleBox;      //! Particle list
 
-#ifndef GEANT_NVCC
   ClassDefNV(TEXsec, 7) // Element X-secs
 #endif
 #endif

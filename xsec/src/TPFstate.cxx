@@ -1,9 +1,11 @@
 #include "TPFstate.h"
 #include "TFinState.h"
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include <TMath.h>
 #include <TFile.h>
 #include <TRandom.h>
+#endif
 #endif
 #ifdef USE_VECGEOM_NAVIGATOR
 #include "base/RNG.h"
@@ -12,8 +14,10 @@ using vecgeom::RNG;
 using std::max;
 
 int TPFstate::fVerbose = 0;
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 ClassImp(TPFstate)
+#endif
 #endif
 
 //_________________________________________________________________________
@@ -58,12 +62,14 @@ TPFstate::TPFstate(int pdg, int nfstat, int nreac, const int dict[]) :
       fRmap[np] = dict[np];
    }
    // consistency
+#ifndef GEANT_NVCC
    for (int i = 0; i < fNReac; ++i)
       if (fRdict[fRmap[i]] != i)
 #ifdef USE_ROOT
 	 Fatal("SetPartXS", "Dictionary mismatch for!");
 #else
 	 std::cerr<<"SetPartXS: dictionary mismatch for"<<std::endl;
+#endif
 #endif
 }
 
@@ -123,12 +129,14 @@ bool TPFstate::SetPart(int pdg, int nfstat, int nreac, const int dict[]) {
     fRmap[np] = dict[np];
   }
   // consistency
+     #ifndef GEANT_NVCC
   for (int i = 0; i < fNReac; ++i)
     if (fRdict[fRmap[i]] != i)
      #ifdef USE_ROOT
       Fatal("SetPart", "Dictionary mismatch for!");
      #else
      std::cerr<<"SetPart\n";
+     #endif
      #endif
   return true;
 }
@@ -151,12 +159,14 @@ bool TPFstate::SetPart(int pdg, int nfstat, int nreac, const int dict[], TFinSta
     fRmap[np] = dict[np];
   }
   // consistency
+     #ifndef GEANT_NVCC
   for (int i = 0; i < fNReac; ++i)
     if (fRdict[fRmap[i]] != i)
      #ifdef USE_ROOT
       Fatal("SetPart", "Dictionary mismatch for!");
      #else
      std::cerr<<"SetPartXS\n";
+     #endif
      #endif
   return true;
 }
@@ -307,7 +317,7 @@ bool TPFstate::GetReac(int preac, float en, int ifs, int &npart, float &weight, 
     return fFstatP[ipoint]->GetReac(ifs, npart, weight, kerma, enr, pid, mom);
   }
 }
-
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 //______________________________________________________________________________
 void TPFstate::Streamer(TBuffer &R__b) {
@@ -333,6 +343,7 @@ void TPFstate::Streamer(TBuffer &R__b) {
   }
 }
 #endif
+#endif
 
 //_________________________________________________________________________
 void TPFstate::Print(const char *) const {
@@ -341,10 +352,12 @@ void TPFstate::Print(const char *) const {
 
 //_________________________________________________________________________
 bool TPFstate::Resample() {
+  #ifndef GEANT_NVCC
   if (fVerbose)
     printf("Resampling %s from \nemin = %8.2g emacs = %8.2g, nbins = %d to \n"
            "emin = %8.2g emacs = %8.2g, nbins = %d\n",
            Name(), fEmin, fEmax, fNEbins, TPartIndex::I()->Emin(), TPartIndex::I()->Emax(), TPartIndex::I()->NEbins());
+  #endif
   // Build the original energy grid
   double edelta = exp(1 / fEilDelta);
   double *oGrid = new double[fNEbins];
@@ -432,10 +445,15 @@ void TPFstate::Compact() {
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 void TPFstate::RebuildClass() {
   if(((unsigned long) this) % sizeof(double) != 0) {
-      cout << "TPFstate::RebuildClass: the class is misaligned" << endl;
+      printf("TPFstate::RebuildClass: the class is misaligned\n");
+#ifndef GEANT_NVCC  
       exit(1);
+#else
+      return;
+#endif
   }
    char *start = fStore;
    // we consider that the pointer energy grid is stale
@@ -446,20 +464,34 @@ void TPFstate::RebuildClass() {
    if(fRestCaptFstat != nullptr) {
 #ifdef MAGIC_DEBUG
       if(((TFinState*) start)->GetMagic() != -777777) {
-	 cout << "TFinState::Broken magic 1 " << ((TFinState*) start)->GetMagic() << endl;
-	 exit(1);
+	 printf("TFinState::Broken magic 1 %d\n ",((TFinState*) start)->GetMagic());
+#ifndef GEANT_NVCC  
+         exit(1);
+#else
+         return;
+#endif
       }
 #endif
       ((TFinState *) start)->RebuildClass();
       fRestCaptFstat = (TFinState *) start;
-      if(!fRestCaptFstat->CheckAlign()) exit(1);
+      if(!fRestCaptFstat->CheckAlign()) 
+#ifndef GEANT_NVCC  
+         exit(1);
+#else
+         return;
+#endif
+  
       start += ((TFinState*) start)->SizeOf();
    }
    for(auto i=0; i<fNFstat; ++i) {
 #ifdef MAGIC_DEBUG
       if(((TFinState*) start)->GetMagic() != -777777) {
-	 cout << "TFinState::Broken magic 2 " << ((TFinState*) start)->GetMagic() << endl;
-	 exit(1);
+	 printf("TFinState::Broken magic 2 %d\n ",((TFinState*) start)->GetMagic());
+#ifndef GEANT_NVCC  
+         exit(1);
+#else
+         return;
+#endif
       }
 #endif
       ((TFinState *) start)->RebuildClass();

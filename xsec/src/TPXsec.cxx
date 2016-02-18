@@ -1,22 +1,33 @@
 #include "TPXsec.h"
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include "TRandom.h"
 #include "TFile.h"
 #include "TMath.h"
 #endif
+#endif
 #ifdef USE_VECGEOM_NAVIGATOR
 #include "base/RNG.h"
 using vecgeom::RNG;
 #endif
+#ifndef GEANT_NVCC
 using std::max;
-
+#else
+template<class T>
+  GEANT_CUDA_BOTH_CODE
+const T& max(const T&a,const T& b) {
+    return (a<b)?b:a;
+}
+#endif
 int TPXsec::fVerbose = 0;
 
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 ClassImp(TPXsec)
 #endif
-
+#endif
 //_________________________________________________________________________
+  GEANT_CUDA_BOTH_CODE
 TPXsec::TPXsec()
    : fPDG(0), fNEbins(0), fNCbins(0), fNXsec(0), fNTotXs(0), fNXSecs(0),
      fEGrid(TPartIndex::I()->EGrid()), fMSangle(nullptr), fMSansig(nullptr), fMSlength(nullptr),
@@ -27,6 +38,7 @@ TPXsec::TPXsec()
 }
 
 //_________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 TPXsec::TPXsec(int pdg, int nxsec)
    :  fPDG(pdg), fNEbins(TPartIndex::I()->NEbins()),
       fNCbins(0), fNXsec(nxsec), fNTotXs(fNEbins), fNXSecs(fNEbins * fNXsec),
@@ -40,6 +52,7 @@ TPXsec::TPXsec(int pdg, int nxsec)
 }
 
 //_________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 TPXsec::TPXsec(const TPXsec &other): fPDG(other.fPDG), fNEbins(other.fNEbins),
 				     fNCbins(other.fNCbins), fNXsec(other.fNXsec),
 				     fNTotXs(other.fNTotXs), fNXSecs(other.fNXSecs),
@@ -55,6 +68,7 @@ TPXsec::TPXsec(const TPXsec &other): fPDG(other.fPDG), fNEbins(other.fNEbins),
 }
 
 //_________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 TPXsec::~TPXsec() {
   delete[] fMSangle;
   delete[] fMSansig;
@@ -66,6 +80,7 @@ TPXsec::~TPXsec() {
 }
 
 //_________________________________________________________________________
+  GEANT_CUDA_BOTH_CODE
 int TPXsec::SizeOf() const {
    size_t size = sizeof(*this);
    size += 5 * fNCbins * sizeof(float);
@@ -77,6 +92,7 @@ int TPXsec::SizeOf() const {
 }
 
 //_________________________________________________________________________
+  GEANT_CUDA_BOTH_CODE
 void TPXsec::Compact() {
    int size = 0;
    char *start = fStore;
@@ -125,10 +141,15 @@ void TPXsec::Compact() {
 }
 
 //______________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 void TPXsec::RebuildClass() {
   if(((unsigned long) this) % sizeof(double) != 0) {
-      cout << "TPXsec::RebuildClass: the class is misaligned" << endl;
+      printf("TPXsec::RebuildClass: the class is misaligned\n");
+   #ifndef GEANT_NVCC
       exit(1);
+   #else
+      return;
+   #endif
   }
    // Reset fEgrid, may be in a different place
    fEGrid = TPartIndex::I()->EGrid();
@@ -178,6 +199,7 @@ void TPXsec::RebuildClass() {
    }
 }
 
+#ifndef GEANT_NVCC
 #ifdef USE_ROOT
 //______________________________________________________________________________
 void TPXsec::Streamer(TBuffer &R__b) {
@@ -195,11 +217,17 @@ void TPXsec::Streamer(TBuffer &R__b) {
   }
 }
 #endif
+#endif
 
 //_________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 void TPXsec::Interp(double egrid[], float value[], int nbins, double eildelta, int stride, double en, float result[]) {
   en = en < egrid[nbins - 1] ? en : egrid[nbins - 1] * 0.999;
+#ifndef GEANT_NVCC
   en = max<double>(en, egrid[0]);
+#else
+  en = max<double>(en, egrid[0]);
+#endif
   int ibin = log(en / egrid[0]) * eildelta;
   ibin = ibin < nbins - 1 ? ibin : nbins - 2;
   double en1 = egrid[ibin];
@@ -237,11 +265,14 @@ bool TPXsec::Prune() {
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 bool TPXsec::Resample() {
+#ifndef GEANT_NVCC
   if (fVerbose)
     printf("Resampling %s from \nemin = %8.2g emacs = %8.2g, nbins = %d to \n"
            "emin = %8.2g emacs = %8.2g, nbins = %d\n",
            Name(), fEmin, fEmax, fNEbins, TPartIndex::I()->Emin(), TPartIndex::I()->Emax(), TPartIndex::I()->NEbins());
+#endif 
   // Build the original energy grid
   double edelta = exp(1 / fEilDelta);
   double *oGrid = new double[fNEbins];
@@ -338,10 +369,14 @@ bool TPXsec::SetPartXS(const float xsec[], const int dict[]) {
   // consistency
   for (int i = 0; i < fNXsec; ++i)
     if (fRdict[fRmap[i]] != i)
+     #ifndef GEANT_NVCC
      #ifdef USE_ROOT
       Fatal("SetPartXS", "Dictionary mismatch for!");
      #else 
       std::cerr<<"SetPartXS error\n";
+     #endif
+     #else 
+      printf("SetPartXS error\n");
      #endif
 
   delete[] fTotXs;
@@ -467,7 +502,9 @@ int TPXsec::SampleReac(double en) const {
 #ifdef USE_VECGEOM_NAVIGATOR
     double ran = RNG::Instance().uniform();
 #elif USE_ROOT
+#ifndef GEANT_NVCC
     double ran = xnorm * gRandom->Rndm();
+#endif
 #endif
     double xsum = 0;
     for (int i = 0; i < fNXsec; ++i) {
@@ -535,8 +572,10 @@ bool TPXsec::XS_v(int npart, int rindex, const double en[], double lam[]) const 
       int rnumber = fRdict[rindex];
       if (rnumber < 0) {
        #ifdef USE_ROOT
+       #ifndef GEANT_NVCC
         Error("XS", "No %s for %s\n", TPartIndex::I()->ProcName(rindex),
               TPartIndex::I()->PartName(TPartIndex::I()->PartIndex(fPDG)));
+       #endif
        #else 
         std::cerr<<"XS error\n";
        #endif
@@ -573,8 +612,10 @@ float TPXsec::XS(int rindex, double en, bool verbose) const {
     int rnumber = fRdict[rindex];
     if (rnumber < 0 && verbose) {
      #ifdef USE_ROOT
+     #ifndef GEANT_NVCC
       Error("XS", "No %s for %s\n", TPartIndex::I()->ProcName(rindex),
             TPartIndex::I()->PartName(TPartIndex::I()->PartIndex(fPDG)));
+       #endif
      #else
       std::cerr<<"XS error\n";
      #endif
