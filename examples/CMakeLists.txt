@@ -29,11 +29,11 @@ set(sources
   src/LHCbApplication.cxx
   src/FastSimApplication.cxx
   )     
-
+     
 set(headers
   inc/ExN03Application.h 
   inc/CMSApplication.h
-#  inc/CMSDetectorConstruction.h
+  inc/CMSDetectorConstruction.h
   inc/LHCbApplication.h 
   inc/FastSimApplication.h 
   )   
