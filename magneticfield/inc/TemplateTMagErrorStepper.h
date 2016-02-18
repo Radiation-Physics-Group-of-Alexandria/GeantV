@@ -12,10 +12,13 @@
 
 #include "TemplateGULineSection.h"
 
-namespace GUIntegrationNms
+// Either include TMagErrorStepper.h or define NumVarBase in new namespace
+// as in commented code. Don't do both. 
+#include "TMagErrorStepper.h"
+/*namespace GUIntegrationNms
 {
    constexpr unsigned int NumVarBase  = 8;  //
-}
+}*/
 
 template
 <class Backend, class T_Stepper, class T_Equation, unsigned int Nvar>
