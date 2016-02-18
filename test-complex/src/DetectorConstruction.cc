@@ -22,10 +22,10 @@ CMSMagneticFieldG4* DetectorConstruction::fpMasterCmsField= 0;
 
 DetectorConstruction::DetectorConstruction(G4VPhysicalVolume *setWorld, bool uniformMagField ) :
    fWorld(setWorld), fUseUniformField( uniformMagField ), fpMagField(0),
-   // fDistanceConst( 2.0 * CLHEP::millimeter ),
    fFieldFilename("cmsmagfield2015.txt"),
    fAllocatedStepper(nullptr),
-   fMinStepField( 1.0e-2 * CLHEP::millimeter )
+   fMinStepField( 1.0e-2 * CLHEP::millimeter ),
+   fDistanceConst( 1.0 * CLHEP::millimeter )
 {   
    // fWorld = setWorld;
 /*      char* gdmlFileName = getenv("VP_GEOM_GDML");
@@ -104,11 +104,12 @@ void DetectorConstruction::CreateAndRegisterCMSfield()
       fpMasterCmsField= new CMSMagneticFieldG4( fFieldFilename );
    }
 
-   fpMagField= fpMasterCmsField; // ->CloneOrSafeSelf();
+   // fpMagField= fpMasterCmsField; // ->CloneOrSafeSelf();
    // Re-use the same object in all threads -- methods must remain 'truly' const
 
-   // fpMagField= G4CachedMagneticField( fpMasterCmsField, fDistanceConst ); 
+   fpMagField= new G4CachedMagneticField( fpMasterCmsField, fDistanceConst );
    // Field will not be re-evaluated if position moves by less than fDistanceConst
+   // Note: The cache object will be different in each thread, as needed
    
    // Check the values
    double position[3] = { 0. , 0., 0. };

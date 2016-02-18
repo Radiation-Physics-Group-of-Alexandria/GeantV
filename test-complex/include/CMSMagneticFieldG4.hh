@@ -21,10 +21,10 @@ class CMSMagneticFieldG4 : public G4MagneticField
   public:
     //New stuff 
     //Takes as input x,y,z; Gives output Bx,By,Bz
-    void GetFieldValueXYZ(const Vector3D &position, Vector3D &xyzField) const;
+    void GetFieldValueXYZ(const G4ThreeVector &position, G4ThreeVector &xyzField) const;
 
     //Stores rz field as well for cross checking purpose 
-    void GetFieldValueTest(const Vector3D &position, Vector3D &rzField);
+    void GetFieldValueTest(const G4ThreeVector &position, G4ThreeVector &rzField);
 
     //Takes as input an SOA3D for position, gives field
     //   void GetFieldValues(const vecgeom::SOA3D<double> &position, vecgeom::SOA3D<double> &field); //not tested yet with given input
@@ -53,24 +53,24 @@ class CMSMagneticFieldG4 : public G4MagneticField
     const double kAInverse = 1/(kRDiff*kZDiff);
 
     //For (R,Z) pairs : obtain estimated field in cylindrical coordinates - output in rzfield
-    void GetFieldValueRZ(const double radius,const double z, Vector3D &rzField) const; 
+    void GetFieldValueRZ(const double radius,const double z, G4ThreeVector &rzField) const; 
     void GetFieldValueRZ(const std::vector<double>   & radius,
                          const std::vector<double>   & z,
-                               std::vector<Vector3D> & rzField ) const;
+                               std::vector<G4ThreeVector> & rzField ) const;
    
     //Used to convert cartesian coordinates to cylindrical coordinates R-Z-phi
     //  Does not calculate phi
-    inline void CartesianToCylindrical(const Vector3D &cart, double cyl[2]) const;
+    inline void CartesianToCylindrical(const G4ThreeVector &cart, double cyl[2]) const;
 
     //Converts cylindrical magnetic field to field in cartesian coordinates 
-    inline void CylindricalToCartesian(const Vector3D &B_cyl, const double sinTheta, const double cosTheta, Vector3D &B_cart) const;
+    inline void CylindricalToCartesian(const G4ThreeVector &B_cyl, const double sinTheta, const double cosTheta, G4ThreeVector &B_cart) const;
 
 private:
     std::vector<double> fRadius, fPhi, fZ, fBr, fBz, fBphi;
     bool  fInitialised;
 };
 
-inline void CMSMagneticFieldG4::CartesianToCylindrical(const Vector3D &cart, double cyl[2]) const
+inline void CMSMagneticFieldG4::CartesianToCylindrical(const G4ThreeVector &cart, double cyl[2]) const
 {
     //cyl[3] =[r,z,phi]
     cyl[0] = sqrt(cart[0]*cart[0] + cart[1]*cart[1]); // r = sqrt(x^2 + y^2)
@@ -80,15 +80,16 @@ inline void CMSMagneticFieldG4::CartesianToCylindrical(const Vector3D &cart, dou
 
 inline
 void
-CMSMagneticFieldG4::CylindricalToCartesian(const Vector3D &rzField,
-                                           const double    sinTheta,
-                                           const double    cosTheta,
-                                                 Vector3D &xyzField) const
+CMSMagneticFieldG4::CylindricalToCartesian(const G4ThreeVector &rzField,
+                                           const double         sinTheta,
+                                           const double         cosTheta,
+                                                 G4ThreeVector &xyzField) const
 {
     //B_cyl[] has r, phi and z
-    xyzField[0] = rzField[0]*cosTheta - rzField[1]*sinTheta; // Bx= Br cos(theta) - Bphi sin(theta)
-    xyzField[1] = rzField[0]*sinTheta + rzField[1]*cosTheta; //By = Br sin(theta) + Bphi cos(theta)
-    xyzField[2] = rzField[2];   //Bz = Bz 
+    double Bx, By; 
+    Bx= rzField.x() *cosTheta - rzField.y() * sinTheta ; // Bx= Br cos(theta) - Bphi sin(theta)
+    By= rzField.x() *sinTheta + rzField.y() * cosTheta ; // By = Br sin(theta) + Bphi cos(theta)
+    xyzField.set( Bx, By, rzField[2] );
 }
 
 inline void
@@ -98,8 +99,8 @@ CMSMagneticFieldG4::GetFieldValue( const G4double  Point[4],
    G4ThreeVector Position3v( Point[0], Point[1], Point[2] );
    G4ThreeVector Bfield3v( 0.0, 0.0, 0.0 );
    GetFieldValueXYZ( Position3v, Bfield3v );
-   Bfield[0]= Bfield3v.x() * CLHEP::tesla;
-   Bfield[1]= Bfield3v.y() * CLHEP::tesla;
-   Bfield[2]= Bfield3v.z() * CLHEP::tesla;
+   Bfield[0]= Bfield3v.x(); // * CLHEP::tesla;  -> Moved to ReadVector
+   Bfield[1]= Bfield3v.y(); // * CLHEP::tesla;
+   Bfield[2]= Bfield3v.z(); // * CLHEP::tesla;
 }
 #endif
