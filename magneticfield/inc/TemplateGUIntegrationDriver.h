@@ -1796,6 +1796,7 @@ TemplateGUIntegrationDriver<Backend>
     // Ananya: doing OneGoodStep always. Ask John what should be done.
     // if( h > fMinimumStep )
     // { 
+
       OneStep(y,dydx,x,h,epsilon,hdid,hnext) ;
       lastStepSucceeded= (hdid == h);   
     // }
@@ -1856,11 +1857,12 @@ TemplateGUIntegrationDriver<Backend>
     {
       finishedLane =  
               ( !CondNoOfSteps || !CondXLessThanx2 || !CondIsNotLastStep );
+      std::cout<<" finishedLane:     "<<finishedLane     << std::endl;
  #ifdef DEBUG     
       std::cout<<" CondNoOfSteps:    "<< CondNoOfSteps   << std::endl;
       std::cout<<" CondXLessThanx2:  "<<CondXLessThanx2  << std::endl;
       std::cout<<" CondIsNotLastStep:"<<CondIsNotLastStep<< std::endl;
-      std::cout<<" finishedLane:     "<<finishedLane     << std::endl;
+      
 #endif
       for (int i = 0; i < kVectorSize; ++i)
       {
@@ -1916,6 +1918,7 @@ TemplateGUIntegrationDriver<Backend>
     std::cout<<"Value of lastStep is: "<< lastStep <<std::endl;
     std::cout<<"isDoneLane is:        "<< isDoneLane <<std::endl;
 #endif 
+
   } 
 
   // Shifted inside if loop in while. 
@@ -1995,9 +1998,6 @@ TemplateGUIntegrationDriver<Backend>
 
       // Evaluate accuracy
       errpos_sq =  yerr[0]*yerr[0] + yerr[1]*yerr[1] + yerr[2]*yerr[2] ; 
-#ifdef DEBUG
-      std::cout<< "----errmom_sq is: "<< errmom_sq << std::endl;
-#endif
       errpos_sq *= inv_eps_pos_sq; // Scale relative to required tolerance
 
       // Accuracy for momentum
@@ -2092,12 +2092,13 @@ TemplateGUIntegrationDriver<Backend>
       }   
     }
   }
-#ifdef DEBUG
-  std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
-#endif 
+// #ifdef DEBUG
+  // std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
+// #endif 
 
   h         = hFinal;
-  hnext     = hnextFinal;
+  // hnext     = hnextFinal; // Not required, since hnext is assigned 
+                             // a completely new value later here.
   x         = xFinal;
   hdid      = hdidFinal;
   errmax_sq = errmax_sqFinal;
@@ -2112,6 +2113,8 @@ TemplateGUIntegrationDriver<Backend>
 
   // for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = ytemp[k]; }
   for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = yFinal[k]; }
+
+  // std::cout<< " hdid= "<<hdidFinal<<" and hnext= "<<hnext<<  std::endl;
 
   return;
 }   // end of  OneStep .............................
