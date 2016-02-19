@@ -99,7 +99,6 @@ TEFstate::TEFstate(const TEFstate &other) :
    fPFstateP(other.fPFstateP)
 {
 }
-
 //___________________________________________________________________
 TEFstate::~TEFstate()
 {
@@ -230,7 +229,6 @@ TEFstate *TEFstate::GetElement(int z, int a) {
 #endif  
 }
 #else   
-#ifndef GEANT_NVCC
 TEFstate *TEFstate::GetElement(int z, int a, TFile *f) {
   //   printf("Getting Element %d %d %d\n",z,a,fNLdElems);
   int ecode = z * 10000 + a * 10;
@@ -265,7 +263,6 @@ TEFstate *TEFstate::GetElement(int z, int a, TFile *f) {
   exit(1);
 #endif
 }
-#endif
 #endif
 
 //___________________________________________________________________

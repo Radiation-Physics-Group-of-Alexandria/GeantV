@@ -17,7 +17,6 @@
 //                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 #ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #include "Rtypes.h"
@@ -63,6 +62,7 @@ enum GVproc {
 #ifdef GEANT_NVCC
 class TPartIndex;
 extern GEANT_CUDA_DEVICE_CODE TPartIndex *fgPartIndexDev;
+extern TPartIndex *fgPartIndexHost;
 #endif
 
 class TPartIndex {
@@ -70,7 +70,7 @@ class TPartIndex {
 public:
   GEANT_CUDA_BOTH_CODE
   static TPartIndex *I() {
-#ifndef GEANT_CUDA_DEVICE_BUILD
+#ifndef GEANT_NVCC
      if (!fgPartIndex) {
 #ifdef USE_VECGEOM_NAVIGATOR
       Particle::CreateParticles();
@@ -79,6 +79,7 @@ public:
      }
     return fgPartIndex;
 #else
+#ifdef GEANT_CUDA_DEVICE_BUILD
      if (!fgPartIndexDev) {
 #ifdef USE_VECGEOM_NAVIGATOR
       Particle::CreateParticles();
@@ -86,7 +87,16 @@ public:
       fgPartIndexDev = new TPartIndex();
      }
     return fgPartIndexDev;
+#else
 
+     if (!fgPartIndexHost) {
+#ifdef USE_VECGEOM_NAVIGATOR
+      Particle::CreateParticles();
+#endif
+      fgPartIndexHost = new TPartIndex();
+     }
+    return fgPartIndexHost;
+#endif
 
 #endif 
 }
@@ -119,6 +129,7 @@ public:
   // Process index <- G4 process*1000+subprocess
   static int ProcCode(int procindex) /* const */ { return fgPCode[procindex]; }
 
+  GEANT_CUDA_BOTH_CODE
   static short NProc() /* const */ { return fgNProc; }
 
   // Fill the particle table
@@ -132,7 +143,7 @@ public:
   int PDG(const char *pname) const;
 // Particle name <- GV particle number
 #ifdef USE_VECGEOM_NAVIGATOR
-#ifndef GEANT_NVCC 
+#ifndef GEANT_CUDA_DEVICE_BUILD
   const char *PartName(int i) const { 
    return Particle_t::GetParticle(fPDG[i]).Name(); 
  }
@@ -209,7 +220,7 @@ private:
 
  GEANT_CUDA_BOTH_CODE
   void CreateReferenceVector();
-  #ifndef GEANT_CUDA_DEVICE_BUILD
+  #ifndef GEANT_NVCC
   static TPartIndex *fgPartIndex;
   #endif
   const int fVersion = 1000002;
@@ -242,7 +253,6 @@ private:
   std::map<int, int> fPDGToGVMap;              // PDG->GV code map
   std::vector<const Particle_t *> fGVParticle; // direct access to particles via GV index
 #endif
-
 #ifndef GEANT_NVCC
 #ifdef USE_ROOT
 #ifdef USE_VECGEOM_NAVIGATOR

@@ -8,7 +8,6 @@
 
 #ifndef TEFstate_H
 #define TEFstate_H
-#define USE_ROOT 0
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TEXSec                                                               //
@@ -17,7 +16,6 @@
 //                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 #include "TPartIndex.h"
 #include "TPFstate.h"
 
@@ -41,9 +39,7 @@ class TEFstate {
 public:
   TEFstate();
   TEFstate(int z, int a, float dens);
-#ifndef GEANT_NVCC
   TEFstate &operator=(const TEFstate &other);
-#endif
   ~TEFstate();
   static const char *ClassName() { return "TEFstate"; }
   bool AddPart(int kpart, int pdg, int nfstat, int nreac, const int dict[]);

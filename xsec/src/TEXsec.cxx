@@ -809,7 +809,7 @@ void TEXsec::RebuildStore(char *b) {
    }
    if(int (start - b) != size) {
       printf("TEXsec::RebuildStore: expected size %d ",size);
-      printf("%d found size \n",start - b);
+      printf("found size %d\n",start - b);
       exit(1);
    }
 }
@@ -841,7 +841,7 @@ void TEXsec::RebuildStore(char *b) {
    }
    if(int (start - b) != size) {
       printf("TEXsec::RebuildStore: expected size %d ",size);
-      printf("%d found size \n",start - b);
+      printf("found size %d \n",start - b);
       return;
    }
 }

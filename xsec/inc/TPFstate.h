@@ -41,12 +41,8 @@ public:
       return false;
     return true;
   }
- #ifndef GEANT_NVCC
-  const char *Name() const { return TPartIndex::I()->PartName(fPDG); }
- #else
   GEANT_CUDA_BOTH_CODE
   const char *Name() const { return TPartIndex::I()->PartName(fPDG); }
- #endif
 
   bool SetPart(int pdg, int nfstat, int nreac, const int dict[]);
   bool SetPart(int pdg, int nfstat, int nreac, const int dict[], TFinState vecfs[]);
