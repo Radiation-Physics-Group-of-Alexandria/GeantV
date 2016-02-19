@@ -643,7 +643,7 @@ TemplateGUIntegrationDriver<Backend>
 
   startCurveLength= yInput.GetCurveLength();
   x1= startCurveLength; 
-  x2= x1 + hstep;
+  x2= x1 + hstep; // = x + hstep
 
   h = hstep; // = x2 -x1 ; or x2 - x
 
@@ -1527,10 +1527,10 @@ TemplateGUIntegrationDriver<Backend>
   // Though condition addition not required if we assume that we have
   // at least 4 tracks with h>0
 
-  bool isDoneThisLane = true; // to get the while loop starting
+  bool done = true; // to get the while loop starting
                               // Alternatively, make it do while instead of while to get things started 
   // put inside a while(trackNextInput<nTracks) loop
-  while(trackNextInput < fNTracks && isDoneThisLane== true)
+  while(trackNextInput < fNTracks && done== true)
   {
 
     // Ensure that hstep > 0
@@ -1563,7 +1563,7 @@ TemplateGUIntegrationDriver<Backend>
     // ystart[i][currIndex] = FieldTrackName.PosMomVector[i]
     else
     {
-      isDoneThisLane = false;
+      done = false;
       double yScalar[fNoVars];
       yInput[trackNextInput].DumpToArray(yScalar);
       for (int i = 0; i < fNoVars; ++i)
@@ -1580,7 +1580,7 @@ TemplateGUIntegrationDriver<Backend>
     
   }
   
-  return isDoneThisLane;
+  return done;
 
 } // End of InsertNewTrack function
 
@@ -1741,7 +1741,7 @@ TemplateGUIntegrationDriver<Backend>
   // yInput.DumpToArray( ystart );
   // startCurveLength= yInput.GetCurveLength();
   x1= startCurveLength; 
-  x2= x1 + hStepLane;
+  x2= x1 + hStepLane; // x2 also needs to be lane specific
 
   h = hStepLane; // = x2 -x1 ; or x2 - x
 
@@ -1827,12 +1827,14 @@ TemplateGUIntegrationDriver<Backend>
     // Must cope with difficult rounding-error issues if hstep << x2
 
     lastStep = (h==0) || lastStep ;
-
+#ifdef DEBUG
+    std::cout<<" lastStep : "<< lastStep << std::endl;
+#endif
     nstp++;
 
     Bool_v CondNoOfSteps     = nstp<=fMaxNoSteps;
     Bool_v CondXLessThanx2   = x < x2;
-    Bool_v CondIsNotLastStep = !lastStep;
+    Bool_v CondIsNotLastStep = !lastStep; // lastStep is false
 
     bool condNoOfSteps     = vecgeom::IsFull(CondNoOfSteps    );
     bool condXLessThanx2   = vecgeom::IsFull(CondXLessThanx2  ); 
@@ -1844,6 +1846,9 @@ TemplateGUIntegrationDriver<Backend>
 
     // succeeded = (x>=x2);  // If it was a "forced" last step
     succeededLane = (x>=x2); 
+#ifdef DEBUG
+    std::cout<<" x is "<<x<< " and x2 is : "<< x2 << endl;
+#endif 
 
     if ( !( condNoOfSteps && condXLessThanx2 && condIsNotLastStep ) )
     // Condition inside if can be stored in a variable and used for while condition. 
@@ -1851,7 +1856,12 @@ TemplateGUIntegrationDriver<Backend>
     {
       finishedLane =  
               ( !CondNoOfSteps || !CondXLessThanx2 || !CondIsNotLastStep );
-
+ #ifdef DEBUG     
+      std::cout<<" CondNoOfSteps:    "<< CondNoOfSteps   << std::endl;
+      std::cout<<" CondXLessThanx2:  "<<CondXLessThanx2  << std::endl;
+      std::cout<<" CondIsNotLastStep:"<<CondIsNotLastStep<< std::endl;
+      std::cout<<" finishedLane:     "<<finishedLane     << std::endl;
+#endif
       for (int i = 0; i < kVectorSize; ++i)
       {
         if (finishedLane[i] ==1 &&  fIndex[i] != -1)
@@ -1877,7 +1887,7 @@ TemplateGUIntegrationDriver<Backend>
           if (trackNextInput<nTracks)
           {
             // Might not be needed. `probably taken care of by InsertNewTrack. Check: Ananya
-            isDoneLane[i] = false; // the lane needs to go back in the while loop 
+            // isDoneLane[i] = false; // the lane needs to go back in the while loop 
                                    // with a new track
 
             // InsertNewTrack needs to be positioned after isDoneLane because
@@ -1891,6 +1901,7 @@ TemplateGUIntegrationDriver<Backend>
             h        [i] = hStepLane[i];// Can absorb in InsertNewTrack as well, leads to too many variables though
                                         // Maybe ask John interpretation of this h and then put in InsertNewTrack
                                         // with appropriate name 
+            x2       [i] = x[i] + hStepLane[i];
           }
           else
           {
@@ -1901,7 +1912,10 @@ TemplateGUIntegrationDriver<Backend>
       }
 
     }
-
+#ifdef DEBUG
+    std::cout<<"Value of lastStep is: "<< lastStep <<std::endl;
+    std::cout<<"isDoneLane is:        "<< isDoneLane <<std::endl;
+#endif 
   } 
 
   // Shifted inside if loop in while. 
@@ -1947,7 +1961,7 @@ TemplateGUIntegrationDriver<Backend>
 #ifdef DEBUG
   std::cout << "OneStep called with htry= " << htry << std::endl;
 #endif 
-  
+
   h = htry ; // Set stepsize to the initial trial value
 
   Double_v inv_eps_vel_sq = 1.0 / (eps_rel_max*eps_rel_max);
@@ -2031,6 +2045,15 @@ TemplateGUIntegrationDriver<Backend>
       Double_v errPower = Vc::exp( (0.5*fPowerShrink)*vecgeom::Log(errmax_sq) ); 
       htemp = fSafetyFactor *h* errPower;
       // htemp = fSafetyFactor *h* vecgeom::Pow( errmax_sq, 0.5*fPowerShrink );
+      // Can use the loop below instead of the lines above since power is 
+      // expensive operation. 
+/*      for (int i = 0; i < kVectorSize; ++i)
+      {
+        if (finished[i] != -1)
+        {
+          htemp[i] = fSafetyFactor *h[i]* std::pow(errmax_sq[i], 0.5*fPowerShrink);
+        }
+      }*/
 
       h = vecgeom::Max(htemp, 0.1*h);
       
@@ -2070,7 +2093,7 @@ TemplateGUIntegrationDriver<Backend>
     }
   }
 #ifdef DEBUG
-  std::cout << "GUIntDrv: 1-good-step - Loop done at iter = " << iter << std::endl;
+  std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
 #endif 
 
   h         = hFinal;
