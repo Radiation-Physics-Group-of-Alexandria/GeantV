@@ -31,9 +31,10 @@ using fieldUnits::degree;
 #include "TemplateFieldEquationFactory.h"
 #include "TemplateGUVIntegrationStepper.h"
 #include "TemplateGUTCashKarpRKF45.h"
-
 #include "TemplateGUIntegrationDriver.h"
 #include "FieldTrack.h"
+
+#include <stdlib.h>
 
 using namespace std;
 
@@ -162,37 +163,6 @@ int main(int argc, char *args[])
     double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                     x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
-/*    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
-
-    for (int i = 0; i < 4; ++i)
-    {
-      X_pos[i] = i-1.;
-      Y_pos[i] = i-1.;
-      Z_pos[i] = i-1.;
-      X_mom[i] = i-1.;
-      Y_mom[i] = i+1.-1.;
-      Z_mom[i] = i+1.-1.;
-
-    }
-    cout<<"New X position is: "<<X_pos<<endl;
-
-    Double yIn[] = {X_pos * mmGVf, Y_pos * mmGVf ,Z_pos * mmGVf,
-                    X_mom * ppGVf ,Y_mom * ppGVf ,Z_mom * ppGVf};*/
-
-
-    #ifdef DEBUGAnanya
-      cout<<yIn[0]<<endl;
-    #endif 
-       
-
-    auto gvEquation2 = new GvEquationType(gvField);
-                   // new TMagFieldEquation<TUniformMagField, Nposmom>(gvField);
-    // gvEquation2->InitializeCharge( particleCharge ); // Let's make sure
-    
-    // Should be able to share the Equation -- eventually
-    // For now, it checks that it was Done() -- and fails an assert
-
-
     std::cout << "# step_len_mm = " << step_len_mm;
     
     
@@ -237,47 +207,144 @@ int main(int argc, char *args[])
     int nTracks = 16;
     FieldTrack yInput[nTracks], yOutput[nTracks];
     // double posMom[] ={0., 0., 0., 0., 0., 1.};
-    double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-                       x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
-    const ThreeVector_d  startPosition( posMom[0], posMom[1], posMom[2]);
-    const ThreeVector_d  startMomentum( posMom[3], posMom[4], posMom[5]);
-    GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
-    GUFieldTrack yTrackOut( startPosition, startMomentum );  // yStart
-
-    for (int i = 0; i < nTracks; ++i)
-    {
-      yInput [i].LoadFromArray(posMom);
-      yOutput[i].LoadFromArray(posMom);
-    }
     double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
 
-    for (int i = 0; i < no_of_steps; ++i)
+    // for (int step = 0; step < no_of_steps; ++step)
+    for (int step = 0; step < 10; ++step)
     {
       total_step += step_len;
       std::fill_n(hstep, nTracks, total_step);
 
-      testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
-      testScalarDriver      ->AccurateAdvance( yTrackIn, hstep[0], epsTol, yTrackOut );
+      x_pos = (float) rand()/(RAND_MAX) ;
+      y_pos = (float) rand()/(RAND_MAX) ;
+      z_pos = (float) rand()/(RAND_MAX) ;
+      x_mom = (float) rand()/(RAND_MAX) ;
+      y_mom = (float) rand()/(RAND_MAX) ;
+      z_mom = (float) rand()/(RAND_MAX) ;
+      double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                         x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
-      cout<<" yOutput[0] is: "  << yOutput[0]<<" for yInput: "  <<yInput[0]<< endl;
-      cout<<" yTrackOut[0] is: "<< yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
+      const ThreeVector_d  startPosition( posMom[0], posMom[1], posMom[2]);
+      const ThreeVector_d  startMomentum( posMom[3], posMom[4], posMom[5]);
+      GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
+      GUFieldTrack yTrackOut( startPosition, startMomentum );  // yStart
 
-/*      cout<<"\n----Given hstep was: "<<endl;
+      for (int j = 0; j < nTracks; ++j)
+      {
+        yInput [j].LoadFromArray(posMom);
+        yOutput[j].LoadFromArray(posMom);
+      }
+
+/*      double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
+      double X_Mom[nTracks], Y_Mom[nTracks], Z_Mom[nTracks];
+      double posMomMatrix[nTracks][6];
       for (int i = 0; i < nTracks; ++i)
       {
-        cout<<hstep[i]<<" ";
-      }
-      cout<<endl;
+        X_Pos[i] = (float) rand()/(RAND_MAX) ;
+        Y_Pos[i] = (float) rand()/(RAND_MAX) ;
+        Z_Pos[i] = (float) rand()/(RAND_MAX) ;
+        X_Mom[i] = (float) rand()/(RAND_MAX) ;
+        Y_Mom[i] = (float) rand()/(RAND_MAX) ;
+        Z_Mom[i] = (float) rand()/(RAND_MAX) ;
 
-      cout<<"\n----Output succeeded is: "<<endl;
+        // posMomMatrix[i] = {X_Pos[i] * mmGVf, Y_Pos[i] * mmGVf ,Z_Pos[i] * mmGVf,
+        //                    X_Mom[i] * ppGVf ,Y_Mom[i] * ppGVf ,Z_Mom[i] * ppGVf};
+        posMomMatrix[i][0] = X_Pos[i] * mmGVf;
+        posMomMatrix[i][1] = Y_Pos[i] * mmGVf;
+        posMomMatrix[i][2] = Z_Pos[i] * mmGVf;
+        posMomMatrix[i][3] = X_Mom[i] * ppGVf;
+        posMomMatrix[i][4] = Y_Mom[i] * ppGVf;
+        posMomMatrix[i][5] = Z_Mom[i] * ppGVf;
+        yInput [i].LoadFromArray(posMomMatrix[i]);
+        yOutput[i].LoadFromArray(posMomMatrix[i]);
+      }
+*/
+      for (int i = 0; i < nTracks; ++i)
+      {
+         hstep[i] = hstep[i] + i*hstep[i];
+      }
+#define DebuggingSection
+#ifndef DebuggingSection
+      testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
+#endif 
+/*      testScalarDriver->AccurateAdvance( yTrackIn, hstep[0], epsTol, yTrackOut );
+
+      cout<<" yOutput[0] is: "<< yOutput[0]<<" for yInput: "  <<yInput[0]<< endl;
+      cout<<" yTrackOut is: " << yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;*/
+
+/*      for (int i = 0; i < nTracks; ++i)
+      {
+        const ThreeVector_d  startPosition( posMomMatrix[i][0], posMomMatrix[i][1], posMomMatrix[i][2]);
+        const ThreeVector_d  startMomentum( posMomMatrix[i][3], posMomMatrix[i][4], posMomMatrix[i][5]);
+        GUFieldTrack yTrackIn ( startPosition, startMomentum ); 
+        GUFieldTrack yTrackOut( startPosition, startMomentum ); 
+
+        testScalarDriver->AccurateAdvance( yTrackIn, hstep[i], epsTol, yTrackOut );
+
+        cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< endl;
+        cout<<" yTrackOut is: " << yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
+      }
+*/
+
+      for (int i = 0; i < nTracks; ++i)
+      {
+#ifndef DebuggingSection
+        testScalarDriver->AccurateAdvance( yTrackIn, hstep[i], epsTol, yTrackOut );
+
+        cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< endl;
+        cout<<" yTrackOut is : "      << yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
+#endif 
+      }
+
+/*     cout<<"\n----Output succeeded is: "<<endl;
       for (int i = 0; i < nTracks; ++i)
       {
         cout<<succeeded[i]<<" ";
       }
       cout<<endl;*/
     }
+
+#ifdef DebuggingSection
+    if(true){
+      // double posMomt[] = {  0.0394383, 0.0783099, 0.079844, 0.911647, 0.197551, 0.335223};  
+      double posMomt[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
+
+      
+      total_step = 60;
+      std::fill_n(hstep, nTracks, total_step);
+
+      for (int i = 0; i < nTracks; ++i)
+      {
+         hstep[i] = hstep[i] + i*hstep[i];
+      }
+
+      for (int j = 0; j < nTracks; ++j)
+      {
+        yInput [j].LoadFromArray(posMomt);
+        yOutput[j].LoadFromArray(posMomt);
+      }
+
+      const ThreeVector_d  startPosition( posMomt[0], posMomt[1], posMomt[2]);
+      const ThreeVector_d  startMomentum( posMomt[3], posMomt[4], posMomt[5]);
+      GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
+      GUFieldTrack yTrackOut( startPosition, startMomentum );  // yStart
+
+      testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
+      // testScalarDriver->AccurateAdvance( yTrackIn, hstep[11], epsTol, yTrackOut );
+
+      for (int i = 0; i < nTracks; ++i)
+      {
+        testScalarDriver->AccurateAdvance( yTrackIn, hstep[i], epsTol, yTrackOut );
+
+        cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<< endl;
+        cout<<" yTrackOut is : "      << yTrackOut << endl;
+      }
+
+    }
+#endif 
+
 
 
 
