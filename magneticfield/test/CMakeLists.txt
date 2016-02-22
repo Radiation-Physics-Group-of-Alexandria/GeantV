@@ -43,8 +43,8 @@ add_executable(testTemplateStepperFixedCashKarp2 testTemplateStepperFixedCashKar
 target_link_libraries(testTemplateStepperFixedCashKarp2 Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 #message(STATUS "Created target for testTemplateStepperFixedCashKarp2")
 
-#add_executable(testIntegrationDriverCashKarp testIntegrationDriverCashKarp.cxx) ## ${sources} ${headers})
-#target_link_libraries(testIntegrationDriverCashKarp Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+add_executable(testIntegrationDriverCashKarp testIntegrationDriverCashKarp.cxx) ## ${sources} ${headers})
+target_link_libraries(testIntegrationDriverCashKarp Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 #message(STATUS "Created target for testIntegrationDriverCashKarp")
 
 
