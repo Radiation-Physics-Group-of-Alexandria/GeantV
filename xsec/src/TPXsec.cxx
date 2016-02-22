@@ -589,6 +589,7 @@ bool TPXsec::XS_v(int npart, int rindex, const double en[], double lam[]) const 
 }
 
 //_________________________________________________________________________
+GEANT_CUDA_DEVICE_CODE
 float TPXsec::XS(int rindex, double en, bool verbose) const {
   //   printf("fEGrid %p\n",fEGrid);
   en = en < fEGrid[fNEbins - 1] ? en : fEGrid[fNEbins - 1] * 0.999;

@@ -36,8 +36,9 @@
 #include "Geant/Math.h"
 using vecgeom::kPi;
 using vecgeom::kTwoPi;
+#ifndef GEANT_NVCC
 #include "base/MessageLogger.h"
-
+#endif
 #ifdef USE_ROOT
 ClassImp(TTabPhysMgr)
 #endif
@@ -46,6 +47,7 @@ ClassImp(TTabPhysMgr)
 //______________________________________________________________________________
 TTabPhysMgr *TTabPhysMgr::Instance(const char *xsecfilename, const char *finalsfilename) {
   // Access to instance of TTabPhysMgr
+#ifndef GEANT_NVCC
   if (fgInstance)
     return fgInstance;
   if (!(xsecfilename && finalsfilename)) {
@@ -54,11 +56,13 @@ TTabPhysMgr *TTabPhysMgr::Instance(const char *xsecfilename, const char *finalsf
   }
   fgInstance = new TTabPhysMgr(xsecfilename, finalsfilename);
   return fgInstance;
+ #endif
 }
 
 //______________________________________________________________________________
 TTabPhysMgr::~TTabPhysMgr() {
   // Destructor
+#ifndef GEANT_NVCC
   delete[] fMatXsec;
   delete[] fElemXsec;
   delete[] fElemFstate;
@@ -66,6 +70,7 @@ TTabPhysMgr::~TTabPhysMgr() {
   delete fHasNCaptureAtRest;
   fgInstance = 0;
 //  Particle_t::CreateParticles();
+#endif 
 }
 
 //______________________________________________________________________________
@@ -86,7 +91,7 @@ TTabPhysMgr::TTabPhysMgr(const char *xsecfilename, const char *finalsfilename)
       fGeom(0),
 #endif
       fHasNCaptureAtRest(0) {
-
+#ifndef GEANT_NVCC
   fgInstance = this;
   //Particle_t::CreateParticles();
 #ifdef USE_ROOT
@@ -270,6 +275,7 @@ TTabPhysMgr::TTabPhysMgr(const char *xsecfilename, const char *finalsfilename)
   t = clock() - t;
   printf("Memory taken by xsec and states: %ld [MB] loaded in: %g [sec]\n", mem, ((float)t) / CLOCKS_PER_SEC);
 #endif
+#endif
 }
 
 //______________________________________________________________________________
@@ -284,7 +290,7 @@ void TTabPhysMgr::TransformLF(int /*indref*/, GeantTrack_v & /*tracks*/, int /*n
 
 // NOT ACTIVE NOW
 //______________________________________________________________________________
-GEANT_CUDA_DEVICE_CODE
+GEANT_CUDA_BOTH_CODE
 void TTabPhysMgr::ApplyMsc(Material_t *mat, int ntracks, GeantTrack_v &tracks, GeantTaskData *td) {
   // Compute MSC angle at the beginning of the step and apply it to the vector
   // of tracks.
@@ -359,7 +365,7 @@ void TTabPhysMgr::ApplyMsc(Material_t *mat, int ntracks, GeantTrack_v &tracks, G
 }
 
 //______________________________________________________________________________
-GEANT_CUDA_DEVICE_CODE
+GEANT_CUDA_BOTH_CODE
 int TTabPhysMgr::Eloss(Material_t *mat, int ntracks, GeantTrack_v &tracks, GeantTaskData *td) {
   // Apply energy loss for the input material for ntracks in the vector of
   // tracks. Output: modified tracks.fEV array
@@ -774,7 +780,7 @@ int TTabPhysMgr::SampleInt(int imat, int ntracks, GeantTrack_v &tracks, GeantTas
 // Will be called only if the particle has decay or/and nuclear capture at-rest
 //______________________________________________________________________________
 // will be called recursively if necessary
-GEANT_CUDA_DEVICE_CODE
+GEANT_CUDA_BOTH_CODE
 void TTabPhysMgr::GetRestFinStates(int partindex, TMXsec *mxs, double energyLimit, GeantTrack_v &tracks, int iintrack,
                                    int &nTotSecPart, GeantTaskData *td) {
   // current track should have already been killed before calling
@@ -1142,7 +1148,7 @@ void TTabPhysMgr::RotateNewTrack(double oldXdir, double oldYdir, double oldZdir,
 // (oldXdir, oldYdir, oldZdir) is the direction vector of parent track in lab.
 // frame; direction vector of the current track, measured from local Z is
 // already updated in GeantTrack track; here we rotate it to lab. frame
-GEANT_CUDA_DEVICE_CODE
+GEANT_CUDA_BOTH_CODE
 void TTabPhysMgr::RotateNewTrack(double oldXdir, double oldYdir, double oldZdir, GeantTrack_v &tracks, int itrack) {
   const double one = 1.0;
   const double zero = 0.0;
@@ -1229,7 +1235,7 @@ void TTabPhysMgr::RotateTrack(GeantTrack &track, double theta, double phi) {
 // FOR THE itrack-th element of a GeantTrack_v
 // GeantTrack_v contains the original direction in lab frame; theta and
 // phi are the scattering angles measured form the particle local Z
-GEANT_CUDA_DEVICE_CODE
+GEANT_CUDA_BOTH_CODE
 void TTabPhysMgr::RotateTrack(GeantTrack_v &tracks, int itrack, double theta, double phi) {
   const double one = 1.0;
   const double zero = 0.0;
@@ -1274,7 +1280,9 @@ void TTabPhysMgr::RotateTrack(GeantTrack_v &tracks, int itrack, double theta, do
 }
 
 //______________________________________________________________________________
+
 const char *TTabPhysMgr::GetVersion() const {
+#ifndef GEANT_NVCC
   static bool first = true;
   static mutex l;
   static char ver[512];
@@ -1285,10 +1293,11 @@ const char *TTabPhysMgr::GetVersion() const {
   }
   l.unlock();
   return ver;
+#endif
 }
 
 //______________________________________________________________________________
-GEANT_CUDA_DEVICE_CODE
+GEANT_CUDA_BOTH_CODE
 bool TTabPhysMgr::HasRestProcess(int gvindex) {
   return fDecay->HasDecay(gvindex) || fHasNCaptureAtRest[gvindex] || (gvindex == TPartIndex::I()->GetSpecGVIndex(1));
 }

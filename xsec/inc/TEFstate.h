@@ -1,11 +1,9 @@
 // Author: Federico Carminati   27/05/13
-
 /*************************************************************************
  * Copyright (C) 1995-2000, fca                                          *
  * All rights reserved.                                                  *
  *                                                                       *
  *************************************************************************/
-
 #ifndef TEFstate_H
 #define TEFstate_H
 //////////////////////////////////////////////////////////////////////////
@@ -18,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////////
 #include "TPartIndex.h"
 #include "TPFstate.h"
+#include "Geant/Config.h"
 
 #ifndef GEANT_NVCC
 class TFile;
@@ -61,8 +60,10 @@ public:
   void SetRestCaptFstate(int kpart, const TFinState &fstate);
   bool HasRestCapture(int partindex);
 
+  GEANT_CUDA_BOTH_CODE
   bool SampleReac(int pindex, int preac, float en, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
                   const float *&mom, int &ebinindx) const;
+  GEANT_CUDA_BOTH_CODE
   bool SampleReac(int pindex, int preac, float en, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
                   const float *&mom, int &ebinindx, double randn1, double randn2) const;
   bool SampleRestCaptFstate(int kpart, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
@@ -104,8 +105,10 @@ GEANT_CUDA_BOTH_CODE
   }
 #else
 #ifdef GEANT_CUDA_DEVICE_BUILD
- GEANT_CUDA_DEVICE_CODE int NLdElems() { return fEFNLdElemsDev; }
- GEANT_CUDA_DEVICE_CODE TEFstate *Element(int i) {
+ GEANT_CUDA_DEVICE_CODE 
+ static int NLdElems() { return fEFNLdElemsDev; }
+ GEANT_CUDA_DEVICE_CODE 
+ static TEFstate *Element(int i) {
     if (i < 0 || i >= fEFNLdElemsDev)
       return 0;
     return fEFElementsDev[i];

@@ -171,7 +171,9 @@ public:
   // Number of particles with reactions
   void SetNPartReac(int np) { fNpReac = np; }
   void SetNPartCharge(int nc) { fNpCharge = nc; }
+ GEANT_CUDA_BOTH_CODE
   int NPartReac() const { return fNpReac; }
+ GEANT_CUDA_BOTH_CODE
   int NPartCharge() const { return fNpCharge; }
 #ifndef USE_VECGEOM_NAVIGATOR
   TDatabasePDG *DBPdg() const { return fDBPdg; }

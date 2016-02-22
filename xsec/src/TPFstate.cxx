@@ -11,7 +11,15 @@
 #include "base/RNG.h"
 using vecgeom::RNG;
 #endif
+#ifndef GEANT_NVCC
 using std::max;
+#else
+template<class T>
+  GEANT_CUDA_BOTH_CODE
+const T& max(const T&a,const T& b) {
+    return (a<b)?b:a;
+}
+#endif
 
 int TPFstate::fVerbose = 0;
 #ifndef GEANT_NVCC
@@ -181,6 +189,7 @@ bool TPFstate::SetFinState(int ibin, int reac, const int npart[], const float we
 }
 
 //______________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 bool TPFstate::SampleReac(int preac, float en, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
                           const float *&mom, int &ebinindx) const {
   int rnumber = fRdict[preac];
@@ -223,6 +232,7 @@ bool TPFstate::SampleReac(int preac, float en, int &npart, float &weight, float 
 }
 
 //______________________________________________________________________________
+  GEANT_CUDA_BOTH_CODE
 bool TPFstate::SampleReac(int preac, float en, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
                           const float *&mom, int &ebinindx, double randn1, double randn2) const {
   int rnumber = fRdict[preac];

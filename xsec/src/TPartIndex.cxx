@@ -18,6 +18,13 @@ using std::map;
 #ifdef USE_ROOT
 ClassImp(TPartIndex)
 #endif
+using std::max;
+#else
+ template<class T>
+  GEANT_CUDA_BOTH_CODE
+const T& max(const T&a,const T& b) {
+    return (a<b)?b:a;
+}
 #endif
 
     const
@@ -436,7 +443,7 @@ void TPartIndex::CreateReferenceVector() {
             if (index == std::string::npos)
               name += "_bar";
             int acode = 0;
-            int len = std::max<int>(name.size(), 28 - lpdg - 1);
+            int len = max<int>(name.size(), 28 - lpdg - 1);
             sprintf(fmt, "%%5d %%-%d.%ds%%-%dd%%4d%%6d%%s", len, len, lpdg + 1);
             //		printf("%5d %-15.15s %-12d%4d%6d\n",
             printf(fmt, count, name.c_str(), updg[i], ap, acode, "\n");
@@ -455,7 +462,7 @@ void TPartIndex::CreateReferenceVector() {
             int trkcode = -1;
             int ndec = 0;
             int len = 23 - lpdg - 1;
-            len = std::max<int>(name.size(), 23 - lpdg - 1);
+            len = max<int>(name.size(), 23 - lpdg - 1);
             sprintf(fmt, "%%5d %%-%d.%ds%%%dd%%3d%%4d %%-11s%%3d%%12.5e%%12.5e%%5d%%3d%%5d%%3d%%5d%%4d%%s", len, len,
                     lpdg + 1);
             //		printf("%s\n",fmt);

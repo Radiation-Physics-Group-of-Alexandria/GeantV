@@ -108,7 +108,6 @@ TFinState &TFinState::operator=(const TFinState &right) {
   }
   return *this;
 }
-
 //_________________________________________________________________________
 bool TFinState::SetFinState(int nfstates, const int npart[], const float weight[], const float kerma[],
                             const float en[], const char surv[], const int pid[], const float mom[]) {
@@ -209,6 +208,7 @@ void TFinState::NormFinSateWeights() {
 }
 
 //_________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 bool TFinState::SampleReac(int &npart, float &weight, float &kerma, float &en, const int *&pid,
                            const float *&mom) const {
 
@@ -259,6 +259,7 @@ bool TFinState::SampleReac(int &npart, float &weight, float &kerma, float &en, c
 }
 
 //_________________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 bool TFinState::SampleReac(int &npart, float &weight, float &kerma, float &en, const int *&pid, const float *&mom,
                            double randn) const {
 

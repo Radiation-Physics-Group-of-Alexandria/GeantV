@@ -43,7 +43,9 @@ public:
   int GetNsecs() const { return fNsecs; }
 
   bool Prune() { return true; }
+  GEANT_CUDA_BOTH_CODE
   bool SampleReac(int &npart, float &weight, float &kerma, float &en, const int *&pid, const float *&mom) const;
+  GEANT_CUDA_BOTH_CODE
   bool SampleReac(int &npart, float &weight, float &kerma, float &en, const int *&pid, const float *&mom,
                   double randn) const;
 

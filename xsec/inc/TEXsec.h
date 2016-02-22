@@ -66,6 +66,7 @@ GEANT_CUDA_BOTH_CODE
   int NEbins() const { return fNEbins; }
 GEANT_CUDA_BOTH_CODE
   double EilDelta() const { return fEilDelta; }
+GEANT_CUDA_BOTH_CODE
   float XS(int pindex, int rindex, float en) const;
   float DEdx(int pindex, float en) const;
   bool MS(int index, float en, float &ang, float &asig, float &len, float &lsig) const;
@@ -159,8 +160,10 @@ bool CheckAlign() {
  #else
 
 #ifdef GEANT_CUDA_DEVICE_BUILD
- GEANT_CUDA_DEVICE_CODE int NLdElems() { return fNLdElemsDev; }
- GEANT_CUDA_DEVICE_CODE TEXsec *Element(int i) {
+ GEANT_CUDA_DEVICE_CODE 
+ static int NLdElems() { return fNLdElemsDev; }
+ GEANT_CUDA_DEVICE_CODE 
+ static TEXsec *Element(int i) {
     if (i < 0 || i >= fNLdElemsDev)
       return 0;
     return fElementsDev[i];

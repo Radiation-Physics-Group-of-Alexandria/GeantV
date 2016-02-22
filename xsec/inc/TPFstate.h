@@ -50,8 +50,10 @@ public:
                    const char surv[], const int pid[], const float mom[]);
   void Print(const char *opt = "") const;
   bool Prune() { return true; }
+  GEANT_CUDA_BOTH_CODE
   bool SampleReac(int preac, float en, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
                   const float *&mom, int &ebinindx) const;
+  GEANT_CUDA_BOTH_CODE
   bool SampleReac(int preac, float en, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
                   const float *&mom, int &ebinindx, double randn1, double randn2) const;
   bool SampleRestCaptFstate(int &npart, float &weight, float &kerma, float &enr, const int *&pid,

@@ -48,6 +48,7 @@ public:
   bool SetPartIon(const float dedx[]);
   bool SetPartMS(const float angle[], const float ansig[], const float length[], const float lensig[]);
   int PDG() const { return fPDG; }
+  GEANT_CUDA_BOTH_CODE
   float XS(int rindex, double en, bool verbose=false) const;
   bool XS_v(int npart, int rindex, const double en[], double lam[]) const;
   float DEdx(double en) const;

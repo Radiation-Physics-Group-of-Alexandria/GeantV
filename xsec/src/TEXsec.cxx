@@ -28,11 +28,17 @@
 #endif
 using vecgeom::kAvogadro;
 using std::numeric_limits;
-using std::max;
 
 #ifndef GEANT_NVCC
+using std::max;
 #ifdef USE_ROOT
 ClassImp(TEXsec)
+#else
+template<class T>
+  GEANT_CUDA_BOTH_CODE
+const T& max(const T&a,const T& b) {
+    return (a<b)?b:a;
+}
 #endif
 
 int TEXsec::fNLdElems = 0;
@@ -161,6 +167,7 @@ bool TEXsec::AddPartIon(int kpart, const float dedx[]) {
    return fPXsecP[kpart]->SetPartIon(dedx); }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 float TEXsec::XS(int pindex, int rindex, float en) const {
    return fPXsecP[pindex]->XS(rindex, en); }
 
@@ -814,7 +821,7 @@ void TEXsec::RebuildStore(char *b) {
    }
 }
 #else
-
+#ifdef GEANT_CUDA_DEVICE_BUILD
 //___________________________________________________________________
 GEANT_CUDA_DEVICE_CODE
 void TEXsec::RebuildStore(char *b) {
@@ -845,6 +852,36 @@ void TEXsec::RebuildStore(char *b) {
       return;
    }
 }
+#else 
+void TEXsec::RebuildStore(char *b) {
+   int size = 0;
+   fNLdElemsHost = 0;
+   char *start = b;
+   memcpy(&size,start,sizeof(int));
+   start += sizeof(int);
+   memcpy(&fNLdElemsHost,start,sizeof(int));
+   start += sizeof(int);
+   for(auto i=0; i<fNLdElemsHost; ++i) {
+      TEXsec *current = (TEXsec *) start;
+#ifdef MAGIC_DEBUG
+      if(current->GetMagic() != -777777) {
+	 printf("TEXsec::Broken Magic@ %d %d\n", i, current->GetMagic());
+	 return;
+      }
+#endif
+      current->RebuildClass();
+      fElementsHost[i] = current;
+      if(!fElementsHost[i]->CheckAlign()) 
+       return;
+      start += current->SizeOf();
+   }
+   if(int (start - b) != size) {
+      printf("TEXsec::RebuildStore: expected size %d ",size);
+      printf("found size %d \n",start - b);
+      return;
+   }
+}
+#endif
 #endif
 //___________________________________________________________________
 float TEXsec::Lambda(int pindex, double en) const {
@@ -885,10 +922,12 @@ TEXsec *TEXsec::GetElement(int z, int a) {
   for (int el = 0; el < fNLdElemsDev; ++el)
     if (ecode == fElementsDev[el]->Ele())
       return fElementsDev[el];
+  return 0;
 #else
   for (int el = 0; el < fNLdElemsHost; ++el)
     if (ecode == fElementsHost[el]->Ele())
       return fElementsHost[el];
+  return 0;
 #endif   
 }
 #else   

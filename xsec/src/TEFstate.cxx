@@ -4,7 +4,6 @@
 #include "TError.h"
 #endif
 #endif
-
 #include <TPFstate.h>
 #include <TPartIndex.h>
 #include "TEFstate.h"
@@ -196,12 +195,14 @@ bool TEFstate::SampleRestCaptFstate(int kpart, int &npart, float &weight, float 
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 bool TEFstate::SampleReac(int pindex, int preac, float en, int &npart, float &weight, float &kerma, float &enr,
                           const int *&pid, const float *&mom, int &ebinindx) const {
   return fPFstateP[pindex]->SampleReac(preac, en, npart, weight, kerma, enr, pid, mom, ebinindx);
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 bool TEFstate::SampleReac(int pindex, int preac, float en, int &npart, float &weight, float &kerma, float &enr,
                           const int *&pid, const float *&mom, int &ebinindx, double randn1, double randn2) const {
   return fPFstateP[pindex]->SampleReac(preac, en, npart, weight, kerma, enr, pid, mom, ebinindx, randn1, randn2);
@@ -222,10 +223,12 @@ TEFstate *TEFstate::GetElement(int z, int a) {
   for (int el = 0; el < fEFNLdElemsDev; ++el)
     if (ecode == fEFElementsDev[el]->Ele())
       return fEFElementsDev[el];
+  return 0;
 #else
   for (int el = 0; el < fEFNLdElemsHost; ++el)
     if (ecode == fEFElementsHost[el]->Ele())
       return fEFElementsHost[el];
+  return 0;
 #endif  
 }
 #else   
@@ -423,6 +426,7 @@ void TEFstate::RebuildStore(char *b) {
    }
 }
 #else
+#ifdef GEANT_CUDA_DEVICE_BUILD
 //___________________________________________________________________
 GEANT_CUDA_DEVICE_CODE
 void TEFstate::RebuildStore(char *b) {
@@ -451,4 +455,33 @@ void TEFstate::RebuildStore(char *b) {
       return;
    }
 }
+#else
+//___________________________________________________________________
+void TEFstate::RebuildStore(char *b) {
+   char *start = b;
+   int size = 0;
+   memcpy(&size,start,sizeof(int));
+   start += sizeof(int);
+   memcpy(&fEFNLdElemsHost,start,sizeof(int));
+   start += sizeof(int);
+   for(auto i=0; i<fEFNLdElemsHost; ++i) {
+      TEFstate *current = (TEFstate *) start;
+#ifdef MAGIC_DEBUG
+      if(current->GetMagic() != -777777) {
+	 printf("TEFstate::Broken Magic %d\n",current->GetMagic());
+         return;
+      }
+#endif
+      current->RebuildClass();
+      fEFElementsHost[i] = current;
+      if(!fEFElementsHost[i]->CheckAlign())
+         return;
+      start += current->SizeOf();
+   }
+   if((int)(start - b) != size) {
+      printf("TEFstate::RebuildStore: expected size %d  found size %d\n",size,start - b);
+      return;
+   }
+}
+#endif
 #endif
