@@ -1,6 +1,14 @@
 #ifndef _FIELDTRACK_H_
 #define _FIELDTRACK_H_
 
+/*---------------------
+Data structure in place of GUFieldTrack to be used 
+for input and output stream arrays of AccurateAdvance 
+in IntegrationDriver. Functions DumpToArray and LoadFromArray
+can be removed if PosMomVector is made public data member.
+Same goes for SetCurveLength and GetCurveLength functions.
+----------------*/
+
 struct FieldTrack{
 
 private: 
