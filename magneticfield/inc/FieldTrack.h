@@ -3,6 +3,9 @@
 
 struct FieldTrack{
 
+private: 
+  double fDistanceAlongCurve = 0.0;
+
 public:
   //data members
 
@@ -31,9 +34,18 @@ public:
     return fDistanceAlongCurve;
   }
 
-private: 
-  double fDistanceAlongCurve = 0.0;
-
+  friend std::ostream&
+          operator<<( std::ostream& os, const FieldTrack& fieldTrack)
+          {
+            os<< " ( ";
+            os<< " X= "<< fieldTrack.PosMomVector[0]<<" "
+                       << fieldTrack.PosMomVector[1]<<" "
+                       << fieldTrack.PosMomVector[2]<<" "; //Position
+            os<< " P= "<< fieldTrack.PosMomVector[3]<<" "
+                       << fieldTrack.PosMomVector[4]<<" "
+                       << fieldTrack.PosMomVector[5]<<" "; //Momentum
+            os<< " ) ";
+          }
 };
 
 

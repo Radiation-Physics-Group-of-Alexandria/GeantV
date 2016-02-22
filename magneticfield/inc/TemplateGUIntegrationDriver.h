@@ -69,7 +69,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
                           Double_v  eps,      //  memb variables ?
                           Double_v& hdid,
                           Double_v& hnext ) ;
-#endif
+
      void InitializeAccurateAdvance( /*const*/ FieldTrack yInput[],
                                      const double      hstep [],
                                            Double_v    y[],
@@ -95,7 +95,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
                              bool       succeeded[]);
 
      void SetNTracks( int nTracks );
-
+#endif
 
      Bool_v  QuickAdvance( TemplateGUFieldTrack<Backend>& y_posvel,        // INOUT
                            const Double_v      dydx[],  
@@ -1857,8 +1857,8 @@ TemplateGUIntegrationDriver<Backend>
     {
       finishedLane =  
               ( !CondNoOfSteps || !CondXLessThanx2 || !CondIsNotLastStep );
-      std::cout<<" finishedLane:     "<<finishedLane     << std::endl;
  #ifdef DEBUG     
+      std::cout<<" finishedLane:     "<<finishedLane     << std::endl;
       std::cout<<" CondNoOfSteps:    "<< CondNoOfSteps   << std::endl;
       std::cout<<" CondXLessThanx2:  "<<CondXLessThanx2  << std::endl;
       std::cout<<" CondIsNotLastStep:"<<CondIsNotLastStep<< std::endl;
@@ -1961,9 +1961,6 @@ TemplateGUIntegrationDriver<Backend>
 
   Double_v yerr [TemplateGUFieldTrack<Backend>::ncompSVEC], 
            ytemp[TemplateGUFieldTrack<Backend>::ncompSVEC];
-#ifdef DEBUG
-  std::cout << "OneStep called with htry= " << htry << std::endl;
-#endif 
 
   h = htry ; // Set stepsize to the initial trial value
 
@@ -1989,7 +1986,7 @@ TemplateGUIntegrationDriver<Backend>
     {
       tot_no_trials++;
       fpStepper-> StepWithErrorEstimate(y,dydx,h,ytemp,yerr);
-#
+
 #ifdef DEBUG
       std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
 #endif 
@@ -2027,9 +2024,6 @@ TemplateGUIntegrationDriver<Backend>
             /* StoreFinalValues() */
             finished      [i] = -1;
             hFinal        [i] = h[i];
-            hnextFinal    [i] = hnext[i];
-            xFinal        [i] = x[i];
-            hdidFinal     [i] = hdid[i];
             errmax_sqFinal[i] = errmax_sq[i];
             for (int j = 0; j < TemplateGUFieldTrack<Backend>::ncompSVEC; ++j)
             {
@@ -2070,9 +2064,6 @@ TemplateGUIntegrationDriver<Backend>
             /* StoreFinalValues() */
             finished      [i] = -1;
             hFinal        [i] = h[i];
-            hnextFinal    [i] = hnext[i];
-            xFinal        [i] = x[i];
-            hdidFinal     [i] = hdid[i];
             errmax_sqFinal[i] = errmax_sq[i];
             for (int j = 0; j < TemplateGUFieldTrack<Backend>::ncompSVEC; ++j)
             {
@@ -2092,29 +2083,24 @@ TemplateGUIntegrationDriver<Backend>
       }   
     }
   }
-// #ifdef DEBUG
+#ifdef DEBUG
   // std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
-// #endif 
+#endif 
 
   h         = hFinal;
-  // hnext     = hnextFinal; // Not required, since hnext is assigned 
-                             // a completely new value later here.
-  x         = xFinal;
-  hdid      = hdidFinal;
   errmax_sq = errmax_sqFinal;
 
   // Compute size of next Step
   Double_v errPower = Vc::exp( (0.5*GetPowerGrow())* vecgeom::Log(errmax_sq));
-  hnext = GetSafety()*errPower;
+  hnext = GetSafety() * h * errPower;
   // hnext = GetSafety()*vecgeom::Pow(errmax_sq, 0.5*GetPowerGrow());
   vecgeom::MaskedAssign(errmax_sq <= fErrcon*fErrcon, fMaxSteppingIncrease*h, &hnext); // No more than a factor of 5 increase
 
   x += (hdid = h);
 
-  // for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = ytemp[k]; }
   for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = yFinal[k]; }
 
-  // std::cout<< " hdid= "<<hdidFinal<<" and hnext= "<<hnext<<  std::endl;
+  // std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
 
   return;
 }   // end of  OneStep .............................
