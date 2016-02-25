@@ -242,11 +242,6 @@ void GeantTrack::SetNextPath(VolumePath_t const *const path) {
 void GeantTrack::Print(const char *msg) const {
   //  TString spath;
   //   if (path) path->GetPath(spath);
-  // Geant::Print(location, "=== Track %d (ev=%d): Process=%d, pstep=%g Charge=%d  Position:(%f,%f,%f) Dir:(%f,%f,%f) "
-  //       "P:%g E:%g snext=%g safety=%g nintlen=%g intlen=%g nsteps=%d",
-  //       fParticle, fEvent, fProcess, fPstep, fCharge, fXpos, fYpos, fZpos, fXdir, fYdir, fZdir, P(), fE, fSnext,
-  //       fSafety, fNintLen, fIntLen, fNsteps);
-
   const char *status[8] = {"alive", "killed", "inflight", "boundary", "exitSetup", "physics", "postponed", "new"};
 #ifdef USE_VECGEOM_NAVIGATOR
   Geant::Print(msg,
