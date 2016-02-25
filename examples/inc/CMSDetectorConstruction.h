@@ -2,7 +2,6 @@
 #define GEANT_CMS_Detector_Construction
 
 #include "UserDetectorConstruction.h"
-#include "CMSDetectorConstruction.h"
 
 #ifdef  USE_ROOT_TObject
 #ifndef ROOT_TObject
@@ -24,10 +23,10 @@ class CMSDetectorConstruction : public UserDetectorConstruction
 {
   public:
     /** @brief Destructor */
-    CMSDetectorConstruction():  fFieldFilename(std::string("")), fCMSfield(0) {}
+    CMSDetectorConstruction():  fFieldFilename(std::string("")), fCMSfield(nullptr) {}
     // CMSDetectorConstruction(const char* fieldFilename);
     // CMSDetectorConstruction(std::string fieldFilename);
-    ~CMSDetectorConstruction() { delete fCMSfield; } ;
+    ~CMSDetectorConstruction() { delete fCMSfield; }
     
     /** @brief Destructor */
     void SetFileForField(const char *filename){ fFieldFilename= filename; }
@@ -39,7 +38,7 @@ class CMSDetectorConstruction : public UserDetectorConstruction
   private:
     std::string   fFieldFilename;
     CMSmagField*  fCMSfield;
-    TUniformMagField*  fUniformField; // Alternative - for debugging only
+    // TUniformMagField*  fUniformField; // Alternative - for debugging only
     /** Field is created and owned by this class */
 
     // ClassDef(CMSDetectorConstruction, 1) // User application
@@ -53,52 +52,45 @@ public:
 // CMSDetectorConstruction::
 CMSDetectorConstruction(const char* fieldFilename) :
   fFieldFilename(fieldFilename),
-  fCMSfield(0)
+  fCMSfield(nullptr)
 {}
 
 // CMSDetectorConstruction::
 CMSDetectorConstruction(std::string fieldFilename) :
   fFieldFilename(fieldFilename),
-  fCMSfield(0)
+  fCMSfield(nullptr)
 {}
 
 // ClassImp(CMSDetectorConstruction);
 
 bool
 // CMSDetectorConstruction::
-CreateFieldAndSolver(bool useRungeKutta)
-
+CreateFieldAndSolver(bool useRungeKutta, GUVMagneticField** fieldPP=0 ) override
 {
-  // static std::string OnOff[]= { "Off", "On" };
-  Geant::Print("CMSDetectorConstruction::CreateFieldAndSolver", " Called with Arg: useRungeKutta=");
-   //   (useRungeKutta ? "on" : "Off" ) ); 
+  using FieldType = CMSmagField;  
 
+  Geant::Print("CMSDetectorConstruction::CreateFieldAndSolver", " Called with Arg: useRungeKutta=");
   if(useRungeKutta )   { printf("on"); }  else { printf("Off"); }
 
-#if 1
-  using FieldType = CMSmagField;  
+  if( fieldPP ) *fieldPP= nullptr;
+
   std::cout << "    Calling CMSmagField constructor with filename= " << fFieldFilename << std::endl;
   fCMSfield= new CMSmagField(fFieldFilename);
-  fUniformField= nullptr;
+  // fUniformField= nullptr;
+  useRungeKutta= true;  // Must initialize it always -- 
+  printf("CMSDetectorConstruction::CratedFieldAndSolver> useRungeKutta - forced ON, until 'general helix' is available ");
   
   auto fieldPtr = fCMSfield;  
-#else
-  using FieldType = TUniformMagField;
-  double BzValue = 38.1 * fieldUnits::kilogauss;
-  printf("    Called CMSmagField c-tor to create Uniform field with value %f \n", BzValue );
-  fCMSfield= nullptr;
 
-  vecgeom::Vector3D<double>  fieldValue( 0.0, 0.0, BzValue ); 
-  fUniformField= new TUniformMagField( fieldValue);
+  if( fieldPP && fieldPtr ) *fieldPP= fieldPtr;
 
-  auto fieldPtr = fUniformField;
-#endif
+  fpField= fieldPtr;  // UserDetectorConstruction::SetField( fieldPtr ); 
   
   Geant::Print("CMSDetectorConstruction::CreateFieldAndSolver", "CMSmagfield created.");
   
   if(useRungeKutta){
     CreateSolverForField<FieldType>(fieldPtr);
-    printf("%s", "CMSdetectorConstruction - Configured field propagation with Runge Kutta.");    
+    printf("%s", "CMSdetectorConstruction - Configured field propagation for Runge Kutta.");    
   } else {
     printf("%s", "CMSdetectorConstruction - NOT configuring field propagation with Runge Kutta.");
   }  
