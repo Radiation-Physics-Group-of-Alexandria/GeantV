@@ -1542,12 +1542,12 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   bool mediumAngle = ( numRadiansMin < angle ) && ( angle < numRadiansMax );
   useRungeKutta = useRungeKutta && (mediumAngle);
 
-  // But use RK as fall back - until 'General Helix' is robust
   bool dominantBz =  std::fabs( std::fabs(BfieldInitial[2]) )
          > 1.e3 *
      std::max( std::fabs( BfieldInitial[0]), std::fabs(BfieldInitial[1]) );
-  if( !dominantBz )
-     useRungeKutta = true;
+
+  // But use RK as fall back - until 'General Helix' is robust  
+  // if( !dominantBz ) useRungeKutta = true;
 
 #ifdef DEBUG_FIELD
   printf("--PropagateInVolumeSingle: \n");
@@ -1599,8 +1599,6 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
      if ( dominantBz ) {
         // printf("h"); std::cout << "h";
         propagationType= 2;
-        // double Bx = BfieldInitial[0] * toKiloGauss;
-        // double By = BfieldInitial[1] * toKiloGauss;
         // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g ) Kilo Gauss\n", Bz, Bx, By );
 
         // Constant field in Z-direction
@@ -1608,10 +1606,11 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                                PositionNewHlx, DirectionNewHlx);
      }
-  /* GENERAL_HELIX method - to be made more robust
      else {
         propagationType= 3;
-        printf("H"); std::cout << "H";
+        double Bx = BfieldInitial[0] * toKiloGauss;
+        double By = BfieldInitial[1] * toKiloGauss;
+        // printf("H"); std::cout << "H";
         if( ! CheckDirection( i, 1.0e-4 ) )
            PrintTrack(i, "Failed check of *direction* - input to General Helix stepper.");
 
@@ -1622,7 +1621,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                          PositionNewHlx, DirectionNewHlx);
      }
-   */
+
      PositionNew =  PositionNewHlx;
      DirectionNew = DirectionNewHlx;
   }
@@ -2915,7 +2914,7 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
   {
     ThreeVector_d Position (fXposV[i], fYposV[i], fZposV[i]);
     ThreeVector_f MagFldF( 0.0f, 0.0f, 0.0f );
-    auto field= td->GetField();
+    auto field= td->fFieldObj;
     if( field ) field->GetFieldValue(Position, MagFldF);
 
     MagFldD = ThreeVector_d(MagFldF.x(), MagFldF.y(), MagFldF.z());
