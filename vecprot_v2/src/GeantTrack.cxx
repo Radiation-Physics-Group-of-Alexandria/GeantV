@@ -2514,7 +2514,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
 
   double Bfield[3], bmag= 0.0;
 
-  unsigned int numNeutral= 0, numCharged=0, numStraight=0, numCurved=0; // numPhysics=0,
+  unsigned int numNeutral= 0, numCharged=0, numStraight=0, numCurved=0, numPhysics=0;
 
   // Remove dead tracks, propagate neutrals
   for (itr = 0; itr < ntracks; itr++) {
@@ -2558,6 +2558,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
       } else {
         fStatusV[itr] = kPhysics;
         // Update number of steps to physics
+        numPhysics++;
         td->fNphys++;
       }
       fPstepV[itr] -= fSnextV[itr];
@@ -2580,7 +2581,6 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
        numCurved++;
     }
   }
-
   /**
   for (int ix = 0; ix < ntracks; ix++) { sumEout += fEV[ix]; }
   for (int ix = 0; ix < output.GetNtracks(); ix++) { sumEout += output.fEV[ix]; }
@@ -2588,6 +2588,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
      Printf("PropagateTracks: Ein= %8.3g                      Eout= %8.3g                      Balance= %8.3g",
             sumEin, sumEout, sumEout - sumEin );
    **/
+  
   // Compact remaining tracks and move the removed oned to the output container
   if (!fCompact)
     Compact(&output);
@@ -2597,15 +2598,12 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
 
   // static unsigned long totalTracks=0, totalNeutral=0, totalCharged=0, totalStraight=0, totalCurved=0, totalPhysics=0;
 
-  /*****
   unsigned int numCalls=0;
   const unsigned modCalls = 1000;
   if( (++numCalls) % modCalls == 0 ) {
      Printf("\nPropagateTracks: # tracks: Neutral=%4d, Charged=%4d, numStraight=%4d, numCurved=%4d, numPhysics=%4d . Action= %2d",
             numNeutral, numCharged, numStraight, numCurved, numPhysics, action );
   }
-  *****/
-
 
   switch (action) {
   case kDone:
@@ -2916,9 +2914,10 @@ void GeantTrack_v::GetFieldValue(GeantTaskData *td, int i, double B[3], double *
 #endif
   {
     ThreeVector_d Position (fXposV[i], fYposV[i], fZposV[i]);
-    ThreeVector_f MagFldF;
-    td->fFieldObj->GetFieldValue(Position, MagFldF);
-    // MagFldD = MagFldF;
+    ThreeVector_f MagFldF( 0.0f, 0.0f, 0.0f );
+    auto field= td->GetField();
+    if( field ) field->GetFieldValue(Position, MagFldF);
+
     MagFldD = ThreeVector_d(MagFldF.x(), MagFldF.y(), MagFldF.z());
     if( bmag ) *bmag= MagFldD.Mag();
 

@@ -287,8 +287,11 @@ public:
                       bool single = kFALSE);
 
   /** @brief Set object to initialize detector, field */
-  void SetUserDetectorConstruction(UserDetectorConstruction* udc) {fUserDetectorCtion= udc;}
-   
+  void SetUserDetectorConstruction(UserDetectorConstruction* udc) {
+    fUserDetectorCtion= udc;
+    fInitialisedRKIntegration= false;  //  Needs to be re-done !!
+  }
+
   /** @brief Function returning the number of monitored features */
   int GetMonFeatures() const;
 
