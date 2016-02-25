@@ -2000,7 +2000,7 @@ int GeantTrack_v::PropagateSingleTrack(int itr, GeantTaskData *td, int stage) {
 
   // printf(" PropagateSingleTrack called for itr= %d -- Track: ", itr );
   // PrintTrack(itr);
-  CheckTrack(itr, " PropagateSingleTrack called.");
+  // CheckTrack(itr, " PropagateSingleTrack called.");
   // PrintTrack(itr);
 
   int icrossed = 0;
@@ -2209,9 +2209,6 @@ double GeantTrack_v::Curvature(GeantTaskData *td, int i) const {
   PtransB = Momentum - ratio * MagFld ;
   double Pt_mag = PtransB.Mag();
 
-  //  Must replace 'Pt' by P - P_projection_on_B
-  // fPV[i] * 
-  
   return fabs(GeantTrack::kB2C * fChargeV[i] * bmag / (Pt_mag + tiny));
 }
 

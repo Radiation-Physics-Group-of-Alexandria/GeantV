@@ -1,8 +1,10 @@
 /*
- * ConstFieldHelixStepper.h
+ * ConstVecFieldHelixStepper.h
  *
- *  Created on: Apr 23, 2014
- *      Author: swenzel
+ *  Created on: January 29, 2016
+ *      Author: J. Apostolakis
+ *      
+ *  Started from ConstBzFieldHelixStepper by S. Wenzel
  */
 
 #ifndef CONSTVECFIELDHELIXSTEPPER_H_
@@ -106,7 +108,7 @@ inline
 void ConstVecFieldHelixStepper::CalculateDerived()
   {
      fBmag = std::sqrt( fBx * fBx + fBy * fBy + fBz * fBz );
-     double inv_mag=  1.0 * fBmag;
+     double inv_mag=  1.0 / fBmag;
      fUnitX = inv_mag * fBx;
      fUnitY = inv_mag * fBy;
      fUnitZ = inv_mag * fBz;
@@ -174,42 +176,59 @@ template<typename Vector3D, typename BaseDType, typename BaseIType>
 
       // BaseDType dt = sqrt((dx0*dx0) + (dy0*dy0)) + kSmall;
 
-      Vector3D  dirField3( fUnitX, fUnitY, fUnitZ );
-      BaseDType dirDotFlDir = startDirection.Dot(dirField3);
-      BaseDType dt = sqrt( startDirection.Mag2() - dirDotFlDir * dirDotFlDir ) + kSmall;
+      assert( std::abs( startDirection.Mag2() - 1.0 ) < 1.0e-6 );
+
+      Vector3D  dir1Field( fUnitX, fUnitY, fUnitZ );
+      BaseDType UVdotUB = startDirection.Dot(dir1Field);   //  Limit cases 0.0 and 1.0
+      BaseDType dt2   = std::max( startDirection.Mag2() - UVdotUB * UVdotUB, 0.0 );
+      BaseDType sinVB = sqrt( dt2 ) + kSmall;
  
-      // BaseDType invnorm = 1. / dt;
+      // BaseDType invnorm = 1. / sinVB;
 
       // radius has sign and determines the sense of rotation
-      BaseDType R = momentum*dt/((kB2C_local*BaseDType(charge))*(fBmag));
+      BaseDType R = momentum*sinVB/((kB2C_local*BaseDType(charge))*(fBmag));
 
-      Vector3D  restVelX = startDirection - dirDotFlDir * dirField3;
+      Vector3D  restVelX = startDirection - UVdotUB * dir1Field;
 
-      Vector3D  dirVelX( 0.0, 0.0, 0.0 );            // OK if it is zero - ie. dir // B
-      if( restVelX.Mag2() > 0.0 ) dirVelX = restVelX.Unit();
-      Vector3D  crossDir= dirVelX.Cross(dirField3);  // OK if it is zero
+      // Vector3D  dirVelX( 0.0, 0.0, 0.0 );            // OK if it is zero - ie. dir // B
+      // if( restVelX.Mag2() > 0.0 ) dirVelX = restVelX.Unit();
+      Vector3D  dirVelX  = restVelX.Unit();             // Unit must cope with 0 length !!
+      Vector3D  dirCrossVB = dirVelX.Cross(dir1Field);  // OK if it is zero 
+      // Vector3D  dirCrossVB= restVelX.Cross(dir1Field);  // OK if it is zero      
 
-      // BaseDType cosa= invnorm * startDirection.Dot(dirVelX);  //  1.0
-      // BaseDType sina= invnorm * startDirection.Dot(crossDir); //  0.0 
-
-      BaseDType phi = step * BaseDType(charge) * fBz * kB2C_local / momentum;
+      /*
+       *
+      printf("\n");
+      printf("CVFHS> dir-1  B-fld  = %f %f %f   mag= %f \n", dir1Field.x(), dir1Field.y(), dir1Field.z(),
+             dir1Field.Mag() );
+      printf("CVFHS> dir-2  VelX   = %f %f %f   mag= %f \n", dirVelX.x(), dirVelX.y(), dirVelX.z(),
+             dirVelX.Mag() );
+      printf("CVFHS> dir-3: CrossVB= %f %f %f   mag= %f \n", dirCrossVB.x(), dirCrossVB.y(), dirCrossVB.z(),
+             dirCrossVB.Mag() );
+      // dirCrossVB = dirCrossVB.Unit();
+      printf("CVFHS> Dot products   d1.d2= %g   d2.d3= %g  d3.d1= %g \n",
+             dir1Field.Dot(dirVelX), dirVelX.Dot( dirCrossVB), dirCrossVB.Dot(dir1Field) );
+      assert ( std::fabs( dir1Field.Dot(  dirVelX   ) ) < 1.e-6 );
+      assert ( std::fabs( dirVelX.Dot(    dirCrossVB) ) < 1.e-6 );      
+      assert ( std::fabs( dirCrossVB.Dot( dir1Field ) ) < 1.e-6 );
+       *
+       */
+      
+      BaseDType phi = - step * BaseDType(charge) * fBmag * kB2C_local / momentum;
 
       BaseDType cosphi;
       BaseDType sinphi;
       sincos(phi, &sinphi, &cosphi);
 
-      // x = x0 + R*( -sina - ( - sinphi ));
-      // y = y0 + R*( cosa  - ( cosphi ));
-      // z = z0 + step * dz0;
-
-      endPosition = startPosition + R * ( 1 - cosphi ) * crossDir
+      endPosition = startPosition + R * ( cosphi - 1 ) * dirCrossVB
                     - R * sinphi * dirVelX
-                    + step * dirDotFlDir * dirField3;   //   'Drift' along field direction
+                    + step * UVdotUB * dir1Field;   //   'Drift' along field direction
 
       // dx = dx0 * cosphi - sinphi * dy0;
       // dy = dy0 * cosphi + sinphi * dx0;
       // dz = dz0;
-      endDirection = dirDotFlDir * dirField3 + cosphi * dirVelX + sinphi * crossDir;
+      // printf(" phi= %f, sin(phi)= %f , sin(V,B)= %f\n", phi, sinphi, sinVB );
+      endDirection = UVdotUB * dir1Field + cosphi * sinVB * dirVelX + sinphi * sinVB * dirCrossVB;
   }
  
   /**

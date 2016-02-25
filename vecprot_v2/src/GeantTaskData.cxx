@@ -19,10 +19,11 @@ inline namespace GEANT_IMPL_NAMESPACE {
 //______________________________________________________________________________
 GeantTaskData::GeantTaskData(size_t nthreads, int maxDepth, int maxPerBasket)
     : fTid(-1), fNthreads(nthreads), fMaxDepth(0), fSizeBool(0), fSizeDbl(0), fToClean(false), 
-      fVolume(nullptr), fRndm(nullptr), fBoolArray(nullptr), fDblArray(nullptr), fTrack(0, maxDepth),
+      fVolume(nullptr), fRndm(nullptr), fBoolArray(nullptr), fDblArray(nullptr), fTrack(0, maxDepth), 
       fPath(nullptr), fBmgr(nullptr), fReused(nullptr), fPool(),
-      fSizeInt(5 * maxPerBasket), fIntArray(new int[fSizeInt]), fFieldPropagator(nullptr), fTransported(nullptr), fTransported1(maxPerBasket), fNkeepvol(0),
-      fNsteps(0), fNsnext(0), fNphys(0), fNmag(0), fNpart(0), fNsmall(0), fNcross(0)
+      fFieldObj(nullptr), fSizeInt(5 * maxPerBasket), fIntArray(new int[fSizeInt]), fFieldPropagator(nullptr), 
+      fTransported(nullptr), fTransported1(maxPerBasket), fNkeepvol(0),
+      fNsteps(0), fNsnext(0), fNphys(0), fNmag(0), fNpart(0), fNsmall(0), fNcross(0)      
 {
   // Constructor
   fNthreads = nthreads;

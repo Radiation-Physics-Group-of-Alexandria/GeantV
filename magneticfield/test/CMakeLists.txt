@@ -42,6 +42,10 @@ add_executable(testGUPropagateField testGUPropagateField.cxx) ## ${sources} ${he
 target_link_libraries(testGUPropagateField -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield -lGeant_v ${VECGEOM_LIBRARIES})
 message(STATUS "Created target for testGUPropagateField")
 
+add_executable(testConstVecFieldStepper testConstVecFieldStepper.cxx) ## ${sources} ${headers})
+target_link_libraries(testConstVecFieldStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS "Created target for testConstVecFieldStepper")
+
 ## add_executable(testFieldPropagator TestGUFieldPropagator.cxx) ## ${sources} ${headers})
 ## target_link_libraries(testFieldPropagator -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield -lGeant_v ${VECGEOM_LIBRARIES})
 ## # ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} Xsec Geant_v)

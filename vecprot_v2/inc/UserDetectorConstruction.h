@@ -45,7 +45,8 @@ class UserDetectorConstruction
     double GetEpsilonRK() { return fEpsilonRK; }
     double GetMinimumStep() { return fMinimumStepInField; }
     bool   IsFieldCreated() { return fCreatedField; }
-  
+    GUVField*    GetField() { return fpField; }
+   
   private:
     double           fEpsilonRK;
     double           fMinimumStepInField;
@@ -57,10 +58,13 @@ class UserDetectorConstruction
     bool             fCreatedField;
     bool             fCalled;
 
+  protected:
+    GUVField*        fpField;
+
   public:
     static constexpr double   fEpsilonDefault = 3.0e-5; 
     static constexpr double   fMinimumStepInFieldDef= 1.0e-4; // GV units = cm
-    // vecgeom::Vector3D<float>  fUniformMagFieldValue;
+    // vecgeom::Vector3D<float>  fUniformMagFieldVec;
 
 // };   // RootComm
 
@@ -74,7 +78,8 @@ UserDetectorConstruction() :
    fUseUniformField(false),
    fZeroField(true),
    fCreatedField(false),
-   fCalled(false)
+   fCalled(false),
+   fpField(nullptr)
    {}
 
 // bool UserDetectorConstruction::Construct(const char *geomfile)
@@ -87,6 +92,7 @@ bool
 // UserDetectorConstruction:: // RootComm
 CreateSolverForField(Field_t* ptrField)
 {
+   // printf(" -UserDetectorConstructio::CreateSolverForField() called.\n"); 
   FieldPropagatorFactory::CreatePropagator<Field_t>( *ptrField,
                                                      fEpsilonRK,
                                                      fMinimumStepInField);
@@ -116,15 +122,18 @@ UseConstantMagField( float fieldVal[3],  const char* Units =0 )
 
   if( defaultUsed )
      printf("%s - WARNING: No units provided - using kilogauss as default unit", 
-            "UserDetectorConstruction::UseConstantMagField");
+            methodName );
 
   fUniformMagField= vecgeom::Vector3D<float>( fieldVal[0] * unit, fieldVal[1] * unit, fieldVal[2] * unit );
-  
-  printf("%s - Info: UseConstantMagField called. Field value = %9.3g , %9.3g  %9.3g  kiloGauss\n",
-         methodName,
-         fUniformMagField[0] / fieldUnits::kilogauss,       fUniformMagField[1] / fieldUnits::kilogauss,
-         fUniformMagField[2] / fieldUnits::kilogauss );
 
+  /*
+  printf("%s called. Field value = %9.3g , %9.3g  %9.3g  kiloGauss\n",
+         methodName,
+         fUniformMagField[0] / fieldUnits::kilogauss,
+         fUniformMagField[1] / fieldUnits::kilogauss,
+         fUniformMagField[2] / fieldUnits::kilogauss );
+   */
+  
   fUseUniformField= true;
   fZeroField = ( fUniformMagField.Mag2() == 0.0 );
 }
@@ -132,28 +141,43 @@ UseConstantMagField( float fieldVal[3],  const char* Units =0 )
 /**  This method must exist for derived classes, 
   *    and must call CreateSolverForField() for concrete field class
   */
+virtual
 bool
 // UserDetectorConstruction:: // RootComm
-CreateFieldAndSolver(bool /*useRungeKutta*/ )
+CreateFieldAndSolver(bool /*useRungeKutta*/, GUVMagneticField** fieldPP=0 )
 {
+  using ThreeVectorF = vecgeom::Vector3D<float>;
+
   static const char *method="UserDetectorConstruction::CreateFieldAndSolver";
   bool rtv= false;
+  if( fieldPP ) *fieldPP= nullptr;
    
-  // Geant::Print(method, "%s - method called.  Uniform= %d  Zero-value= %d.", method, fUseUniformField, fZeroField );
+  Geant::Print(method, "%s - method called.  Use uniform= %d  Value= %f %f %f - kiloggauss.  Zero-Flag= %d",
+               method,
+               fUseUniformField,
+               fUniformMagField[0]/fieldUnits::kilogauss,
+               fUniformMagField[1]/fieldUnits::kilogauss,
+               fUniformMagField[2]/fieldUnits::kilogauss,
+               fZeroField );
 
   if( fUseUniformField )
   {
     auto gvField= new TUniformMagField( fUniformMagField );
+
+    // printf("   Field class created - address= %p \n", gvField );
+    fpField= gvField;
+
+    // Check that field was correctedly created ...
+    ThreeVector  Position( 0.0, 0.0, 0.1 );
+    ThreeVectorF fieldVal( 0.0, 0.0, 0.13579 );
+    gvField->GetFieldValue(Position, fieldVal);
+
     rtv= CreateSolverForField<TUniformMagField>(gvField);
+
+    if( fieldPP ) *fieldPP= nullptr;
 
     if (fZeroField) {
       Geant::Print(method," Zero Magnetic Field configured.");
-    } else {
-      printf("Creating uniform B-field: %6.2g  %6.2g  %6.2g kilo-gauss\n",
-           fUniformMagField[0]/fieldUnits::kilogauss,
-           fUniformMagField[1]/fieldUnits::kilogauss,
-           fUniformMagField[2]/fieldUnits::kilogauss );
-      printf("  Recall  kilogauss = %8.2g in field Units\n", fieldUnits::kilogauss );       
     }
     fCalled = true;
   } else {

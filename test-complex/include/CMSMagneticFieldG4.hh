@@ -96,11 +96,11 @@ inline void
 CMSMagneticFieldG4::GetFieldValue( const G4double  Point[4],
                                          G4double *Bfield ) const
 {
-   G4ThreeVector Position3v( Point[0], Point[1], Point[2] );
-   G4ThreeVector Bfield3v( 0.0, 0.0, 0.0 );
-   GetFieldValueXYZ( Position3v, Bfield3v );
-   Bfield[0]= Bfield3v.x(); // * CLHEP::tesla;  -> Moved to ReadVector
-   Bfield[1]= Bfield3v.y(); // * CLHEP::tesla;
-   Bfield[2]= Bfield3v.z(); // * CLHEP::tesla;
+    G4ThreeVector Position3v( Point[0], Point[1], Point[2] );
+    G4ThreeVector Bfield3v( 0.0, 0.0, 0.0 );
+    GetFieldValueXYZ( Position3v, Bfield3v );
+    Bfield[0]= Bfield3v.x(); // * CLHEP::tesla;  -> Moved to ReadVector
+    Bfield[1]= Bfield3v.y(); // * CLHEP::tesla;
+    Bfield[2]= Bfield3v.z(); // * CLHEP::tesla;
 }
 #endif
