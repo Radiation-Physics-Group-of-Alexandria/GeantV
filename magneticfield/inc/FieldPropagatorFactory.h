@@ -89,7 +89,8 @@ FieldPropagatorFactory::CreatePropagator(Field_t& gvField,
                                          double   minStepSize)
 {
   using Equation_t =  TMagFieldEquation<Field_t,Nvar>;
-
+  // const char* method="FieldPropagatorFactory::CreatePropagator";
+  // cout << *method << " called. " << endl;
   auto gvEquation = 
      FieldEquationFactory::CreateMagEquation<Field_t>(&gvField);
   // cout << "Parameters for RK integration in magnetic field: "; //  << endl;
@@ -120,6 +121,7 @@ FieldPropagatorFactory::RegisterPropagator(GUFieldPropagator* fieldPropagator)
   assert( fpPool );  // Cannot be zero
   if( fpPool ) {
      fpPool->RegisterPrototype( fieldPropagator );
+     // printf( "FieldPropagatorFactory: Registered Prototype field-prop %p\n", fieldPropagator );
   } else {
      Geant::Error("PrepareRkIntegration","Cannot find GUFieldPropagatorPool Instance.");
   }
