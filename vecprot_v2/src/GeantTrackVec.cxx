@@ -83,8 +83,8 @@ GeantTrack_v::GeantTrack_v()
 //______________________________________________________________________________
 GeantTrack_v::GeantTrack_v(int size, int maxdepth)
     : fNtracks(0), fNselected(0), fCompact(true), fMixed(false), fMaxtracks(0), fHoles(0), fSelected(0),
-      fMaxDepth(maxdepth), fBufSize(0), fVPstart(0), fBuf(0), fEventV(0), fEvslotV(0), fParticleV(0), fMotherV(0), fPDGV(0),
-      fGVcodeV(0), fEindexV(0), fBindexV(0), fChargeV(0), fProcessV(0), fNstepsV(0), fSpeciesV(0), fStatusV(0),
+      fMaxDepth(maxdepth), fBufSize(0), fVPstart(0), fBuf(0), fEventV(0), fEvslotV(0), fParticleV(0), fPDGV(0),
+      fGVcodeV(0), fEindexV(0), fChargeV(0), fProcessV(0), fNstepsV(0), fParentIdV(0), fSpeciesV(0), fStatusV(0),
       fMassV(0), fXposV(0), fYposV(0), fZposV(0), fXdirV(0), fYdirV(0), fZdirV(0), fPV(0), fEV(0), fTimeV(0), fEdepV(0),
       fPstepV(0), fStepV(0), fSnextV(0), fSafetyV(0), fNintLenV(0), fIntLenV(0), fBoundaryV(0), fPendingV(0), fPathV(0), fNextpathV(0) {
   // Constructor with maximum capacity.
@@ -102,7 +102,7 @@ VECCORE_ATT_HOST_DEVICE
 GeantTrack_v::GeantTrack_v(void *addr, unsigned int nTracks, int maxdepth)
     : fNtracks(0), fNselected(0), fCompact(true), fMixed(false), fMaxtracks(GeantTrack::round_up_align(nTracks)), fHoles(0),
       fSelected(0), fMaxDepth(maxdepth), fBufSize(0), fVPstart(0), fBuf(0), fEventV(0), fEvslotV(0), fParticleV(0), fMotherV(0),
-      fPDGV(0), fGVcodeV(0), fEindexV(0), fBindexV(0), fChargeV(0), fProcessV(0), fNstepsV(0), fSpeciesV(0),
+      fPDGV(0), fGVcodeV(0), fEindexV(0), fBindexV(0), fChargeV(0), fProcessV(0), fNstepsV(0), fParentIdV(0), fSpeciesV(0),
       fStatusV(0), fMassV(0), fXposV(0), fYposV(0), fZposV(0), fXdirV(0), fYdirV(0), fZdirV(0), fPV(0), fEV(0),
       fTimeV(0), fEdepV(0), fPstepV(0), fStepV(0), fSnextV(0), fSafetyV(0), fNintLenV(0), fIntLenV(0), fBoundaryV(0), fPendingV(0), 
       fPathV(0), fNextpathV(0) {
@@ -121,7 +121,7 @@ GeantTrack_v::GeantTrack_v(const GeantTrack_v &track_v)
     : fNtracks(0), fNselected(track_v.fNselected), fCompact(track_v.fCompact), fMixed(track_v.fMixed),
       fMaxtracks(track_v.fMaxtracks), fHoles(0), fSelected(0), fMaxDepth(track_v.fMaxDepth), fBufSize(track_v.fBufSize),
       fVPstart(0), fBuf(0), fEventV(0), fEvslotV(0), fParticleV(0), fMotherV(0), fPDGV(0), fGVcodeV(0), fEindexV(0), fBindexV(0), fChargeV(0),
-      fProcessV(0), fNstepsV(0), fSpeciesV(0), fStatusV(0), fMassV(0), fXposV(0), fYposV(0), fZposV(0),
+      fProcessV(0), fNstepsV(0), fParentIdV(0), fSpeciesV(0), fStatusV(0), fMassV(0), fXposV(0), fYposV(0), fZposV(0),
       fXdirV(0), fYdirV(0), fZdirV(0), fPV(0), fEV(0), fTimeV(0), fEdepV(0), fPstepV(0), fStepV(0), fSnextV(0),
       fSafetyV(0), fNintLenV(0), fIntLenV(0), fBoundaryV(0), fPendingV(0), fPathV(0), fNextpathV(0) {
 // Copy constructor
@@ -205,6 +205,8 @@ void GeantTrack_v::AssignInBuffer(char *buff, int size) {
   fProcessV = (int *)buf;
   buf += size_intn;
   fNstepsV = (int *)buf;
+  buf += size_intn;
+  fParentIdV = (int *)buf;
   buf += size_intn;
   fSpeciesV = (Species_t *)buf;
   buf += size * sizeof(Species_t);
@@ -1367,12 +1369,12 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   bool mediumAngle = ( numRadiansMin < angle ) && ( angle < numRadiansMax );
   useRungeKutta = useRungeKutta && (mediumAngle);
 
-  // But use RK as fall back - until 'General Helix' is robust
   bool dominantBz =  std::fabs( std::fabs(BfieldInitial[2]) )
          > 1.e3 *
      std::max( std::fabs( BfieldInitial[0]), std::fabs(BfieldInitial[1]) );
-  if( !dominantBz )
-     useRungeKutta = true;
+
+  // But use RK as fall back - until 'General Helix' is robust  
+  // if( !dominantBz ) useRungeKutta = true;
 
 #ifdef DEBUG_FIELD
   printf("--PropagateInVolumeSingle: \n");
@@ -1389,8 +1391,9 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   ThreeVector Direction(fXdirV[i], fYdirV[i], fZdirV[i]);
   ThreeVector PositionNew(0.,0.,0.);
   ThreeVector DirectionNew(0.,0.,0.);
-  int propagationType= -1;
-  
+
+  int propagationType= 0;
+
   if( useRungeKutta )
   {
      // crtstep = 1.0e-4;   printf( "Setting crtstep = %f -- for DEBUGing ONLY.", crtstep );
@@ -1423,15 +1426,17 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
      if ( dominantBz ) {
         // printf("h"); std::cout << "h";
         propagationType= 2;
-        // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g )", Bz, Bx, By );
-        // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g )", Bz,  BfieldInitial[0] * toKiloGauss,
-        //      BfieldInitial[0] * toKiloGauss );
-        // Old - constant field in Z-direction
-        ConstBzFieldHelixStepper stepper( Bz ); // z-component
+        // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g ) Kilo Gauss\n", Bz, Bx, By );
+
+        // Constant field in Z-direction
+        ConstBzFieldHelixStepper stepper( Bz ); //
         stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
                                                PositionNew, DirectionNew);
      } else {
         propagationType= 3;
+        // double Bx = BfieldInitial[0] * toKiloGauss;
+        // double By = BfieldInitial[1] * toKiloGauss;
+        // printf("H"); std::cout << "H";
         if( ! CheckDirection( i, 1.0e-4 ) )
            PrintTrack(i, "Failed check of *direction* - input to General Helix stepper.");
 
@@ -1463,12 +1468,13 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
          fXposV[i], fYposV[i], fZposV[i],
          fXdirV[i], fYdirV[i], fZdirV[i], oldMag, newMag, newMag-1.0 );
          // DirectionNew.Mag()-1.0  );
-#endif
+
   const char* Msg[4]= { "After propagation in field - type Unknown(ERROR) ",
                         "After propagation in field - with RK           ",
                         "After propagation in field - with Helix-Bz     ",
                         "After propagation in field - with Helix-General" };
   CheckTrack(i, Msg[propagationType] );
+#endif
 
 #if 0
   ThreeVector SimplePosition = Position + crtstep * Direction;
@@ -1771,7 +1777,7 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
 
   double Bfield[3], bmag= 0.0;
 
-  unsigned int numNeutral= 0, numCharged=0, numStraight=0, numCurved=0; // numPhysics=0,
+  unsigned int numNeutral= 0, numCharged=0, numStraight=0, numCurved=0; // , numPhysics=0;
 
   // Remove dead tracks, propagate neutrals
   for (itr = 0; itr < ntracks; itr++) {
@@ -1841,11 +1847,11 @@ int GeantTrack_v::PropagateTracks(GeantTaskData *td) {
   /**
   for (int ix = 0; ix < ntracks; ix++) { sumEout += fEV[ix]; }
   for (int ix = 0; ix < output.GetNtracks(); ix++) { sumEout += output.fEV[ix]; }
-  if( sumEout - sumEin > 1e-6 * sumEin ) 
-     Printf("PropagateTracks: Ein= %8.3g           Eout= %8.3g        Edep = %8.3g       Balance= %8.3g",
-            sumEin, sumEout, sumEdep, sumEout - sumEin );
-   */
-
+  if( sumEout - sumEin > 0.001 * sumEin )
+     Printf("PropagateTracks: Ein= %8.3g                      Eout= %8.3g                      Balance= %8.3g",
+            sumEin, sumEout, sumEout - sumEin );
+   **/
+  
   // Compact remaining tracks and move the removed oned to the output container
   if (!fCompact)
     Compact(&output);
