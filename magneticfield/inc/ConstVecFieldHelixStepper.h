@@ -16,7 +16,6 @@
 
 namespace Geant
 {
-
   /**
   * A very simple stepper treating the propagation of particles in a constant Bz magnetic field
   * ( neglecting energy loss of particle )
@@ -44,7 +43,7 @@ namespace Geant
         if (charge == 0) return RT(0.);
         return abs( kB2C * fBz * dir.FastInverseScaledXYLength( momentum ) );
       }
-*/
+      */
 
       /**
        * this function propagates the track along the helix solution by a step
@@ -108,10 +107,17 @@ inline
 void ConstVecFieldHelixStepper::CalculateDerived()
   {
      fBmag = std::sqrt( fBx * fBx + fBy * fBy + fBz * fBz );
-     double inv_mag=  1.0 / fBmag;
-     fUnitX = inv_mag * fBx;
-     fUnitY = inv_mag * fBy;
-     fUnitZ = inv_mag * fBz;
+     if ( fBmag > 0.0 ) {
+        double inv_mag=  1.0 / fBmag;
+        fUnitX = inv_mag * fBx;
+        fUnitY = inv_mag * fBy;
+        fUnitZ = inv_mag * fBz;
+     } else {
+        // Arbitrary unit vector
+        fUnitX = 0.0;
+        fUnitY = 0.0; 
+        fUnitZ = 1.0;
+     }
   }
 
 inline
@@ -196,23 +202,21 @@ template<typename Vector3D, typename BaseDType, typename BaseIType>
       Vector3D  dirCrossVB = dirVelX.Cross(dir1Field);  // OK if it is zero 
       // Vector3D  dirCrossVB= restVelX.Cross(dir1Field);  // OK if it is zero      
 
-      /*
-       *
+      /***
       printf("\n");
-      printf("CVFHS> dir-1  B-fld  = %f %f %f   mag= %f \n", dir1Field.x(), dir1Field.y(), dir1Field.z(),
-             dir1Field.Mag() );
-      printf("CVFHS> dir-2  VelX   = %f %f %f   mag= %f \n", dirVelX.x(), dirVelX.y(), dirVelX.z(),
-             dirVelX.Mag() );
-      printf("CVFHS> dir-3: CrossVB= %f %f %f   mag= %f \n", dirCrossVB.x(), dirCrossVB.y(), dirCrossVB.z(),
-             dirCrossVB.Mag() );
+      printf("CVFHS> dir-1  B-fld  = %f %f %f   mag-1= %g \n", dir1Field.x(), dir1Field.y(), dir1Field.z(),
+             dir1Field.Mag()-1.0 );
+      printf("CVFHS> dir-2  VelX   = %f %f %f   mag-1= %g \n", dirVelX.x(), dirVelX.y(), dirVelX.z(),
+             dirVelX.Mag()-1.0 );
+      printf("CVFHS> dir-3: CrossVB= %f %f %f   mag-1= %g \n", dirCrossVB.x(), dirCrossVB.y(), dirCrossVB.z(),
+             dirCrossVB.Mag()-1.0 );
       // dirCrossVB = dirCrossVB.Unit();
       printf("CVFHS> Dot products   d1.d2= %g   d2.d3= %g  d3.d1= %g \n",
              dir1Field.Dot(dirVelX), dirVelX.Dot( dirCrossVB), dirCrossVB.Dot(dir1Field) );
+       ***/
       assert ( std::fabs( dir1Field.Dot(  dirVelX   ) ) < 1.e-6 );
       assert ( std::fabs( dirVelX.Dot(    dirCrossVB) ) < 1.e-6 );      
       assert ( std::fabs( dirCrossVB.Dot( dir1Field ) ) < 1.e-6 );
-       *
-       */
       
       BaseDType phi = - step * BaseDType(charge) * fBmag * kB2C_local / momentum;
 
