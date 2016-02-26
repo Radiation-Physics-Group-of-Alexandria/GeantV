@@ -1627,7 +1627,7 @@ TemplateGUIntegrationDriver<Backend>
   // Built on original AccurateAdvance. Takes buffer stream of nTracks
   // Converts them to Vc vectors for processing
   // Inserts new track when processing for a lane is finished.
-  
+
   // Driver for Runge-Kutta integration with adaptive stepsize control.
   // Integrate starting 'vector' y_current, over length 'hstep'
   // maintaining integration error so that relative accuracy is better
@@ -1744,7 +1744,7 @@ TemplateGUIntegrationDriver<Backend>
   // For now, just adding isDoneLane : needs to be && or || with the first 3 
   // and keep nTracks condition in final ||
   // Say continue if isDoneLane is not 1111 and rest all conditions are not 0000
-
+#define PARTDEBUG
   // while ( !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) || trackNextInput < nTracks  )
   while ( (!vecgeom::IsFull(isDoneLane) && 
            !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) ) || 
@@ -1762,9 +1762,9 @@ TemplateGUIntegrationDriver<Backend>
     // if( h > fMinimumStep )
     // { 
 
-      OneStep(y,dydx,x,h,epsilon,hdid,hnext) ;
-    // KeepStepping(y,dydx,x,h,epsilon,hdid,hnext, hStepLane) ;
-      lastStepSucceeded= (hdid == h);   
+      // OneStep(y,dydx,x,h,epsilon,hdid,hnext) ;
+    KeepStepping(y,dydx,x,h,epsilon,hdid,hnext, hStepLane) ;
+    lastStepSucceeded= (hdid == h);   
     // }
 
     ThreeVector EndPos( y[0], y[1], y[2] );
@@ -1879,7 +1879,7 @@ TemplateGUIntegrationDriver<Backend>
                    typename Backend::precision_v  eps_rel_max,
                    typename Backend::precision_v& hdid,      // Out
                    typename Backend::precision_v& hnext      )    // Out
-//Derived from OneGoodStep
+// Derived from OneGoodStep
 // Driver for one Runge-Kutta Step with monitoring of local truncation error
 // to ensure accuracy and adjust stepsize. Input are dependent variable
 // array y[0,...,5] and its derivative dydx[0,...,5] at the
@@ -2057,6 +2057,10 @@ TemplateGUIntegrationDriver<Backend>
 // WIP
 
 {
+#ifdef PARTDEBUG
+  std::cout<<"\n"<<std::endl;
+#endif 
+
   Double_v errmax_sq;
   Double_v h, htemp, xnew ;
 
@@ -2073,7 +2077,7 @@ TemplateGUIntegrationDriver<Backend>
   int iter;
 
   static int tot_no_trials=0;  // thread_local
-  const int max_trials=100; 
+  const  int max_trials   =100; 
 
   int finished[kVectorSize] = {0}; // This makes all elements of array 0
 
@@ -2112,11 +2116,11 @@ TemplateGUIntegrationDriver<Backend>
       errmom_sq *= inv_eps_vel_sq;
       errmax_sq = vecgeom::Max( errpos_sq, errmom_sq ); // Square of maximum error
 #ifdef DEBUG
-      std::cout<< "----eps_pos is: "<< eps_pos << std::endl;
-      std::cout<< "----inv_eps_pos_sq is: "<< eps_pos << std::endl;
-      std::cout<< "----errmom_sq is: "<< errmom_sq << std::endl;
-      std::cout<< "----errpos_sq is: "<< errpos_sq << std::endl;
-      std::cout<< "----errmax_sq is: "<< errmax_sq << std::endl;
+      std::cout<< "----eps_pos is       : "<< eps_pos   << std::endl;
+      std::cout<< "----inv_eps_pos_sq is: "<< eps_pos   << std::endl;
+      std::cout<< "----errmom_sq is     : "<< errmom_sq << std::endl;
+      std::cout<< "----errpos_sq is     : "<< errpos_sq << std::endl;
+      std::cout<< "----errmax_sq is     : "<< errmax_sq << std::endl;
 #endif 
       xnew = x + h; // Ananya : adding here to give an appropriate value to xnew
                     // Discuss with john if appropriate 
@@ -2131,7 +2135,8 @@ TemplateGUIntegrationDriver<Backend>
             /* StoreFinalValues() */
             finished[i] = -1;
             errMaxLessThanOne[i] = 1;
-            if (xnew[i] <= x2[i] )
+            xnew[i] = x[i] + hFinal[i];
+            if (xnew[i] < x2[i] )
             {
               // stay in loop 
               // But how? 
@@ -2141,6 +2146,9 @@ TemplateGUIntegrationDriver<Backend>
               // updated at every xnew < x2 step? 
               // too much storage to and forth... more time taken in data transfer 
               hFinal        [i] += h[i];
+            #ifdef PARTDEBUG
+              std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (errMaxLessThanOne Loop)(iter= )"<<iter<<std::endl;
+            #endif 
               errmax_sqFinal[i]  = errmax_sq[i];
               for (int j = 0; j < TemplateGUFieldTrack<Backend>::ncompSVEC; ++j)
               {
@@ -2158,7 +2166,7 @@ TemplateGUIntegrationDriver<Backend>
 
       // Step failed; compute the size of retrial Step.
       Double_v errPower = Vc::exp( (0.5*fPowerShrink)*vecgeom::Log(errmax_sq) ); 
-      htemp = fSafetyFactor *h* errPower;
+      htemp = GetSafety() *h* errPower;
 
 
       h = vecgeom::Max(htemp, 0.1*h);
@@ -2179,6 +2187,9 @@ TemplateGUIntegrationDriver<Backend>
             if (xnew[i]<= x2[i])
             {
               hFinal        [i] += h[i];
+            #ifdef PARTDEBUG
+              std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (hIsZero Loop)"<<std::endl;
+            #endif 
               errmax_sqFinal[i]  = errmax_sq[i];
               for (int j = 0; j < TemplateGUFieldTrack<Backend>::ncompSVEC; ++j)
               {
@@ -2204,9 +2215,6 @@ TemplateGUIntegrationDriver<Backend>
       }   
     }
   }
-// #ifdef DEBUG
-  std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
-// #endif 
 
   h         = hFinal;
   errmax_sq = errmax_sqFinal;
@@ -2220,7 +2228,10 @@ TemplateGUIntegrationDriver<Backend>
 
   for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = yFinal[k]; }
 
+#ifdef PARTDEBUG
+  std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
   std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
+#endif 
 
   return;
 }   // end of  OneStep .............................
