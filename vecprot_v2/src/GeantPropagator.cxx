@@ -33,6 +33,19 @@
 #include "navigation/HybridNavigator2.h"
 #include "management/RootGeoManager.h"
 #include "volumes/PlacedVolume.h"
+#include "LeadNavigator.h"
+#include "liquidArgonNavigator.h"
+#include "ZDC_EMAbsorberNavigator.h"
+#include "ZDC_EMLayerNavigator.h"
+#include "HVQXNavigator.h"
+#include "ZDC_EMFiberNavigator.h"
+#include "FixedShield10Navigator.h"
+#include "ZDC_HadAbsorberNavigator.h"
+#include "CAHLNavigator.h"
+#include "CAELNavigator.h"
+#include "CAEANavigator.h"
+
+#include <dlfcn.h>
 #else
 #include "TGeoVolume.h"
 #include "TGeoManager.h"
@@ -415,6 +428,124 @@ void GeantPropagator::PrepareRkIntegration() {
 }
 
 #if USE_VECGEOM_NAVIGATOR == 1
+void InitSpecializedNavigators(std::string libname) {
+  void *handle;
+  handle = dlopen(libname.c_str(), RTLD_NOW);
+  if (!handle) {
+    std::cerr << "Error loading navigator shared lib: " << dlerror() << "\n";
+    std::cerr << "doing nothing ... \n";
+    return;
+  }
+
+  // the create detector "function type":
+  typedef void (*InitFunc_t)();
+
+  // find entry symbol correct symbol in lib
+  // TODO: get rid of hard coded name (which might not be portable)
+  InitFunc_t init = (InitFunc_t)dlsym(handle, "_Z25InitSpecializedNavigatorsv");
+
+  if (init != nullptr) {
+    // call the init function which is going to set specific navigators as
+    // compiled in by the user
+    init();
+  } else {
+    std::cerr << "Init specialized navigators from shared lib failed; symbol not found\n";
+  }
+}
+
+void InitSpecializedNavigators() {
+  std::cerr << "---- SpecializedNavigator Initializer Called ---- \n ";
+  int counter = 0;
+  for (auto &lvol : vecgeom::GeoManager::Instance().GetLogicalVolumesMap()) {
+    if (std::strcmp(lvol.second->GetName(), "Lead") == 0) {
+      lvol.second->SetNavigator(vecgeom::LeadNavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "LeadNavigator"
+                   "\n";
+      counter++;
+    }
+    if (std::strcmp(lvol.second->GetName(), "liquidArgon") == 0) {
+      lvol.second->SetNavigator(vecgeom::liquidArgonNavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "liquidArgonNavigator"
+                   "\n";
+      counter++;
+    }
+  }
+  std::cerr << "overwrote " << counter << " navigators \n";
+  std::cerr << "---- SpecializedNavigator Initializer Call Ends ---- \n ";
+}
+
+void InitSpecializedNavigatorsCMS() {
+  std::cerr << "---- SpecializedNavigator Initializer Called ---- \n ";
+  int counter = 0;
+  for (auto &lvol : vecgeom::GeoManager::Instance().GetLogicalVolumesMap()) {
+    if (std::strcmp(lvol.second->GetName(), "ZDC_EMAbsorber") == 0) {
+      lvol.second->SetNavigator(vecgeom::ZDC_EMAbsorberNavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "ZDC_EMAbsorberNavigator"
+                   "\n";
+      counter++;
+    }
+    if (std::strcmp(lvol.second->GetName(), "ZDC_EMLayer") == 0) {
+      lvol.second->SetNavigator(vecgeom::ZDC_EMLayerNavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "ZDC_EMLayerNavigator"
+                   "\n";
+      counter++;
+    }
+    /* if(std::strcmp(lvol.second->GetName(),"HVQX") == 0){
+     lvol.second->SetNavigator(vecgeom::HVQXNavigator::Instance());
+     std::cerr << "---- assigning specialized navigator " "HVQXNavigator""\n";
+     counter++;
+    }*/
+    if (std::strcmp(lvol.second->GetName(), "ZDC_EMFiber") == 0) {
+      lvol.second->SetNavigator(vecgeom::ZDC_EMFiberNavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "ZDC_EMFiberNavigator"
+                   "\n";
+      counter++;
+    }
+    if (std::strcmp(lvol.second->GetName(), "FixedShield10") == 0) {
+      lvol.second->SetNavigator(vecgeom::FixedShield10Navigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "FixedShield10Navigator"
+                   "\n";
+      counter++;
+    }
+    if (std::strcmp(lvol.second->GetName(), "ZDC_HadAbsorber") == 0) {
+      lvol.second->SetNavigator(vecgeom::ZDC_HadAbsorberNavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "ZDC_HadAbsorberNavigator"
+                   "\n";
+      counter++;
+    }
+    if (std::strcmp(lvol.second->GetName(), "CAHL") == 0) {
+      lvol.second->SetNavigator(vecgeom::CAHLNavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "CAHLNavigator"
+                   "\n";
+      counter++;
+    }
+    if (std::strcmp(lvol.second->GetName(), "CAEL") == 0) {
+      lvol.second->SetNavigator(vecgeom::CAELNavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "CAELNavigator"
+                   "\n";
+      counter++;
+    }
+    if (std::strcmp(lvol.second->GetName(), "CAEA") == 0) {
+      lvol.second->SetNavigator(vecgeom::CAEANavigator::Instance());
+      std::cerr << "---- assigning specialized navigator "
+                   "CAEANavigator"
+                   "\n";
+      counter++;
+    }
+  }
+  std::cerr << "overwrote " << counter << " navigators \n";
+  std::cerr << "---- SpecializedNavigator Initializer Call Ends ---- \n ";
+}
+
 //______________________________________________________________________________
 void InitNavigators(){
     for( auto & lvol : GeoManager::Instance().GetLogicalVolumesMap() ){
@@ -428,8 +559,17 @@ void InitNavigators(){
 	    lvol.second->SetNavigator(HybridNavigator<>::Instance());
 	    HybridManager2::Instance().InitStructure((lvol.second));
 	}
-	lvol.second->SetLevelLocator(SimpleABBoxLevelLocator::GetInstance());
+    lvol.second->SetLevelLocator(SimpleABBoxLevelLocator::GetInstance());
     }
+
+    // now set some special navigators
+
+    // either from a shared lib
+    InitSpecializedNavigators("libGeneratedNavigators.dylib");
+
+    // or by calling a special function
+    //    InitSpecializedNavigatorsCMS();
+
 }
 
 /**
