@@ -8,6 +8,7 @@ in IntegrationDriver. Functions DumpToArray and LoadFromArray
 can be removed if PosMomVector is made public data member.
 Same goes for SetCurveLength and GetCurveLength functions.
 ----------------*/
+#include <iostream>
 
 struct FieldTrack{
 
@@ -42,7 +43,7 @@ public:
     return fDistanceAlongCurve;
   }
 
-  friend std::ostream&
+friend std::ostream&
           operator<<( std::ostream& os, const FieldTrack& fieldTrack)
           {
             os<< " ( ";
@@ -53,7 +54,10 @@ public:
                        << fieldTrack.PosMomVector[4]<<" "
                        << fieldTrack.PosMomVector[5]<<" "; //Momentum
             os<< " ) ";
+
+            return os;
           }
+
 };
 
 
