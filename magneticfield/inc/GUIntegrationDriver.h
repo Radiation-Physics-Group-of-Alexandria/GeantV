@@ -22,7 +22,7 @@
 class GUIntegrationDriver
 {
    public:  // with description
-     GUIntegrationDriver( double                 hminimum, 
+     GUIntegrationDriver( double                 hminimum, //same
                           GUVIntegrationStepper *pStepper,
                           int                    numberOfComponents=6,
                           int                    statisticsVerbosity=1);
@@ -33,9 +33,9 @@ class GUIntegrationDriver
      // Core methods
      bool  AccurateAdvance( const GUFieldTrack& y_current,
                                         double  hstep,
-                                        double  eps,            // Requested y_err/hstep
+                                        double  eps, //same             // Requested y_err/hstep
                                   GUFieldTrack& yOutput,                            
-                                        double  hinitial=0.0);  // Suggested 1st interval
+                                        double  hinitial=0.0);  // take it out 
        // Above drivers for integrator (Runge-Kutta) with stepsize control. 
        // Integrates ODE starting values y_current
        // from current s (s=s0) to s=s0+h with accuracy eps. 
@@ -237,6 +237,7 @@ class GUIntegrationDriver
 
      int  fVerboseLevel;   // Verbosity level for printing (debug, ..)
         // Could be varied during tracking - to help identify issues
+     int fStepperCalls=0.;     
 
 };
 
