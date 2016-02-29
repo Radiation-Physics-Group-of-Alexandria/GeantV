@@ -22,6 +22,8 @@
 
 #include "base/Vector.h"
 
+#include <iostream>
+
 #define NEWACCURATEADVANCE
 
 template <class Backend>
@@ -296,7 +298,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
 
      // ---------------------------------------------------------------
      //  STATE
-
+    // public:
      int    fNoTotalSteps, fNoBadSteps, fNoSmallSteps, fNoInitialSmallSteps; 
      Double_v fDyerr_max, fDyerr_mx2;
      Double_v fDyerrPos_smTot, fDyerrPos_lgTot, fDyerrVel_lgTot; 
@@ -310,6 +312,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
      int kVectorSize = 4; //can be templated on the backend somehow
      int *fIndex; // or int fIndex[kVectorSize]
      int fNTracks;
+     int fStepperCalls=0;
 
 };
 
@@ -1655,13 +1658,14 @@ TemplateGUIntegrationDriver<Backend>
   static int dbg=1;
   static int nStpPr=50;   // For debug printing of long integrations
   Double_v ySubStepStart[ncompSVEC];
-
+#ifdef PARTDEBUG
   std::cout << " AccurateAdvance called with hstep= " ;
   for (int i = 0; i < nTracks; ++i)
   {
     std::cout<<hstep[i]<<" ";
   }
   std::cout<<std::endl;
+#endif 
 #endif
 
   Double_v  y   [ncompSVEC], 
@@ -1744,7 +1748,7 @@ TemplateGUIntegrationDriver<Backend>
   // For now, just adding isDoneLane : needs to be && or || with the first 3 
   // and keep nTracks condition in final ||
   // Say continue if isDoneLane is not 1111 and rest all conditions are not 0000
-#define PARTDEBUG
+// #define PARTDEBUG
   // while ( !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) || trackNextInput < nTracks  )
   while ( (!vecgeom::IsFull(isDoneLane) && 
            !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) ) || 
@@ -1762,8 +1766,9 @@ TemplateGUIntegrationDriver<Backend>
     // if( h > fMinimumStep )
     // { 
 
-      // OneStep(y,dydx,x,h,epsilon,hdid,hnext) ;
-    KeepStepping(y,dydx,x,h,epsilon,hdid,hnext, hStepLane) ;
+    OneStep(y,dydx,x,h,epsilon,hdid,hnext);
+    fNoTotalSteps++;
+    // KeepStepping(y,dydx,x,h,epsilon,hdid,hnext, hStepLane) ;
     lastStepSucceeded= (hdid == h);   
     // }
 
@@ -1789,7 +1794,9 @@ TemplateGUIntegrationDriver<Backend>
 
     // Ensure that the next step does not overshoot
     vecgeom::MaskedAssign( x+h > x2, x2 - x, &h);
-    // std::cout<<"AccurateAdvance: hnext is: "<<hnext<<" and h is : "<<h<<std::endl; 
+  #ifdef PARTDEBUG
+    std::cout<<"AccurateAdvance: hnext is: "<<hnext<<" and h is : "<<h<<std::endl; 
+  #endif 
     // When stepsize overshoots, decrease it!
     // Must cope with difficult rounding-error issues if hstep << x2
 
@@ -1863,7 +1870,9 @@ TemplateGUIntegrationDriver<Backend>
     std::cout<<"Value of lastStep is: "<< lastStep <<std::endl;
     std::cout<<"isDoneLane is:        "<< isDoneLane <<std::endl;
 #endif 
-
+#ifdef PARTDEBUG
+    // std::cout<<"nstp is : "<<nstp<<" against max. : "<<fMaxNoSteps<<std::endl;
+#endif
   } 
 
 }  // end of AccurateAdvance ...........................
@@ -1891,6 +1900,10 @@ TemplateGUIntegrationDriver<Backend>
 // Numerical Recipes in C:p. 719
 
 {
+#ifdef PARTDEBUG
+  std::cout<<"\n"<<std::endl;  
+#endif 
+
   Double_v errmax_sq;
   Double_v h, htemp, xnew ;
 
@@ -1921,6 +1934,7 @@ TemplateGUIntegrationDriver<Backend>
     {
       tot_no_trials++;
       fpStepper-> StepWithErrorEstimate(y,dydx,h,ytemp,yerr);
+      fStepperCalls++;
 
 #ifdef DEBUG
       std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
@@ -2018,9 +2032,9 @@ TemplateGUIntegrationDriver<Backend>
       }   
     }
   }
-// #ifdef DEBUG
-  // std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
-// #endif 
+#ifdef PARTDEBUG
+  std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
+#endif 
 
   h         = hFinal;
   errmax_sq = errmax_sqFinal;
@@ -2035,8 +2049,9 @@ TemplateGUIntegrationDriver<Backend>
 
   for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = yFinal[k]; }
 
-  // std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
-
+#ifdef PARTDEBUG
+  std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
+#endif
   return;
 }   // end of  OneStep .............................
 
@@ -2075,6 +2090,7 @@ TemplateGUIntegrationDriver<Backend>
   Double_v errmom_sq=0.0;    // square of momentum vector difference
 
   int iter;
+
 
   static int tot_no_trials=0;  // thread_local
   const  int max_trials   =100; 
@@ -2223,6 +2239,8 @@ TemplateGUIntegrationDriver<Backend>
   Double_v errPower = Vc::exp( (0.5*GetPowerGrow())* vecgeom::Log(errmax_sq));
   hnext = GetSafety() * h * errPower;
   vecgeom::MaskedAssign(errmax_sq <= fErrcon*fErrcon, fMaxSteppingIncrease*h, &hnext); // No more than a factor of 5 increase
+
+  // std::cout<<"fPowerShrink is: "<<1/fPowerShrink<<" and fPowerGrow is: "<<1/GetPowerGrow()<< std::endl;
 
   x += (hdid = h);
 

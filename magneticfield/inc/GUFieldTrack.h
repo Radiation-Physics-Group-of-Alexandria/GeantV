@@ -102,9 +102,10 @@ class  GUFieldTrack
      friend  std::ostream&
              operator<<( std::ostream& os, const GUFieldTrack& SixVec);
 
-   private:
+
 
      double  SixVector[6];
+   private:
      double  fDistanceAlongCurve;  // distance along curve of point
      double  fMomentumMag;
      // double  fKineticEnergy;
