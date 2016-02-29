@@ -241,9 +241,6 @@ int main(int argc, char *args[])
     // for (int step = 0; step < no_of_steps; ++step)
     for (int step = 0; step < 100; ++step)
     {
-      total_step += step_len;
-      std::fill_n(hstep, nTracks, total_step);
-
       srand(time(NULL));
 
       x_pos = (float) rand()/(RAND_MAX) ;
@@ -290,10 +287,21 @@ int main(int argc, char *args[])
         yOutput[i].LoadFromArray(posMomMatrix[i]);
       }
 */
+/*      total_step += step_len;
+      std::fill_n(hstep, nTracks, total_step);
       for (int i = 1; i < nTracks; ++i)
       {
          hstep[i] = hstep[i] + i*hstep[i];
+      }*/
+
+      // Random hstep between 0 and 200 cm (2m)
+      // x, y, z values are multiplied with mmRef before being passed to function
+      // the value of which is 0.1, so passing 200 directly would be in cm
+      for (int i = 0; i < nTracks; ++i)
+      {
+        hstep[i] = (float) rand()/(RAND_MAX) *200.; 
       }
+
 // #define DebuggingSection
 #ifdef CALCULATETIME
       clock_t biasClock= clock();
@@ -339,8 +347,8 @@ int main(int argc, char *args[])
         testScalarDriver->AccurateAdvance( yTrackIn, hstep[i], epsTol, yTrackOut );
 
     #ifdef CALCULATETIME
-        outputXForScalar += yTrackOut .SixVector   [0];
-        outputXForVector += yOutput[i].PosMomVector[0];
+        outputXForScalar += yTrackOut .SixVector   [1];
+        outputXForVector += yOutput[i].PosMomVector[1];
     #else
         cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< endl;
         cout<<" yTrackOut is : "      << yTrackOut <<" for yTrackIn: "<<yTrackIn <<" for hstep: "<<hstep[i]<< endl;
