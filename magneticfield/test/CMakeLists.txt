@@ -54,7 +54,11 @@ message(STATUS "Created target for testToyClass")
 
 add_executable(testVectorIntegrationDriver testVectorIntegrationDriver.cxx) ## ${sources} ${headers})
 target_link_libraries(testVectorIntegrationDriver Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-#message(STATUS "Created target for testVectorIntegrationDriver")
+message(STATUS "Created target for testVectorIntegrationDriver")
+
+add_executable(BenchmarkIntegrationDriver BenchmarkIntegrationDriver.cxx) ## ${sources} ${headers})
+target_link_libraries(BenchmarkIntegrationDriver Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS "Created target for BenchmarkIntegrationDriver")
 
 #add_executable(TestConstBzStepper TestConstBzStepper.cxx) ## ${sources} ${headers})
 #target_link_libraries(TestConstBzStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
