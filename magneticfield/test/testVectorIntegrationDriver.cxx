@@ -5,7 +5,7 @@
 //    was the work of Somnath Banerjee in GSoC 2015
 //
 #include <iomanip>
-
+#include <ctime>
 
 #include "Units.h"
 
@@ -83,10 +83,6 @@ int main(int argc, char *args[])
        1 , 1 , 0    // dydx mom  x, y, z
     }; //Variables in yOut[] & dydx[] we want to display - 0 for No, 1 for yes
 
-    bool printErr= 0;   // Print the predicted Error
-    bool printSep = 0;  // separator  '|'
-    bool printInp = 0;  // print the input values
-    
     const unsigned int nwdf= 12;  // Width for float/double
     
     //Set coordinates here
@@ -206,16 +202,50 @@ int main(int argc, char *args[])
 
     int nTracks = 16;
     FieldTrack yInput[nTracks], yOutput[nTracks];
-    // double posMom[] ={0., 0., 0., 0., 0., 1.};
+    // double posMom[] ={0., 0., 0., 0., 1., 1.};
 
     double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
 
+#define DebuggingSection
+// #define CALCULATETIME 
+
+#ifndef DebuggingSection
+#ifndef MAINTESTING
+    double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                       x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
+    // double posMom[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
+
+    std::fill_n(hstep, nTracks, 620);
+    const ThreeVector_d  startPosition( posMom[0], posMom[1], posMom[2]);
+    const ThreeVector_d  startMomentum( posMom[3], posMom[4], posMom[5]);
+    GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
+    GUFieldTrack yTrackOut( startPosition, startMomentum );  // yStart
+
+    for (int j = 0; j < nTracks; ++j)
+    {
+      yInput [j].LoadFromArray(posMom);
+      yOutput[j].LoadFromArray(posMom);
+    }
+
+    testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
+    testScalarDriver->AccurateAdvance( yTrackIn, hstep[0], epsTol, yTrackOut );
+    cout<<" yOutput is   : "<< yOutput[0]<<" for yInput: "  <<yInput[0]<< endl;
+    cout<<" yTrackOut is : "<< yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
+#endif 
+#endif 
+
+#ifdef MAINTESTING 
+  #ifdef CALCULATETIME
+    std::vector<double> ratioVector;
+  #endif 
     // for (int step = 0; step < no_of_steps; ++step)
-    for (int step = 0; step < 10; ++step)
+    for (int step = 0; step < 13; ++step)
     {
       total_step += step_len;
       std::fill_n(hstep, nTracks, total_step);
+
+      srand(time(NULL));
 
       x_pos = (float) rand()/(RAND_MAX) ;
       y_pos = (float) rand()/(RAND_MAX) ;
@@ -261,13 +291,30 @@ int main(int argc, char *args[])
         yOutput[i].LoadFromArray(posMomMatrix[i]);
       }
 */
-      for (int i = 0; i < nTracks; ++i)
+      for (int i = 1; i < nTracks; ++i)
       {
          hstep[i] = hstep[i] + i*hstep[i];
       }
 // #define DebuggingSection
+#ifdef CALCULATETIME
+      clock_t biasClock= clock();
+      biasClock = clock() - biasClock;
+      clock_t biasClock2 = clock();
+      biasClock2 = clock() - biasClock2;
+      cout<<"biasClock2 is: "<<biasClock2<<" and 1 is : "<<biasClock<<endl;
+      cout<<" and diff. in float is : "<< ((float)(biasClock-biasClock2))/CLOCKS_PER_SEC;
+
+      clock_t clock1= clock();
+#endif 
+
 #ifndef DebuggingSection
-      testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
+      testVectorDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
+#endif 
+
+#ifdef CALCULATETIME
+      clock1 = clock() - clock1 - biasClock;
+      float clock1InFloat = ((float)clock1)/CLOCKS_PER_SEC;
+      cout<<"Vector time is: "<<clock1InFloat<<endl;
 #endif 
 /*      testScalarDriver->AccurateAdvance( yTrackIn, hstep[0], epsTol, yTrackOut );
 
@@ -287,32 +334,50 @@ int main(int argc, char *args[])
         cout<<" yTrackOut is: " << yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
       }
 */
-
+#ifdef CALCULATETIME
+      clock_t clock2= clock();
+#endif 
       for (int i = 0; i < nTracks; ++i)
       {
 #ifndef DebuggingSection
         testScalarDriver->AccurateAdvance( yTrackIn, hstep[i], epsTol, yTrackOut );
 
         cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< endl;
-        cout<<" yTrackOut is : "      << yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
+        cout<<" yTrackOut is : "      << yTrackOut <<" for yTrackIn: "<<yTrackIn <<" for hstep: "<<hstep[i]<< endl;
 #endif 
       }
-
-/*     cout<<"\n----Output succeeded is: "<<endl;
-      for (int i = 0; i < nTracks; ++i)
-      {
-        cout<<succeeded[i]<<" ";
-      }
-      cout<<endl;*/
+#ifdef CALCULATETIME
+      clock2 = clock() - clock2 - biasClock;
+      float clock2InFloat = ((float)clock2)/CLOCKS_PER_SEC;
+      cout<<"scalar time is: "<<clock2InFloat<<endl;
+      // cout<<"ratio is: "<<clock2InFloat/clock1InFloat<<endl;
+      ratioVector.push_back(clock2InFloat/clock1InFloat);
+#endif 
     }
+
+#ifdef CALCULATETIME
+    int sizeOfRatioVector = ratioVector.size(); //no_steps;
+    cout<<"Size of ratioVector is: "<<ratioVector.size()<<endl;
+    cout<<"Time ratios are: "<<endl;
+    for (int i = 0; i < sizeOfRatioVector; ++i)
+    {
+      cout<<i<<" "<<ratioVector.back()<< " " <<endl;
+      ratioVector.pop_back();
+    }
+    cout<<endl;
+#endif 
+
+#endif 
 
 #ifdef DebuggingSection
     if(true){
-      // double posMomt[] = {  0.0394383, 0.0783099, 0.079844, 0.911647, 0.197551, 0.335223};  
-      double posMomt[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
+      // double posMomt[] = { 0.0394383, 0.0783099, 0.079844, 0.911647, 0.197551, 0.335223};  
+      // double posMomt[] = { 0.018234, 0.0576585, 0.0694335, 0.857714, 0.205414, 0.186222 };
+      double posMomt[] = {0.0627625, 0.0184593, 0.0449569, 0.68876, 0.163077, 0.841872};
+      // double posMomt[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
 
       
-      total_step = 60;
+      total_step = 7280;
       std::fill_n(hstep, nTracks, total_step);
 
       for (int i = 0; i < nTracks; ++i)
@@ -331,19 +396,29 @@ int main(int argc, char *args[])
       GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
       GUFieldTrack yTrackOut( startPosition, startMomentum );  // yStart
 
-      testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
+      testVectorDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
       // testScalarDriver->AccurateAdvance( yTrackIn, hstep[11], epsTol, yTrackOut );
 
       for (int i = 0; i < nTracks; ++i)
       {
         testScalarDriver->AccurateAdvance( yTrackIn, hstep[i], epsTol, yTrackOut );
 
-        cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<< endl;
+        // cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for hstep: "<<hstep[i]<< endl ;
+        cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for hstep: "<<hstep[i]<< endl ;
         cout<<" yTrackOut is : "      << yTrackOut << endl;
       }
 
+      // GUFieldTrack randNew = yTrackIn + yTrackOut;
+
+      // cout<<yOutput[0]<<endl;
+      // cout<<yOutput[1]<<endl;
+      // cout<<yOutput[2]<<hstep[2]<<endl;
+
     }
 #endif 
+
+    // cout<<" Scalar Stepper function calls are: "<< testScalarDriver->fStepperCalls <<" and OneGoodStep calls are "<<testScalarDriver->fNoTotalSteps << endl;
+    // cout<<" Vector Stepper function calls are: "<< testVectorDriver->fStepperCalls <<" and OneStep calls are "<<testVectorDriver->fNoTotalSteps << endl;
 
 
 
