@@ -207,38 +207,17 @@ int main(int argc, char *args[])
     double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
 
-#define MAINTESTING
 #define CALCULATETIME 
-
-#ifndef MAINTESTING
-    double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-                       x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
-    // double posMom[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
-
-    std::fill_n(hstep, nTracks, 620);
-    const ThreeVector_d  startPosition( posMom[0], posMom[1], posMom[2]);
-    const ThreeVector_d  startMomentum( posMom[3], posMom[4], posMom[5]);
-    GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
-    GUFieldTrack yTrackOut( startPosition, startMomentum );  // yStart
-
-    for (int j = 0; j < nTracks; ++j)
-    {
-      yInput [j].LoadFromArray(posMom);
-      yOutput[j].LoadFromArray(posMom);
-    }
-
-    testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
-    testScalarDriver->AccurateAdvance( yTrackIn, hstep[0], epsTol, yTrackOut );
-    cout<<" yOutput is   : "<< yOutput[0]<<" for yInput: "  <<yInput[0]<< endl;
-    cout<<" yTrackOut is : "<< yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
-#endif 
+#define MAINTESTING
 
 #ifdef MAINTESTING 
+    int nRepititions = 1;
   #ifdef CALCULATETIME
+    nRepititions = 100;
     std::vector<double> ratioVector;
-    double outputXForScalar, outputXForVector;
+    long double outputXForScalar=0, outputXForVector=0;
+    std::vector<GUFieldTrack> v;
   #endif 
-    // for (int step = 0; step < no_of_steps; ++step)
     for (int step = 0; step < 100; ++step)
     {
       srand(time(NULL));
@@ -308,13 +287,21 @@ int main(int argc, char *args[])
       biasClock = clock() - biasClock;
       clock_t biasClock2 = clock();
       biasClock2 = clock() - biasClock2;
-      cout<<"biasClock2 is: "<<biasClock2<<" and 1 is : "<<biasClock<<endl;
-      cout<<" and diff. in float is : "<< ((float)(biasClock-biasClock2))/CLOCKS_PER_SEC;
+      cout<<"biasClock2 is: "<<biasClock2<<" and 1 is : "<<biasClock<<" and diff. in double is : "<< ((float)(biasClock-biasClock2))/CLOCKS_PER_SEC;
 
       clock_t clock1= clock();
 #endif 
 
-      testVectorDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
+      for (int repeat = 0; repeat < nRepititions; ++repeat)
+      {
+        testVectorDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
+        for (int i = 0; i < nTracks; ++i)
+        {
+          outputXForVector += yOutput[i].PosMomVector[1];
+        }
+      }
+
+      // testVectorDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
 
 #ifdef CALCULATETIME
       clock1 = clock() - clock1 - biasClock;
@@ -342,20 +329,24 @@ int main(int argc, char *args[])
 #ifdef CALCULATETIME
       clock_t clock2= clock();
 #endif 
-      for (int i = 0; i < nTracks; ++i)
+      for (int repeat = 0; repeat < nRepititions; ++repeat)
       {
-        testScalarDriver->AccurateAdvance( yTrackIn, hstep[i], epsTol, yTrackOut );
+        for (int i = 0; i < nTracks; ++i)
+        {
+          testScalarDriver->AccurateAdvance( yTrackIn, hstep[i], epsTol, yTrackOut );
 
-    #ifdef CALCULATETIME
-        outputXForScalar += yTrackOut .SixVector   [1];
-        outputXForVector += yOutput[i].PosMomVector[1];
-    #else
-        cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< endl;
-        cout<<" yTrackOut is : "      << yTrackOut <<" for yTrackIn: "<<yTrackIn <<" for hstep: "<<hstep[i]<< endl;
-    #endif 
-    
+      #ifdef CALCULATETIME
+          outputXForScalar += yTrackOut .SixVector   [1];
+          // outputXForVector += yOutput[i].PosMomVector[1];
+      #else
+          cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< endl;
+          cout<<" yTrackOut is : "      << yTrackOut <<" for yTrackIn: "<<yTrackIn <<" for hstep: "<<hstep[i]<< endl;
+      #endif 
+      
 
+        }
       }
+
 #ifdef CALCULATETIME
       clock2 = clock() - clock2 - biasClock;
       float clock2InFloat = ((float)clock2)/CLOCKS_PER_SEC;
