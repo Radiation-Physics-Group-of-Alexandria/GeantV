@@ -49,6 +49,7 @@ int fEFNLdElemsHost = 0;
 #endif
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 TEFstate::TEFstate() :
    fEGrid(TPartIndex::I()->EGrid()),
    fAtcm3(0),

@@ -14,9 +14,7 @@
 //                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-#include "TPartIndex.h"
 #include "TPFstate.h"
-#include "Geant/Config.h"
 
 #ifndef GEANT_NVCC
 class TFile;
@@ -36,6 +34,7 @@ extern GEANT_CUDA_DEVICE_CODE TPDecay  *fDecayDev;           //! decay table
 #endif
 class TEFstate {
 public:
+GEANT_CUDA_BOTH_CODE
   TEFstate();
   TEFstate(int z, int a, float dens);
   TEFstate &operator=(const TEFstate &other);

@@ -28,7 +28,8 @@
 #endif
 
 class TFinState {
-public:
+public: 
+ GEANT_CUDA_BOTH_CODE
   TFinState();
   TFinState(int nfstates, const int npart[], const float weight[], const float kerma[], const float en[],
             const char surv[], const int pid[], const float mom[]);

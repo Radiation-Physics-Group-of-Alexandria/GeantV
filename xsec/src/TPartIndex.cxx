@@ -288,16 +288,23 @@ void TPartIndex::Streamer(TBuffer &R__b) {
 void TPartIndex::CreateReferenceVector() {
     // create the particle reference vector
     fGVParticle.resize(fPDGToGVMap.size(), 0);
+#ifdef USE_VECGEOM_NAVIGATOR
 #ifdef GEANT_NVCC
     for (vecgeom::map<int, int>::iterator p = fPDGToGVMap.begin(); p != fPDGToGVMap.end(); ++p) {
 #else
-#ifdef USE_VECGEOM_NAVIGATOR
     for (map<int, int>::iterator p = fPDGToGVMap.begin(); p != fPDGToGVMap.end(); ++p) {
+#endif
 // std::cout << " gv index " << p->second << " corresponds to " << p->first << std::endl;
 // create direct access vector with GeantV code
+#ifndef GEANT_CUDA_DEVICE_BUILD
       const Particle_t *pp = &Particle_t::GetParticle(p->first);
       // set the code inside the particle too
       const_cast<Particle_t *>(pp)->SetCode(p->second);
+#else
+      const Particle_t *pp = &Particle_t::GetParticleDev(p->first);
+      // set the code inside the particle too
+      const_cast<Particle_t *>(pp)->SetCode(p->second);
+#endif
       if (pp->Mass() >= 0)
         fGVParticle[p->second] = pp;
       else
@@ -472,7 +479,6 @@ void TPartIndex::CreateReferenceVector() {
           }
         }
       }
-#endif
 #endif
 #endif
     }

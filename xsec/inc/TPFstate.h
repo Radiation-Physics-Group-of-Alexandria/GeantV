@@ -30,6 +30,7 @@ class TFinState;
 
 class TPFstate {
 public:
+  GEANT_CUDA_BOTH_CODE
   TPFstate();
   TPFstate(int pdg, int nfstat, int nreac, const int dict[]);
   TPFstate(const TPFstate &other);

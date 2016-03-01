@@ -29,6 +29,7 @@ ClassImp(TPFstate)
 #endif
 
 //_________________________________________________________________________
+  GEANT_CUDA_BOTH_CODE
 TPFstate::TPFstate()
 : fNEbins(0),
    fNEFstat(0),
@@ -423,6 +424,7 @@ bool TPFstate::Resample() {
 }
 
 //___________________________________________________________________
+GEANT_CUDA_BOTH_CODE
 int TPFstate::SizeOf() const {
    size_t size = sizeof(*this);
    if(fRestCaptFstat != nullptr) size += fRestCaptFstat->SizeOf();
