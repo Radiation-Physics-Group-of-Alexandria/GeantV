@@ -22,7 +22,8 @@
 
 #include "base/Vector.h"
 
-#include <iostream>
+// Adding because addign scalar stepper for new constructor (KeepStepping)
+#include "GUVIntegrationStepper.h"
 
 #define NEWACCURATEADVANCE
 
@@ -39,6 +40,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
                                   TemplateGUVIntegrationStepper<Backend> *pStepper,
                                   int    numberOfComponents  = 6,
                                   int    statisticsVerbosity = 1                  );
+
      TemplateGUIntegrationDriver( const TemplateGUIntegrationDriver& );
        // Copy constructor used to create Clone method
      ~TemplateGUIntegrationDriver();
@@ -106,6 +108,12 @@ class TemplateGUIntegrationDriver : public AlignedBase
                                Double_v& hdid,
                                Double_v& hnext,
                          const Double_v  hStepLane ) ;
+
+     TemplateGUIntegrationDriver( double hminimum,  //same 
+                                  TemplateGUVIntegrationStepper<Backend> *pStepper,
+                                  GUVIntegrationStepper                  *pScalarStepper,
+                                  int    numberOfComponents  = 6,
+                                  int    statisticsVerbosity = 1                        );
 #endif
 
      Bool_v  QuickAdvance( TemplateGUFieldTrack<Backend>& y_posvel,        // INOUT
@@ -307,13 +315,14 @@ class TemplateGUIntegrationDriver : public AlignedBase
 
      int  fVerboseLevel;   // Verbosity level for printing (debug, ..)
      // Could be varied during tracking - to help identify issues
-
+#ifdef NEWACCURATEADVANCE
      //Variables required for track insertion algorithm
      int kVectorSize = 4; //can be templated on the backend somehow
      int *fIndex; // or int fIndex[kVectorSize]
      int fNTracks;
      int fStepperCalls=0;
-
+     GUVIntegrationStepper *fpScalarStepper;
+#endif 
 };
 
 // #include "GUIntegratorDriver.icc"
@@ -1766,9 +1775,9 @@ TemplateGUIntegrationDriver<Backend>
     // if( h > fMinimumStep )
     // { 
 
-    OneStep(y,dydx,x,h,epsilon,hdid,hnext);
+    // OneStep(y,dydx,x,h,epsilon,hdid,hnext);
     fNoTotalSteps++;
-    // KeepStepping(y,dydx,x,h,epsilon,hdid,hnext, hStepLane) ;
+    KeepStepping(y,dydx,x,h,epsilon,hdid,hnext, hStepLane) ;
     lastStepSucceeded= (hdid == h);   
     // }
 
@@ -2253,5 +2262,25 @@ TemplateGUIntegrationDriver<Backend>
 
   return;
 }   // end of  OneStep .............................
+
+
+// New constructor for KeepStepping method 
+// Scalar stepper passed 
+template <class Backend>
+TemplateGUIntegrationDriver<Backend>
+  ::TemplateGUIntegrationDriver( double  hminimum, 
+                                 TemplateGUVIntegrationStepper<Backend> *pStepper,
+                                 GUVIntegrationStepper                  *pScalarStepper,
+                                 int     numComponents,
+                                 int     statisticsVerbose                             )
+  : TemplateGUIntegrationDriver( hminimum, 
+                                 pStepper,
+                                 numComponents,
+                                 statisticsVerbose)
+{
+  fpScalarStepper = pScalarStepper; 
+}
+
+
 
 #endif /* TemplateGUIntegrationDriver_Def */
