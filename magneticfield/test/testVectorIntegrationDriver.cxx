@@ -174,7 +174,7 @@ int main(int argc, char *args[])
     double hminimum = 0.2;
     auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
 
-    // Preparing scalar Integration Driver
+    //========= Preparing scalar Integration Driver ============
     using  GvEquationTypeScalar=  TMagFieldEquation<TUniformMagField, Nposmom>;
     
     auto gvFieldScalar    = new TUniformMagField( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
@@ -189,7 +189,7 @@ int main(int argc, char *args[])
                                                     Nposmom,
                                                     statisticsVerbosity); 
     testScalarDriver->InitializeCharge( particleCharge );
-
+    //==========  Scalar Driver prepared =========================
 
 
     double total_step = 0.;
@@ -377,7 +377,7 @@ int main(int argc, char *args[])
       // double posMomt[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
 
       
-      total_step = 7280;
+      total_step = 40;
       std::fill_n(hstep, nTracks, total_step);
 
       for (int i = 0; i < nTracks; ++i)
