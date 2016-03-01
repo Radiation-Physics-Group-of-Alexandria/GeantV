@@ -143,12 +143,10 @@ int main(int argc, char *args[])
   #ifdef DEBUGAnanya
     cout<<"---- constructed TemplateGUTCashKarpRKF45"<<endl;
   #endif
-/*    TemplateGUVIntegrationStepper<Backend> *myStepper;
-    myStepper = &myStepper2;*/
 
-    TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
+/*    TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-    myStepper->InitializeCharge( particleCharge );
+    myStepper->InitializeCharge( particleCharge );*/
 
     //Initialising coordinates
     const double mmGVf = fieldUnits::millimeter;
@@ -172,7 +170,7 @@ int main(int argc, char *args[])
 
     //=======================Test part for Integration driver====================
     double hminimum = 0.2;
-    auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
+    // auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
 
     //========= Preparing scalar Integration Driver ============
     using  GvEquationTypeScalar=  TMagFieldEquation<TUniformMagField, Nposmom>;
@@ -190,6 +188,13 @@ int main(int argc, char *args[])
                                                     statisticsVerbosity); 
     testScalarDriver->InitializeCharge( particleCharge );
     //==========  Scalar Driver prepared =========================
+
+    auto myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
+
+    myStepper->InitializeCharge( particleCharge );
+
+    auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
+    // ========== Vector Driver prepared ========================
 
 
     double total_step = 0.;
