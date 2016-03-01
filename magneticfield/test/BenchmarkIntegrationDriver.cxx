@@ -216,7 +216,8 @@ int main(int argc, char *args[])
 #ifdef CALCULATETIME
   nRepititions = 100;
   std::vector<double> ratioVector;
-  long double outputXForScalar=0, outputXForVector=0;
+  long double outputVarForScalar=0, outputVarForVector=0;
+  int indOutputVar=1;
   std::vector<GUFieldTrack> v;
 #endif 
   for (int step = 0; step < 10; ++step)
@@ -290,7 +291,7 @@ int main(int argc, char *args[])
       testVectorDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
       for (int i = 0; i < nTracks; ++i)
       {
-        outputXForVector += yOutput[i].PosMomVector[1];
+        outputVarForVector += yOutput[i].PosMomVector[1];
       }
     }
 
@@ -330,7 +331,7 @@ int main(int argc, char *args[])
 
     #ifdef CALCULATETIME
         outputXForScalar += yTrackOut .SixVector   [1];
-        // outputXForVector += yOutput[i].PosMomVector[1];
+        // outputVarForVector += yOutput[i].PosMomVector[1];
     #else
         cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< endl;
         cout<<" yTrackOut is : "      << yTrackOut <<" for yTrackIn: "<<yTrackIn <<" for hstep: "<<hstep[i]<< endl;
@@ -351,7 +352,7 @@ int main(int argc, char *args[])
 
 #ifdef CALCULATETIME
   cout<<"outputXForScalar: "<< outputXForScalar<< endl;
-  cout<<"outputXForVector: "<< outputXForVector<< endl;
+  cout<<"outputVarForVector: "<< outputVarForVector<< endl;
   int sizeOfRatioVector = ratioVector.size(); //no_steps;
   cout<<"Size of ratioVector is: "<<ratioVector.size()<<endl;
   cout<<"Time ratios are: "<<endl;
@@ -380,13 +381,13 @@ int main(int argc, char *args[])
   nRepititions = 10;
   std::vector<double> ratioVector;
   std::vector<GUFieldTrack> vectorGUFieldTrack;
-  // GUFieldTrack testFieldTrack[10];
-  // cout<<"\n-----llalala"<< v<<endl;
-  long double outputXForScalar=0, outputXForVector=0;
+  long double outputVarForScalar = 0, outputVarForVector = 0;
+  int indOutputVar = 2;
 
   for (int step = 0; step < 10; ++step)
   {
     srand(time(NULL));
+    // srand(9);
 
     double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
     double X_Mom[nTracks], Y_Mom[nTracks], Z_Mom[nTracks];
@@ -426,29 +427,32 @@ int main(int argc, char *args[])
     // Random hstep between 0 and 200 cm (2m)
     // x, y, z values are multiplied with mmRef before being passed to function
     // the value of which is 0.1, so passing 200 directly would be in cm
-/*    for (int j = 0; j < noOfVectorCalls; ++j)
+    double hstepMatrix[noOfVectorCalls][nTracks];
+    for (int j = 0; j < noOfVectorCalls; ++j)
     {
       for (int i = 0; i < nTracks; ++i)
       {
-        hstep[j][i] = (float) rand()/(RAND_MAX) *200.; 
+        hstepMatrix[j][i] = (float) rand()/(RAND_MAX) *200.; 
       }
-    }*/
+    }
+
     for (int i = 0; i < nTracks; ++i)
     {
       hstep[i] = (float) rand()/(RAND_MAX) *200.; 
     }
 
-    clock_t clock1= clock();
 
+    clock_t clock1= clock();
     for (int repeat = 0; repeat < nRepititions; ++repeat)
     {
       for (int j = 0; j < noOfVectorCalls; ++j)
       {
-        testVectorDriver->AccurateAdvance( yInputMatrix[j], hstep, epsTol, yOutput, nTracks, succeeded );
+        testVectorDriver->AccurateAdvance( yInputMatrix[j], hstepMatrix[j], epsTol, yOutput, nTracks, succeeded );
+        // testVectorDriver->AccurateAdvance( yInputMatrix[j], hstep, epsTol, yOutput, nTracks, succeeded );
         for (int i = 0; i < nTracks; ++i)
         {
           // cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< endl;
-          outputXForVector += yOutput[i].PosMomVector[1];
+          outputVarForVector += yOutput[i].PosMomVector[indOutputVar];
         }      
       }
     }
@@ -470,12 +474,12 @@ int main(int argc, char *args[])
       {
         for (int i = 0; i < nTracks; ++i)
         {
-          // cout<<"hstep index is : "<< i%nTracks << " and hstep is: "<<hstep[i%nTracks]<< endl;
           // testScalarDriver->AccurateAdvance( vectorGUFieldTrack[i], hstep[i%nTracks], epsTol, yTrackOut );
-          testScalarDriver->AccurateAdvance( vectorGUFieldTrack[indScalar], hstep[i], epsTol, yTrackOut );
+          // testScalarDriver->AccurateAdvance( vectorGUFieldTrack[indScalar], hstep[i], epsTol, yTrackOut );
+          testScalarDriver->AccurateAdvance( vectorGUFieldTrack[indScalar], hstepMatrix[j][i], epsTol, yTrackOut );
           // cout<<" yTrackOut is : "      << yTrackOut <<" for yTrackIn: "<<vectorGUFieldTrack[indScalar] <<" for hstep: "<<hstep[i]<< endl;
 
-          outputXForScalar += yTrackOut.SixVector[1];
+          outputVarForScalar += yTrackOut.SixVector[indOutputVar];
           indScalar++;
         }      
       }
@@ -486,15 +490,14 @@ int main(int argc, char *args[])
     clock2 = clock() - clock2 ;
     float clock2InFloat = ((float)clock2)/CLOCKS_PER_SEC;
     cout<<"scalar time is: "<<clock2InFloat<<endl;
-    // cout<<"ratio is: "<<clock2InFloat/clock1InFloat<<endl;
     ratioVector.push_back(clock2InFloat/clock1InFloat);
 
   }
 
 
-  cout<<"outputXForScalar: "<< outputXForScalar<< endl;
-  cout<<"outputXForVector: "<< outputXForVector<< endl;
-  int sizeOfRatioVector = ratioVector.size(); //no_steps;
+  cout<<"outputVarForScalar: "<< outputVarForScalar<< endl;
+  cout<<"outputVarForVector: "<< outputVarForVector<< endl;
+  int sizeOfRatioVector = ratioVector.size(); // no_steps;
   cout<<"Size of ratioVector is: "<<ratioVector.size()<<endl;
   cout<<"Time ratios are: "<<endl;
   for (int i = 0; i < sizeOfRatioVector; ++i)
