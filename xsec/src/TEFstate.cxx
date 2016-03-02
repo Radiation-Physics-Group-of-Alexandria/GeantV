@@ -210,6 +210,7 @@ bool TEFstate::SampleReac(int pindex, int preac, float en, int &npart, float &we
 }
 
 //___________________________________________________________________
+  GEANT_CUDA_BOTH_CODE
 bool TEFstate::GetReac(int pindex, int preac, float en, int ifs, int &npart, float &weight, float &kerma, float &enr,
                        const int *&pid, const float *&mom) const {
   return fPFstateP[pindex]->GetReac(preac, en, ifs, npart, weight, kerma, enr, pid, mom);

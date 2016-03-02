@@ -18,6 +18,7 @@ ClassImp(TFinState)
 #endif
 
 //_________________________________________________________________________
+ GEANT_CUDA_BOTH_CODE
 TFinState::TFinState()
     : fNFstates(0), fNsecs(0), fNMom(0), fWeight(0), fKerma(0), fEn(0), fMom(0), fPID(0), fNpart(0), fSurv(0) {
 }
@@ -252,7 +253,7 @@ bool TFinState::SampleReac(int &npart, float &weight, float &kerma, float &en, c
   kerma = fKerma[finstat];
   en = fEn[finstat];
   //  memcpy(pid,&fPID[ipoint],npart*sizeof(int));
-  //  memcpy(mom,&fMom[3*ipoint],3*npart*sizeof(float));
+  //  memcpy(mom&fMom[3*ipoint],3*npart*sizeof(float));
   pid = &fPID[ipoint];
   mom = &fMom[3 * ipoint];
   return fSurv[finstat];
@@ -304,6 +305,7 @@ bool TFinState::SampleReac(int &npart, float &weight, float &kerma, float &en, c
 }
 
 //_________________________________________________________________________
+  GEANT_CUDA_BOTH_CODE
 bool TFinState::GetReac(int finstat, int &npart, float &weight, float &kerma, float &en, const int *&pid,
                         const float *&mom) const {
   if (!fNFstates) { // ensure that nothing happens

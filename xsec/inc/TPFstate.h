@@ -62,6 +62,7 @@ public:
   bool SampleRestCaptFstate(int &npart, float &weight, float &kerma, float &enr, const int *&pid, const float *&mom,
                             double randn) const;
 
+  GEANT_CUDA_BOTH_CODE
   bool GetReac(int preac, float en, int ifs, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
                const float *&mom) const;
   int NEFstat() const { return fNEFstat; }

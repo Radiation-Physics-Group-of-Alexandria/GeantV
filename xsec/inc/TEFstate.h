@@ -69,6 +69,7 @@ GEANT_CUDA_BOTH_CODE
                             const float *&mom) const;
   bool SampleRestCaptFstate(int kpart, int &npart, float &weight, float &kerma, float &enr, const int *&pid,
                             const float *&mom, double randn) const;
+  GEANT_CUDA_BOTH_CODE
   bool GetReac(int pindex, int preac, float en, int ifs, int &npart, float &weight, float &kerma, float &enr,
                const int *&pid, const float *&mom) const;
 

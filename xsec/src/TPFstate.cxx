@@ -298,6 +298,9 @@ bool TPFstate::SampleRestCaptFstate(int &npart, float &weight, float &kerma, flo
 }
 
 //______________________________________________________________________________
+
+
+  GEANT_CUDA_BOTH_CODE
 bool TPFstate::GetReac(int preac, float en, int ifs, int &npart, float &weight, float &kerma, float &enr,
                        const int *&pid, const float *&mom) const {
   int rnumber = fRdict[preac];

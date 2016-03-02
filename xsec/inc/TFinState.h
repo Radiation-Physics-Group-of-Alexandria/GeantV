@@ -50,6 +50,7 @@ public:
   bool SampleReac(int &npart, float &weight, float &kerma, float &en, const int *&pid, const float *&mom,
                   double randn) const;
 
+  GEANT_CUDA_BOTH_CODE
   bool GetReac(int finstat, int &npart, float &weight, float &kerma, float &en, const int *&pid,
                const float *&mom) const;
   void Dump() const {}
