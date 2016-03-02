@@ -2125,7 +2125,8 @@ TemplateGUIntegrationDriver<Backend>
 
   Double_v x2 = x + htry;
   Bool_v errMaxLessThanOneLocal(false), hIsZeroCondLocal(false);
-  int htryExhausted[kVectorSize] = {0};
+  // int htryExhausted[kVectorSize] = {0};
+  Bool_v htryExhausted(false);
   Double_v charge(1.);
 
   for (iter = 0; iter < max_trials; iter++)
@@ -2171,7 +2172,7 @@ TemplateGUIntegrationDriver<Backend>
         for (int i = 0; i < kVectorSize; ++i)
         {
           // Probably could use several MaskedAssigns as well
-          if ( errMaxLessThanOneLocal[i] ==1 && htryExhausted[i] != 1 )
+          if ( errMaxLessThanOneLocal[i] ==1 && htryExhausted[i] != true )
           {
 
             /* StoreFinalValues() */
@@ -2200,7 +2201,7 @@ TemplateGUIntegrationDriver<Backend>
             }
             else
             {
-              htryExhausted[i] = 1;
+              htryExhausted[i] = false;
             }
 
             if (xnew[i] <= x2[i])
@@ -2229,7 +2230,7 @@ TemplateGUIntegrationDriver<Backend>
       {
         for (int i = 0; i < kVectorSize; ++i)
         {
-          if ( hIsZeroCondLocal[i] ==1 && htryExhausted[i] != 1 )
+          if ( hIsZeroCondLocal[i] ==1 && htryExhausted[i] != true )
           {
             /* StoreFinalValues() */
             finished      [i]  = -1;
@@ -2249,7 +2250,7 @@ TemplateGUIntegrationDriver<Backend>
             }
             else
             {
-              htryExhausted[i] = 1;
+              htryExhausted[i] = false;
             }
 
           }
