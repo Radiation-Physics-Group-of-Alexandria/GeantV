@@ -307,7 +307,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
 
      // ---------------------------------------------------------------
      //  STATE
-    // public:
+    public:
      int    fNoTotalSteps, fNoBadSteps, fNoSmallSteps, fNoInitialSmallSteps; 
      Double_v fDyerr_max, fDyerr_mx2;
      Double_v fDyerrPos_smTot, fDyerrPos_lgTot, fDyerrVel_lgTot; 
@@ -321,7 +321,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
      int kVectorSize = 4; //can be templated on the backend somehow
      int *fIndex; // or int fIndex[kVectorSize]
      int fNTracks;
-     int fStepperCalls=0;
+     int fStepperCalls = 0;
      GUVIntegrationStepper *fpScalarStepper;
 #endif 
 };
@@ -2132,12 +2132,17 @@ TemplateGUIntegrationDriver<Backend>
   for (iter = 0; iter < max_trials; iter++)
   {
     if ( !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
-    // if ( vecgeom::IsEmpty(htryExhausted) && !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
+
+    // With the below if condition, the speedup becomes 0.25!!! 
+    // The output values are almost the same although. They have a 
+    // difference of e-2 or e-1 sometimes.
+    // if ( vecgeom::IsEmpty(htryExhausted) || !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
     {
       tot_no_trials++;
 
       fpStepper-> RightHandSideVIS( yFinal, charge, dydx );
       fpStepper-> StepWithErrorEstimate( yFinal, dydx, h, ytemp, yerr);
+      fStepperCalls++;
 
 #ifdef DEBUG
       std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
