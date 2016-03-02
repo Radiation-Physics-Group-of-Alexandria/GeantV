@@ -2132,6 +2132,7 @@ TemplateGUIntegrationDriver<Backend>
   for (iter = 0; iter < max_trials; iter++)
   {
     if ( !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
+    // if ( vecgeom::IsEmpty(htryExhausted) && !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
     {
       tot_no_trials++;
 
@@ -2230,9 +2231,56 @@ TemplateGUIntegrationDriver<Backend>
       {
         for (int i = 0; i < kVectorSize; ++i)
         {
+          // Probably could use several MaskedAssigns as well
           if ( hIsZeroCondLocal[i] ==1 && htryExhausted[i] != true )
           {
+
             /* StoreFinalValues() */
+            finished   [i] = -1;
+            hIsZeroCond[i] = 1;
+            xnew       [i] = x[i] + hFinal[i];
+            if (xnew[i] < x2[i] )
+            {
+              // stay in loop 
+              // But how? 
+              // htryExhausted[i] = -1; // i.e. still in working condition
+              // set it to -1 otherwise and store output 
+              // but if at some point x > x2 , then? what about keeping output
+              // updated at every xnew < x2 step? 
+              // too much storage to and forth... more time taken in data transfer 
+              hFinal   [i] += h[i];
+
+            #ifdef PARTDEBUG
+              std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (hIsZero Loop)(iter= )"<<iter<<std::endl;
+            #endif 
+              errmax_sqFinal [i] = errmax_sq[i];
+              for (int j = 0; j < TemplateGUFieldTrack<Backend>::ncompSVEC; ++j)
+              {
+                yFinal[j][i] = ytemp[j][i];
+              }
+            }
+            else
+            {
+              htryExhausted[i] = false;
+            }
+
+            if (xnew[i] <= x2[i])
+            {
+              hTotalDoneSoFar[i] += h[i]; // Diff. from hFinal because can be carried over 
+                                          // from prev. KeepStepping. 
+            }
+          }
+        }
+      }
+
+
+/*      if ( !vecgeom::IsEmpty(hIsZeroCondLocal) )
+      {
+        for (int i = 0; i < kVectorSize; ++i)
+        {
+          if ( hIsZeroCondLocal[i] ==1 && htryExhausted[i] != true )
+          {
+            //---- StoreFinalValues() ----
             finished      [i]  = -1;
             hIsZeroCond   [i]  = true;
 
@@ -2255,7 +2303,8 @@ TemplateGUIntegrationDriver<Backend>
 
           }
         }
-      }      
+      }  */
+
       if(vecgeom::IsFull(xnew==x)) {
         std::cerr << "GVIntegratorDriver::OneStep:" << std::endl
          << "  Stepsize underflow in Stepper " << std::endl ;
