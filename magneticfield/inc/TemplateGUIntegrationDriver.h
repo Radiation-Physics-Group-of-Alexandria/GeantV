@@ -2143,10 +2143,7 @@ TemplateGUIntegrationDriver<Backend>
   {
     if ( !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
 
-    // With the below if condition, the speedup becomes 0.25!!! 
-    // The output values are almost the same although. They have a 
-    // difference of e-2 or e-1 sometimes.
-    // if ( vecgeom::IsEmpty(htryExhausted) || !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
+    // if ( vecgeom::IsEmpty(htryExhausted) && !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
     {
     #ifdef PARTDEBUG  
 
