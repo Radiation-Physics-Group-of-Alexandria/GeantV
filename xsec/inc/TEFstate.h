@@ -15,9 +15,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 #include "TPFstate.h"
+#include "Geant/Config.h"
 
 #ifndef GEANT_NVCC
+#ifdef USE_ROOT
 class TFile;
+#endif
 #endif
 
 class TFinState;
