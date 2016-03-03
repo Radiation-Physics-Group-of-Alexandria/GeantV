@@ -1656,7 +1656,7 @@ TemplateGUIntegrationDriver<Backend>
   //  - the return value is 'true' if integration succeeded to the end of the interval,
   //    and 'false' otherwise.
 
-  #define PARTDEBUG
+  // #define PARTDEBUG
 
   typedef typename Backend::precision_v Double_v;
   typedef typename Backend::bool_v      Bool_v;
