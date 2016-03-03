@@ -32,7 +32,7 @@ using namespace std;
 
 #define DEBUGAnanya
 
-int main(int argc, char *args[])
+int main(/*int argc, char *args[]*/)
 {
     constexpr unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
 
@@ -49,19 +49,19 @@ int main(int argc, char *args[])
      - Modify values  */
     
     int no_of_steps = 250;         // No. of Steps for the stepper
-    int stepper_no =  5;         // Choose stepper no., for refernce see above
+    // int stepper_no =  5;         // Choose stepper no., for refernce see above
     double step_len_mm = 200.;    // meant as millimeter;  //Step length 
     double z_field_in = DBL_MAX;
     
     //Checking for command line values :
-    if(argc>1)
+/*    if(argc>1)
         stepper_no = atoi(args[1]);
     if(argc > 2)
        step_len_mm = (float)(stof(args[2]));   // *mm);
     if(argc > 3)
         no_of_steps = atoi(args[3]);
     if(argc > 4)
-       z_field_in = (float) (stof(args[4]));     // tesla
+       z_field_in = (float) (stof(args[4]));     // tesla*/
     double step_len = step_len_mm * fieldUnits::millimeter;
     
     //Set Charge etc.
@@ -77,9 +77,9 @@ int main(int argc, char *args[])
        1 , 1 , 0    // dydx mom  x, y, z
     }; //Variables in yOut[] & dydx[] we want to display - 0 for No, 1 for yes
 
-    bool printErr= 0;   // Print the predicted Error
-    bool printSep = 0;  // separator  '|'
-    bool printInp = 0;  // print the input values
+    // bool printErr= 0;   // Print the predicted Error
+    // bool printSep = 0;  // separator  '|'
+    // bool printInp = 0;  // print the input values
     
     const unsigned int nwdf= 12;  // Width for float/double
     
@@ -180,7 +180,7 @@ int main(int argc, char *args[])
     #endif 
        
 
-    auto gvEquation2 = new GvEquationType(gvField);
+    // auto gvEquation2 = new GvEquationType(gvField);
                    // new TMagFieldEquation<TUniformMagField, Nposmom>(gvField);
     // gvEquation2->InitializeCharge( particleCharge ); // Let's make sure
     
@@ -206,7 +206,7 @@ int main(int argc, char *args[])
     const ThreeVectorSimd  startMomentum( yIn[3], yIn[4], yIn[5]);
     TemplateGUFieldTrack<Backend>  yTrackIn(  startPosition, startMomentum );  // yStart
     TemplateGUFieldTrack<Backend>  yTrackOut( startPosition, startMomentum );  // yStart
-    Double total_step = 0.;
+    // Double total_step = 0.;
 
     typedef typename Backend::bool_v Bool;
     Bool goodAdvance(true);
@@ -218,7 +218,7 @@ int main(int argc, char *args[])
     FieldTrack yInput[nTracks], yOutput[nTracks];
     double hstep[nTracks];
     bool   succeeded[nTracks];
-    // testDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
+    testDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
 
 
 
@@ -352,7 +352,7 @@ int main(int argc, char *args[])
     cout.precision(3);
     
     /*----------------NOW STEPPING-----------------*/
-    no_of_steps = 25;
+    no_of_steps = 1;
     for(int j=0; j<no_of_steps; j++)
     {
         cout<<setw(6)<<j ;           //Printing Step number
@@ -395,7 +395,7 @@ int main(int argc, char *args[])
         for(int i=0; i<6;i++)   // Print auxiliary components
         {
            double unitGVf=1;  
-           double unitRef=1;
+           // double unitRef=1;
            // if( i < 3 )             // length / length
 
            if( i >= 3 ){

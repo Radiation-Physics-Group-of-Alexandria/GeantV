@@ -162,10 +162,17 @@ REALLY_INLINE
     double momentum_mag_square = y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
     double inv_momentum_magnitude = 1. / std::sqrt( momentum_mag_square );
     // double inv_momentum_magnitude = vdt::fast_isqrt_general( momentum_mag_square, 2);
-
+    #ifdef DEBUGAnanya
+    std::cout<<" momentum_mag_square is: "<<momentum_mag_square<<std::endl;
+    std::cout<<" inv_momentum_magnitude: "<<inv_momentum_magnitude<<std::endl; 
+    #endif 
     vecgeom::Vector3D<double> B( Bfloat[0], Bfloat[1], Bfloat[2] );
 
     double cof = fParticleCharge*fCof*inv_momentum_magnitude;
+
+    #ifdef DEBUGAnanya
+    std::cout<<"cof is: "<<cof<<std::endl;
+    #endif
 
     dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
     dydx[1] = y[4]*inv_momentum_magnitude;       //  (d/ds)y = Vy/V
@@ -174,6 +181,14 @@ REALLY_INLINE
     dydx[3] = cof*(y[4]*B[2] - y[5]*B[1]) ;  // Ax = a*(Vy*Bz - Vz*By)
     dydx[4] = cof*(y[5]*B[0] - y[3]*B[2]) ;  // Ay = a*(Vz*Bx - Vx*Bz)
     dydx[5] = cof*(y[3]*B[1] - y[4]*B[0]) ;  // Az = a*(Vx*By - Vy*Bx)
+
+    #ifdef DEBUGAnanya
+    std::cout<<"\n"<<" y is: "<<y[0]<<" "<<y[1]<<" "<<y[2]<<" "<<y[3]<<" "<<y[4]<<" "<<y[5]<<std::endl;
+    std::cout<<"\n"<<" B is: "<<B[0]<<" "<<B[1]<<" "<<B[2]<<" "<<B[3]<<" "<<B[4]<<" "<<B[5]<<std::endl;
+
+    std::cout<<"\ndydx at end of TMagFieldEquation is: "<<std::endl;
+    std::cout<<dydx[0]<<" "<<dydx[1]<<" "<<dydx[2]<<" "<<dydx[3]<<" "<<dydx[4]<<" "<<dydx[5]<<std::endl;
+    #endif
 
     return ;
 }
