@@ -38,13 +38,13 @@ using fieldUnits::degree;
 
 using namespace std;
 
-int main(int argc, char *args[])
+int main(/*int argc, char *args[]*/)
 {
     constexpr unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
 
     using Backend = vecgeom::kVc ;
-    typedef typename Backend::precision_v Double;
-    typedef vecgeom::Vector3D<Double> ThreeVectorSimd;
+    // typedef typename Backend::precision_v Double;
+    // typedef vecgeom::Vector3D<Double> ThreeVectorSimd;
     typedef vecgeom::Vector3D<double> ThreeVector_d;
 
     using  GvEquationType=  TemplateTMagFieldEquation<Backend, TemplateTUniformMagField<Backend>, Nposmom>;
@@ -60,40 +60,40 @@ int main(int argc, char *args[])
     double z_field_in = DBL_MAX;
     
     //Checking for command line values :
-    if(argc>1)
+/*    if(argc>1)
         stepper_no = atoi(args[1]);
     if(argc > 2)
        step_len_mm = (float)(stof(args[2]));   // *mm);
     if(argc > 3)
         no_of_steps = atoi(args[3]);
     if(argc > 4)
-       z_field_in = (float) (stof(args[4]));     // tesla
+       z_field_in = (float) (stof(args[4]));     // tesla*/
     double step_len = step_len_mm * fieldUnits::millimeter;
     
     //Set Charge etc.
     double particleCharge = +1.0;      // in e+ units
     
     //Choice of output coordinates
-    int
+/*    int
     columns[] =
     {
        1 , 1 , 1 ,  // position  x, y, z 
        1 , 1 , 1 ,  // momentum  x, y, z
        0 , 0 , 0 ,  // dydx pos  x, y, z
        1 , 1 , 0    // dydx mom  x, y, z
-    }; //Variables in yOut[] & dydx[] we want to display - 0 for No, 1 for yes
+    };*/ //Variables in yOut[] & dydx[] we want to display - 0 for No, 1 for yes
 
-    const unsigned int nwdf= 12;  // Width for float/double
+    // const unsigned int nwdf= 12;  // Width for float/double
     
     //Set coordinates here
-    double
+/*    double
        x_pos = 0.,                 //pos - position  : input unit = mm
        y_pos = 0.,
        z_pos = 0.;
     double   
        x_mom = 0.,                 //mom - momentum  : input unit = GeV / c
        y_mom = 1.,
-       z_mom = 1.;
+       z_mom = 1.;*/
     double          
        x_field = 0.,               //Uniform Magnetic Field (x,y,z)
        y_field = 0.;               //  Tesla // *tesla ;
@@ -118,7 +118,7 @@ int main(int argc, char *args[])
          << x_field << " , " << y_field << " , " << z_field 
        // << (1.0/fieldUnits::tesla) * gvField->GetValue()->X() << ",  "
          << " Tesla " << endl;
-    cout << "#  Initial  momentum * c = " << x_mom << " , " << y_mom << " , " << z_mom << " GeV " << endl;
+    // cout << "#  Initial  momentum * c = " << x_mom << " , " << y_mom << " , " << z_mom << " GeV " << endl;
     //Create an Equation :
     #ifdef DEBUGAnanya
       cout<<"----Just before making EquationFactory"<<endl;
@@ -149,21 +149,21 @@ int main(int argc, char *args[])
     myStepper->InitializeCharge( particleCharge );*/
 
     //Initialising coordinates
-    const double mmGVf = fieldUnits::millimeter;
-    const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
+    // const double mmGVf = fieldUnits::millimeter;
+    // const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
                                          //   Else it must be divided by fieldUnits::c_light;
     // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
-    double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-                    x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
+/*    double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                    x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};*/
 
     std::cout << "# step_len_mm = " << step_len_mm;
     
     
     //Empty buckets for results
-    Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
+/*    Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
            yout[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-           yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+           yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.};*/
     
     /*-----------------------END PREPARING STEPPER---------------------------*/
 
@@ -217,6 +217,17 @@ int main(int argc, char *args[])
 
 #ifndef DebuggingSection
 #ifndef MAINTESTING
+    double
+      x_pos = 0.,                 //pos - position  : input unit = mm
+      y_pos = 0.,
+      z_pos = 0.;
+    double   
+      x_mom = 0.,                 //mom - momentum  : input unit = GeV / c
+      y_mom = 1.,
+      z_mom = 1.;
+    const double mmGVf = fieldUnits::millimeter;
+    const double ppGVf = fieldUnits::GeV ; 
+    
     double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                        x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
     // double posMom[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
@@ -245,12 +256,13 @@ int main(int argc, char *args[])
     std::vector<double> ratioVector;
   #endif 
     // for (int step = 0; step < no_of_steps; ++step)
-    for (int step = 0; step < 13; ++step)
+    for (int step = 0; step < 20; ++step)
     {
       total_step += step_len;
       std::fill_n(hstep, nTracks, total_step);
 
-      srand(time(NULL));
+      // srand(time(NULL));
+      srand(9);
 
       x_pos = (float) rand()/(RAND_MAX) ;
       y_pos = (float) rand()/(RAND_MAX) ;
@@ -388,6 +400,7 @@ int main(int argc, char *args[])
       for (int i = 0; i < nTracks; ++i)
       {
          hstep[i] = hstep[i] + i*hstep[i];
+         // hstep[i] = (float) rand()/(RAND_MAX) *200.; 
       }
 
       for (int j = 0; j < nTracks; ++j)
@@ -422,8 +435,8 @@ int main(int argc, char *args[])
     }
 #endif 
 
-    // cout<<" Scalar Stepper function calls are: "<< testScalarDriver->fStepperCalls <<" and OneGoodStep calls are "<<testScalarDriver->fNoTotalSteps << endl;
-    // cout<<" Vector Stepper function calls are: "<< testVectorDriver->fStepperCalls <<" and OneStep calls are "<<testVectorDriver->fNoTotalSteps << endl;
+    cout<<" Scalar Stepper function calls are: "<< testScalarDriver->fStepperCalls <<" and OneGoodStep calls are "<<testScalarDriver->fNoTotalSteps << endl;
+    cout<<" Vector Stepper function calls are: "<< testVectorDriver->fStepperCalls <<" and OneStep calls are "<<testVectorDriver->fNoTotalSteps << endl;
 
 
 

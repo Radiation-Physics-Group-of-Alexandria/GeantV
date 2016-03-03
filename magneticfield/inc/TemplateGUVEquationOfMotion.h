@@ -100,9 +100,9 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
      static unsigned int GetNumCreated() { return fNumObjectsCreated; }
      static unsigned int GetNumLive() { return fNumObjectsCreated - fNumObjectsDeleted; }
 
-
+     template <class Backend_>
      friend std::ostream&
-             operator<<( std::ostream& os, const TemplateGUVEquationOfMotion<Backend>& eq);
+             operator<<( std::ostream& os, const TemplateGUVEquationOfMotion<Backend_>& eq);
 
    
 
@@ -214,6 +214,9 @@ TemplateGUVEquationOfMotion<Backend>::RightHandSide( const typename Backend::pre
 
    GetFieldValue    ( Position, Field_3vf );
    EvaluateRhsGivenB( y, Field_3vf, charge, dydx );
+   // std::cout<<"\n----Field_3vf is: "<<Field_3vf[0]<<std::endl;
+   // std::cout<<"----Field_3vf is: "<<Field_3vf[1]<<std::endl;
+   // std::cout<<"----Field_3vf is: "<<Field_3vf[2]<<std::endl;
 /*
    #ifdef DEBUGAnanya
     std::cout<<"\n----Field_3vf is: "<<Field_3vf[0]<<std::endl;
