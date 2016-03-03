@@ -30,10 +30,15 @@
 #include "TemplateGUFieldTrack.h"
 #include "TemplateGUVHelicalStepper.h"
 #include "TemplateGUTCashKarpRKF45.h"
-#include "TemplateGUIntegrationDriver.h" //nothing done yet. Also, need to append stuff from .cxx file
+// #include "TemplateGUIntegrationDriver.h" //nothing done yet. Also, need to append stuff from .cxx file
 #include "TemplateTMagErrorStepper.h"
 #include "TemplateGUExactHelixStepper.h"
+#include "TemplateTClassicalRK4.h"
+#include "TemplateTSimpleRunge.h"
+#include "TemplateStepperFactory.h"
+#include "TemplateFieldEquationFactory.h"
 
+// #include "ToyClass.h"
 
 #include "Units.h"
 

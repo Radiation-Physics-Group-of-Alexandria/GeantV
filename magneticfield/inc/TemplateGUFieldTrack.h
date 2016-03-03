@@ -104,8 +104,9 @@ class  TemplateGUFieldTrack
      inline void DumpToArray(Double_v valArr[ncompSVEC]) const; 
             void LoadFromArray(const Double_v valArr[ncompSVEC],
                                      int      noVarsIntegrated );
+     template <class Backend_>
      friend  std::ostream&
-             operator<<( std::ostream& os, const TemplateGUFieldTrack<Backend>& SixVec);
+             operator<<( std::ostream& os, const TemplateGUFieldTrack<Backend_>& SixVec);
 
    private:
 

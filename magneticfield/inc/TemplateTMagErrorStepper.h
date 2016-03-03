@@ -58,9 +58,9 @@ class TemplateTMagErrorStepper : public TemplateGUVIntegrationStepper<Backend>
 
       Double_v DistChord() const;
 
-      // template<class T_Stepper, class T_Equation, int Nvar>
+      template<class Backend_, class T_Stepper_, class T_Equation_, int Nvar_>
       friend  std::ostream&
-         operator<<( std::ostream& os, const TemplateTMagErrorStepper<Backend, T_Stepper, T_Equation, Nvar> &  );
+         operator<<( std::ostream& os, const TemplateTMagErrorStepper<Backend_, T_Stepper_, T_Equation_, Nvar_> &  );
 
       bool CheckInitialisation() const; //discuss bool or Bool_v
 

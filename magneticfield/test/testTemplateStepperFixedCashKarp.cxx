@@ -42,7 +42,7 @@ int main(int argc, char *args[])
 
     using Backend = vecgeom::kVc ;
     typedef typename Backend::precision_v Double;
-    typedef vecgeom::Vector3D<Double> ThreeVectorSimd;
+    // typedef vecgeom::Vector3D<Double> ThreeVectorSimd;
     typedef vecgeom::Vector3D<double> ThreeVector_d;
 
     using  GvEquationType=  TemplateTMagFieldEquation<Backend, TemplateTUniformMagField<Backend>, Nposmom>;
@@ -86,7 +86,7 @@ int main(int argc, char *args[])
          printDiff= 0;  // Print the diffrence 
     bool printSep = 0;  // separator  '|'
     bool printInp = 0;  // print the input values
-    bool printInpX= 0;  // print the input values for Ref 
+    // bool printInpX= 0;  // print the input values for Ref 
     
     const unsigned int nwdf= 12;  // Width for float/double
     
@@ -195,7 +195,7 @@ int main(int argc, char *args[])
     const double mmRef = mmGVf; // Unit for reference of lenght   - milli-meter
     const double ppRef = ppGVf; // Unit for reference of momentum - GeV / c^2
     
-    auto gvEquation2 = new GvEquationType(gvField);
+    // auto gvEquation2 = new GvEquationType(gvField);
                    // new TMagFieldEquation<TUniformMagField, Nposmom>(gvField);
     // gvEquation2->InitializeCharge( particleCharge ); // Let's make sure
     
@@ -220,18 +220,18 @@ int main(int argc, char *args[])
     std::cout << "# step_len_mm = " << step_len_mm;
     std::cout << " mmRef= " << mmRef << "   ppRef= " << ppRef << std::endl;
     
-    Double yInX[] = {x_pos * mmRef, y_pos * mmRef ,z_pos * mmRef,
-                     x_mom * ppRef ,y_mom * ppRef ,z_mom * ppRef};
+    // Double yInX[] = {x_pos * mmRef, y_pos * mmRef ,z_pos * mmRef,
+                     // x_mom * ppRef ,y_mom * ppRef ,z_mom * ppRef};
 
-    double stepLengthRef = step_len_mm * mmRef;
+    // double stepLengthRef = step_len_mm * mmRef;
     
     //Empty buckets for results
     Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
-        dydxRef[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
+        // dydxRef[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
            yout[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-          youtX[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-           yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-          yerrX[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+          // youtX[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
+           yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+    // Double yerrX[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
     
     /*-----------------------END PREPARING STEPPER---------------------------*/
     
@@ -357,7 +357,7 @@ int main(int argc, char *args[])
         for(int i=0; i<6;i++)   // Print auxiliary components
         {
            double unitGVf=1;  
-           double unitRef=1;
+           // double unitRef=1;
            // if( i < 3 )             // length / length
 
            if( i >= 3 ){
