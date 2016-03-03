@@ -1652,7 +1652,7 @@ TemplateGUIntegrationDriver<Backend>
   //  - the return value is 'true' if integration succeeded to the end of the interval,
   //    and 'false' otherwise.
 
-  // #define PARTDEBUG
+  #define PARTDEBUG
 
   typedef typename Backend::precision_v Double_v;
   typedef typename Backend::bool_v      Bool_v;
@@ -1804,6 +1804,10 @@ TemplateGUIntegrationDriver<Backend>
 
     // For rest, check the proposed next stepsize 
     h = vecgeom::Max(hnext, fMinimumStep);
+  #ifdef PARTDEBUG
+    // std::cout<< "h after checking proposed next stepsize is min. of : "<< hnext <<" and "<< x2-x << std::endl;    
+    std::cout<<" Here, x2 is: "<<x2 << " and x is : "<< x << std::endl;
+  #endif 
 
     // Ensure that the next step does not overshoot
     vecgeom::MaskedAssign( x+h > x2, x2 - x, &h);
@@ -2123,10 +2127,11 @@ TemplateGUIntegrationDriver<Backend>
 
   Bool_v errMaxLessThanOne(false), hIsZeroCond(false);
 
-  Double_v x2 = x + htry;
-  Bool_v errMaxLessThanOneLocal(false), hIsZeroCondLocal(false);
+  Double_v x2 = x + (hStepLane - hTotalDoneSoFar);
+  // Double_v x2 = x + htry;
+  Bool_v  errMaxLessThanOneLocal(false), hIsZeroCondLocal(false);
   // int htryExhausted[kVectorSize] = {0};
-  Bool_v htryExhausted(false);
+  Bool_v   htryExhausted(false);
   Double_v charge(1.);
 
   for (iter = 0; iter < max_trials; iter++)
@@ -2138,6 +2143,12 @@ TemplateGUIntegrationDriver<Backend>
     // difference of e-2 or e-1 sometimes.
     // if ( vecgeom::IsEmpty(htryExhausted) || !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
     {
+    #ifdef PARTDEBUG  
+
+      Bool_v hZeroOrErrCond = hIsZeroCond || errMaxLessThanOne;
+      std::cout<< "hZeroOrErrCond is: "<< hZeroOrErrCond << std::endl;
+    #endif  
+
       tot_no_trials++;
 
       fpStepper-> RightHandSideVIS( yFinal, charge, dydx );
@@ -2178,10 +2189,10 @@ TemplateGUIntegrationDriver<Backend>
         for (int i = 0; i < kVectorSize; ++i)
         {
           // Probably could use several MaskedAssigns as well
-          if ( errMaxLessThanOneLocal[i] ==1 && htryExhausted[i] != true )
+          if ( errMaxLessThanOneLocal[i] ==1 && htryExhausted[i] == false )
           {
 
-            /* StoreFinalValues() */
+            //----- StoreFinalValues() ---- 
             finished         [i] = -1;
             errMaxLessThanOne[i] = 1;
             xnew             [i] = x[i] + hFinal[i];
@@ -2207,7 +2218,7 @@ TemplateGUIntegrationDriver<Backend>
             }
             else
             {
-              htryExhausted[i] = false;
+              htryExhausted[i] = true;
             }
 
             if (xnew[i] <= x2[i])
@@ -2218,7 +2229,11 @@ TemplateGUIntegrationDriver<Backend>
           }
         }
       }
-      if ( vecgeom::IsFull(errMaxLessThanOneLocal) )  { break; } // Step succeeded. 
+    #ifdef PARTDEBUG
+      if ( vecgeom::IsFull(errMaxLessThanOneLocal) )  { std::cout<<"errMaxLessThanOneLocal is full. "<<std::endl; } // Step succeeded. 
+
+    #endif   
+      // if ( vecgeom::IsFull(errMaxLessThanOneLocal) )  { break; } // Step succeeded. 
 
       // Step failed; compute the size of retrial Step.
       Double_v errPower = Vc::exp( (0.5*fPowerShrink)*vecgeom::Log(errmax_sq) ); 
@@ -2237,7 +2252,7 @@ TemplateGUIntegrationDriver<Backend>
         for (int i = 0; i < kVectorSize; ++i)
         {
           // Probably could use several MaskedAssigns as well
-          if ( hIsZeroCondLocal[i] ==1 && htryExhausted[i] != true )
+          if ( hIsZeroCondLocal[i] ==1 && htryExhausted[i] == false )
           {
 
             /* StoreFinalValues() */
@@ -2266,7 +2281,7 @@ TemplateGUIntegrationDriver<Backend>
             }
             else
             {
-              htryExhausted[i] = false;
+              htryExhausted[i] = true;
             }
 
             if (xnew[i] <= x2[i])
@@ -2339,6 +2354,7 @@ TemplateGUIntegrationDriver<Backend>
 #ifdef PARTDEBUG
   std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
   std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
+  std::cout<< "htryExhausted is: "<< htryExhausted << std::endl;
 #endif 
 
   return;
