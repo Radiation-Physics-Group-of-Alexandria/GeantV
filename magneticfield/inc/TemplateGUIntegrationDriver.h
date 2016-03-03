@@ -613,11 +613,13 @@ TemplateGUIntegrationDriver<Backend>
   typedef typename Backend::precision_v Double_v;
   typedef typename Backend::bool_v      Bool_v;
   typedef vecgeom::Vector3D<Double_v>   ThreeVector;
-
+#ifdef COLLECT_STATISTICS
   constexpr double perMillion  = 1.0e-6;
   constexpr double perThousand = 1.0e-3;
+  int no_warnings = 0;
+#endif 
 
-  int nstp, i, no_warnings=0;
+  int nstp, i;
   Double_v x, hnext, hdid, h;
 
   int ncompSVEC = TemplateGUFieldTrack<Backend>::ncompSVEC; //12, //to be derived from TemplateGUFieldTrack
@@ -726,11 +728,13 @@ TemplateGUIntegrationDriver<Backend>
 
       // Issue a warning only for gross differences -
       // we understand how small difference occur.
-
-      //Ananya: changing line to avoid the sqrt in absence of issuance of warnings
+// #ifdef COLLECT_STATISTICS
+      //Ananya: changing line to avoid #ifdef COLLECT_STATISTICSthe sqrt in absence of issuance of warnings
       if ( endPointDist2 >= hdid*hdid*(1.+perThousand)*(1.+perThousand) )
-      // if ( endPointDist >= hdid*(1.+perThousand) )
-      { 
+      // if ( endPointDis#endif 
+        t >= hdid*(1.+perThousand) )
+      { #endif 
+
 
         no_warnings++;
       }
@@ -1308,7 +1312,7 @@ void TemplateGUIntegrationDriver<Backend>
     {
       PrintStat_Aux( StartFT,  requestStep, 0., 
                        0,        0.0,         1.0);
-      //*************
+      
     }
 
     if( verboseLevel <= 3 )
@@ -1316,7 +1320,7 @@ void TemplateGUIntegrationDriver<Backend>
       std::cout.precision(noPrecision);
       PrintStat_Aux( CurrentFT, requestStep, step_len, 
                      subStepNo, subStepSize, DotStartCurrentVeloc );
-      //*************
+      
     }
 
     else // if( verboseLevel > 3 )
@@ -1652,24 +1656,20 @@ TemplateGUIntegrationDriver<Backend>
   //  - the return value is 'true' if integration succeeded to the end of the interval,
   //    and 'false' otherwise.
 
-  #define PARTDEBUG
+  // #define PARTDEBUG
 
   typedef typename Backend::precision_v Double_v;
   typedef typename Backend::bool_v      Bool_v;
   typedef vecgeom::Vector3D<Double_v>   ThreeVector;
 
-  constexpr double perMillion  = 1.0e-6;
-  constexpr double perThousand = 1.0e-3;
-
-  int no_warnings=0;
   Double_v x, hnext, hdid, h;
 
   int ncompSVEC = TemplateGUFieldTrack<Backend>::ncompSVEC; //12, to be derived from TemplateGUFieldTrack
 
 #ifdef GUDEBUG_FIELD
-  static int dbg=1;
-  static int nStpPr=50;   // For debug printing of long integrations
-  Double_v ySubStepStart[ncompSVEC];
+  // static int dbg=1;
+  // static int nStpPr=50;   // For debug printing of long integrations
+  // Double_v ySubStepStart[ncompSVEC];
 #endif
 
 #ifdef PARTDEBUG
@@ -1690,10 +1690,10 @@ TemplateGUIntegrationDriver<Backend>
 
   Double_v startCurveLength;
 
-  int  noFullIntegr = 0, noSmallIntegr = 0 ;
   // G4ThreadLocal
+#ifdef COLLECT_STATISTICS
   static int  noGoodSteps =0 ;  // Bad = chord > curve-len 
-  const  int  nvar= fNoVars;
+#endif 
 
   Double_v hStepLane; 
   Double_v hTotalDoneSoFar(0.); // To keep track of hDone in KeepStepping
@@ -1805,12 +1805,17 @@ TemplateGUIntegrationDriver<Backend>
     // For rest, check the proposed next stepsize 
     h = vecgeom::Max(hnext, fMinimumStep);
   #ifdef PARTDEBUG
-    // std::cout<< "h after checking proposed next stepsize is min. of : "<< hnext <<" and "<< x2-x << std::endl;    
+    std::cout<< "h after checking proposed next stepsize is min. of : "<< hnext <<" and "<< x2-x << std::endl;    
     std::cout<<" Here, x2 is: "<<x2 << " and x is : "<< x << std::endl;
   #endif 
 
     // Ensure that the next step does not overshoot
     vecgeom::MaskedAssign( x+h > x2, x2 - x, &h);
+  #ifdef PARTDEBUG
+    Double_v hforDebug = x2 - x;
+    std::cout<< "x2 -x is :  "<< hforDebug << std::endl;
+  #endif 
+    // h = x2 - x; 
   #ifdef PARTDEBUG
     std::cout<<"AccurateAdvance: hnext is: "<<hnext<<" and h is : "<<h<<std::endl; 
   #endif 
