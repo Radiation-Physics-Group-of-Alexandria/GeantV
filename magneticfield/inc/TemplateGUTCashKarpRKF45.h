@@ -69,8 +69,8 @@ class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>, 
                                      Double_v*  yErr) override;
     #endif 
 
-    Double_v DistChord() ;// override;  
-    Double_v DistChord() const override {}
+    // Double_v DistChord() ;// override;  
+    Double_v DistChord() const override ;
 
     REALLY_INLINE
     void RightHandSideInl(Double_v y[], Double_v dydx[]) 
@@ -397,6 +397,9 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
 
         yErr[i] = Step*(dc1*dydx[i] + dc3*ak3[i] + dc4*ak4[i] +
                 dc5*ak5[i] + dc6*ak6[i]) ;
+#ifdef DEBUGAnanya
+        // std::cout<< "----In Stepper, yerrr is: "<<yErr[i]<<std::endl;
+#endif 
     }
     for(i=0;i<Nvar;i++)
     {
@@ -414,7 +417,7 @@ template <class Backend, class T_Equation, unsigned int Nvar>
 inline 
 typename Backend::precision_v
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
-  DistChord() //  const
+  DistChord()  const
 {
     typedef typename Backend::precision_v Double_v;
     typedef vecgeom::Vector3D<Double_v> ThreeVector;
