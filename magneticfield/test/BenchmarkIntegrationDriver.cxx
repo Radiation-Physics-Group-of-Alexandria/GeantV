@@ -36,6 +36,8 @@ using fieldUnits::degree;
 
 #include <stdlib.h>
 
+// #include "CMSmagField.h"
+
 using namespace std;
 
 int main(int argc, char *args[])
@@ -43,12 +45,18 @@ int main(int argc, char *args[])
   constexpr unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
 
   using Backend = vecgeom::kVc ;
-  typedef typename Backend::precision_v Double;
-  typedef vecgeom::Vector3D<Double> ThreeVectorSimd;
   typedef vecgeom::Vector3D<double> ThreeVector_d;
+  
+// #define USECMSFIELD
+#ifdef USECMSFIELD
+  using Field_Type = CMSmagField;
+#else
+  using Field_Type = TemplateTUniformMagField<Backend>;
+#endif 
 
-  using  GvEquationType=  TemplateTMagFieldEquation<Backend, TemplateTUniformMagField<Backend>, Nposmom>;
- 
+  using  GvEquationType=  TemplateTMagFieldEquation<Backend, Field_Type, Nposmom>;
+  
+
   /* -----------------------------SETTINGS-------------------------------- */
   
   /* Parameters of test
@@ -74,16 +82,16 @@ int main(int argc, char *args[])
   double particleCharge = +1.0;      // in e+ units
   
   //Choice of output coordinates
-  int
+/*  int
   columns[] =
   {
      1 , 1 , 1 ,  // position  x, y, z 
      1 , 1 , 1 ,  // momentum  x, y, z
      0 , 0 , 0 ,  // dydx pos  x, y, z
      1 , 1 , 0    // dydx mom  x, y, z
-  }; //Variables in yOut[] & dydx[] we want to display - 0 for No, 1 for yes
+  }; *///Variables in yOut[] & dydx[] we want to display - 0 for No, 1 for yes
 
-  const unsigned int nwdf= 12;  // Width for float/double
+  // const unsigned int nwdf= 12;  // Width for float/double
   
   //Set coordinates here
   double
@@ -109,8 +117,17 @@ int main(int argc, char *args[])
     cout<<"----Just before making TemplateTUniformMagField"<<endl;
    #endif 
 
+
+
+  // CMSmagField m1("../VecMagFieldRoutine/cms2015.txt");
+
   // Field
-  auto gvField= new TemplateTUniformMagField<Backend>( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+#ifdef USECMSFIELD
+  auto gvField = new Field_Type ("../VecMagFieldRoutine/cms2015.txt");
+#else 
+  auto gvField= new Field_Type( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+#endif
+  
   #ifdef DEBUGAnanya
    cout<<"----TemplateTUniformMagField Object constructed"<<endl;
   #endif
@@ -124,7 +141,7 @@ int main(int argc, char *args[])
     cout<<"----Just before making EquationFactory"<<endl;
   #endif 
   auto gvEquation =
-     TemplateFieldEquationFactory<Backend>::CreateMagEquation<TemplateTUniformMagField<Backend> >(gvField);
+     TemplateFieldEquationFactory<Backend>::CreateMagEquation< Field_Type >(gvField);
   #ifdef DEBUGAnanya
      cout<<"----EquationFactory made "<<endl;
   #endif 
@@ -156,16 +173,16 @@ int main(int argc, char *args[])
                                        //   Else it must be divided by fieldUnits::c_light;
   // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
-  double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-                  x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
+/*  double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                  x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};*/
 
   std::cout << "# step_len_mm = " << step_len_mm;
   
   
   //Empty buckets for results
-  Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
+/*  Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
          yout[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-         yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+         yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.};*/
   
   /*-----------------------END PREPARING STEPPER---------------------------*/
 
@@ -207,6 +224,7 @@ int main(int argc, char *args[])
   double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
   bool   succeeded[nTracks];
 
+
 #define TIMINGTESTING 
 // #define MAINTESTING
 #define CALCULATETIME
@@ -223,6 +241,7 @@ int main(int argc, char *args[])
   for (int step = 0; step < 10; ++step)
   {
     srand(time(NULL));
+
 
     x_pos = (float) rand()/(RAND_MAX) ;
     y_pos = (float) rand()/(RAND_MAX) ;
@@ -383,11 +402,13 @@ int main(int argc, char *args[])
   std::vector<GUFieldTrack> vectorGUFieldTrack;
   long double outputVarForScalar = 0, outputVarForVector = 0;
   int indOutputVar = 2;
-
+    
+  // srand(time(NULL));
+  srand(34);
+  
   for (int step = 0; step < 10; ++step)
   {
-    srand(time(NULL));
-    // srand(9);
+
 
     double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
     double X_Mom[nTracks], Y_Mom[nTracks], Z_Mom[nTracks];
@@ -442,7 +463,7 @@ int main(int argc, char *args[])
     }
 
 
-    clock_t clock1= clock();
+    clock_t clock1 = clock();
     for (int repeat = 0; repeat < nRepititions; ++repeat)
     {
       for (int j = 0; j < noOfVectorCalls; ++j)
@@ -458,15 +479,14 @@ int main(int argc, char *args[])
     }
     clock1 = clock() - clock1 ;
     float clock1InFloat = ((float)clock1)/CLOCKS_PER_SEC;
-    cout<<"Vector time is: "<<clock1InFloat<<endl;
+    cout<<"Vector time is: "<<clock1InFloat<<" s"<<endl;
 
 
     const ThreeVector_d  startPos( x_pos, y_pos, z_pos);
     const ThreeVector_d  startMom( x_mom, y_mom, z_mom);
     GUFieldTrack yTrackOut( startPos, startMom ); 
 
-    clock_t clock2= clock();
-
+    clock_t clock2 = clock();
     for (int repeat = 0; repeat < nRepititions; ++repeat)
     {
       int indScalar = 0;
@@ -483,13 +503,10 @@ int main(int argc, char *args[])
           indScalar++;
         }      
       }
-
     }
-
-
     clock2 = clock() - clock2 ;
     float clock2InFloat = ((float)clock2)/CLOCKS_PER_SEC;
-    cout<<"scalar time is: "<<clock2InFloat<<endl;
+    cout<<"scalar time is: "<<clock2InFloat<<" s"<< endl;
     ratioVector.push_back(clock2InFloat/clock1InFloat);
 
   }
@@ -509,6 +526,8 @@ int main(int argc, char *args[])
 
 #endif 
 
+    cout<<" Scalar Stepper function calls are: "<< testScalarDriver->fStepperCalls <<" and OneGoodStep calls are "<<testScalarDriver->fNoTotalSteps << endl;
+    cout<<" Vector Stepper function calls are: "<< testVectorDriver->fStepperCalls <<" and OneStep calls are "<<testVectorDriver->fNoTotalSteps << endl;
 
 
   //========================End testing IntegrationDriver=======================
