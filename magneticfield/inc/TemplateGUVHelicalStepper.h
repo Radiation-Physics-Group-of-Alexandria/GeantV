@@ -138,7 +138,7 @@ void TemplateGUVHelicalStepper<Backend>::
 {
 
   typedef typename Backend::precision_v Double_v;
-  Double_v momentum_val = vecgeom::VECGEOM_IMPL_NAMESPACE::Sqrt(yIn[3]*yIn[3] + yIn[4]*yIn[4] + yIn[5]*yIn[5]) ;
+  Double_v momentum_val = vecgeom::Sqrt(yIn[3]*yIn[3] + yIn[4]*yIn[4] + yIn[5]*yIn[5]) ;
   Double_v inv_momentum = 1.0 / momentum_val ;
   Double_v yDir[3];
 
@@ -301,7 +301,7 @@ TemplateGUVHelicalStepper<Backend>::
   Double_v        B_d_P = Bnorm.Dot(initTangent); // this is the fraction of P parallel to B
   ThreeVectorSimd vpar  = B_d_P * Bnorm;       // the component parallel      to B
   ThreeVectorSimd vperp = initTangent - vpar;  // the component perpendicular to B
-  Double_v        B_v_P = vecgeom::VECGEOM_IMPL_NAMESPACE::Sqrt( 1 - B_d_P * B_d_P); // Fraction of P perp to B
+  Double_v        B_v_P = vecgeom::Sqrt( 1 - B_d_P * B_d_P); // Fraction of P perp to B
   Double_v        Theta = R_1 * h; // * B_v_P;
 
 
@@ -313,12 +313,12 @@ TemplateGUVHelicalStepper<Backend>::
   CosT     = 1 - 0.5 * Theta2 + 1.0/24.0 * Theta4;*/
 
   //if inside else
-/*  Bool_v trigCond = vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(Theta) > approc_limit;
-  vecgeom::MaskedAssign(trigCond, vecgeom::VECGEOM_IMPL_NAMESPACE::sin(Theta), &SinT);
-  vecgeom::MaskedAssign(trigCond, vecgeom::VECGEOM_IMPL_NAMESPACE::cos(Theta), &CosT);*/
+/*  Bool_v trigCond = vecgeom::Abs(Theta) > approc_limit;
+  vecgeom::MaskedAssign(trigCond, vecgeom::sin(Theta), &SinT);
+  vecgeom::MaskedAssign(trigCond, vecgeom::cos(Theta), &CosT);*/
 
-  SinT = vecgeom::VECGEOM_IMPL_NAMESPACE::sin(Theta);
-  CosT = vecgeom::VECGEOM_IMPL_NAMESPACE::cos(Theta);
+  SinT = vecgeom::sin(Theta);
+  CosT = vecgeom::cos(Theta);
 
   Double_v R = 1.0 / R_1;
 
@@ -357,20 +357,20 @@ TemplateGUVHelicalStepper<Backend>::
 
   Double_v ptan=velocityVal*B_v_P;
 
-  R_Helix =vecgeom::VECGEOM_IMPL_NAMESPACE::Abs( ptan/(fUnitConstant  * fParticleCharge*Bmag));
+  R_Helix =vecgeom::Abs( ptan/(fUnitConstant  * fParticleCharge*Bmag));
      
 
   // for too small magnetic fields there is no curvature
   // (include momentum here) FIXME
 
-/*  Bool_v noCurvatureCond = (vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(R_1) < 1e-10) || (Bmag<1e-12);
+/*  Bool_v noCurvatureCond = (vecgeom::Abs(R_1) < 1e-10) || (Bmag<1e-12);
   vecgeom::MaskedAssign(noCurvatureCond, 1., &Theta  );
   vecgeom::MaskedAssign(noCurvatureCond, h , &R      );
   vecgeom::MaskedAssign(noCurvatureCond, 0., &R_Helix);*/
 
 
-  SetAngCurve(vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(Theta));
-  SetCurve(vecgeom::VECGEOM_IMPL_NAMESPACE::Abs(R));
+  SetAngCurve(vecgeom::Abs(Theta));
+  SetCurve(vecgeom::Abs(R));
   SetRadHelix(R_Helix);
 
 
