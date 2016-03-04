@@ -157,7 +157,7 @@ int main(int argc, char *args[])
     const double mmRef = mmGVf; // Unit for reference of lenght   - milli-meter
     const double ppRef = ppGVf; // Unit for reference of momentum - GeV / c^2
     
-    auto gvEquation2 = new GvEquationType(gvField);
+    // auto gvEquation2 = new GvEquationType(gvField);
                    // new TMagFieldEquation<TUniformMagField, Nposmom>(gvField);
     // gvEquation2->InitializeCharge( particleCharge ); // Let's make sure
     
@@ -182,18 +182,18 @@ int main(int argc, char *args[])
     std::cout << "# step_len_mm = " << step_len_mm;
     std::cout << " mmRef= " << mmRef << "   ppRef= " << ppRef << std::endl;
     
-    double yInX[] = {x_pos * mmRef, y_pos * mmRef ,z_pos * mmRef,
-                     x_mom * ppRef ,y_mom * ppRef ,z_mom * ppRef};
+    // double yInX[] = {x_pos * mmRef, y_pos * mmRef ,z_pos * mmRef,
+                     // x_mom * ppRef ,y_mom * ppRef ,z_mom * ppRef};
 
-    double stepLengthRef = step_len_mm * mmRef;
+    // double stepLengthRef = step_len_mm * mmRef;
     
     //Empty buckets for results
-    double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
-        dydxRef[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-           yout[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-          youtX[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-           yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
-          yerrX[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+    double dydx   [8] = {0.,0.,0.,0.,0.,0.,0.,0.};  // 2 extra safety buffer
+    // double dydxRef[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+    double yout   [8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+    // double youtX  [8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+    double yerr   [8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+    // double yerrX  [8] = {0.,0.,0.,0.,0.,0.,0.,0.};
     
     /*-----------------------END PREPARING STEPPER---------------------------*/
     
