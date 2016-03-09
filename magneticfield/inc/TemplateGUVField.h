@@ -75,7 +75,7 @@ inline TemplateGUVField<Backend>::TemplateGUVField( int numberOfComponents, bool
      fChangesEnergy(changesEnergy)
      //GUVField(numberOfComponents, changesEnergy)
 {
-  std::cout<<"-- entered TemplateGUVField  constructor--"<<std::endl;
+  // std::cout<<"-- entered TemplateGUVField  constructor--"<<std::endl;
 }
 
 
