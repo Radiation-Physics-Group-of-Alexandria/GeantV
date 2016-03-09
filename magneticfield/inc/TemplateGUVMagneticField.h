@@ -17,7 +17,9 @@ class TemplateGUVMagneticField :  public TemplateGUVField<Backend>
   
     TemplateGUVMagneticField():  
      TemplateGUVField<Backend>( fNumFieldComponents, fFieldChangesEnergy) 
-    {std::cout<<"--- TemplateGUVMagneticField entered here ---"<<std::endl;}
+    {
+      // std::cout<<"--- TemplateGUVMagneticField entered here ---"<<std::endl;
+    }
 
     virtual ~TemplateGUVMagneticField(){}; 
 
