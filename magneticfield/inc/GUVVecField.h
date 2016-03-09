@@ -9,7 +9,7 @@
 #include "backend/Backend.h"
 
 #include "GUVField.h"
-
+#include "VcFloatBackend.h"
 
 class GUVVecField 
 {

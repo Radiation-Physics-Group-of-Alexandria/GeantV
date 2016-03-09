@@ -48,7 +48,8 @@
 #include "base/Global.h"
 
 #include "backend/Backend.h"
-#include "backend/scalarfloat/Backend.h"
+// #include "backend/scalarfloat/Backend.h"
+#include "ScalarFloatBackend.h"
 
 // Configuration options - to be improved and incorporated in CMakeLists.txt
 //
@@ -61,7 +62,8 @@
 //  For efficience purposes methods which expose the backend (Vc) are needed
 #include <Vc/Vc>
 #include "backend/vc/Backend.h"
-#include "backend/vcfloat/Backend.h"
+// #include "backend/vcfloat/Backend.h"
+#include "VcFloatBackend.h"
 
 #include "GUVMagneticField.h"
 #include "TemplateGUVMagneticField.h"

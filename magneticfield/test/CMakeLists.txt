@@ -19,6 +19,9 @@ set_source_files_properties(${sources} PROPERTY COMPILE_FLAGS                  "
 #----------------------------------------------------------------------------------------------
 # Add the executables
 #
+# include_directories(${PROJECT_SOURCE_DIR}/magneticfield/inc)
+# include_directories(${PROJECT_SOURCE_DIR}/magneticfield/inc ${PROJECT_SOURCE_DIR}/VecMagFieldRoutine/include)
+
 
 ## Need -lGeant_v in order to obtain the function/template Geant::cxx::ErrorHandlerImpl
 
