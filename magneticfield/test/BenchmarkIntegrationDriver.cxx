@@ -36,6 +36,7 @@ using fieldUnits::degree;
 
 #include <stdlib.h>
 
+#include "ScalarCMSmagField.h"
 #include "TemplateCMSmagField.h"
 
 using namespace std;
@@ -47,14 +48,16 @@ int main(int argc, char *args[])
   using Backend = vecgeom::kVc ;
   typedef vecgeom::Vector3D<double> ThreeVector_d;
   
-// #define USECMSFIELD
+#define USECMSFIELD
 #ifdef USECMSFIELD
-  using Field_Type = TemplateCMSmagField<Backend>;
+  using Field_Type        = TemplateCMSmagField<Backend>;
+  using Field_Type_Scalar = ScalarCMSmagField;
 #else
-  using Field_Type = TemplateTUniformMagField<Backend>;
+  using Field_Type        = TemplateTUniformMagField<Backend>;
+  using Field_Type_Scalar = TUniformMagField;
 #endif 
 
-  using  GvEquationType=  TemplateTMagFieldEquation<Backend, Field_Type, Nposmom>;
+  using GvEquationType    = TemplateTMagFieldEquation<Backend, Field_Type, Nposmom>;
   
 
   /* -----------------------------SETTINGS-------------------------------- */
@@ -113,9 +116,10 @@ int main(int argc, char *args[])
   else
      z_field = -1.0;  //  Tesla // *tesla ;
 
-   #ifdef DEBUGAnanya
-    cout<<"----Just before making TemplateTUniformMagField"<<endl;
-   #endif 
+#undef DEBUGAnanya
+ #ifdef DEBUGAnanya
+  cout<<"----Just before making TemplateTUniformMagField"<<endl;
+ #endif 
 
 
 
@@ -192,9 +196,14 @@ int main(int argc, char *args[])
   auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
 
   // Preparing scalar Integration Driver
-  using  GvEquationTypeScalar=  TMagFieldEquation<TUniformMagField, Nposmom>;
-  
-  auto gvFieldScalar    = new TUniformMagField( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+  using  GvEquationTypeScalar=  TMagFieldEquation<Field_Type_Scalar, Nposmom>;
+
+#ifdef USECMSFIELD
+  auto gvFieldScalar    = new Field_Type_Scalar("../VecMagFieldRoutine/cms2015.txt");
+#else
+  auto gvFieldScalar    = new Field_Type_Scalar( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+#endif 
+
   auto gvEquationScalar = new GvEquationTypeScalar(gvFieldScalar);
 
   GUVIntegrationStepper *myStepperScalar; 
