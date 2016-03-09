@@ -36,7 +36,7 @@ using fieldUnits::degree;
 
 #include <stdlib.h>
 
-// #include "CMSmagField.h"
+#include "TemplateCMSmagField.h"
 
 using namespace std;
 
@@ -49,7 +49,7 @@ int main(int argc, char *args[])
   
 // #define USECMSFIELD
 #ifdef USECMSFIELD
-  using Field_Type = CMSmagField;
+  using Field_Type = TemplateCMSmagField<Backend>;
 #else
   using Field_Type = TemplateTUniformMagField<Backend>;
 #endif 
@@ -119,7 +119,7 @@ int main(int argc, char *args[])
 
 
 
-  // CMSmagField m1("../VecMagFieldRoutine/cms2015.txt");
+  // TemplateCMSmagField<vecgeom::kVcFloat> m1("../VecMagFieldRoutine/cms2015.txt");
 
   // Field
 #ifdef USECMSFIELD
@@ -127,7 +127,7 @@ int main(int argc, char *args[])
 #else 
   auto gvField= new Field_Type( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
 #endif
-  
+
   #ifdef DEBUGAnanya
    cout<<"----TemplateTUniformMagField Object constructed"<<endl;
   #endif
@@ -404,7 +404,7 @@ int main(int argc, char *args[])
   int indOutputVar = 2;
     
   // srand(time(NULL));
-  srand(34);
+  srand(9);
   
   for (int step = 0; step < 10; ++step)
   {

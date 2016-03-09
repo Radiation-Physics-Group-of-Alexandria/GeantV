@@ -34,6 +34,9 @@ using fieldUnits::degree;
 #include "TemplateGUIntegrationDriver.h"
 #include "FieldTrack.h"
 
+#include "TemplateCMSmagField.h"
+#include "ScalarCMSmagField.h"
+
 #include <stdlib.h>
 
 using namespace std;
@@ -46,8 +49,17 @@ int main(/*int argc, char *args[]*/)
     // typedef typename Backend::precision_v Double;
     // typedef vecgeom::Vector3D<Double> ThreeVectorSimd;
     typedef vecgeom::Vector3D<double> ThreeVector_d;
+  #define USECMSFIELD
+  #ifdef USECMSFIELD
+    using Field_Type = TemplateCMSmagField<Backend>;
+    using Field_Type_Scalar = ScalarCMSmagField;
+    // using Field_Type_Scalar = TemplateCMSmagField<vecgeom::kScalar>;
+  #else
+    using Field_Type_Scalar = TUniformMagField;
+    using Field_Type = TemplateTUniformMagField<Backend>;
+  #endif 
 
-    using  GvEquationType=  TemplateTMagFieldEquation<Backend, TemplateTUniformMagField<Backend>, Nposmom>;
+    using  GvEquationType=  TemplateTMagFieldEquation<Backend, Field_Type, Nposmom>;
    
     /* -----------------------------SETTINGS-------------------------------- */
     
@@ -110,7 +122,12 @@ int main(/*int argc, char *args[]*/)
      #endif 
 
     // Field
-    auto gvField= new TemplateTUniformMagField<Backend>( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+  #ifdef USECMSFIELD
+    auto gvField = new Field_Type ("../VecMagFieldRoutine/cms2015.txt");
+  #else 
+    auto gvField = new Field_Type( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+  #endif
+
     #ifdef DEBUGAnanya
      cout<<"----TemplateTUniformMagField Object constructed"<<endl;
     #endif
@@ -124,7 +141,7 @@ int main(/*int argc, char *args[]*/)
       cout<<"----Just before making EquationFactory"<<endl;
     #endif 
     auto gvEquation =
-       TemplateFieldEquationFactory<Backend>::CreateMagEquation<TemplateTUniformMagField<Backend> >(gvField);
+       TemplateFieldEquationFactory<Backend>::CreateMagEquation<Field_Type >(gvField);
     #ifdef DEBUGAnanya
        cout<<"----EquationFactory made "<<endl;
     #endif 
@@ -173,9 +190,13 @@ int main(/*int argc, char *args[]*/)
     // auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
 
     //========= Preparing scalar Integration Driver ============
-    using  GvEquationTypeScalar=  TMagFieldEquation<TUniformMagField, Nposmom>;
+    using  GvEquationTypeScalar=  TMagFieldEquation<Field_Type_Scalar, Nposmom>;
     
-    auto gvFieldScalar    = new TUniformMagField( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+  #ifdef USECMSFIELD
+    auto gvFieldScalar    = new Field_Type_Scalar("../VecMagFieldRoutine/cms2015.txt");
+  #else
+    auto gvFieldScalar    = new Field_Type_Scalar( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
+  #endif
     auto gvEquationScalar = new GvEquationTypeScalar(gvFieldScalar);
 
     GUVIntegrationStepper *myStepperScalar; 
@@ -194,6 +215,8 @@ int main(/*int argc, char *args[]*/)
     myStepper->InitializeCharge( particleCharge );
 
     auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
+
+    testVectorDriver->SetPartDebug(true);
     // ========== Vector Driver prepared ========================
 
 
