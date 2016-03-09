@@ -115,6 +115,8 @@ class TemplateGUIntegrationDriver : public AlignedBase
                                   GUVIntegrationStepper                  *pScalarStepper,
                                   int    numberOfComponents  = 6,
                                   int    statisticsVerbosity = 1                        );
+
+     void SetPartDebug (bool debugValue);
 #endif
 
      Bool_v  QuickAdvance( TemplateGUFieldTrack<Backend>& y_posvel,        // INOUT
@@ -323,6 +325,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
      int fNTracks;
      int fStepperCalls = 0;
      GUVIntegrationStepper *fpScalarStepper;
+     bool partDebug = false ; 
 #endif 
 };
 
@@ -1656,7 +1659,7 @@ TemplateGUIntegrationDriver<Backend>
   //  - the return value is 'true' if integration succeeded to the end of the interval,
   //    and 'false' otherwise.
 
-  // #define PARTDEBUG
+  #define PARTDEBUG
 
   typedef typename Backend::precision_v Double_v;
   typedef typename Backend::bool_v      Bool_v;
@@ -1673,12 +1676,15 @@ TemplateGUIntegrationDriver<Backend>
 #endif
 
 #ifdef PARTDEBUG
-  std::cout << " AccurateAdvance called with hstep= " ;
-  for (int i = 0; i < nTracks; ++i)
+  if (partDebug)
   {
-    std::cout<< hstep[i]<< " ";
+    std::cout << " AccurateAdvance called with hstep= " ;
+    for (int i = 0; i < nTracks; ++i)
+    {
+      std::cout<< hstep[i]<< " ";
+    }
+    std::cout<< std::endl;
   }
-  std::cout<< std::endl;
 #endif 
 
   Double_v  y   [ncompSVEC], 
@@ -1802,29 +1808,51 @@ TemplateGUIntegrationDriver<Backend>
     Bool_v avoidNumerousSmallSteps = (h < epsilon * hStepLane) || (h < fSmallestFraction * startCurveLength);
     lastStep = avoidNumerousSmallSteps || lastStep;
 
+    Double_v diff2 = (x2 - x);
     // For rest, check the proposed next stepsize 
     h = vecgeom::Max(hnext, fMinimumStep);
   #ifdef PARTDEBUG
-    std::cout<< "h after checking proposed next stepsize is min. of : "<< hnext <<" and "<< x2-x << std::endl;    
-    std::cout<<" Here, x2 is: "<<x2 << " and x is : "<< x << std::endl;
+    if (partDebug)
+    {
+      std::cout<< "diff before both masked assign statements is: "<<diff2 << std::endl;
+      std::cout<< "h after checking proposed next stepsize is max. of : "<< hnext <<" and "<< x2-x << std::endl; 
+      // std::cout.precision(17);  
+      std::cout<<" Here, x2 is: "<<x2 << " and x is : "<< x << std::endl;
+      Bool_v diffXAndX2 = (x+h) > x2 ;
+      std::cout<< "Bool_v x+h > x2 is: "<< diffXAndX2 << std::endl;
+    }
+     Double_v diff = (x2 - x);
   #endif 
 
+
     // Ensure that the next step does not overshoot
-    vecgeom::MaskedAssign( x+h > x2, x2 - x, &h);
+    // vecgeom::MaskedAssign( x+h > x2, x2 - x, &h);
+    h = vecgeom::Min(x2 -x , h);
+
   #ifdef PARTDEBUG
-    Double_v hforDebug = x2 - x;
-    std::cout<< "x2 -x is :  "<< hforDebug << std::endl;
+    if (partDebug)
+    {
+      Double_v hforDebug = x2 - x;
+      std::cout<< "x2 -x is :  "<< hforDebug << std::endl;
+      std::cout<< "diff is: " << diff << std::endl;
+    }
   #endif 
-    // h = x2 - x; 
   #ifdef PARTDEBUG
-    std::cout<<"AccurateAdvance: hnext is: "<<hnext<<" and h is : "<<h<<std::endl; 
+    if (partDebug)
+    {
+      // h = x2 - x; 
+      std::cout<<"AccurateAdvance: hnext is: "<<hnext<<" and h is : "<<h<<std::endl; 
+    }
   #endif 
     // When stepsize overshoots, decrease it!
     // Must cope with difficult rounding-error issues if hstep << x2
 
     lastStep = (h==0) || lastStep ;
 #ifdef DEBUG
-    std::cout<<" lastStep : "<< lastStep << std::endl;
+    if (partDebug)
+    {
+      std::cout<<" lastStep : "<< lastStep << std::endl;
+    }
 #endif
     nstp++;
 
@@ -1846,12 +1874,14 @@ TemplateGUIntegrationDriver<Backend>
     {
       finishedLane =  
               ( !CondNoOfSteps || !CondXLessThanx2 || !CondIsNotLastStep );
- #ifdef DEBUG     
-      std::cout<<" finishedLane:     "<< finishedLane     << std::endl;
-      std::cout<<" CondNoOfSteps:    "<< CondNoOfSteps    << std::endl;
-      std::cout<<" CondXLessThanx2:  "<< CondXLessThanx2  << std::endl;
-      std::cout<<" CondIsNotLastStep:"<< CondIsNotLastStep<< std::endl;
-      
+ #ifdef DEBUG
+      if (partDebug)
+      {
+        std::cout<<" finishedLane:     "<< finishedLane     << std::endl;
+        std::cout<<" CondNoOfSteps:    "<< CondNoOfSteps    << std::endl;
+        std::cout<<" CondXLessThanx2:  "<< CondXLessThanx2  << std::endl;
+        std::cout<<" CondIsNotLastStep:"<< CondIsNotLastStep<< std::endl;        
+      }
 #endif
       for (int i = 0; i < kVectorSize; ++i)
       {
@@ -1889,11 +1919,14 @@ TemplateGUIntegrationDriver<Backend>
           }
         }
       }
-
     }
 #ifdef DEBUG
-    std::cout<<"Value of lastStep is: "<< lastStep <<std::endl;
-    std::cout<<"isDoneLane is:        "<< isDoneLane <<std::endl;
+    if (partDebug)
+    {
+      std::cout<<"Value of lastStep is: "<< lastStep <<std::endl;
+      std::cout<<"isDoneLane is:        "<< isDoneLane <<std::endl;
+    }
+
 #endif 
 #ifdef PARTDEBUG
     // std::cout<<"nstp is : "<<nstp<<" against max. : "<<fMaxNoSteps<<std::endl;
@@ -1926,7 +1959,10 @@ TemplateGUIntegrationDriver<Backend>
 
 {
 #ifdef PARTDEBUG
-  std::cout<<"\n"<<std::endl;  
+  if (partDebug)
+  {
+    std::cout<<"\n"<<std::endl;  
+  }
 #endif 
 
   Double_v errmax_sq;
@@ -1962,7 +1998,10 @@ TemplateGUIntegrationDriver<Backend>
       fStepperCalls++;
 
 #ifdef DEBUG
-      std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
+      if (partDebug)
+      {
+        std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
+      }
 #endif 
       Double_v eps_pos = eps_rel_max * vecgeom::Max(h, fMinimumStep);  // Uses remaining step 'h'
       Double_v inv_eps_pos_sq = 1.0 / (eps_pos*eps_pos);
@@ -1981,11 +2020,15 @@ TemplateGUIntegrationDriver<Backend>
       errmom_sq *= inv_eps_vel_sq;
       errmax_sq = vecgeom::Max( errpos_sq, errmom_sq ); // Square of maximum error
 #ifdef DEBUG
-      std::cout<< "----eps_pos is: "<< eps_pos << std::endl;
-      std::cout<< "----inv_eps_pos_sq is: "<< eps_pos << std::endl;
-      std::cout<< "----errmom_sq is: "<< errmom_sq << std::endl;
-      std::cout<< "----errpos_sq is: "<< errpos_sq << std::endl;
-      std::cout<< "----errmax_sq is: "<< errmax_sq << std::endl;
+      if (partDebug)
+      {
+        std::cout<< "----eps_pos is: "<< eps_pos << std::endl;
+        std::cout<< "----inv_eps_pos_sq is: "<< eps_pos << std::endl;
+        std::cout<< "----errmom_sq is: "<< errmom_sq << std::endl;
+        std::cout<< "----errpos_sq is: "<< errpos_sq << std::endl;
+        std::cout<< "----errmax_sq is: "<< errmax_sq << std::endl;
+      }
+
 #endif 
       errMaxLessThanOne = ( errmax_sq <=1.0 );
       if ( !vecgeom::IsEmpty(errMaxLessThanOne) )
@@ -2058,7 +2101,10 @@ TemplateGUIntegrationDriver<Backend>
     }
   }
 #ifdef PARTDEBUG
-  std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
+  if (partDebug)
+  {
+    std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
+  }
 #endif 
 
   h         = hFinal;
@@ -2075,7 +2121,10 @@ TemplateGUIntegrationDriver<Backend>
   for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = yFinal[k]; }
 
 #ifdef PARTDEBUG
-  std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
+  if (partDebug)
+  {
+    std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
+  }
 #endif
   return;
 }   // end of  OneStep .............................
@@ -2099,7 +2148,10 @@ TemplateGUIntegrationDriver<Backend>
 
 {
 #ifdef PARTDEBUG
-  std::cout<<"\n"<<std::endl;
+  if (partDebug)
+  {
+    std::cout<<"\n"<<std::endl;
+  }
 #endif 
 
   Double_v errmax_sq;
@@ -2146,9 +2198,12 @@ TemplateGUIntegrationDriver<Backend>
     // if ( vecgeom::IsEmpty(htryExhausted) && !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
     {
     #ifdef PARTDEBUG  
+      if (partDebug)
+      {
+        Bool_v hZeroOrErrCond = hIsZeroCond || errMaxLessThanOne;
+        std::cout<< "hZeroOrErrCond is: "<< hZeroOrErrCond << std::endl;
+      }
 
-      Bool_v hZeroOrErrCond = hIsZeroCond || errMaxLessThanOne;
-      std::cout<< "hZeroOrErrCond is: "<< hZeroOrErrCond << std::endl;
     #endif  
 
       tot_no_trials++;
@@ -2158,7 +2213,10 @@ TemplateGUIntegrationDriver<Backend>
       fStepperCalls++;
 
 #ifdef DEBUG
-      std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
+      if (partDebug)
+      {
+        std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
+      }
 #endif 
       Double_v eps_pos = eps_rel_max * vecgeom::Max(h, fMinimumStep);  // Uses remaining step 'h'
       Double_v inv_eps_pos_sq = 1.0 / (eps_pos*eps_pos);
@@ -2177,11 +2235,14 @@ TemplateGUIntegrationDriver<Backend>
       errmom_sq *= inv_eps_vel_sq;
       errmax_sq  = vecgeom::Max( errpos_sq, errmom_sq ); // Square of maximum error
 #ifdef DEBUG
-      std::cout<< "----eps_pos is       : "<< eps_pos   << std::endl;
-      std::cout<< "----inv_eps_pos_sq is: "<< eps_pos   << std::endl;
-      std::cout<< "----errmom_sq is     : "<< errmom_sq << std::endl;
-      std::cout<< "----errpos_sq is     : "<< errpos_sq << std::endl;
-      std::cout<< "----errmax_sq is     : "<< errmax_sq << std::endl;
+      if (partDebug)
+      {
+        std::cout<< "----eps_pos is       : "<< eps_pos   << std::endl;
+        std::cout<< "----inv_eps_pos_sq is: "<< eps_pos   << std::endl;
+        std::cout<< "----errmom_sq is     : "<< errmom_sq << std::endl;
+        std::cout<< "----errpos_sq is     : "<< errpos_sq << std::endl;
+        std::cout<< "----errmax_sq is     : "<< errmax_sq << std::endl;
+      }
 #endif 
       xnew = x + h; // Ananya : adding here to give an appropriate value to xnew
                     // Discuss with john if appropriate 
@@ -2210,7 +2271,10 @@ TemplateGUIntegrationDriver<Backend>
               hFinal         [i] += h[i];
 
             #ifdef PARTDEBUG
-              std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (errMaxLessThanOne Loop)(iter= )"<<iter<<std::endl;
+              if (partDebug)
+              {
+                std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (errMaxLessThanOne Loop)(iter= )"<<iter<<std::endl;
+              }
             #endif 
               errmax_sqFinal [i] = errmax_sq[i];
               for (int j = 0; j < TemplateGUFieldTrack<Backend>::ncompSVEC; ++j)
@@ -2232,7 +2296,13 @@ TemplateGUIntegrationDriver<Backend>
         }
       }
     #ifdef PARTDEBUG
-      if ( vecgeom::IsFull(errMaxLessThanOneLocal) )  { std::cout<<"errMaxLessThanOneLocal is full. "<<std::endl; } // Step succeeded. 
+      if ( vecgeom::IsFull(errMaxLessThanOneLocal) )  
+      {
+        if (partDebug)
+        {
+          std::cout<<"errMaxLessThanOneLocal is full. "<<std::endl; 
+        } 
+      } // Step succeeded. 
 
     #endif   
       // if ( vecgeom::IsFull(errMaxLessThanOneLocal) )  { break; } // Step succeeded. 
@@ -2273,7 +2343,10 @@ TemplateGUIntegrationDriver<Backend>
               hFinal   [i] += h[i];
 
             #ifdef PARTDEBUG
-              std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (hIsZero Loop)(iter= )"<<iter<<std::endl;
+              if (partDebug)
+              {
+                std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (hIsZero Loop)(iter= )"<<iter<<std::endl;
+              }
             #endif 
               errmax_sqFinal [i] = errmax_sq[i];
               for (int j = 0; j < TemplateGUFieldTrack<Backend>::ncompSVEC; ++j)
@@ -2354,9 +2427,12 @@ TemplateGUIntegrationDriver<Backend>
   for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = yFinal[k]; }
 
 #ifdef PARTDEBUG
-  std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
-  std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
-  std::cout<< "htryExhausted is: "<< htryExhausted << std::endl;
+  if (partDebug)
+  {
+    std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
+    std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
+    std::cout<< "htryExhausted is: "<< htryExhausted << std::endl;
+  }
 #endif 
 
   return;
@@ -2380,6 +2456,14 @@ TemplateGUIntegrationDriver<Backend>
   fpScalarStepper = pScalarStepper; 
 }
 
+
+template <class Backend>
+void
+TemplateGUIntegrationDriver<Backend>
+  ::SetPartDebug(bool debugValue)
+{
+  partDebug = debugValue;
+}
 
 
 #endif /* TemplateGUIntegrationDriver_Def */
