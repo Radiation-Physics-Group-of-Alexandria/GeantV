@@ -51,15 +51,15 @@ int main(/*int argc, char *args[]*/)
     typedef vecgeom::Vector3D<double> ThreeVector_d;
   #define USECMSFIELD
   #ifdef USECMSFIELD
-    using Field_Type = TemplateCMSmagField<Backend>;
+    using Field_Type        = TemplateCMSmagField<Backend>;
     using Field_Type_Scalar = ScalarCMSmagField;
     // using Field_Type_Scalar = TemplateCMSmagField<vecgeom::kScalar>;
   #else
     using Field_Type_Scalar = TUniformMagField;
-    using Field_Type = TemplateTUniformMagField<Backend>;
+    using Field_Type        = TemplateTUniformMagField<Backend>;
   #endif 
 
-    using  GvEquationType=  TemplateTMagFieldEquation<Backend, Field_Type, Nposmom>;
+    using GvEquationType    = TemplateTMagFieldEquation<Backend, Field_Type, Nposmom>;
    
     /* -----------------------------SETTINGS-------------------------------- */
     
@@ -67,9 +67,9 @@ int main(/*int argc, char *args[]*/)
      - Modify values  */
     
     int no_of_steps = 20;         // No. of Steps for the stepper
-    int stepper_no =  5;         // Choose stepper no., for refernce see above
+    int stepper_no  =  5;         // Choose stepper no., for refernce see above
     double step_len_mm = 200.;    // meant as millimeter;  //Step length 
-    double z_field_in = DBL_MAX;
+    double z_field_in  = DBL_MAX;
     
     //Checking for command line values :
 /*    if(argc>1)
@@ -116,10 +116,10 @@ int main(/*int argc, char *args[]*/)
        z_field = z_field_in;
     else
        z_field = -1.0;  //  Tesla // *tesla ;
-
-     #ifdef DEBUGAnanya
-      cout<<"----Just before making TemplateTUniformMagField"<<endl;
-     #endif 
+#undef DEBUGAnanya
+   #ifdef DEBUGAnanya
+    cout<<"----Just before making TemplateTUniformMagField"<<endl;
+   #endif 
 
     // Field
   #ifdef USECMSFIELD
@@ -216,7 +216,7 @@ int main(/*int argc, char *args[]*/)
 
     auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
 
-    testVectorDriver->SetPartDebug(true);
+    // testVectorDriver->SetPartDebug(true);
     // ========== Vector Driver prepared ========================
 
 
