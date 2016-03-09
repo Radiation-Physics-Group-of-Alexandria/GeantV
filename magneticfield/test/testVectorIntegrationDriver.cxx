@@ -116,10 +116,6 @@ int main(/*int argc, char *args[]*/)
        z_field = z_field_in;
     else
        z_field = -1.0;  //  Tesla // *tesla ;
-#undef DEBUGAnanya
-   #ifdef DEBUGAnanya
-    cout<<"----Just before making TemplateTUniformMagField"<<endl;
-   #endif 
 
     // Field
   #ifdef USECMSFIELD
@@ -128,48 +124,19 @@ int main(/*int argc, char *args[]*/)
     auto gvField = new Field_Type( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
   #endif
 
-    #ifdef DEBUGAnanya
-     cout<<"----TemplateTUniformMagField Object constructed"<<endl;
-    #endif
+
     cout << "#  Initial  Field strength (GeantV) = "
          << x_field << " , " << y_field << " , " << z_field 
        // << (1.0/fieldUnits::tesla) * gvField->GetValue()->X() << ",  "
          << " Tesla " << endl;
     // cout << "#  Initial  momentum * c = " << x_mom << " , " << y_mom << " , " << z_mom << " GeV " << endl;
     //Create an Equation :
-    #ifdef DEBUGAnanya
-      cout<<"----Just before making EquationFactory"<<endl;
-    #endif 
+ 
     auto gvEquation =
        TemplateFieldEquationFactory<Backend>::CreateMagEquation<Field_Type >(gvField);
-    #ifdef DEBUGAnanya
-       cout<<"----EquationFactory made "<<endl;
-    #endif 
 
     // gvEquation->InitializeCharge( particleCharge );  // Send it via Stepper instead    
-
-    /*-------------------------PREPARING STEPPER-----------------------------*/
     
-    //Create a stepper :
-
-  #ifdef DEBUGAnanya
-     cout<<"---- "<<endl;
-     cout<<"---- Making TemplateGUTCashKarpRKF45"<<endl;
-  #endif   
-    // TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom> myStepper2(gvEquation);
-  #ifdef DEBUGAnanya
-    cout<<"---- constructed TemplateGUTCashKarpRKF45"<<endl;
-  #endif
-
-/*    TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
-
-    myStepper->InitializeCharge( particleCharge );*/
-
-    //Initialising coordinates
-    // const double mmGVf = fieldUnits::millimeter;
-    // const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
-                                         //   Else it must be divided by fieldUnits::c_light;
-    // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
 /*    double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                     x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};*/
@@ -181,9 +148,7 @@ int main(/*int argc, char *args[]*/)
 /*    Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
            yout[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
            yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.};*/
-    
-    /*-----------------------END PREPARING STEPPER---------------------------*/
-
+  
 
     //=======================Test part for Integration driver====================
     double hminimum = 0.2;
@@ -216,7 +181,10 @@ int main(/*int argc, char *args[]*/)
 
     auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
 
-    // testVectorDriver->SetPartDebug(true);
+    bool debugValue ; 
+    cout<< "Debug? " << endl;
+    cin >> debugValue;
+    testVectorDriver->SetPartDebug(debugValue);
     // ========== Vector Driver prepared ========================
 
 
@@ -235,27 +203,28 @@ int main(/*int argc, char *args[]*/)
     double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
 
-#define DebuggingSection
+#define MAINTESTING
 // #define CALCULATETIME 
 
-#ifndef DebuggingSection
-#ifndef MAINTESTING
     double
-      x_pos = 0.,                 //pos - position  : input unit = mm
-      y_pos = 0.,
-      z_pos = 0.;
+      x_pos = 20.,                 //pos - position  : input unit = mm
+      y_pos = 20.,
+      z_pos = 20.;
     double   
       x_mom = 0.,                 //mom - momentum  : input unit = GeV / c
       y_mom = 1.,
       z_mom = 1.;
     const double mmGVf = fieldUnits::millimeter;
     const double ppGVf = fieldUnits::GeV ; 
+
+#ifndef DebuggingSection
+#ifndef MAINTESTING    
     
     double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                        x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
     // double posMom[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
 
-    std::fill_n(hstep, nTracks, 620);
+    std::fill_n(hstep, nTracks, 20);
     const ThreeVector_d  startPosition( posMom[0], posMom[1], posMom[2]);
     const ThreeVector_d  startMomentum( posMom[3], posMom[4], posMom[5]);
     GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
@@ -268,9 +237,11 @@ int main(/*int argc, char *args[]*/)
     }
 
     testVectorDriver->AccurateAdvance( yInput,   hstep,    epsTol, yOutput, nTracks, succeeded );
-    testScalarDriver->AccurateAdvance( yTrackIn, hstep[0], epsTol, yTrackOut );
+    bool scalarResult = testScalarDriver->AccurateAdvance( yTrackIn, hstep[0], epsTol, yTrackOut );
     cout<<" yOutput is   : "<< yOutput[0]<<" for yInput: "  <<yInput[0]<< endl;
     cout<<" yTrackOut is : "<< yTrackOut <<" for yTrackIn: "<<yTrackIn << endl;
+    cout<<" Success of Vector: "<< succeeded[0] << endl;
+    cout<<" Success of scalar: "<< scalarResult << endl;
 #endif 
 #endif 
 
@@ -278,14 +249,14 @@ int main(/*int argc, char *args[]*/)
   #ifdef CALCULATETIME
     std::vector<double> ratioVector;
   #endif 
-    // for (int step = 0; step < no_of_steps; ++step)
-    for (int step = 0; step < 20; ++step)
+    for (int step = 0; step < no_of_steps; ++step)
+    // for (int step = 0; step < 20; ++step)
     {
       total_step += step_len;
       std::fill_n(hstep, nTracks, total_step);
 
-      // srand(time(NULL));
-      srand(9);
+      srand(time(NULL));
+      // srand(9);
 
       x_pos = (float) rand()/(RAND_MAX) ;
       y_pos = (float) rand()/(RAND_MAX) ;
