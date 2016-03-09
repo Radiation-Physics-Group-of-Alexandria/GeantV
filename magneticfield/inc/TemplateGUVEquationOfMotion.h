@@ -21,7 +21,7 @@
 #include <ostream>
 #include "TemplateGUVField.h"   // required in inline method implementations
 
-#define DEBUGAnanya
+// #define DEBUGAnanya
 
 //vecgeom::VECGEOM_DEVICE_FORWARD_DECLARE( template <typename Type> class TemplateGUVEquationOfMotion;)
 
