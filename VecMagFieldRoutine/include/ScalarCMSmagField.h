@@ -68,6 +68,8 @@
 
  #include "TemplateCMSmagField.h"
 
+ #include "Units.h"
+
 // Vc Version 0.7 and earlier had a 'Gather' method which obtained one 
 //    member of a class/struct. 
 // Vc Version 1.0 no longer has this method.
@@ -257,7 +259,7 @@ bool ScalarCMSmagField
    std::string line;
    std::string s1,s2,s3,s4,s5,s0;
    float d1,d2,d3,d4,d5,d0;
-   int ind =0;
+   int ind = 0;
    std::ifstream pFile(inputMap);
    if (pFile.is_open())
    {
@@ -428,6 +430,10 @@ void ScalarCMSmagField
     vecgeom::MaskedAssign(nonZero, pos.x()*rInv, &cosTheta);
 
     CylindricalToCartesian(rzField, sinTheta, cosTheta, xyzField);
+
+    xyzField *= fieldUnits::tesla;
+
+    // std::cout<< "Input pos is: " << pos << " , xyzField is: " << xyzField << std::endl;
 }
 
 
