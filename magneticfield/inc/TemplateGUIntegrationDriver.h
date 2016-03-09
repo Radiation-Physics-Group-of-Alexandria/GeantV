@@ -1785,9 +1785,9 @@ TemplateGUIntegrationDriver<Backend>
     // if( h > fMinimumStep )
     // { 
 
-    // OneStep( y, dydx, x, h, epsilon, hdid, hnext);
+    OneStep( y, dydx, x, h, epsilon, hdid, hnext);
     fNoTotalSteps++;
-    KeepStepping( y, dydx, x, h, epsilon, hdid, hnext, hStepLane, hTotalDoneSoFar) ;
+    // KeepStepping( y, dydx, x, h, epsilon, hdid, hnext, hStepLane, hTotalDoneSoFar) ;
     lastStepSucceeded = (hdid == h);   
     // }
 
@@ -2436,7 +2436,7 @@ TemplateGUIntegrationDriver<Backend>
 #endif 
 
   return;
-}   // end of  OneStep .............................
+}   // end of  KeepStepping .............................
 
 
 // New constructor for KeepStepping method 

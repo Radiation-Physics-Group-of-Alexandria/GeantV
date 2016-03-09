@@ -24,7 +24,7 @@
 
 #include "TemplateGUVEquationOfMotion.h"
 
-#define DEBUGAnanya
+// #define DEBUGAnanya
 
 template <class Backend> 
 class TemplateGUVIntegrationStepper
@@ -162,7 +162,7 @@ TemplateGUVIntegrationStepper<Backend>::
     fNoIntegrationVariables(num_integration_vars),
     fNoStateVariables(num_state_vars > 0 ? num_state_vars : num_integration_vars)
 {
-  #ifdef DEBUGAnanya
+  #if 0
     std::cout<<"\n----Entered constructor of TemplateGUVIntegrationStepper"<<std::endl;
     std::cout<<"----Equation is: "<<equation->idxTime<<std::endl;
     std::cout<<"----num_state_vars is: "<<integrationOrder<<std::endl;
@@ -172,7 +172,7 @@ TemplateGUVIntegrationStepper<Backend>::
 template <class Backend> 
 TemplateGUVIntegrationStepper<Backend>::~TemplateGUVIntegrationStepper()
 {
-  #ifdef DEBUGAnanya
+  #if 0
     std::cout<<"----IntegrationStepper destructor"<<std::endl;
   #endif 
 }
