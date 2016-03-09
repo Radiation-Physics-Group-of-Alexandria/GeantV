@@ -212,7 +212,7 @@ TemplateCMSmagField<Backend>
     fMagvArray = new MagVector3<float>[kNoZValues*kNoRValues];
     fVcMagVector3 = new Vc::vector<MagVector3<float>>;
     if( fVerbose ) {
-      printf( "%s", "TemplateCMSmagField class: Version: Reorder2 (floats)");
+      printf( "%s", "- TemplateCMSmagField class: Version: Reorder2 (floats)");
 #ifdef VC_NO_MEMBER_GATHER
       printf( "%s", ", with VC_NO_MEMBER_GATHER enabled." );
 #endif
