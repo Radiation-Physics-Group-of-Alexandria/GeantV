@@ -17,7 +17,7 @@
 #include "AlignedBase.h"
 
 #define INLINERHS 1
-#define DEBUGAnanya
+// #define DEBUGAnanya
 #define RemoveAuxStepper
 // #define NoPointers
 
@@ -142,7 +142,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
     #endif
      fLastStepLength(0.)
 {
-  #ifdef DEBUGAnanya
+  #if 0
      std::cout<<"\n----Entered constructor of TemplateGUTCashKarpRKF45 "<<std::endl;
      std::cout<<"----In TemplateGUTCashKarpRKF45 constructor, Nvar is: "<<Nvar<<std::endl;
   #endif
@@ -162,7 +162,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
    fMidError  = new Double_v[sNstore];
   #endif
 
-  #ifdef DEBUGAnanya
+  #if 0
     std::cout<<"----Before Auxiliary stepper if condition"<<std::endl;
   #endif
 
@@ -179,7 +179,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
    }
   #endif 
 
-   #ifdef DEBUGAnanya
+   #if 0
     std::cout<<"----end of constructor of TemplateGUTCashKarpRKF45"<<std::endl;
    #endif
 }
@@ -256,7 +256,7 @@ template <class Backend, class T_Equation,unsigned int Nvar>
 REALLY_INLINE
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::~TemplateGUTCashKarpRKF45()
 {
-#ifdef DEBUGAnanya
+#if 0
   std::cout<<"----- CashKarp destructor0"<<std::endl;
 #endif
 
@@ -267,7 +267,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::~TemplateGUTCashKarpRKF45()
    delete[] fLastDyDx;
    delete[] fMidVector;
    delete[] fMidError;
-#ifdef DEBUGAnanya
+#if 0
   std::cout<<"----- CashKarp destructor0.5"<<std::endl;
 #endif
 
@@ -276,7 +276,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::~TemplateGUTCashKarpRKF45()
    delete fAuxStepper;
   #endif 
 
-#ifdef DEBUGAnanya
+#if 0
   std::cout<<"----- CashKarp destructor1"<<std::endl;
 #endif
 
@@ -284,7 +284,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::~TemplateGUTCashKarpRKF45()
       delete fEquation_Rhs; // Expect to own the equation, except if auxiliary (then sharing the equation)
 #endif
 
-#ifdef DEBUGAnanya
+#if 0
   std::cout<<"----- CashKarp destructor1"<<std::endl;
 #endif
 
