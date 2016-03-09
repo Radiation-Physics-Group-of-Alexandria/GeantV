@@ -66,6 +66,10 @@
 #include "GUVMagneticField.h"
 #include "TemplateGUVMagneticField.h"
 
+#include "Units.h"
+
+// using fieldUnits::tesla;
+
 // Vc Version 0.7 and earlier had a 'Gather' method which obtained one 
 //    member of a class/struct. 
 // Vc Version 1.0 no longer has this method.
@@ -487,6 +491,20 @@ void TemplateCMSmagField<Backend>
     vecgeom::MaskedAssign(nonZero, pos.x()*rInv, &cosTheta);
 
     CylindricalToCartesian(rzField, sinTheta, cosTheta, xyzField);
+
+    xyzField *= fieldUnits::tesla;
+
+    // std::cout<< "Input pos is: " << pos << " , xyzField is: " << xyzField << std::endl;
+/*    std::cout << "Input pos is: " 
+              << " ( " << pos[0][0] 
+              << " , " << pos[1][0]
+              << " , " << pos[2][0]
+              << " ) , xyzField is: "
+              << " ( " << xyzField[0][0] 
+              << " , " << xyzField[1][0] 
+              << " , " << xyzField[2][0] 
+              << " )" << std::endl;*/
+
 }
 
 /*template <class Backend>
