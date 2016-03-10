@@ -203,7 +203,7 @@ int main(/*int argc, char *args[]*/)
     double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
 
-#define MAINTESTING
+#define DebuggingSection
 // #define CALCULATETIME 
 
     double
@@ -249,13 +249,15 @@ int main(/*int argc, char *args[]*/)
   #ifdef CALCULATETIME
     std::vector<double> ratioVector;
   #endif 
+    
+    srand(time(NULL));
+
     for (int step = 0; step < no_of_steps; ++step)
     // for (int step = 0; step < 20; ++step)
     {
       total_step += step_len;
       std::fill_n(hstep, nTracks, total_step);
 
-      srand(time(NULL));
       // srand(9);
 
       x_pos = (float) rand()/(RAND_MAX) ;
@@ -384,11 +386,13 @@ int main(/*int argc, char *args[]*/)
     if(true){
       // double posMomt[] = { 0.0394383, 0.0783099, 0.079844, 0.911647, 0.197551, 0.335223};  
       // double posMomt[] = { 0.018234, 0.0576585, 0.0694335, 0.857714, 0.205414, 0.186222 };
-      double posMomt[] = {0.0627625, 0.0184593, 0.0449569, 0.68876, 0.163077, 0.841872};
+      // double posMomt[] = {0.0627625, 0.0184593, 0.0449569, 0.68876, 0.163077, 0.841872};
+      // double posMomt[] = {0.0614384, 0.0736116, 0.0124955, 0.236072, 0.737118, 0.0545562};
+      double posMomt[] = {0.00668596, 0.0106866, 0.000127922, 0.126255, 0.101243, 0.384278};
       // double posMomt[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
 
       
-      total_step = 40;
+      total_step = 120;
       std::fill_n(hstep, nTracks, total_step);
 
       for (int i = 0; i < nTracks; ++i)
