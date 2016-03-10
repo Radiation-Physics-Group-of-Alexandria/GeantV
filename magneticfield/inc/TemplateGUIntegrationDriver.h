@@ -120,6 +120,8 @@ class TemplateGUIntegrationDriver : public AlignedBase
 
      // true for OneStep, false for KeepStepping
      void SetSteppingMethod (bool steppingMethod);
+
+     void SetVectorScalardydx(bool );
 #endif
 
      Bool_v  QuickAdvance( TemplateGUFieldTrack<Backend>& y_posvel,        // INOUT
@@ -328,8 +330,9 @@ class TemplateGUIntegrationDriver : public AlignedBase
      int fNTracks;
      int fStepperCalls = 0;
      GUVIntegrationStepper *fpScalarStepper;
-     bool partDebug = false ; 
-     bool oneStep = true; // false for KeepStepping
+     bool fPartDebug = false ; 
+     bool fOneStep = true; // false for KeepStepping
+     bool fVecScadydx = true; // default vector stepper 
 #endif 
 };
 
@@ -1680,7 +1683,7 @@ TemplateGUIntegrationDriver<Backend>
 #endif
 
 #ifdef PARTDEBUG
-  if (partDebug)
+  if (fPartDebug)
   {
     std::cout << " AccurateAdvance called with hstep= " ;
     for (int i = 0; i < nTracks; ++i)
@@ -1788,7 +1791,7 @@ TemplateGUIntegrationDriver<Backend>
     // if( h > fMinimumStep )
     // { 
 
-    if (oneStep)
+    if (fOneStep)
     {
       fpStepper->RightHandSideVIS( y, charge, dydx );   // TODO: change to inline
       OneStep( y, dydx, x, h, epsilon, hdid, hnext);
@@ -1847,7 +1850,7 @@ TemplateGUIntegrationDriver<Backend>
     }
   #endif 
   #ifdef PARTDEBUG
-    if (partDebug)
+    if (fPartDebug)
     {
       // h = x2 - x; 
       std::cout<<"AccurateAdvance: hnext is: "<<hnext<<" and h is : "<<h<<std::endl; 
@@ -1858,7 +1861,7 @@ TemplateGUIntegrationDriver<Backend>
 
     lastStep = (h==0) || lastStep ;
 #ifdef DEBUG
-    if (partDebug)
+    if (fPartDebug)
     {
       std::cout<<" lastStep : "<< lastStep << std::endl;
     }
@@ -1884,7 +1887,7 @@ TemplateGUIntegrationDriver<Backend>
       finishedLane =  
               ( !CondNoOfSteps || !CondXLessThanx2 || !CondIsNotLastStep );
  #ifdef DEBUG
-      if (partDebug)
+      if (fPartDebug)
       {
         std::cout<<" finishedLane:     "<< finishedLane     << std::endl;
         std::cout<<" CondNoOfSteps:    "<< CondNoOfSteps    << std::endl;
@@ -1930,7 +1933,7 @@ TemplateGUIntegrationDriver<Backend>
       }
     }
 #ifdef DEBUG
-    if (partDebug)
+    if (fPartDebug)
     {
       std::cout<<"Value of lastStep is: "<< lastStep <<std::endl;
       std::cout<<"isDoneLane is:        "<< isDoneLane <<std::endl;
@@ -1968,7 +1971,7 @@ TemplateGUIntegrationDriver<Backend>
 
 {
 #ifdef PARTDEBUG
-  if (partDebug)
+  if (fPartDebug)
   {
     std::cout<<"\n"<<std::endl;  
   }
@@ -2116,7 +2119,7 @@ TemplateGUIntegrationDriver<Backend>
     }
   }
 #ifdef PARTDEBUG
-  if (partDebug)
+  if (fPartDebug)
   {
     std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
   }
@@ -2136,7 +2139,7 @@ TemplateGUIntegrationDriver<Backend>
   for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = yFinal[k]; }
 
 #ifdef PARTDEBUG
-  if (partDebug)
+  if (fPartDebug)
   {
     std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
   }
@@ -2163,7 +2166,7 @@ TemplateGUIntegrationDriver<Backend>
 
 {
 #ifdef PARTDEBUG
-  if (partDebug)
+  if (fPartDebug)
   {
     std::cout<<"\n"<<std::endl;
   }
@@ -2172,8 +2175,10 @@ TemplateGUIntegrationDriver<Backend>
   Double_v errmax_sq;
   Double_v h, htemp, xnew ;
 
-  Double_v yerr [TemplateGUFieldTrack<Backend>::ncompSVEC], 
-           ytemp[TemplateGUFieldTrack<Backend>::ncompSVEC];
+  int ncompSVEC = TemplateGUFieldTrack<Backend>::ncompSVEC;
+
+  Double_v yerr [ncompSVEC], 
+           ytemp[ncompSVEC];
 
   h = htry ; // Set stepsize to the initial trial value
 
@@ -2191,8 +2196,8 @@ TemplateGUIntegrationDriver<Backend>
   int finished[kVectorSize] = {0}; // This makes all elements of array 0
 
   Double_v hFinal(0.), hnextFinal, xFinal, hdidFinal, errmax_sqFinal;
-  Double_v yFinal[TemplateGUFieldTrack<Backend>::ncompSVEC]; // = y[]
-  for (int i = 0; i < TemplateGUFieldTrack<Backend>::ncompSVEC; ++i)
+  Double_v yFinal[ncompSVEC]; // = y[]
+  for (int i = 0; i < ncompSVEC; ++i)
   {
     yFinal[i] = y[i];
   }
@@ -2205,18 +2210,25 @@ TemplateGUIntegrationDriver<Backend>
   // int htryExhausted[kVectorSize] = {0};
   Bool_v   htryExhausted(false);
   Double_v charge(+1.);
+  Bool_v   reEvaluateRHS(false);
+  double singleDydx[ncompSVEC];
+  double singley   [ncompSVEC];
+
+  if (fVecScadydx == false ) // scalar stepper 
+  {
+    fpStepper-> RightHandSideVIS( yFinal, charge, dydx );
+  }
 
   for (iter = 0; iter < max_trials; iter++)
   {
-    if ( !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
+    // if ( !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
 
-    // With the below if condition, the speedup becomes 0.25!!! 
-    // The output values are almost the same although. They have a 
-    // difference of e-2 or e-1 sometimes.
-    // if ( vecgeom::IsEmpty(htryExhausted) || !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
+    // Slightly more speedup compared to if condition above. 
+    // Correct results. 
+    if ( vecgeom::IsEmpty(htryExhausted) || !vecgeom::IsFull(hIsZeroCond || errMaxLessThanOne) )
     {
     #ifdef PARTDEBUG  
-      if (partDebug)
+      if (fPartDebug)
       {
         Bool_v hZeroOrErrCond = hIsZeroCond || errMaxLessThanOne;
         std::cout<< "hZeroOrErrCond is: "<< hZeroOrErrCond << std::endl;
@@ -2226,12 +2238,37 @@ TemplateGUIntegrationDriver<Backend>
 
       tot_no_trials++;
 
-      fpStepper-> RightHandSideVIS( yFinal, charge, dydx );
+      if (!fVecScadydx)
+      {
+        for (int i = 0; i < kVectorSize; ++i)
+        {
+          if (reEvaluateRHS[i] == true)
+          {
+            for (int j = 0; j < fNoVars; ++j)
+            {
+              singley[j] = yFinal[j][i];
+            }
+
+            fpScalarStepper-> RightHandSideVIS( singley, /* charge, */ singleDydx );
+
+            for (int j = 0; j < fNoVars; ++j)
+            {
+              dydx[j][i] = singleDydx[j];
+            }
+          }
+        }      
+      }
+
+      if (fVecScadydx) // vector stepper 
+      {
+        fpStepper-> RightHandSideVIS( yFinal, charge, dydx );
+      }
+      
       fpStepper-> StepWithErrorEstimate( yFinal, dydx, h, ytemp, yerr);
       fStepperCalls++;
 
 #ifdef DEBUG
-      if (partDebug)
+      if (fPartDebug)
       {
         std::cout<< "\n----yerr is: " << yerr[0] <<" "<<yerr[1]<<" "<<yerr[2] << std::endl;
       }
@@ -2253,7 +2290,7 @@ TemplateGUIntegrationDriver<Backend>
       errmom_sq *= inv_eps_vel_sq;
       errmax_sq  = vecgeom::Max( errpos_sq, errmom_sq ); // Square of maximum error
 #ifdef DEBUG
-      if (partDebug)
+      if (fPartDebug)
       {
         std::cout<< "----eps_pos is       : "<< eps_pos   << std::endl;
         std::cout<< "----inv_eps_pos_sq is: "<< eps_pos   << std::endl;
@@ -2279,6 +2316,7 @@ TemplateGUIntegrationDriver<Backend>
             xnew             [i] = x[i] + hFinal[i];
             if (xnew[i] < x2[i] )
             {
+              reEvaluateRHS[i] = true;
               // stay in loop 
               // But how? 
               // htryExhausted[i] = -1; // i.e. still in working condition
@@ -2289,7 +2327,7 @@ TemplateGUIntegrationDriver<Backend>
               hFinal         [i] += h[i];
 
             #ifdef PARTDEBUG
-              if (partDebug)
+              if (fPartDebug)
               {
                 std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (errMaxLessThanOne Loop)(iter= )"<<iter<<std::endl;
               }
@@ -2303,6 +2341,7 @@ TemplateGUIntegrationDriver<Backend>
             else
             {
               htryExhausted[i] = true;
+              reEvaluateRHS[i] = false;
             }
 
             if (xnew[i] <= x2[i])
@@ -2316,7 +2355,7 @@ TemplateGUIntegrationDriver<Backend>
     #ifdef PARTDEBUG
       if ( vecgeom::IsFull(errMaxLessThanOneLocal) )  
       {
-        if (partDebug)
+        if (fPartDebug)
         {
           std::cout<<"errMaxLessThanOneLocal is full. "<<std::endl; 
         } 
@@ -2351,6 +2390,7 @@ TemplateGUIntegrationDriver<Backend>
             xnew       [i] = x[i] + hFinal[i];
             if (xnew[i] < x2[i] )
             {
+              reEvaluateRHS[i] = true;
               // stay in loop 
               // But how? 
               // htryExhausted[i] = -1; // i.e. still in working condition
@@ -2361,7 +2401,7 @@ TemplateGUIntegrationDriver<Backend>
               hFinal   [i] += h[i];
 
             #ifdef PARTDEBUG
-              if (partDebug)
+              if (fPartDebug)
               {
                 std::cout<<"hFinal["<<i<<"] is: "<<hFinal[i]<<" (hIsZero Loop)(iter= )"<<iter<<std::endl;
               }
@@ -2375,6 +2415,7 @@ TemplateGUIntegrationDriver<Backend>
             else
             {
               htryExhausted[i] = true;
+              reEvaluateRHS[i] = false;
             }
 
             if (xnew[i] <= x2[i])
@@ -2445,7 +2486,7 @@ TemplateGUIntegrationDriver<Backend>
   for(int k=0;k<fNoIntegrationVariables;k++) { y[k] = yFinal[k]; }
 
 #ifdef PARTDEBUG
-  if (partDebug)
+  if (fPartDebug)
   {
     std::cout << "TemplateGUIntDrv: 1--step - Loop done at iter = " << iter << " with htry= " << htry <<std::endl;
     std::cout<< " hdid= "<<hdid<<" and hnext= "<<hnext<<  std::endl;
@@ -2480,7 +2521,7 @@ void
 TemplateGUIntegrationDriver<Backend>
   ::SetPartDebug(bool debugValue)
 {
-  partDebug = debugValue;
+  fPartDebug = debugValue;
 }
 
 template <class Backend>
@@ -2488,7 +2529,18 @@ void
 TemplateGUIntegrationDriver<Backend>
   ::SetSteppingMethod(bool steppingMethod)
 {
-  oneStep = steppingMethod;
+  fOneStep = steppingMethod;
 }
 
+template <class Backend>
+void
+TemplateGUIntegrationDriver<Backend>
+  ::SetVectorScalardydx(bool scalarRHS)
+{
+  // 0 for scalar 
+  // 1 for vector 
+  // only applicable for KeepStepping
+  // default vector 
+  fVecScadydx = scalarRHS; 
+}
 #endif /* TemplateGUIntegrationDriver_Def */

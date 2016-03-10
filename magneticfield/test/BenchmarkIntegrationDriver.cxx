@@ -199,12 +199,8 @@ int main(int argc, char *args[])
 
   //=======================Test part for Integration driver====================
   double hminimum = 0.2;
-  auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
+  // auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
 
-  bool chooseSteppingMethod;
-  cout<<"Give 1 for OneStep and 0 for KeepStepping" << endl;
-  cin >> chooseSteppingMethod;
-  testVectorDriver->SetSteppingMethod(chooseSteppingMethod); 
 
   // Preparing scalar Integration Driver
   using  GvEquationTypeScalar=  TMagFieldEquation<Field_Type_Scalar, Nposmom>;
@@ -226,6 +222,20 @@ int main(int argc, char *args[])
                                                   Nposmom,
                                                   statisticsVerbosity); 
   testScalarDriver->InitializeCharge( particleCharge );
+
+  auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
+  bool chooseSteppingMethod;
+  cout<<"Give 1 for OneStep and 0 for KeepStepping" << endl;
+  cin >> chooseSteppingMethod;
+  testVectorDriver->SetSteppingMethod(chooseSteppingMethod); 
+
+  if (chooseSteppingMethod == false ) // KeepStepping
+  {
+    bool scalarRHS;
+    cout <<"Give 1 for using vector stepper for dydx calculation and 0 for scalar " << endl;
+    cin >> scalarRHS;
+    testVectorDriver-> SetVectorScalardydx(scalarRHS);
+  }
 
 
 
@@ -267,10 +277,10 @@ int main(int argc, char *args[])
   std::vector<double> speedUp, scalarTime, vectorTime;
   // std::vector<GUFieldTrack> vectorGUFieldTrack;
   long double outputVarForScalar = 0, outputVarForVector = 0;
-  int indOutputVar = 2;
+  int indOutputVar = 1;
     
-  srand(time(NULL));
-  // srand(19);
+  // srand(time(NULL));
+  srand(9);
   
   vecgeom::Vector<ThreeVector_d> posVec; 
   // GenVecCart( posVec, noOfVectorCalls * nTracks*no_of_steps);
