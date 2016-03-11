@@ -11,13 +11,12 @@ include_directories(../magneticfield/inc  ../VecMagFieldRoutine/include)
 set(sources
    ${CMAKE_CURRENT_SOURCE_DIR}/src/ExN03Application.cxx
    ${CMAKE_CURRENT_SOURCE_DIR}/src/CMSApplication.cxx
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/CMSdetectorConstruction.cxx
 )     
      
 set(headers
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ExN03Application.h 
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/CMSApplication.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/inc/CMSdetectorConstruction.h 
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/CMSDetectorConstruction.h 
 )   
 
 #file(GLOB sources src/*.cxx)
