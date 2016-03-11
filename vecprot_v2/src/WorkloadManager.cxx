@@ -429,10 +429,51 @@ void *WorkloadManager::TransportTracks() {
     waiting[tid] = 0;
     MaybeCleanupBaskets(td,basket);
     ++counter;
-    ntotransport = basket->GetNinput(); // all tracks to be transported
-                                        //      ninput = ntotransport;
+    // ntotransport = basket->GetNinput(); // all tracks to be transported
+    // ninput = ntotransport;
+    int ninput = basket->GetNinput(); // all tracks to be transported
+    ntotransport= ninput;
+    
     GeantTrack_v &input = basket->GetInputTracks();
+
+#define ENERGY_BALANCE 1
+
+#ifdef ENERGY_BALANCE    
+    double sumEin= 0.0;
+    for (int ix = 0; ix < input.GetNtracks(); ix++) {
+       // TrackStatus_t status= input.fStatusV[ix];
+       // bool       isOutside= input.fPathV[ix]->IsOutside();
+
+       int pdg = input.fPDGV[ix];
+#ifdef USE_VECGEOM_NAVIGATOR
+       const Particle_t *const &partPDG = &Particle_t::GetParticle(pdg);
+#else
+       TParticlePDG *partPDG = TDatabasePDG::Instance()->GetParticle(pdg);
+#endif
+       double     restMass = partPDG->Mass();
+       
+       double   eFullTrack = input.fEV[ix];
+       double       eTrack = eFullTrack ;
+       // double         kinE = eTrack - restMass;     // Only kinetic energy
+       
+       // Quick and dirty rule: produced matter is 'free', antimatter requires 2x rest-mass
+       //  Must exclude antiparticles which were input.
+       if( (pdg ==  11) || (pdg ==  2212) || (pdg ==  2112) ) {  // e-, proton & neutron
+          eTrack -= restMass;                 // Only kinetic energy
+       }
+       if( (pdg == -11) || (pdg == -2212) || (pdg == -2112) ) {  // e-, proton & neutron
+          // 'Anti'-particles generated in the interaction
+          eTrack += restMass;                 // + 'Creation' energy
+       }
+       // eTrack += input.fEdepV[ix];  // Does track enter with Edep > 0 ?
+       sumEin += eTrack;
+    }
+    double sumEkilled= 0.0, sumEexiting= 0.0, sumEphysics= 0.0, sumEdep= 0.0, sumEout= 0.0; // sumEremains= 0.0;
+    double eBalance =  0.0;
+    double eConv = 1.0e+3; // Print in MeV
+#endif
     GeantTrack_v &output = *td->fTransported;
+
     if (!ntotransport)
       goto finish; // input list empty
     //      Geant::Print("","======= BASKET %p with %d tracks counter=%d =======", basket, ntotransport,
@@ -440,6 +481,7 @@ void *WorkloadManager::TransportTracks() {
     //      basket->Print();
     //      Geant::Print("","==========================================");
     //      propagator->fTracksPerBasket[tid] = ntotransport;
+    
     td->fVolume = 0;
     mat = 0;
     if (!basket->IsMixed()) {
@@ -481,8 +523,9 @@ void *WorkloadManager::TransportTracks() {
         }
       }
 
-      //         Geant::Print("","====== WorkloadManager:");
-      //         input.PrintTracks();
+      //  Geant::Print("","====== WorkloadManager: Input tracks - top ");
+      //     input.PrintTracks();
+
       // Propagate all remaining tracks
       if (basket->IsMixed())
         ncross += input.PropagateTracksScalar(td);
@@ -496,6 +539,9 @@ void *WorkloadManager::TransportTracks() {
     //            will happen.
     // kExitingSetup - particles exiting the geometry
     // kKilled - particles that could not advance in geometry after several tries
+
+    // Geant::Print("","====== WorkloadManager: tracks - type of step selected ");
+    // output.PrintTracks();
 
     // Update track time for all output tracks (this should vectorize)
     nout = output.GetNtracks();
@@ -565,7 +611,77 @@ void *WorkloadManager::TransportTracks() {
         //  Geant::Print("","============= Basket: %s\n", basket->GetName());
         //  output.PrintTracks();        
       }
+      Geant::Print("","============= WrkMgr After UsePhysics - Basket: %s\n", basket->GetName());
+      output.PrintTracks();       
     }
+    
+#ifdef ENERGY_BALANCE
+    sumEkilled= 0.0, sumEexiting= 0.0, sumEphysics= 0.0, sumEdep= 0.0, sumEout= 0.0; // sumEremains= 0.0;
+
+    for (int ix = 0; ix < output.GetNtracks(); ix++) {
+         TrackStatus_t status= output.fStatusV[ix];
+         bool       isOutside= output.fPathV[ix]->IsOutside();
+
+         int pdg = output.fPDGV[ix];
+#ifdef USE_VECGEOM_NAVIGATOR
+         const Particle_t *const &partPDG = &Particle_t::GetParticle(pdg);
+#else
+         TParticlePDG *partPDG = TDatabasePDG::Instance()->GetParticle(pdg);
+#endif
+         double     restMass = partPDG->Mass();
+
+         double   eFullTrack = output.fEV[ix];
+         double       eTrack = eFullTrack ;     // Default: total energy
+
+         // Quick and dirty rule: produced matter is 'free', antimatter requires 2x rest-mass
+         //  Must exclude antiparticles which were input.
+         if( (pdg ==  11) || (pdg ==  2212) || (pdg ==  2112) ) {
+            eTrack -= restMass;                 // Only kinetic energy
+         }
+         if( (pdg == -11) || (pdg == -2212) || (pdg == -2112) ) {
+            // 'Anti'-particles generated in the interaction
+            eTrack += restMass;                 // + 'Creation' energy
+         }
+         // tracks.fStatusV[itr] == kKilled ||
+         // tracks.fStatusV[itr] == kExitingSetup ||
+         if( status == kKilled ) {
+            sumEkilled += eTrack;
+            // nKilled ++;
+         } else if( status == kExitingSetup || isOutside ) {
+            sumEexiting += eTrack;
+            // nExiting ++;
+         } else if( status == kPhysics ) {
+            sumEphysics += eFullTrack;  // Un-adjusted - surviving particle!
+            // nInteracting ++;
+         } else {
+            sumEout    += eTrack;
+         }
+
+         sumEdep += output.fEdepV[ix];
+      }
+
+      // for (int ix = 0; ix < input.GetNtracks(); ix++) {
+      //  if( input.fStatusV[ix] != kKilled ) { sumEremains += input.fEV[ix]; }
+      // }
+
+      eConv = 1.0e+3; // Print in MeV
+      eBalance=  sumEin - sumEdep - sumEphysics - sumEout - sumEexiting;
+
+      // Geant::Print("WrkMgr",": ...
+
+      // if( std::fabs(eBalance) > 0.03 * sumEin ) {
+        Printf("WrkMgr: #tracks: in=%4d out= %4d Ein= %13.4f  Edep = %10.4f   Eout= %13.4f  Ekilled = %9.4f  Exiting = %6.3g Physics= %14.6f - Balance= %12.6g",  // Remains= %8.6f 
+             // numTracksIn,
+             ninput, output.GetNtracks(),
+             sumEin*eConv, sumEdep*eConv, sumEout*eConv, sumEkilled*eConv,
+             sumEexiting*eConv, sumEphysics*eConv, // sumEremains*eConv,
+             eBalance*eConv);
+       // }
+
+#endif
+      Geant::Print("","====== WorkloadManager: Output tracks - after physics");
+      output.PrintTracks("Output Tracks: ");
+
 
     // Report problem tracks (option in comments) -- and correct them!
     if (ntotnext) {
