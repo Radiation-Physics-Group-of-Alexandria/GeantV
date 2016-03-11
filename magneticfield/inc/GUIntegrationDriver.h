@@ -228,7 +228,7 @@ class GUIntegrationDriver
 
      // ---------------------------------------------------------------
      //  STATE
-
+    public:
      int  fNoTotalSteps, fNoBadSteps, fNoSmallSteps, fNoInitialSmallSteps;
      double fDyerrPosMaxSq, fDyerrDirMaxSq;
      double fDyerrPos_smTot, fDyerrPos_lgTot, fDyerrVel_lgTot;
