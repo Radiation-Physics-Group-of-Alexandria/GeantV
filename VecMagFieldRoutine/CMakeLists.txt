@@ -34,8 +34,8 @@ set( ALL_LIBRARIES Vmagfield ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} 
 #add_executable(Vecmagfieldtest ${CMAKE_CURRENT_SOURCE_DIR}/test/magfieldtest.cpp ${sources})
 #target_link_libraries(Vecmagfieldtest ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB})
 
-add_executable(smallTest ${CMAKE_CURRENT_SOURCE_DIR}/test/smallTest.cpp ${sources})
-target_link_libraries(smallTest ${ALL_LIBRARIES}) # ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB})
+#add_executable(smallTest ${CMAKE_CURRENT_SOURCE_DIR}/test/smallTest.cpp ${sources})
+#target_link_libraries(smallTest ${ALL_LIBRARIES}) # ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB})
 
 add_executable(VecTimingTest ${CMAKE_CURRENT_SOURCE_DIR}/test/BenchmarkTiming.cpp ${sources})
 target_link_libraries(VecTimingTest ${ALL_LIBRARIES}) # ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB})
