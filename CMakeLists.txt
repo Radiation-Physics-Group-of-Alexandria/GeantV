@@ -441,7 +441,7 @@ add_subdirectory (magneticfield)
 
 if (WITH_GEANT4)
 add_subdirectory (test-small)
-#add_subdirectory (test-complex)
+add_subdirectory (test-complex)
 
 add_subdirectory (cmstrack)
 endif()
