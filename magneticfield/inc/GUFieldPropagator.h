@@ -9,6 +9,10 @@
 // #include "ThreeVector.h"
 #include "base/Vector3D.h"
 // typedef vecgeom::Vector3D<double>  ThreeVector; 
+// #include "TemplateGUIntegrationDriver.h"
+
+template <class Backend>
+class TemplateGUIntegrationDriver;
 
 class GUIntegrationDriver;
 class GUVField;
@@ -18,6 +22,9 @@ class GUFieldPropagator
   public:
     // GUFieldPropagator(GUVField *); // First idea -- sidelined, at least for now
     GUFieldPropagator(GUIntegrationDriver* driver, double epsilon); // (GUVField* field)
+
+    template <typename Backend>
+    GUFieldPropagator(TemplateGUIntegrationDriver<Backend>* driver, double epsilon);
 
     template<typename FieldType>  // , typename StepperType>
        GUFieldPropagator(FieldType* magField, double epsilon, double hminimum= 1.0e-4);
