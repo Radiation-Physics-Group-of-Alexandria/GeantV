@@ -658,6 +658,7 @@ GUIntegrationDriver::OneGoodStep(  double y[],        // InOut
   {
     tot_no_trials++;
     fpStepper-> StepWithErrorEstimate(y,dydx,h,ytemp,yerr);
+    fStepperCalls++;
     //          *********************
     double eps_pos = eps_rel_max * std::max(h, fMinimumStep);  // Uses remaining step 'h'
     double inv_eps_pos_sq = 1.0 / (eps_pos*eps_pos);
