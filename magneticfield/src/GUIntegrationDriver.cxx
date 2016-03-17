@@ -176,6 +176,8 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
   //  - 'yOutput' provides the values at the end of the integration interval;
   //  - the return value is 'true' if integration succeeded to the end of the interval,
   //    and 'false' otherwise.
+  
+  std::cout << "AccurateAdvance of GUIntegrationDriver" << std::endl;
 
   constexpr double perMillion  = 1.0e-6;
   constexpr double perThousand = 1.0e-3;
@@ -284,7 +286,10 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
     //      
     if( h > fMinimumStep )
     { 
+      std::cout << "here1" << std::endl;
       OneGoodStep(y,dydx,x,h,epsilon,hdid,hnext) ;
+      std::cout << "here2" << std::endl;
+
       //--------------------------------------
       lastStepSucceeded= (hdid == h);   
 #ifdef GUDEBUG_FIELD
@@ -633,7 +638,7 @@ GUIntegrationDriver::OneGoodStep(  double y[],        // InOut
 
   double yerr[GUFieldTrack::ncompSVEC], ytemp[GUFieldTrack::ncompSVEC];
 
-  bool verbose= false;
+  bool verbose= true;
   if( verbose ) 
      std::cout << "OneGoodStep called with htry= " << htry << std::endl;
   
@@ -658,7 +663,7 @@ GUIntegrationDriver::OneGoodStep(  double y[],        // InOut
   {
     tot_no_trials++;
     fpStepper-> StepWithErrorEstimate(y,dydx,h,ytemp,yerr);
-    fStepperCalls++;
+    // fStepperCalls++;
     //          *********************
     double eps_pos = eps_rel_max * std::max(h, fMinimumStep);  // Uses remaining step 'h'
     double inv_eps_pos_sq = 1.0 / (eps_pos*eps_pos);
