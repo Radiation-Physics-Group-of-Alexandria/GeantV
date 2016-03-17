@@ -119,7 +119,7 @@ int main(/*int argc, char *args[]*/)
 
     // Field
   #ifdef USECMSFIELD
-    auto gvField = new Field_Type ("../VecMagFieldRoutine/cms2015.txt");
+    auto gvField = new Field_Type ("../VecMagFieldRoutine/cmsmagfield2015.txt");
   #else 
     auto gvField = new Field_Type( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
   #endif
@@ -158,7 +158,7 @@ int main(/*int argc, char *args[]*/)
     using  GvEquationTypeScalar=  TMagFieldEquation<Field_Type_Scalar, Nposmom>;
     
   #ifdef USECMSFIELD
-    auto gvFieldScalar    = new Field_Type_Scalar("../VecMagFieldRoutine/cms2015.txt");
+    auto gvFieldScalar    = new Field_Type_Scalar("../VecMagFieldRoutine/cmsmagfield2015.txt");
   #else
     auto gvFieldScalar    = new Field_Type_Scalar( fieldUnits::tesla * ThreeVector_d(x_field, y_field, z_field) );
   #endif
