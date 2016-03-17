@@ -241,6 +241,8 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
 {
     // const int nvar = 6 ;
     // const double a2 = 0.2 , a3 = 0.3 , a4 = 0.6 , a5 = 1.0 , a6 = 0.875;
+    std::cout << " Entered StepWithErrorEstimate of scalar " << std::endl;
+
     unsigned int i;
 
     const double  b21 = 0.2 ,
@@ -263,6 +265,8 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
           dc4 = c4 - 13525.0/55296.0 , 
           dc6 = c6 - 0.25 ;
 
+    std::cout<< " constants declared " <<std::endl;
+
     // Initialise time to t0, needed when it is not updated by the integration.
     //       [ Note: Only for time dependent fields (usually electric) 
     //                 is it neccessary to integrate the time.] 
@@ -275,7 +279,7 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
     }
     // RightHandSideInl(yIn, dydx) ;              // 1st Step
     // PrintDyDx("dydx", dydx, yIn);
-
+    std::cout<< " yin made " << std::endl;
 #if 0
     double ak1[sNstore];
     vecgeom::Vector3D<float>  Bfield1;
@@ -284,14 +288,16 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
     // PrintDyDx("ak1-", ak1, yIn);
 #endif
     
+    std::cout<<" empty if else " << std::endl;
     for(i=0;i<Nvar;i++) 
     {
         yTemp2[i] = yIn[i] + b21*Step*dydx[i] ;
     }
+    std::cout<<" just before rhs calculation " << std::endl;
     this->RightHandSideInl(yTemp2, ak2, Bfield2 ); // 2nd Step
     // PrintField("yTemp2", yTemp2, Bfield2);
     // PrintDyDx("ak2", ak2, yTemp2); 
-    
+    std::cout<<" 1 RHS calculating " << std::endl;
     for(i=0;i<Nvar;i++)
     {
         yTemp3[i] = yIn[i] + Step*(b31*dydx[i] + b32*ak2[i]) ;
@@ -348,6 +354,7 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
         fLastDyDx[i]          = dydx[i];
     }
     fLastStepLength =Step;
+    std::cout << " Exiting StepWithErrorEstimate of scalar " << std::endl;
 
     return ;
 }
@@ -391,6 +398,8 @@ GUTCashKarpRKF45<T_Equation,Nvar>::
         distChord = (midPoint-initialPoint).Mag2();
     }
     return distChord;
+
+
 }
 
 
