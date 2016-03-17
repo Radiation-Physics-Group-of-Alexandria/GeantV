@@ -4,7 +4,7 @@
 //
 // Class description:
 //
-// Provides a driver that talks to the Integrator Stepper, and insures that 
+// Provides a driver that talks to the Integrator Stepper, and ensures that 
 // the error is within acceptable bounds.
 //
 // History:
@@ -22,8 +22,11 @@
 
 #include "base/Vector.h"
 
-// Adding because addign scalar stepper for new constructor (KeepStepping)
+// Adding because adding scalar stepper for new constructor (KeepStepping)
 #include "GUVIntegrationStepper.h"
+
+// Adding to send in scalar driver to deal with 1/2 remaining lanes
+#include "GUIntegrationDriver.h"
 
 #define NEWACCURATEADVANCE
 
@@ -113,6 +116,13 @@ class TemplateGUIntegrationDriver : public AlignedBase
      TemplateGUIntegrationDriver( double hminimum,  //same 
                                   TemplateGUVIntegrationStepper<Backend> *pStepper,
                                   GUVIntegrationStepper                  *pScalarStepper,
+                                  int    numberOfComponents  = 6,
+                                  int    statisticsVerbosity = 1                        );
+
+     TemplateGUIntegrationDriver( double hminimum,  //same 
+                                  TemplateGUVIntegrationStepper<Backend> *pStepper,
+                                  GUVIntegrationStepper                  *pScalarStepper,
+                                  GUIntegrationDriver                    *pScalarDriver,
                                   int    numberOfComponents  = 6,
                                   int    statisticsVerbosity = 1                        );
 
@@ -328,6 +338,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
      int fNTracks;
      int fStepperCalls = 0;
      GUVIntegrationStepper *fpScalarStepper;
+     GUIntegrationDriver *fpScalarDriver;
      bool partDebug = false ; 
      bool oneStep = true; // false for KeepStepping
 #endif 
@@ -2469,6 +2480,24 @@ TemplateGUIntegrationDriver<Backend>
                                  statisticsVerbose)
 {
   fpScalarStepper = pScalarStepper; 
+}
+
+// New constructor. Takes in a scalar driver as well
+template <class Backend>
+TemplateGUIntegrationDriver<Backend>
+  ::TemplateGUIntegrationDriver( double  hminimum, 
+                                 TemplateGUVIntegrationStepper<Backend> *pStepper,
+                                 GUVIntegrationStepper                  *pScalarStepper,
+                                 GUIntegrationDriver                     *pScalarDriver,
+                                 int     numComponents,
+                                 int     statisticsVerbose                             )
+  : TemplateGUIntegrationDriver( hminimum, 
+                                 pStepper,
+                                 numComponents,
+                                 statisticsVerbose)
+{
+  fpScalarStepper = pScalarStepper; 
+  fpScalarDriver  = pScalarDriver;
 }
 
 

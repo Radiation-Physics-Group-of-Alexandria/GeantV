@@ -49,7 +49,7 @@ int main(/*int argc, char *args[]*/)
     // typedef typename Backend::precision_v Double;
     // typedef vecgeom::Vector3D<Double> ThreeVectorSimd;
     typedef vecgeom::Vector3D<double> ThreeVector_d;
-  #define USECMSFIELD
+  // #define USECMSFIELD
   #ifdef USECMSFIELD
     using Field_Type        = TemplateCMSmagField<Backend>;
     using Field_Type_Scalar = ScalarCMSmagField;
@@ -179,7 +179,8 @@ int main(/*int argc, char *args[]*/)
 
     myStepper->InitializeCharge( particleCharge );
 
-    auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
+    // auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
+    auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar, testScalarDriver);
 
     bool debugValue ; 
     cout<< "Debug? " << endl;
