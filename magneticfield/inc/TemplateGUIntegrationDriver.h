@@ -27,6 +27,7 @@
 
 // Adding to send in scalar driver to deal with 1/2 remaining lanes
 #include "GUIntegrationDriver.h"
+#include "GUFieldTrack.h"
 
 #define NEWACCURATEADVANCE
 
@@ -595,6 +596,9 @@ TemplateGUIntegrationDriver<Backend>
 
   // delete[] fIndex;
   delete fIndex;
+  // delete fpScalarDriver;
+  // delete fpScalarStepper;
+  // delete fpStepper;
 }
 
 
@@ -1946,8 +1950,61 @@ TemplateGUIntegrationDriver<Backend>
       std::cout<<"Value of lastStep is: "<< lastStep <<std::endl;
       std::cout<<"isDoneLane is:        "<< isDoneLane <<std::endl;
     }
-
 #endif 
+       
+    Bool_v leftLanes = (nstp<=fMaxNoSteps) && (x < x2) && (!lastStep) ;
+    int countLeftLanes=0;
+    int indLastLane;
+    if( !vecgeom::IsEmpty(leftLanes) )
+    {
+      for (int i = 0; i < kVectorSize; ++i)
+      {
+        if (leftLanes[i] == 1)
+        {
+          countLeftLanes++;
+          indLastLane = i;
+        }
+      }
+    }
+
+    std::cout<< "countLeftLanes is: "<<countLeftLanes << std::endl;
+
+    if (countLeftLanes == 1)
+    {
+      // double hstepOneLane = hStepLane[indLastLane] - hTotalDoneSoFar[indLastLane];
+      vecgeom::Vector3D<double> Pos, Mom;
+      std::cout << "here1" << std::endl;
+      for (int i = 0; i < 3; ++i)
+       {
+         Pos[i] = y[i][indLastLane];
+         Mom[i] = y[i+3][indLastLane];
+       } 
+      std::cout << "here2" << std::endl;
+      GUFieldTrack y_input(Pos, Mom); 
+      GUFieldTrack y_output(Pos, Mom);
+      std::cout << "here3" << std::endl;
+      y_input.SetCurveLength( hTotalDoneSoFar[indLastLane] ) ;
+      std::cout << "here4" << std::endl;
+      fpScalarDriver->AccurateAdvance(y_input, hstep[ fIndex[indLastLane] ], epsilon, y_output );
+      std::cout << "here5" << std::endl;
+      std::cout<<"CAlled Scalar driver " << std::endl;
+      std::cout << "here6" << std::endl;
+      isDoneLane[indLastLane] == true;
+      std::cout << "here7" << std::endl;
+      // Store Output
+      double y_output_arr[6];
+      std::cout << "here8" << std::endl;
+      y_output.DumpToArray(y_output_arr);
+      yOutput[fIndex[indLastLane]].LoadFromArray(y_output_arr);
+      std::cout << "here9" << std::endl;
+      // for (int i = 0; i < 6; ++i)
+      // {
+      //   yOutput[ fIndex[indLastLane] ] [i] = y_output_arr[i]; 
+      //   // yOutput[ fIndex[indLastLane] ] [i+3] = y_output[i+3]; 
+      // }
+    }
+
+
 #ifdef PARTDEBUG
     // std::cout<<"nstp is : "<<nstp<<" against max. : "<<fMaxNoSteps<<std::endl;
 #endif
