@@ -367,12 +367,12 @@ void TemplateCMSmagField<vecgeom::kScalar>
 }
 
 // VcFloat Backend method 
-template<class Backend>
+template</*class Backend*/>
 INLINE_CHOICE
-void TemplateCMSmagField<Backend>
-  ::Gather2(const typename Backend::precision_v index,
-                  typename Backend::precision_v B1[3],
-                  typename Backend::precision_v B2[3])
+void TemplateCMSmagField<vecgeom::kVc>
+  ::Gather2(const typename vecgeom::kVc::precision_v index,
+                  typename vecgeom::kVc::precision_v B1[3],
+                  typename vecgeom::kVc::precision_v B2[3])
 {
 #ifdef VC_NO_MEMBER_GATHER
     typedef Vc::Vector<double> float_v;
@@ -387,7 +387,7 @@ void TemplateCMSmagField<Backend>
     B2[2] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Bz];
 #else 
     // typedef typename vecgeom::kVcFloat::Int_t  Int_v;
-    using Int_v = vecgeom::kVcFloat::Int_t;
+    using Int_v = vecgeom::kVc::Int_t;
 
     Int_v ind = (Int_v) index;
     // Int_v ind2 = ind + 1;  // Get the next value in Z
