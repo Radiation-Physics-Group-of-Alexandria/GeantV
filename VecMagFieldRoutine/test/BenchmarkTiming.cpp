@@ -212,7 +212,7 @@ float TimeVector(MagField &m1, const vecgeom::Vector<ThreeVector> &posVec, const
 
 int main() // int argc, char**argv)
 {
-    CMSmagField m1("../VecMagFieldRoutine/cms2015.txt");
+    CMSmagField m1("../VecMagFieldRoutine/cmsmagfield2015.txt");
     //m1.ReadVectorData("/home/ananya/Work/MagFieldRoutine/cms2015.txt");
     //No absolute path required now. 
     //input file copied to build/VecMagFieldRoutine

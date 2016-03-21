@@ -35,31 +35,60 @@
 
 // #include "MagField.h"
 
-#include "CMSmagField.h"
+#include "TemplateCMSmagField.h"
 
 using namespace std;
 
-typedef vecgeom::Vector3D<float> ThreeVector; //normal Vector3D
-typedef vecgeom::Vector3D<vecgeom::kVcFloat::precision_v> ThreeVecSimd_t;
-typedef vecgeom::Vector<float> VcVectorFloat;
+typedef vecgeom::Vector3D<double> ThreeVector; //normal Vector3D
+typedef vecgeom::Vector3D<vecgeom::kVc::precision_v> ThreeVecSimd_t;
+typedef vecgeom::Vector<double> VcVectorFloat;
 
 
 
 
 int main(){
 
-    CMSmagField m1;
+  TemplateCMSmagField<vecgeom::kVc> m1;
+  TemplateCMSmagField<vecgeom::kScalar> m2;
 
-    m1.ReadVectorData("../VecMagFieldRoutine/cms2015.txt");
-    vecgeom::Vector3D<float> position, xyzField;
+  m1.ReadVectorData("../VecMagFieldRoutine/cmsmagfield2015.txt");
+  m2.ReadVectorData("../VecMagFieldRoutine/cmsmagfield2015.txt");
+  ThreeVector position, xyzField;
+  ThreeVecSimd_t position_v, xyzField_v;
 
-    std::cout<<"Give x,y and z"<<std::endl;
-    std::cin>>position.x()>>position.y()>>position.z();
+  std::cout<<"Give x,y and z"<<std::endl;
+  std::cin>>position.x()>>position.y()>>position.z();
 
-    m1.GetFieldValue<vecgeom::kScalarFloat>(position, xyzField);
+  for (int i = 0; i < 3; ++i)
+  {
+  	position_v[i] = position[i];
+  	xyzField_v[i] = xyzField[i];
+  }
 
-    std::cout<<"Magnetic Field at "<<position<<" is: "<<xyzField<<" tesla."<<std::endl;
+  m2.GetFieldValue(position, xyzField);
+  m1.GetFieldValue(position_v, xyzField_v);
 
+
+  std::cout<<"Magnetic Field at "<<position<<" is: "<<xyzField<<" tesla."<<std::endl;
+  cout<<"Vector mag field is: " << xyzField_v << endl;
+
+  for (int i = 0; i < 4; ++i)
+  {
+  	position[0] = i;
+  	position[1] = i*10;
+  	position[2] = i*100;
+  	position_v[0][i] = i;
+  	position_v[1][i] = i*10;
+  	position_v[2][i] = i*100;
+
+  	m2.GetFieldValue(position, xyzField);
+	  cout << "Magnetic Field at " << position <<" is: "<< xyzField <<" tesla."<< endl;
+  }
+  m1.GetFieldValue(position_v, xyzField_v);
+  cout<<"Vector mag field at position: "<< position_v  << " is: " << xyzField_v << endl;
+
+
+  return 0;
 }
 
 
