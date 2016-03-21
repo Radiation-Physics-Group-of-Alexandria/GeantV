@@ -257,16 +257,16 @@ int main(int argc, char *args[])
   int noOfVectorCalls = 1; // scalarcalls = nTracks*noOfVectorCalls
   no_of_steps = 1;
 
-  bool debugValue ; 
-  cout<< "Debug? " << endl;
-  cin >> debugValue;
-  testVectorDriver->SetPartDebug(debugValue);
-  // cout << "Give no_of_steps: "     << endl;
-  // cin >> no_of_steps;
-  // cout << "Give nRepititions: "    << endl;
-  // cin >> nRepititions;
-  // cout << "Give noOfVectorCalls: " << endl;
-  // cin >> noOfVectorCalls;
+  // bool debugValue ; 
+  // cout<< "Debug? " << endl;
+  // cin >> debugValue;
+  // testVectorDriver->SetPartDebug(debugValue);
+  cout << "Give no_of_steps: "     << endl;
+  cin >> no_of_steps;
+  cout << "Give nRepititions: "    << endl;
+  cin >> nRepititions;
+  cout << "Give noOfVectorCalls: " << endl;
+  cin >> noOfVectorCalls;
 
   std::vector<double> speedUp, scalarTime, vectorTime;
   // std::vector<GUFieldTrack> vectorGUFieldTrack;
@@ -275,8 +275,10 @@ int main(int argc, char *args[])
   
   int randVal = time(NULL);
   // srand(time(NULL));
-  // srand(randVal);
-  srand(1458229725);
+  cout<<"Give seed for rng" << endl;
+  cin >> randVal;
+  srand(randVal);
+  // srand(1458229725);
   cout<< "Random value initializer is : "<< randVal << endl;
   // srand(19);
   
@@ -367,7 +369,7 @@ int main(int argc, char *args[])
     clock1 = clock() - clock1 ;
     float clock1InFloat = ((float)clock1)/CLOCKS_PER_SEC;
     vectorTime.push_back(clock1InFloat);
-    cout<<"Vector time is: "<<clock1InFloat<<" s"<<endl;
+    cout<<"Vector time is: "<<clock1InFloat/(nRepititions*noOfVectorCalls*nTracks)*1e+6<<" ms"<<endl;
 
 
     const ThreeVector_d  startPos( x_pos, y_pos, z_pos);
@@ -395,7 +397,7 @@ int main(int argc, char *args[])
     clock2 = clock() - clock2 ;
     float clock2InFloat = ((float)clock2)/CLOCKS_PER_SEC;
     scalarTime.push_back(clock2InFloat);
-    cout<<"scalar time is: "<<clock2InFloat<<" s"<< endl;
+    cout<<"scalar time is: "<<clock2InFloat/(nRepititions*noOfVectorCalls*nTracks)*1e+6<<" ms"<< endl;
     speedUp.push_back(clock2InFloat/clock1InFloat);
 
   }
