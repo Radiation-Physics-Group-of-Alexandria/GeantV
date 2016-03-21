@@ -105,7 +105,7 @@ int main(int argc, char *args[])
   using Backend = vecgeom::kVc ;
   typedef vecgeom::Vector3D<double> ThreeVector_d;
   
-#define USECMSFIELD
+// #define USECMSFIELD
 #ifdef USECMSFIELD
   using Field_Type        = TemplateCMSmagField<Backend>;
   using Field_Type_Scalar = ScalarCMSmagField;
@@ -199,12 +199,7 @@ int main(int argc, char *args[])
 
   //=======================Test part for Integration driver====================
   double hminimum = 0.2;
-  auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper);
 
-  bool chooseSteppingMethod;
-  cout<<"Give 1 for OneStep and 0 for KeepStepping" << endl;
-  cin >> chooseSteppingMethod;
-  testVectorDriver->SetSteppingMethod(chooseSteppingMethod); 
 
   // Preparing scalar Integration Driver
   using  GvEquationTypeScalar=  TMagFieldEquation<Field_Type_Scalar, Nposmom>;
@@ -226,7 +221,12 @@ int main(int argc, char *args[])
                                                   Nposmom,
                                                   statisticsVerbosity); 
   testScalarDriver->InitializeCharge( particleCharge );
+  auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar, testScalarDriver);
 
+  bool chooseSteppingMethod;
+  cout<<"Give 1 for OneStep and 0 for KeepStepping" << endl;
+  cin >> chooseSteppingMethod;
+  testVectorDriver->SetSteppingMethod(chooseSteppingMethod); 
 
 
   double total_step = 0.;
@@ -257,19 +257,27 @@ int main(int argc, char *args[])
   int noOfVectorCalls = 1; // scalarcalls = nTracks*noOfVectorCalls
   no_of_steps = 1;
 
-  cout << "Give no_of_steps: "     << endl;
-  cin >> no_of_steps;
-  cout << "Give nRepititions: "    << endl;
-  cin >> nRepititions;
-  cout << "Give noOfVectorCalls: " << endl;
-  cin >> noOfVectorCalls;
+  bool debugValue ; 
+  cout<< "Debug? " << endl;
+  cin >> debugValue;
+  testVectorDriver->SetPartDebug(debugValue);
+  // cout << "Give no_of_steps: "     << endl;
+  // cin >> no_of_steps;
+  // cout << "Give nRepititions: "    << endl;
+  // cin >> nRepititions;
+  // cout << "Give noOfVectorCalls: " << endl;
+  // cin >> noOfVectorCalls;
 
   std::vector<double> speedUp, scalarTime, vectorTime;
   // std::vector<GUFieldTrack> vectorGUFieldTrack;
   long double outputVarForScalar = 0, outputVarForVector = 0;
   int indOutputVar = 2;
-    
-  srand(time(NULL));
+  
+  int randVal = time(NULL);
+  // srand(time(NULL));
+  // srand(randVal);
+  srand(1458229725);
+  cout<< "Random value initializer is : "<< randVal << endl;
   // srand(19);
   
   vecgeom::Vector<ThreeVector_d> posVec; 
