@@ -108,9 +108,10 @@ class  TemplateGUFieldTrack
      friend  std::ostream&
              operator<<( std::ostream& os, const TemplateGUFieldTrack<Backend_>& SixVec);
 
+     Double_v  fPositionMomentum[6]; //initially SixVector[6]
+
    private:
 
-     Double_v  fPositionMomentum[6]; //initially SixVector[6]
      Double_v  fDistanceAlongCurve;  // distance along curve of point
      Double_v  fMomentumMag;
      // double  fKineticEnergy;
@@ -445,7 +446,8 @@ void TemplateGUFieldTrack<Backend>
 
   typedef vecgeom::Vector3D<typename Backend::precision_v> ThreeVector;
   // Fill the variables not integrated with zero -- so it's clear !!
-  vecgeom::Vector3D<typename Backend::precision_v> valArr[ncompSVEC];
+  // vecgeom::Vector3D<typename Backend::precision_v> valArr[ncompSVEC];
+  typename Backend::precision_v valArr[ncompSVEC];
   for( i=0; i<noVarsIntegrated; i++){
      valArr[i]= valArrIn[i];
   }
