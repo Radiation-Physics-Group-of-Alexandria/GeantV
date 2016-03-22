@@ -40,6 +40,8 @@ using fieldUnits::degree;
 #include "ScalarCMSmagField.h"
 #include "TemplateCMSmagField.h"
 
+#include "VecGUVMagneticField.h"
+
 using namespace std;
 
 typedef vecgeom::Vector3D<double> ThreeVector_d;
