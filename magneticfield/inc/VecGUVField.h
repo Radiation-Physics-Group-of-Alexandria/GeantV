@@ -53,8 +53,8 @@ class VecGUVField : public AlignedBase
 
       //Vector interface with specialization
       template <class Backend>
-      virtual void GetFieldValue( const vecgeom::Vector3D<typename Backend::precision_v> &Position,
-                                        vecgeom::Vector3D<typename Backend::precision_v> &FieldValue ) = 0;
+      void GetFieldValue( const vecgeom::Vector3D<typename Backend::precision_v> &Position,
+                                vecgeom::Vector3D<typename Backend::precision_v> &FieldValue );
 
       bool DoesFieldChangeEnergy() const { return fChangesEnergy; } 
       int  GetNumberOfComponents() const { return fNumberOfComponents; } 

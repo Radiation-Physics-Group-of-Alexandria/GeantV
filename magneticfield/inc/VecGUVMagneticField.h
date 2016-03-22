@@ -25,8 +25,8 @@ class VecGUVMagneticField :  public VecGUVField
                                typename Backend::precision_v* Field );
 
     template <class Backend>
-    virtual void GetFieldValue( const vecgeom::Vector3D<typename Backend::precision_v> &Position, 
-                                      vecgeom::Vector3D<typename Backend::precision_v> &FieldValue ) = 0;
+    void GetFieldValue( const vecgeom::Vector3D<typename Backend::precision_v> &Position, 
+                              vecgeom::Vector3D<typename Backend::precision_v> &FieldValue );
 
     VecGUVMagneticField& operator = (const VecGUVMagneticField &p);
     //  Copy 'standard' components ...

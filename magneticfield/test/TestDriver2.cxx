@@ -41,6 +41,7 @@ using fieldUnits::degree;
 #include "TemplateCMSmagField.h"
 
 #include "VecGUVMagneticField.h"
+#include "VecTUniformMagField.h"
 
 using namespace std;
 
