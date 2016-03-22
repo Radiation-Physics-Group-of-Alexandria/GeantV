@@ -177,7 +177,7 @@ int main(/*int argc, char *args[]*/)
 
     auto myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-    myStepper->InitializeCharge( particleCharge );
+    // myStepper->InitializeCharge( particleCharge );
 
     // auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
     auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar, testScalarDriver);

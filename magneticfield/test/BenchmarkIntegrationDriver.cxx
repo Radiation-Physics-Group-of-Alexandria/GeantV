@@ -185,7 +185,7 @@ int main(int argc, char *args[])
 
   TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-  myStepper->InitializeCharge( particleCharge );
+  // myStepper->InitializeCharge( particleCharge );
 
   const double mmGVf = fieldUnits::millimeter;
   const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light

@@ -48,7 +48,7 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
        // The other two functions use Rhs_givenB.
 
       
-      virtual void InitializeCharge(double particleCharge)=0;
+      // virtual void InitializeCharge(double particleCharge)=0;
        // Must be called to correctly initialise and provide charge
       virtual void InvalidateParameters()=0;
       

@@ -174,7 +174,7 @@ int main(int argc, char *args[])
        myStepper = cloneStepper;
     }
 
-    myStepper->InitializeCharge( particleCharge );
+    // myStepper->InitializeCharge( particleCharge );
     
     //Initialising coordinates
     const double mmGVf = fieldUnits::millimeter;

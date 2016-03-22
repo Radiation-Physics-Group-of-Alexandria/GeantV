@@ -146,7 +146,7 @@ int main(/*int argc, char *args[]*/)
 
     TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-    myStepper->InitializeCharge( particleCharge );
+    // myStepper->InitializeCharge( particleCharge );
 
     //Initialising coordinates
     const double mmGVf = fieldUnits::millimeter;

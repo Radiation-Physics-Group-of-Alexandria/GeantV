@@ -83,12 +83,12 @@ bool TestEquation(TemplateGUVEquationOfMotion<Backend>* equation)
   typedef typename Backend::bool_v Bool_v;
 
 
-  Double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
+  // Double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
 
   Double dydx[gNposmom];
   Double PositionMomentum[gNposmom];
 
-  double charge= -1;  
+  // double charge= -1;  
   Double Charge(-1);
 
   PositionMomentum[0] = PositionVec[0];
@@ -99,7 +99,7 @@ bool TestEquation(TemplateGUVEquationOfMotion<Backend>* equation)
   PositionMomentum[5] = MomentumVec[2];
 
   
-  equation->InitializeCharge( charge );
+  // equation->InitializeCharge( charge );
 
   equation->EvaluateRhsGivenB( PositionMomentum, FieldVec, Charge, dydx );
 

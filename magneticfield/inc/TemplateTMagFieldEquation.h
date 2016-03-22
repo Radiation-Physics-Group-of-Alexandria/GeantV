@@ -99,9 +99,9 @@ class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
      //Discuss
      //Function needed? probably not if we don't care about particleCharge
      //or not take any input but just do InformReady?
-     REALLY_INLINE
-     void InitializeCharge(double particleCharge) final 
-      {  fParticleCharge= particleCharge; TemplateGUVEquationOfMotion<Backend>::InformReady();  }
+     // REALLY_INLINE
+     // void InitializeCharge(double particleCharge) final 
+     //  {  fParticleCharge= particleCharge; TemplateGUVEquationOfMotion<Backend>::InformReady();  }
 
       //should get this func. from inheritance
       void InvalidateParameters() final { TemplateGUVEquationOfMotion<Backend>::InformDone();}
@@ -109,7 +109,7 @@ class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
    private:
      enum { G4maximum_number_of_field_components = 24 };
      T_Field *fPtrField;
-     double   fParticleCharge;
+     // double   fParticleCharge;
 };
 
 template
@@ -171,7 +171,7 @@ REALLY_INLINE
     // std::cout<<"\n\n\n AM I BEING CALLED SOMEHOW?"<<std::endl;
     // vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
 
-    Double_v cof = fParticleCharge*fCof*inv_momentum_magnitude;
+    Double_v cof = charge*fCof*inv_momentum_magnitude;
 
     dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
     dydx[1] = y[4]*inv_momentum_magnitude;       //  (d/ds)y = Vy/V
