@@ -271,7 +271,7 @@ void VecTMagFieldEquation<T_Field,Size>
 {
    vecgeom::Vector3D<typename Backend::precision_v> Position( Point[0], Point[1], Point[2] );
    vecgeom::Vector3D<typename Backend::precision_v> FieldVec;
-   fPtrField-> T_Field::GetFieldValue( Position, FieldVec );
+   fPtrField-> T_Field::template GetFieldValue<Backend>( Position, FieldVec );
    Field[0] = FieldVec[0];
    Field[1] = FieldVec[1];
    Field[2] = FieldVec[2];
@@ -366,8 +366,8 @@ VecTMagFieldEquation<T_Field,Size>
 {
   vecgeom::Vector3D<typename Backend::precision_v> Position( y[0], y[1], y[2] );
 
-  fPtrField->template /*T_Field::*/GetFieldValue<Backend>( Position, Bfield );
-  // fPtrField->typename T_Field::GetFieldValue<Backend>( Position, Bfield );
+  // fPtrField->template /*T_Field::*/GetFieldValue<Backend>( Position, Bfield );
+  fPtrField->T_Field:: template GetFieldValue<Backend>( Position, Bfield );
 }
 
 

@@ -63,7 +63,7 @@ class VecGUTCashKarpRKF45 : public AlignedBase
     template <class Backend>
     REALLY_INLINE
     void RightHandSideInl(typename Backend::precision_v y[], typename Backend::precision_v dydx[]) 
-    {fEquation_Rhs-> template /*T_Equation::*/RightHandSide<Backend>(y, dydx);}
+    {fEquation_Rhs->T_Equation::template RightHandSide<Backend>(y, dydx);}
 
     template <class Backend>
     inline 
@@ -298,7 +298,7 @@ VecGUTCashKarpRKF45<T_Equation,Nvar>::
                            typename Backend::precision_v charge,
                            typename Backend::precision_v dydx[] )
 {
-   fEquation_Rhs->template /*T_Equation::*/RightHandSide<Backend>(y, charge, dydx);
+   fEquation_Rhs->T_Equation::template RightHandSide<Backend>(y, charge, dydx);
 }
 
 template <class T_Equation, unsigned int Nvar>
