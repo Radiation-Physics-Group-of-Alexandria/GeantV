@@ -47,7 +47,7 @@ typedef vecgeom::Vector3D<double>  ThreeVector;
 using namespace std;
 // using namespace CLHEP;
 
-int main(int argc, char *args[])
+int main(/*int argc, char *args[]*/)
 {
     constexpr unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
 
@@ -89,7 +89,7 @@ int main(int argc, char *args[])
                         //            >3 [i]-Verbose: 
     bool printRatio    = 0;  //  yDiff / yAverage - per component
     bool printRatioVec = 1;  //                   - per vector  (ie Pos or Vector )
-    bool printMagShift = 1;  //  Print  | p | / | p_0 | - 1.0
+    // bool printMagShift = 1;  //  Print  | p | / | p_0 | - 1.0
     bool printInp = 0;  // print the input values
     bool printInpX= 0;  // print the input values for Ref 
 

@@ -89,7 +89,7 @@ bool TestEquation(VecTMagFieldEquation<T_Field,Size>* equation)
   
   // equation->InitializeCharge( charge );
   equation->InformReady();
-  equation->PrintInputFieldAndDyDx<Backend>(PositionVec, Charge, dydx);
+  // equation->PrintInputFieldAndDyDx<Backend>(PositionVec, Charge, dydx);
   // equation->TEvaluateRhsGivenB < Backend > ( PositionMomentum, FieldVec, Charge, dydx );
 
   vecgeom::Vector3D<typename Backend::precision_v>  ForceVec( dydx[3], dydx[4], dydx[5]);

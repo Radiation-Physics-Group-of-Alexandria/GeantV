@@ -124,19 +124,19 @@ int main(int argc, char *args[])
   
   int no_of_steps = 20;         // No. of Steps for the stepper
   int stepper_no  =  5;         // Choose stepper no., for refernce see above
-  double step_len_mm = 200.;    // meant as millimeter;  //Step length 
+  // double step_len_mm = 200.;    // meant as millimeter;  //Step length 
   double z_field_in = DBL_MAX;
   
   // Checking for command line values :
   if(argc>1)
       stepper_no = atoi(args[1]);
-  if(argc > 2)
-     step_len_mm = (float)(stof(args[2]));   // *mm);
+  // if(argc > 2)
+  //    step_len_mm = (float)(stof(args[2]));   // *mm);
   if(argc > 3)
       no_of_steps = atoi(args[3]);
   if(argc > 4)
      z_field_in = (float) (stof(args[4]));     // tesla
-  double step_len = step_len_mm * fieldUnits::millimeter;
+  // double step_len = step_len_mm * fieldUnits::millimeter;
   
   // Set Charge etc.
   double particleCharge = +1.0;      // in e+ units
@@ -190,8 +190,6 @@ int main(int argc, char *args[])
   // const double mmGVf = fieldUnits::millimeter;
   const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
                                        //   Else it must be divided by fieldUnits::c_light;
-
-  std::cout << "# step_len_mm = " << step_len_mm;
   
   
   /*-----------------------END PREPARING STEPPER---------------------------*/

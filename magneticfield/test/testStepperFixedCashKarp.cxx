@@ -331,7 +331,7 @@ int main(int argc, char *args[])
         for(int i=0; i<6;i++)   // Print auxiliary components
         {
            double unitGVf=1;  
-           double unitRef=1;
+           // double unitRef=1;
            // if( i < 3 )             // length / length
 
            if( i >= 3 ){
