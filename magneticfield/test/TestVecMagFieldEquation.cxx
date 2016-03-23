@@ -34,7 +34,7 @@ main( int, char** )
    
   auto eq = CreateFieldAndEquation<VecTUniformMagField, gNposmom>( FieldValue );
 
-  TestEquation<vecgeom::kScalar, VecTUniformMagField, gNposmom>(eq);
+  TestEquation<vecgeom::kVc, VecTUniformMagField, gNposmom>(eq);
 
   return 1;
 }
@@ -89,8 +89,7 @@ bool TestEquation(VecTMagFieldEquation<T_Field,Size>* equation)
   
   // equation->InitializeCharge( charge );
   equation->InformReady();
-  // equation->PrintInputFieldAndDyDx<Backend>(PositionVec, Charge, dydx);
-  // equation->TEvaluateRhsGivenB < Backend > ( PositionMomentum, FieldVec, Charge, dydx );
+  equation->template TEvaluateRhsGivenB<Backend>( PositionMomentum, FieldVec, Charge, dydx );
 
   vecgeom::Vector3D<typename Backend::precision_v>  ForceVec( dydx[3], dydx[4], dydx[5]);
 
