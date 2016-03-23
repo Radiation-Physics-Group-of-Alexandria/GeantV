@@ -75,7 +75,7 @@ class VecTMagFieldEquation // :  public VecGUVEquationOfMotion
     void RightHandSide(const typename Backend::precision_v y[],  
                              typename Backend::precision_v dydx[]) const
     { typename Backend::precision_v charge  = -1.0;
-      RightHandSide(y, charge, dydx);  }; //Ananya
+      RightHandSide<Backend>(y, charge, dydx);  }; //Ananya
       //added this function to get RightHandSide functions compatible irrespecitive of 
       //whether charge is given in input or not. 
       //Assumed that in final version, charge will be included everywhere.
@@ -366,7 +366,8 @@ VecTMagFieldEquation<T_Field,Size>
 {
   vecgeom::Vector3D<typename Backend::precision_v> Position( y[0], y[1], y[2] );
 
-  fPtrField->T_Field::GetFieldValue( Position, Bfield );
+  fPtrField->template /*T_Field::*/GetFieldValue<Backend>( Position, Bfield );
+  // fPtrField->typename T_Field::GetFieldValue<Backend>( Position, Bfield );
 }
 
 

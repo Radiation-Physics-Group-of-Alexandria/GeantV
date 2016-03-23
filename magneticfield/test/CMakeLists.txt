@@ -70,6 +70,11 @@ add_executable(TestVecMagFieldEquation TestVecMagFieldEquation.cxx) ## ${sources
 target_link_libraries(TestVecMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for TestVecMagFieldEquation")
 
+add_executable(TestVecCashKarpStepper TestVecCashKarpStepper.cxx) ## ${sources} ${headers})
+target_link_libraries(TestVecCashKarpStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS "Created target for TestVecCashKarpStepper")
+
+
 #add_executable(TestConstBzStepper TestConstBzStepper.cxx) ## ${sources} ${headers})
 #target_link_libraries(TestConstBzStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
