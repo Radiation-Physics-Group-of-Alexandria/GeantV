@@ -90,11 +90,11 @@ bool TestEquation(GUVEquationOfMotion* equation)
   ThreeVector_d MomentumVec( 0., 0.1, 1.);
   ThreeVector_f FieldVec( 0., 0., 1.);  // Magnetic field value (constant)
 
-  double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
+  // double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
   // double PositionTime[4] = { 1., 2., 3., 4.};
-  PositionTime[0] = PositionVec.x();
-  PositionTime[1] = PositionVec.y();
-  PositionTime[2] = PositionVec.z();
+  // PositionTime[0] = PositionVec.x();
+  // PositionTime[1] = PositionVec.y();
+  // PositionTime[2] = PositionVec.z();
 
   // double magField[3];
 
@@ -113,7 +113,7 @@ bool TestEquation(GUVEquationOfMotion* equation)
   // double FieldArr[3]= { FieldVec.x(), FieldVec.y(), FieldVec.z() };
   
   equation->InitializeCharge( charge );
-  equation->EvaluateRhsGivenB( PositionTime, FieldVec, /* charge, */ dydx );
+  equation->EvaluateRhsGivenB( PositionMomentum, FieldVec, /* charge, */ dydx );
 
   ThreeVector_d  ForceVec( dydx[3], dydx[4], dydx[5]);
 

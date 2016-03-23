@@ -49,8 +49,6 @@ class GUVVectorEquationOfMotion //: public GUVEquationOfMotion
        // The other two functions use Rhs_givenB.
 
       
-      virtual void InitializeCharge(double particleCharge)=0;
-       // Must be called to correctly initialise and provide charge
       virtual void InvalidateParameters()=0;
       
       inline void InformReady(); // All parameters have been set (charge+)

@@ -761,9 +761,9 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
   int ncompSVEC = TemplateGUFieldTrack<vecgeom::kScalar>::ncompSVEC; //12, //to be derived from TemplateGUFieldTrack
 
 #ifdef GUDEBUG_FIELD
-  static int dbg=1;
-  static int nStpPr=50;   // For debug printing of long integrations
-  double ySubStepStart[ncompSVEC];
+  // static int dbg=1;
+  // static int nStpPr=50;   // For debug printing of long integrations
+  // double ySubStepStart[ncompSVEC];
 
   // std::cout << " AccurateAdvance called with hstep= " << hstep << std::endl;
 #endif
@@ -777,9 +777,9 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
 
   double startCurveLength;
 
-  int  noFullIntegr=0, noSmallIntegr = 0 ;
+  // int  noFullIntegr=0, noSmallIntegr = 0 ;
   // G4ThreadLocal
-  static int  noGoodSteps =0 ;  // Bad = chord > curve-len 
+  // static int  noGoodSteps =0 ;  // Bad = chord > curve-len 
   const  int  nvar= fNoVars;
 
 
@@ -816,12 +816,12 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
   nstp=1;
 
 
-  double StartPosAr[3];
+  // double StartPosAr[3];
   double charge(-1.);
 
   while ( ((nstp++)<=fMaxNoSteps) && (x < x2) && (!lastStep) )
   {
-    StartPosAr[0]= y[0]; StartPosAr[1]= y[1];  StartPosAr[2]= y[2]; 
+    // StartPosAr[0]= y[0]; StartPosAr[1]= y[1];  StartPosAr[2]= y[2]; 
     
     fpStepper->RightHandSideVIS( y, charge, dydx );   // TODO: change to inline
 
@@ -847,10 +847,10 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
     ThreeVector EndPos( y[0], y[1], y[2] );
 
     // Check the endpoint
-    const double edx= y[0] - StartPosAr[0];
+/*    const double edx= y[0] - StartPosAr[0];
     const double edy= y[1] - StartPosAr[1];
-    const double edz= y[2] - StartPosAr[2];
-    double endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); 
+    const double edz= y[2] - StartPosAr[2];*/
+    // double endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); 
 
     //Ananya: discuss. What exactly is happening here?
     bool avoidNumerousSmallSteps = (h < epsilon * hstep) || (h < fSmallestFraction * startCurveLength);
@@ -2391,10 +2391,10 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
     ThreeVector EndPos( y[0], y[1], y[2] );
 
     // Check the endpoint
-    const Double_v edx= y[0] - StartPosAr[0];
+/*    const Double_v edx= y[0] - StartPosAr[0];
     const Double_v edy= y[1] - StartPosAr[1];
-    const Double_v edz= y[2] - StartPosAr[2];
-    Double_v endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; 
+    const Double_v edz= y[2] - StartPosAr[2];*/
+    // Double_v endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; 
 
     // Ananya: discuss. What exactly is happening here?
     // h<=0 case: first condition false, second condition always true assuming smallest fraction and 

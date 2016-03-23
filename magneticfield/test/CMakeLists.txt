@@ -66,9 +66,9 @@ add_executable(TestDriver2 TestDriver2.cxx) ## ${sources} ${headers})
 target_link_libraries(TestDriver2 Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for TestDriver2")
 
-#add_executable(TestVecMagFieldEquation TestVecMagFieldEquation.cxx) ## ${sources} ${headers})
-#target_link_libraries(TestVecMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-#message(STATUS "Created target for TestVecMagFieldEquation")
+add_executable(TestVecMagFieldEquation TestVecMagFieldEquation.cxx) ## ${sources} ${headers})
+target_link_libraries(TestVecMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+message(STATUS "Created target for TestVecMagFieldEquation")
 
 #add_executable(TestConstBzStepper TestConstBzStepper.cxx) ## ${sources} ${headers})
 #target_link_libraries(TestConstBzStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

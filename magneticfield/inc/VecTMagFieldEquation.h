@@ -118,7 +118,7 @@ class VecTMagFieldEquation // :  public VecGUVEquationOfMotion
                                 const typename Backend::precision_v charge,  
                                       typename Backend::precision_v dydx[] ) const;
 
-    void InvalidateParameters() final { InformDone();}
+    void InvalidateParameters() { InformDone();}
 
 
     inline void InformReady(); // All parameters have been set (charge+)

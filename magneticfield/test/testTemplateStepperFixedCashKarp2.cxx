@@ -65,7 +65,7 @@ int main(/*int argc, char *args[]*/)
     double step_len = step_len_mm * fieldUnits::millimeter;
     
     //Set Charge etc.
-    double particleCharge = +1.0;      // in e+ units
+    // double particleCharge = +1.0;      // in e+ units
     
     //Choice of output coordinates
     int

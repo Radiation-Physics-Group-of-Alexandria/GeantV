@@ -42,6 +42,7 @@ using fieldUnits::degree;
 
 #include "VecGUVMagneticField.h"
 #include "VecTUniformMagField.h"
+#include "VecTMagFieldEquation.h"
 
 using namespace std;
 
@@ -126,29 +127,29 @@ int main(int argc, char *args[])
    - Modify values  */
   
   int no_of_steps = 20;         // No. of Steps for the stepper
-  int stepper_no  =  5;         // Choose stepper no., for refernce see above
+  // int stepper_no  =  5;         // Choose stepper no., for refernce see above
   double step_len_mm = 200.;    // meant as millimeter;  //Step length 
   double z_field_in = DBL_MAX;
   
   // Checking for command line values :
-  if(argc>1)
-      stepper_no = atoi(args[1]);
+  // if(argc>1)
+      // stepper_no = atoi(args[1]);
   if(argc > 2)
      step_len_mm = (float)(stof(args[2]));   // *mm);
   if(argc > 3)
       no_of_steps = atoi(args[3]);
   if(argc > 4)
      z_field_in = (float) (stof(args[4]));     // tesla
-  double step_len = step_len_mm * fieldUnits::millimeter;
+  // double step_len = step_len_mm * fieldUnits::millimeter;
   
   // Set Charge etc.
-  double particleCharge = +1.0;      // in e+ units
+  // double particleCharge = +1.0;      // in e+ units
   
   // Set coordinates here
-  double
+/*  double
      x_pos = 0.,                 //pos - position  : input unit = mm
      y_pos = 0.,
-     z_pos = 0.;
+     z_pos = 0.;*/
   double   
      x_mom = 0.,                 //mom - momentum  : input unit = GeV / c
      y_mom = 1.,
@@ -189,9 +190,9 @@ int main(int argc, char *args[])
 
   TemplateGUVIntegrationStepper<Backend1> *myStepper = new TemplateGUTCashKarpRKF45<Backend1,GvEquationType,Nposmom>(gvEquation);
 
-  myStepper->InitializeCharge( particleCharge );
+  // myStepper->InitializeCharge( particleCharge );
 
-  const double mmGVf = fieldUnits::millimeter;
+  // const double mmGVf = fieldUnits::millimeter;
   const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
                                        //   Else it must be divided by fieldUnits::c_light;
 
@@ -219,7 +220,7 @@ int main(int argc, char *args[])
   // GUVIntegrationStepper *myStepperScalar; 
   auto myStepperScalar= new TemplateGUTCashKarpRKF45<Backend2, GvEquationTypeScalar, Nposmom>(gvEquationScalar);
 
-  int statisticsVerbosity = 1;
+  // int statisticsVerbosity = 1;
   auto testScalarDriver= new TemplateGUIntegrationDriver<Backend2>
                                                 ( hminimum,
                                                   myStepperScalar);
@@ -232,7 +233,7 @@ int main(int argc, char *args[])
   testVectorDriver->SetSteppingMethod(chooseSteppingMethod); 
 
 
-  double total_step = 0.;
+  // double total_step = 0.;
 
   typedef typename Backend1::bool_v Bool;
   Bool goodAdvance(true);
@@ -292,7 +293,7 @@ int main(int argc, char *args[])
 
   for (int step = 0; step < no_of_steps; ++step)
   {
-    double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
+    // double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
     double X_Mom[nTracks], Y_Mom[nTracks], Z_Mom[nTracks];
     double posMomMatrix[nTracks][6];
     FieldTrack yInputMatrix[noOfVectorCalls][nTracks]; // [6];

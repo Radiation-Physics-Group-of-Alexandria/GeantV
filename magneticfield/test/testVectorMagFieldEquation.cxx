@@ -12,7 +12,6 @@
 #include "GUVVectorIntegrationStepper.h"
 #include "GUVectorLineSection.h"
 #include "ConstVectorFieldHelixStepper.h"
-#include "GUVVectorHelicalStepper.h"
 
 #include "GUVField.h"
 #include "TMagFieldEquation.h"
@@ -75,7 +74,7 @@ ThreeVector_f      FieldValue2(1.0, 2.0, 3.0);
 ThreeVectorSimd_f  FieldValueV(1.0, 2.0, 3.0);
 
 
-int main(int argc, char *argv[]){
+int main(/*int argc, char *argv[]*/){
 
 
   GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue1 );
@@ -113,12 +112,12 @@ bool TestEquation(GUVVectorEquationOfMotion* equation)
   ThreeVectorSimd_d MomentumVec( 0., 0.1, 1.);
   ThreeVectorSimd_f FieldVec( 0., 0., 1.);  // Magnetic field value (constant)
 
-  Double_v PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
+  // Double_v PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
 
   Double_v dydx[gNposmom];
   Double_v PositionMomentum[gNposmom];
 
-  double charge= -1;  
+  // double charge= -1;  
   Double_v Charge(-1);
 
   PositionMomentum[0] = PositionVec[0];
@@ -129,7 +128,7 @@ bool TestEquation(GUVVectorEquationOfMotion* equation)
   PositionMomentum[5] = MomentumVec[2];
 
   
-  equation->InitializeCharge( charge );
+  // equation->InitializeCharge( charge );
 
   equation->EvaluateRhsGivenB( PositionMomentum, FieldVec,  Charge,   dydx );
 

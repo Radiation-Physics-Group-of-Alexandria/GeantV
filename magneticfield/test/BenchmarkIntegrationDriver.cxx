@@ -187,7 +187,7 @@ int main(int argc, char *args[])
 
   // myStepper->InitializeCharge( particleCharge );
 
-  const double mmGVf = fieldUnits::millimeter;
+  // const double mmGVf = fieldUnits::millimeter;
   const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
                                        //   Else it must be divided by fieldUnits::c_light;
 
@@ -229,7 +229,7 @@ int main(int argc, char *args[])
   testVectorDriver->SetSteppingMethod(chooseSteppingMethod); 
 
 
-  double total_step = 0.;
+  // double total_step = 0.;
 
   typedef typename Backend::bool_v Bool;
   Bool goodAdvance(true);
@@ -289,7 +289,7 @@ int main(int argc, char *args[])
 
   for (int step = 0; step < no_of_steps; ++step)
   {
-    double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
+    // double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
     double X_Mom[nTracks], Y_Mom[nTracks], Z_Mom[nTracks];
     double posMomMatrix[nTracks][6];
     FieldTrack yInputMatrix[noOfVectorCalls][nTracks]; // [6];

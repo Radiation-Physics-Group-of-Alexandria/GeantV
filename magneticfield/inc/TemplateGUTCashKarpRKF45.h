@@ -422,7 +422,7 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
     typedef typename Backend::precision_v Double_v;
     typedef vecgeom::Vector3D<Double_v> ThreeVector;
 
-    Double_v distLine, distChord; 
+    Double_v distLine, distChord=0.; 
     ThreeVector initialPoint, finalPoint, midPoint;
 
     // Store last initial and final points (they will be overwritten in self-Stepper call!)

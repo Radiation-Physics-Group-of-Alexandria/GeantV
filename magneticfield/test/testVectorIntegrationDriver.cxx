@@ -204,7 +204,7 @@ int main(/*int argc, char *args[]*/)
     double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
 
-#define DebuggingSection
+#define MAINTESTING
 // #define CALCULATETIME 
 
     double
