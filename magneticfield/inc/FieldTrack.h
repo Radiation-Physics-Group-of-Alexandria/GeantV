@@ -9,15 +9,25 @@ can be removed if PosMomVector is made public data member.
 Same goes for SetCurveLength and GetCurveLength functions.
 ----------------*/
 #include <iostream>
+#include "base/Vector3D.h"   // VecGeom/base/Vector3D.h 
 
 struct FieldTrack{
+  
+  typedef vecgeom::Vector3D<double> ThreeVector;
 
 private: 
   double fDistanceAlongCurve = 0.0;
 
 public:
-  //data members
 
+  FieldTrack()= default ;
+  FieldTrack( const ThreeVector& pPosition,
+              const ThreeVector& pMomentum); // {};
+
+  FieldTrack( const FieldTrack& rStVec );
+  inline FieldTrack& operator = ( const FieldTrack & rStVec );
+
+  //data members
   double PosMomVector[6];
 
   //And functions 
@@ -60,6 +70,36 @@ friend std::ostream&
 
 };
 
+FieldTrack::FieldTrack( const vecgeom::Vector3D<double>& pPosition,
+                        const vecgeom::Vector3D<double>& pMomentum)
+{
+  for (int i = 0; i < 3; ++i)
+    {
+      PosMomVector[i]   = pPosition[i];
+      PosMomVector[i+3] = pMomentum[i];
+    }  
+}
 
+inline
+FieldTrack::FieldTrack( const FieldTrack& rStVec)
+{
+  for (int i = 0; i < 6; ++i)
+  {
+    PosMomVector[i] = rStVec.PosMomVector[i];
+  }
+}
+
+inline
+FieldTrack & FieldTrack::operator = ( const FieldTrack& rStVec)
+{
+  if (&rStVec == this) return *this;
+  
+  for (int i = 0; i < 6; ++i)
+  {
+    PosMomVector[i] = rStVec.PosMomVector[i];
+  }
+  return *this;
+
+}
 
 #endif 
