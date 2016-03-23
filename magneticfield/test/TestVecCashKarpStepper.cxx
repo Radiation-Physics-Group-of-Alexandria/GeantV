@@ -31,7 +31,7 @@ int main()
 {
   constexpr unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
 
-  using Backend = vecgeom::kVc ;
+  using Backend = vecgeom::kScalar ;
   typedef typename Backend::precision_v Double_v;
   // typedef vecgeom::Vector3D<Double_v> ThreeVectorSimd;
   typedef vecgeom::Vector3D<double> ThreeVector_d;
@@ -162,7 +162,7 @@ int main()
   cout.precision(3);
   
   /*----------------NOW STEPPING-----------------*/
-  no_of_steps = 1;
+  no_of_steps = 10;
   for(int j=0; j<no_of_steps; j++)
   {
       cout<<setw(6)<<j ;           //Printing Step number

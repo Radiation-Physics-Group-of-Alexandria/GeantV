@@ -343,6 +343,8 @@ class TemplateGUIntegrationDriver : public AlignedBase
      bool partDebug = false ; 
      bool oneStep = true; // false for KeepStepping
 #endif 
+
+     bool scalarDriverInput = false;
 };
 
 // #include "GUIntegratorDriver.icc"
@@ -2524,46 +2526,55 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
       std::cout<<"isDoneLane is:        "<< isDoneLane <<std::endl;
     }
 #endif 
-       
-/*    Bool_v leftLanes = (nstp<=fMaxNoSteps) && (x < x2) && (!lastStep) ;
-    int countLeftLanes=0;
-    int indLastLane;
-    // std::cout << " leftLanes is: " << leftLanes << std::endl;
-    if( !vecgeom::IsEmpty(leftLanes) )
+
+
+    // This if block if using scalar driver as well. Not applicable for scalar backend
+    // bool scalarDriverInput set in constructor. Default false. 
+    if (scalarDriverInput)
     {
-      for (int i = 0; i < kVectorSize; ++i)
+
+      Bool_v leftLanes = (nstp<=fMaxNoSteps) && (x < x2) && (!lastStep) ;
+      int countLeftLanes=0;
+      int indLastLane;
+      // std::cout << " leftLanes is: " << leftLanes << std::endl;
+      if( !vecgeom::IsEmpty(leftLanes) )
       {
-        if (leftLanes[i] == 1)
+        for (int i = 0; i < kVectorSize; ++i)
         {
-          countLeftLanes++;
-          indLastLane = i;
-          // std::cout << indLastLane << std::endl;
+          if (leftLanes[i] == 1)
+          {
+            countLeftLanes++;
+            indLastLane = i;
+            // std::cout << indLastLane << std::endl;
+          }
         }
       }
+
+      // std::cout<< "countLeftLanes is: "<<countLeftLanes << std::endl;
+
+      if (countLeftLanes == 1)
+      {
+        // double hstepOneLane = hStepLane[indLastLane] - hTotalDoneSoFar[indLastLane];
+        vecgeom::Vector3D<double> Pos, Mom;
+        for (int i = 0; i < 3; ++i)
+         {
+           Pos[i] = y[i][indLastLane];
+           Mom[i] = y[i+3][indLastLane];
+         } 
+        GUFieldTrack y_input(Pos, Mom); 
+        GUFieldTrack y_output(Pos, Mom);
+        // y_input.SetCurveLength( hTotalDoneSoFar[indLastLane] ) ;
+        fpScalarDriver->AccurateAdvance(y_input, hstep[ fIndex[indLastLane] ] - hTotalDoneSoFar[indLastLane], epsilon, y_output );
+
+        isDoneLane[indLastLane] == true;
+        // Store Output
+        double y_output_arr[12];
+        y_output.DumpToArray(y_output_arr);
+        yOutput[fIndex[indLastLane]].LoadFromArray(y_output_arr);
+      }
+
     }
 
-    // std::cout<< "countLeftLanes is: "<<countLeftLanes << std::endl;
-
-    if (countLeftLanes == 1)
-    {
-      // double hstepOneLane = hStepLane[indLastLane] - hTotalDoneSoFar[indLastLane];
-      vecgeom::Vector3D<double> Pos, Mom;
-      for (int i = 0; i < 3; ++i)
-       {
-         Pos[i] = y[i][indLastLane];
-         Mom[i] = y[i+3][indLastLane];
-       } 
-      GUFieldTrack y_input(Pos, Mom); 
-      GUFieldTrack y_output(Pos, Mom);
-      // y_input.SetCurveLength( hTotalDoneSoFar[indLastLane] ) ;
-      fpScalarDriver->AccurateAdvance(y_input, hstep[ fIndex[indLastLane] ] - hTotalDoneSoFar[indLastLane], epsilon, y_output );
-
-      isDoneLane[indLastLane] == true;
-      // Store Output
-      double y_output_arr[12];
-      y_output.DumpToArray(y_output_arr);
-      yOutput[fIndex[indLastLane]].LoadFromArray(y_output_arr);
-    }*/
 
   } // end of while loop
 
@@ -2606,6 +2617,7 @@ TemplateGUIntegrationDriver<Backend>
 {
   fpScalarStepper = pScalarStepper; 
   fpScalarDriver  = pScalarDriver;
+  scalarDriverInput = true;
 }
 
 
