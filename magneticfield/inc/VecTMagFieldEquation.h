@@ -79,6 +79,7 @@ class VecTMagFieldEquation // :  public VecGUVEquationOfMotion
       //added this function to get RightHandSide functions compatible irrespecitive of 
       //whether charge is given in input or not. 
       //Assumed that in final version, charge will be included everywhere.
+
     template <class Backend>
     REALLY_INLINE
     void TEvaluateRhsGivenB( const typename Backend::precision_v y[],
@@ -167,43 +168,42 @@ template <class T_Field, unsigned int Size>
 inline
 VecTMagFieldEquation<T_Field,Size>
   ::VecTMagFieldEquation(T_Field* pField, unsigned int verbose)
-   : // GUVEquationOfMotion(pField, verbose),
-     fPtrField(pField), 
-     fEquationId(fNumObjectsCreated++),
-     fVerbose(verbose), 
-     fInitialised(false)
+  : // GUVEquationOfMotion(pField, verbose),
+    fPtrField(pField), 
+    fEquationId(fNumObjectsCreated++),
+    fVerbose(verbose), 
+    fInitialised(false)
 {
-   if(fVerbose)
-   {
-      std::cout << " Called VecTMagFieldEquation::InformDone() " << std::endl;
-      // std::cout << *this << std::endl;
-   }
-  #ifdef DEBUGAnanya
-    std::cout<<"----Entered constructor of VecTMagFieldEquation "<<std::endl;
-  #endif
+  if(fVerbose)
+  {
+    std::cout << " Called VecTMagFieldEquation::InformDone() " << std::endl;
+    // std::cout << *this << std::endl;
+  }
+ #ifdef DEBUGAnanya
+  std::cout<<"----Entered constructor of VecTMagFieldEquation "<<std::endl;
+ #endif
 
 }
 
 template
 <class T_Field, unsigned int Size>
-   VecTMagFieldEquation<T_Field,Size>
-   ::VecTMagFieldEquation(const VecTMagFieldEquation& right)
-   :  // VecGUVEquationOfMotion( (VecGUVField*) 0 ), // Commented for now, discuss what to do : Ananya
-      fPtrField( right.fPtrField->CloneOrSafeSelf( (bool *)0 ) )
-      // fPtrField( new T_Field(right.fPtrField) )
+  VecTMagFieldEquation<T_Field,Size>
+  ::VecTMagFieldEquation(const VecTMagFieldEquation& right)
+  :  // VecGUVEquationOfMotion( (VecGUVField*) 0 ), // Commented for now, discuss what to do : Ananya
+    fPtrField( right.fPtrField->CloneOrSafeSelf( (bool *)0 ) )
+    // fPtrField( new T_Field(right.fPtrField) )
 {
-   // G4bool threadSafe;
-   // fPtrField = right.fPtrField->CloneOrSafeSelf( &threadSafe );
-
-   // std::cout <<  "VecTMagFieldEquation - copy constructor called." << std::endl;
-   SetFieldObj( fPtrField ); //  Also stored in base class ... for now
+  // G4bool threadSafe;
+  // fPtrField = right.fPtrField->CloneOrSafeSelf( &threadSafe );
+  // std::cout <<  "VecTMagFieldEquation - copy constructor called." << std::endl;
+  SetFieldObj( fPtrField ); //  Also stored in base class ... for now
 }
 
 template
 <class T_Field, unsigned int Size>
-   VecTMagFieldEquation<T_Field,Size>*
-   VecTMagFieldEquation<T_Field,Size>
-   ::CloneOrSafeSelf(bool& safe)
+  VecTMagFieldEquation<T_Field,Size>*
+  VecTMagFieldEquation<T_Field,Size>
+  ::CloneOrSafeSelf(bool& safe)
 {
   VecTMagFieldEquation<T_Field,Size>* equation;
   T_Field* pField=
@@ -213,7 +213,6 @@ template
 
   equation = new VecTMagFieldEquation( pField );
   safe= false;
-
 }
 
 template <class T_Field, unsigned int Size>
@@ -245,7 +244,7 @@ void VecTMagFieldEquation<T_Field,Size>
 {
 #ifdef GUVERBOSE
   if( fVerbose && !fInitialised ){
-     std::cerr << "VecTMagFieldEquation<T_Field,Size> is not Initialised" << std::endl;
+    std::cerr << "VecTMagFieldEquation<T_Field,Size> is not Initialised" << std::endl;
   }
 #endif
   // assert( fInitialised ); //Ananya:temp
@@ -257,7 +256,7 @@ void VecTMagFieldEquation<T_Field,Size>
 {
 #ifdef GUVERBOSE
   if( fVerbose && fInitialised ){
-     std::cerr << "VecTMagFieldEquation<T_Field,Size> was NOT told it is Done!" << std::endl;
+    std::cerr << "VecTMagFieldEquation<T_Field,Size> was NOT told it is Done!" << std::endl;
   }
 #endif
   assert( !fInitialised );
@@ -268,7 +267,7 @@ template <class Backend>
 REALLY_INLINE
 void VecTMagFieldEquation<T_Field,Size>
   ::GetFieldValue( const typename Backend::precision_v Point[4],
-                                                  typename Backend::precision_v Field[] ) const
+                         typename Backend::precision_v Field[] ) const
 {
    vecgeom::Vector3D<typename Backend::precision_v> Position( Point[0], Point[1], Point[2] );
    vecgeom::Vector3D<typename Backend::precision_v> FieldVec;
@@ -294,7 +293,7 @@ template <class Backend>
 inline
 void VecTMagFieldEquation<T_Field,Size>
   ::GetFieldValue( const vecgeom::Vector3D<typename Backend::precision_v> &Position,
-                                           vecgeom::Vector3D<typename Backend::precision_v> &FieldValue ) const
+                         vecgeom::Vector3D<typename Backend::precision_v> &FieldValue ) const
 {
    fPtrField-> GetFieldValue<Backend>( Position, FieldValue );
 }
@@ -309,32 +308,32 @@ void  VecTMagFieldEquation<T_Field,Size>
                                typename Backend::precision_v dydx[]  ) const
 {
   
-    typedef typename Backend::precision_v Double_v;
-    
-    Double_v momentum_mag_square = y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
-    Double_v inv_momentum_magnitude = 1. / vecgeom::VECGEOM_IMPL_NAMESPACE::Sqrt( momentum_mag_square );
+  typedef typename Backend::precision_v Double_v;
+  
+  Double_v momentum_mag_square = y[3]*y[3] + y[4]*y[4] + y[5]*y[5];
+  Double_v inv_momentum_magnitude = 1. / vecgeom::VECGEOM_IMPL_NAMESPACE::Sqrt( momentum_mag_square );
 /*
-    #ifdef DEBUGAnanya
-      std::cout<<"\n----y is: "<<y[3]<<" "<<y[4]<<" " <<y[5]<<std::endl;
-      std::cout<<"----inv_momentum is: "<<inv_momentum_magnitude<<std::endl;
-      std::cout<<"----momentum is: "<< momentum_mag_square <<std::endl;
-    #endif*/
+  #ifdef DEBUGAnanya
+    std::cout<<"\n----y is: "<<y[3]<<" "<<y[4]<<" " <<y[5]<<std::endl;
+    std::cout<<"----inv_momentum is: "<<inv_momentum_magnitude<<std::endl;
+    std::cout<<"----momentum is: "<< momentum_mag_square <<std::endl;
+  #endif*/
 
 
-    // std::cout<<"\n\n\n AM I BEING CALLED SOMEHOW?"<<std::endl;
-    // vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
+  // std::cout<<"\n\n\n AM I BEING CALLED SOMEHOW?"<<std::endl;
+  // vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
 
-    Double_v cof = charge*fCof*inv_momentum_magnitude;
+  Double_v cof = charge*fCof*inv_momentum_magnitude;
 
-    dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
-    dydx[1] = y[4]*inv_momentum_magnitude;       //  (d/ds)y = Vy/V
-    dydx[2] = y[5]*inv_momentum_magnitude;       //  (d/ds)z = Vz/V
+  dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
+  dydx[1] = y[4]*inv_momentum_magnitude;       //  (d/ds)y = Vy/V
+  dydx[2] = y[5]*inv_momentum_magnitude;       //  (d/ds)z = Vz/V
 
-    dydx[3] = cof*(y[4]*B[2] - y[5]*B[1]) ;  // Ax = a*(Vy*Bz - Vz*By)
-    dydx[4] = cof*(y[5]*B[0] - y[3]*B[2]) ;  // Ay = a*(Vz*Bx - Vx*Bz)
-    dydx[5] = cof*(y[3]*B[1] - y[4]*B[0]) ;  // Az = a*(Vx*By - Vy*Bx)
+  dydx[3] = cof*(y[4]*B[2] - y[5]*B[1]) ;  // Ax = a*(Vy*Bz - Vz*By)
+  dydx[4] = cof*(y[5]*B[0] - y[3]*B[2]) ;  // Ay = a*(Vz*Bx - Vx*Bz)
+  dydx[5] = cof*(y[3]*B[1] - y[4]*B[0]) ;  // Az = a*(Vx*By - Vy*Bx)
 
-    return ;
+  return ;
 }
 
 
@@ -347,14 +346,14 @@ VecTMagFieldEquation<T_Field,Size>
               const typename Backend::precision_v charge,  
                     typename Backend::precision_v Bfield[3] ) const
 {
-    // double  Bfield[3];  //G4maximum_number_of_field_components];
-    typename Backend::precision_v PositionAndTime[4];
-    PositionAndTime[0] = y[0];
-    PositionAndTime[1] = y[1];
-    PositionAndTime[2] = y[2];
-    PositionAndTime[3] = 0;        // Time
+  // double  Bfield[3];  //G4maximum_number_of_field_components];
+  typename Backend::precision_v PositionAndTime[4];
+  PositionAndTime[0] = y[0];
+  PositionAndTime[1] = y[1];
+  PositionAndTime[2] = y[2];
+  PositionAndTime[3] = 0;        // Time
 
-    GetFieldValue<Backend>(PositionAndTime, Bfield) ;
+  GetFieldValue<Backend>(PositionAndTime, Bfield) ;
 }
 
 template <class T_Field, unsigned int Size>
@@ -365,9 +364,9 @@ VecTMagFieldEquation<T_Field,Size>
  ::FieldFromY(const typename Backend::precision_v                                  y[],  
                              vecgeom::Vector3D<typename Backend::precision_v> &Bfield ) const
 {
-    vecgeom::Vector3D<typename Backend::precision_v> Position( y[0], y[1], y[2] );
+  vecgeom::Vector3D<typename Backend::precision_v> Position( y[0], y[1], y[2] );
 
-    fPtrField->T_Field::GetFieldValue( Position, Bfield );
+  fPtrField->T_Field::GetFieldValue( Position, Bfield );
 }
 
 
@@ -380,10 +379,10 @@ VecTMagFieldEquation<T_Field,Size>
                  const typename Backend::precision_v charge, 
                        typename Backend::precision_v dydx[] ) const
 {
-    vecgeom::Vector3D<typename Backend::precision_v> BfieldVec;
+  vecgeom::Vector3D<typename Backend::precision_v> BfieldVec;
 
-    FieldFromY<Backend>( y, BfieldVec );
-    TEvaluateRhsGivenB<Backend>( y, BfieldVec, charge, dydx );
+  FieldFromY<Backend>( y, BfieldVec );
+  TEvaluateRhsGivenB<Backend>( y, BfieldVec, charge, dydx );
 }
 
 #include <iostream>   // For debuging only
@@ -399,32 +398,31 @@ VecTMagFieldEquation<T_Field,Size>
                           const typename Backend::precision_v charge, 
                                 typename Backend::precision_v dydx[] ) const
 {
+  RightHandSide<Backend>(y, dydx);
 
-    RightHandSide<Backend>(y, dydx);
+  // Obtain the field value
+  typedef typename Backend::precision_v Double_v;
+  Double_v  Bfield[3];  //G4maximum_number_of_field_components];
+  FieldFromY<Backend>( y, charge, Bfield );
+  TEvaluateRhsGivenB<Backend>(y, Bfield, charge, dydx);
 
-    // Obtain the field value
-    typedef typename Backend::precision_v Double_v;
-    Double_v  Bfield[3];  //G4maximum_number_of_field_components];
-    FieldFromY<Backend>( y, charge, Bfield );
-    TEvaluateRhsGivenB<Backend>(y, Bfield, charge, dydx);
+  cout.precision(8);
 
-    cout.precision(8);
+  // cout.setf (std::ios_base::fixed);
+  // cout << " Position = " << y[0] << " " << y[1] << " " << y[3] << endl;
+  // cout.unsetf(std::ios_base::fixed);
+  cout << "\n# Input & B field \n";
+  cout.setf (std::ios_base::scientific);
+  cout << " Position = " << y[0] << " " << y[1] << " " << y[2] << endl;
+  cout << " Momentum = " << y[3] << " " << y[4] << " " << y[5] << endl;
+  cout << " B-field  = " << Bfield[0] << " " << Bfield[1] << " " << Bfield[2] << endl;
+  cout.unsetf(std::ios_base::scientific);
 
-    // cout.setf (std::ios_base::fixed);
-    // cout << " Position = " << y[0] << " " << y[1] << " " << y[3] << endl;
-    // cout.unsetf(std::ios_base::fixed);
-    cout << "\n# Input & B field \n";
-    cout.setf (std::ios_base::scientific);
-    cout << " Position = " << y[0] << " " << y[1] << " " << y[2] << endl;
-    cout << " Momentum = " << y[3] << " " << y[4] << " " << y[5] << endl;
-    cout << " B-field  = " << Bfield[0] << " " << Bfield[1] << " " << Bfield[2] << endl;
-    cout.unsetf(std::ios_base::scientific);
-
-    cout << "\n# 'Force' from B field \n";
-    cout.setf (std::ios_base::fixed);
-    cout << " dy/dx [0-2] (=dX/ds) = " << dydx[0]   << " " << dydx[1]   << " " << dydx[2] << endl;
-    cout << " dy/dx [3-5] (=dP/ds) = " << dydx[3]   << " " << dydx[4]   << " " << dydx[5] << endl;
-    cout.unsetf(std::ios_base::fixed);
+  cout << "\n# 'Force' from B field \n";
+  cout.setf (std::ios_base::fixed);
+  cout << " dy/dx [0-2] (=dX/ds) = " << dydx[0]   << " " << dydx[1]   << " " << dydx[2] << endl;
+  cout << " dy/dx [3-5] (=dP/ds) = " << dydx[3]   << " " << dydx[4]   << " " << dydx[5] << endl;
+  cout.unsetf(std::ios_base::fixed);
 }
 
 template <class T_Field, unsigned int Size>
@@ -436,27 +434,27 @@ VecTMagFieldEquation<T_Field,Size>
                               typename Backend::precision_v  charge,
                               vecgeom::Vector3D<typename Backend::precision_v> &Field ) const
 {
-   typedef typename Backend::precision_v Double_v;
-   Double_v  PositionAndTime[4];
-   PositionAndTime[0] = y[0];
-   PositionAndTime[1] = y[1];
-   PositionAndTime[2] = y[2];
-   PositionAndTime[3] = y[7];  
+  typedef typename Backend::precision_v Double_v;
+  Double_v  PositionAndTime[4];
+  PositionAndTime[0] = y[0];
+  PositionAndTime[1] = y[1];
+  PositionAndTime[2] = y[2];
+  PositionAndTime[3] = y[7];  
 
-   GetFieldValue<Backend>( PositionAndTime, Field) ;
-   EvaluateRhsGivenB<Backend>( y, Field, charge, dydx );
+  GetFieldValue<Backend>( PositionAndTime, Field) ;
+  EvaluateRhsGivenB<Backend>( y, Field, charge, dydx );
 }
 
 template <class T_Field, unsigned int Size>
 std::ostream&  operator<<( std::ostream& os, const VecTMagFieldEquation<T_Field,Size>& eq)
 {
-   os << " Equation of Motion # " << eq.GetId()
-      << "   field ptr= "  << eq.GetFieldObj() << "  Initialised= " << eq.Initialised()
-      << std::endl;
-   // os << "  Total # of E-of-M = " << VecGUVEquationOfMotion<Backend>::GetNumCreated()
-   //    << " live= " << VecGUVEquationOfMotion<Backend>::GetNumLive() << std::endl;
+  os << " Equation of Motion # " << eq.GetId()
+     << "   field ptr= "  << eq.GetFieldObj() << "  Initialised= " << eq.Initialised()
+     << std::endl;
+  // os << "  Total # of E-of-M = " << VecGUVEquationOfMotion<Backend>::GetNumCreated()
+  //    << " live= " << VecGUVEquationOfMotion<Backend>::GetNumLive() << std::endl;
 
-   return os;
+  return os;
 }
 
 #endif  // VECTMAGFIELDEQUATION_H

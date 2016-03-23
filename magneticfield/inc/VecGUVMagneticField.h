@@ -5,9 +5,7 @@
 
 
 class VecGUVMagneticField :  public VecGUVField
-
 {
-
   public:
     static constexpr int   fNumFieldComponents= 3;
     static constexpr bool  fFieldChangesEnergy= false;
@@ -35,16 +33,16 @@ class VecGUVMagneticField :  public VecGUVField
 
 template <class Backend>
 void
-VecGUVMagneticField::GetFieldValue( const typename Backend::precision_v  Point[4],     // The old interface
-                                                        typename Backend::precision_v* FieldArr )
+VecGUVMagneticField::GetFieldValue( const typename Backend::precision_v  Point[4], // The old interface
+                                          typename Backend::precision_v* FieldArr )
 {
-   typedef typename Backend::precision_v Double_v;
+  typedef typename Backend::precision_v Double_v;
 
-   vecgeom::Vector3D<Double_v> PositionV3D( Point[0], Point[1], Point[2]);
-   vecgeom::Vector3D<Double_v>  Field_v3f;
-   this->GetFieldValue( PositionV3D, Field_v3f );
-   FieldArr[0]= Field_v3f.x();
-   FieldArr[1]= Field_v3f.y();
-   FieldArr[2]= Field_v3f.z();
+  vecgeom::Vector3D<Double_v> PositionV3D( Point[0], Point[1], Point[2]);
+  vecgeom::Vector3D<Double_v>  Field_v3f;
+  this->GetFieldValue( PositionV3D, Field_v3f );
+  FieldArr[0]= Field_v3f.x();
+  FieldArr[1]= Field_v3f.y();
+  FieldArr[2]= Field_v3f.z();
 }
 #endif

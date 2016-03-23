@@ -83,7 +83,7 @@ class VecTUniformMagField : public VecGUVMagneticField
     //  Class is thread-safe, can use 'self' instead of clone
 
   private:
-      vecgeom::Vector3D<double> fFieldComponents;
+    vecgeom::Vector3D<double> fFieldComponents;
 };
 
 
@@ -91,23 +91,23 @@ VecTUniformMagField::VecTUniformMagField(double vField,
                                          double vTheta,
                                          double vPhi     )
 {
- if ( (vField<0) || (vTheta<0) || (vTheta>Constants::pi) || (vPhi<0) || (vPhi>Constants::twopi) )
- {
-    // Exception("VecTUniformMagField::VecTUniformMagField()",
-    //     "GeomField0002", FatalException, "Invalid parameters.") ;
-    std::cerr << "ERROR in VecTUniformMagField::VecTUniformMagField()"
-              << "Invalid parameter(s): expect " << std::endl;
-    std::cerr << " - Theta angle: Value = " << vTheta
-              << "  Expected between 0 <= theta <= pi = " << Constants::pi << std::endl;
-    std::cerr << " - Phi   angle: Value = " << vPhi
-              << "  Expected between 0 <=  phi  <= 2*pi = " << Constants::twopi << std::endl;
-    std::cerr << " - Magnitude vField: Value = " << vField
-              << "  Expected vField > 0 " << Constants::twopi << std::endl;
- }
+  if ( (vField<0) || (vTheta<0) || (vTheta>Constants::pi) || (vPhi<0) || (vPhi>Constants::twopi) )
+  {
+     // Exception("VecTUniformMagField::VecTUniformMagField()",
+     //     "GeomField0002", FatalException, "Invalid parameters.") ;
+     std::cerr << "ERROR in VecTUniformMagField::VecTUniformMagField()"
+               << "Invalid parameter(s): expect " << std::endl;
+     std::cerr << " - Theta angle: Value = " << vTheta
+               << "  Expected between 0 <= theta <= pi = " << Constants::pi << std::endl;
+     std::cerr << " - Phi   angle: Value = " << vPhi
+               << "  Expected between 0 <=  phi  <= 2*pi = " << Constants::twopi << std::endl;
+     std::cerr << " - Magnitude vField: Value = " << vField
+               << "  Expected vField > 0 " << Constants::twopi << std::endl;
+  }
 
- //std::sin and cos should work since vTheta etc are always scalar, but what the heck
- fFieldComponents.Set( vField*sin(vTheta)*cos(vPhi),
-                       vField*sin(vTheta)*sin(vPhi),
-                       vField*cos(vTheta)                  );
+  //std::sin and cos should work since vTheta etc are always scalar, but what the heck
+  fFieldComponents.Set( vField*sin(vTheta)*cos(vPhi),
+                        vField*sin(vTheta)*sin(vPhi),
+                        vField*cos(vTheta)                  );
 }
 #endif

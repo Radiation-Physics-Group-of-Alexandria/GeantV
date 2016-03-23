@@ -44,44 +44,41 @@
 class VecGUVField : public AlignedBase
 {
   public: 
+    inline
+    VecGUVField( int NumberOfComponents, bool changesEnergy );
+    inline
+    VecGUVField( const VecGUVField &);
+    virtual ~VecGUVField();
 
-      inline
-      VecGUVField( int NumberOfComponents, bool changesEnergy );
-      inline
-      VecGUVField( const VecGUVField &);
-      virtual ~VecGUVField();
+    //Vector interface with specialization
+    // We expect the derived class to also have this interface
+    // template <class Backend>
+    // void GetFieldValue( const vecgeom::Vector3D<typename Backend::precision_v> &Position,
+    //                           vecgeom::Vector3D<typename Backend::precision_v> &FieldValue );
 
-      //Vector interface with specialization
-      // We expect the derived class to also have this interface
-      // template <class Backend>
-      // void GetFieldValue( const vecgeom::Vector3D<typename Backend::precision_v> &Position,
-      //                           vecgeom::Vector3D<typename Backend::precision_v> &FieldValue );
+    bool DoesFieldChangeEnergy() const { return fChangesEnergy; } 
+    int  GetNumberOfComponents() const { return fNumberOfComponents; } 
 
-      bool DoesFieldChangeEnergy() const { return fChangesEnergy; } 
-      int  GetNumberOfComponents() const { return fNumberOfComponents; } 
-
-      VecGUVField& operator = (const VecGUVField &p); // Useful ?
-      
-      virtual VecGUVField* Clone() const;
+    VecGUVField& operator = (const VecGUVField &p); // Useful ?
+    
+    virtual VecGUVField* Clone() const;
 
   private:
-      const int  fNumberOfComponents; 
-      bool       fChangesEnergy; 
+    const int  fNumberOfComponents; 
+    bool       fChangesEnergy; 
 };
 
 
 inline VecGUVField::VecGUVField( int numberOfComponents, bool changesEnergy )
-   : fNumberOfComponents(numberOfComponents),
-     fChangesEnergy(changesEnergy)
-     //GUVField(numberOfComponents, changesEnergy)
+  : fNumberOfComponents(numberOfComponents),
+    fChangesEnergy(changesEnergy)
 {
   // std::cout<<"-- entered VecGUVField  constructor--"<<std::endl;
 }
 
 
 inline VecGUVField::VecGUVField( const VecGUVField &field) 
-  :  fNumberOfComponents(field.fNumberOfComponents)
-    //GUVField(field)
+  : fNumberOfComponents(field.fNumberOfComponents)
 {
   fChangesEnergy= field.fChangesEnergy;
 }
@@ -93,25 +90,21 @@ VecGUVField::~VecGUVField()
 
 
 VecGUVField& VecGUVField::operator = (const VecGUVField &p)
-{
-  
-   if (&p != this){
-
-    //line below if inheriting from GUVField. Comment 2nd line in that case
-    // this->GUVField::operator=(p);
-   
-     this->fChangesEnergy= p.fChangesEnergy;   
-   }
-   return *this;
+{ 
+  if (&p != this)
+  {
+    this->fChangesEnergy= p.fChangesEnergy;   
+  }
+  return *this;
 }
 
 VecGUVField* VecGUVField::Clone() const
 {
-    std::cout << "Derived class does not implement cloning,\n"
-              << "but Clone method called.\n"
-              << "Cannot continue;" << std::endl;
-    exit(1); 
-    return NULL;
+  std::cout << "Derived class does not implement cloning,\n"
+            << "but Clone method called.\n"
+            << "Cannot continue;" << std::endl;
+  exit(1); 
+  return NULL;
 }
 
 

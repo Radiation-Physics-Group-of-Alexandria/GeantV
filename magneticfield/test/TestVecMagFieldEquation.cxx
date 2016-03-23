@@ -7,6 +7,8 @@
 #include "VecTMagFieldEquation.h"
 #include "VecTUniformMagField.h"
 
+#include "VecGUTCashKarpRKF45.h"
+
 //To be able to call vecgeom::kScalar/kVc/kCuda
 #include <Vc/Vc>
 // #include "backend/vc/Backend.h"
