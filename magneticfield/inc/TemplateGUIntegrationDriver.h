@@ -335,7 +335,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
 #ifdef NEWACCURATEADVANCE
      //Variables required for track insertion algorithm
      int kVectorSize = 4; //can be templated on the backend somehow
-     int *fIndex; // or int fIndex[kVectorSize]
+     int *fIndex; // Id of oriignal track index  // or int fIndex[kVectorSize]
      int fNTracks;
      int fStepperCalls = 0;
      GUVIntegrationStepper *fpScalarStepper;
@@ -343,6 +343,8 @@ class TemplateGUIntegrationDriver : public AlignedBase
      bool partDebug = false ; 
      bool oneStep = true; // false for KeepStepping
 #endif 
+
+     bool scalarDriverInput = false;
 };
 
 // #include "GUIntegratorDriver.icc"
@@ -760,14 +762,6 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
 
   int ncompSVEC = TemplateGUFieldTrack<vecgeom::kScalar>::ncompSVEC; //12, //to be derived from TemplateGUFieldTrack
 
-#ifdef GUDEBUG_FIELD
-  static int dbg=1;
-  static int nStpPr=50;   // For debug printing of long integrations
-  double ySubStepStart[ncompSVEC];
-
-  // std::cout << " AccurateAdvance called with hstep= " << hstep << std::endl;
-#endif
-
   double  y     [ncompSVEC], 
             dydx  [ncompSVEC];
   double  ystart[ncompSVEC], 
@@ -777,9 +771,7 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
 
   double startCurveLength;
 
-  int  noFullIntegr=0, noSmallIntegr = 0 ;
   // G4ThreadLocal
-  static int  noGoodSteps =0 ;  // Bad = chord > curve-len 
   const  int  nvar= fNoVars;
 
 
@@ -816,13 +808,10 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
   nstp=1;
 
 
-  double StartPosAr[3];
   double charge(-1.);
 
   while ( ((nstp++)<=fMaxNoSteps) && (x < x2) && (!lastStep) )
   {
-    StartPosAr[0]= y[0]; StartPosAr[1]= y[1];  StartPosAr[2]= y[2]; 
-    
     fpStepper->RightHandSideVIS( y, charge, dydx );   // TODO: change to inline
 
 #ifdef COLLECT_STATISTICS
@@ -846,11 +835,11 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
 
     ThreeVector EndPos( y[0], y[1], y[2] );
 
-    // Check the endpoint
+/*    // Check the endpoint
     const double edx= y[0] - StartPosAr[0];
     const double edy= y[1] - StartPosAr[1];
     const double edz= y[2] - StartPosAr[2];
-    double endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); 
+    double endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); */
 
     //Ananya: discuss. What exactly is happening here?
     bool avoidNumerousSmallSteps = (h < epsilon * hstep) || (h < fSmallestFraction * startCurveLength);
@@ -2261,12 +2250,6 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 
   int ncompSVEC = TemplateGUFieldTrack<vecgeom::kVc>::ncompSVEC; //12, to be derived from TemplateGUFieldTrack
 
-#ifdef GUDEBUG_FIELD
-  // static int dbg=1;
-  // static int nStpPr=50;   // For debug printing of long integrations
-  // Double_v ySubStepStart[ncompSVEC];
-#endif
-
 #ifdef PARTDEBUG
   if (partDebug)
   {
@@ -2290,7 +2273,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 
   // G4ThreadLocal
 #ifdef COLLECT_STATISTICS
-  static int  noGoodSteps =0 ;  // Bad = chord > curve-len 
+  // static int  noGoodSteps =0 ;  // Bad = chord > curve-len 
 #endif 
 
   Double_v hStepLane; 
@@ -2346,7 +2329,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
   Bool_v   lastStep(false);
   Double_v nstp(1); 
 
-  Double_v StartPosAr[3];
+  // Double_v StartPosAr[3];
 
   // Ananya : making random charge now
   // needs to be passed in some other way finally
@@ -2362,13 +2345,14 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
   // Say continue if isDoneLane is not 1111 and rest all conditions are not 0000
   // while ( !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) || trackNextInput < nTracks  )
   while ( (!vecgeom::IsFull(isDoneLane) && 
-           !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) ) || 
-           trackNextInput < nTracks  )
+           !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) 
+           ) 
+           ||  trackNextInput < nTracks  )
   {
 #ifdef DEBUG
     std::cout<<"----hStepLane is: "<< hStepLane << std::endl;
 #endif 
-    StartPosAr[0] = y[0]; StartPosAr[1] = y[1];  StartPosAr[2] = y[2]; 
+    // StartPosAr[0] = y[0]; StartPosAr[1] = y[1];  StartPosAr[2] = y[2]; 
     
 
     // Perform the Integration
@@ -2381,20 +2365,21 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
       fpStepper->RightHandSideVIS( y, charge, dydx );   // TODO: change to inline
       OneStep( y, dydx, x, h, epsilon, hdid, hnext);
     }
-    else KeepStepping( y, dydx, x, h, epsilon, hdid, hnext, hStepLane, hTotalDoneSoFar) ;
+    else 
+      KeepStepping( y, dydx, x, h, epsilon, hdid, hnext, hStepLane, hTotalDoneSoFar) ;
 
     fNoTotalSteps++;
     // KeepStepping( y, dydx, x, h, epsilon, hdid, hnext, hStepLane, hTotalDoneSoFar) ;
     lastStepSucceeded = (hdid == h);   
     // }
 
-    ThreeVector EndPos( y[0], y[1], y[2] );
+    // ThreeVector EndPos( y[0], y[1], y[2] );
 
-    // Check the endpoint
+/*    // Check the endpoint
     const Double_v edx= y[0] - StartPosAr[0];
     const Double_v edy= y[1] - StartPosAr[1];
     const Double_v edz= y[2] - StartPosAr[2];
-    Double_v endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; 
+    Double_v endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; */
 
     // Ananya: discuss. What exactly is happening here?
     // h<=0 case: first condition false, second condition always true assuming smallest fraction and 
@@ -2453,39 +2438,22 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 #endif
     nstp++;
 
-    Bool_v CondNoOfSteps     = nstp<=fMaxNoSteps;
-    Bool_v CondXLessThanx2   = x < x2;
-    Bool_v CondIsNotLastStep = !lastStep; // lastStep is false
-
-    bool condNoOfSteps     = vecgeom::IsFull(CondNoOfSteps    );
-    bool condXLessThanx2   = vecgeom::IsFull(CondXLessThanx2  ); 
-    bool condIsNotLastStep = vecgeom::IsFull(CondIsNotLastStep);
-
     Bool_v finishedLane;
-
     succeededLane = (x>=x2); // If it was a "forced" last step
 
-    if ( !( condNoOfSteps && condXLessThanx2 && condIsNotLastStep ) )
+    Bool_v continueLane = ( nstp<=fMaxNoSteps ) && ( !succeededLane ) && !lastStep;
+
+    if ( ! vecgeom::IsFull( continueLane ) )
     // Condition inside if can be stored in a variable and used for while condition. 
     // Saves some evaluations
     {
-      finishedLane =  
-              ( !CondNoOfSteps || !CondXLessThanx2 || !CondIsNotLastStep );
- #ifdef DEBUG
-      if (partDebug)
-      {
-        std::cout<<" finishedLane:     "<< finishedLane     << std::endl;
-        std::cout<<" CondNoOfSteps:    "<< CondNoOfSteps    << std::endl;
-        std::cout<<" CondXLessThanx2:  "<< CondXLessThanx2  << std::endl;
-        std::cout<<" CondIsNotLastStep:"<< CondIsNotLastStep<< std::endl;        
-      }
-#endif
+      finishedLane =  ! continueLane;
       for (int i = 0; i < kVectorSize; ++i)
       {
         if (finishedLane[i] == 1 &&  fIndex[i] != -1)
         {
           // can be replaced with succeeded[fIndex[i]] = x[i] >= x2[i], one Vc vector reduced thus
-          succeeded[fIndex[i]] = succeededLane[i]; //Final succeeded bool // might be absorbed in StoreOutput
+          succeeded[fIndex[i]] = succeededLane[i]; // Final success - can absorb into StoreOutput
           
           // Keep StoreOutput after succeeded[fIndex[i]] = succeededLane[i]; so that
           // succeeded can be changed again. Needs to be changed in case of h<=0
@@ -2500,7 +2468,8 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 
             nstp      [i] = 1;     // logically part of InsertNewTrack, not done so to reduce
             lastStep  [i] = false; // number of parameters to be passed to the function
-            x         [i] = x1[i]; // ?? Needed? Find something to set x<x2 
+            x         [i] = startCurveLength[i];
+            x         [i] = x1[i]; 
             h         [i] = hStepLane[i];// Can absorb in InsertNewTrack as well, leads to too many variables though
                                         // Maybe ask John interpretation of this h and then put in InsertNewTrack
                                         // with appropriate name 
@@ -2525,45 +2494,54 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
     }
 #endif 
        
-/*    Bool_v leftLanes = (nstp<=fMaxNoSteps) && (x < x2) && (!lastStep) ;
-    int countLeftLanes=0;
-    int indLastLane;
-    // std::cout << " leftLanes is: " << leftLanes << std::endl;
-    if( !vecgeom::IsEmpty(leftLanes) )
+    // This if block if using scalar driver as well. Not applicable for scalar backend
+
+    // bool scalarDriverInput set in constructor. Default false.
+
+    if (scalarDriverInput)
     {
-      for (int i = 0; i < kVectorSize; ++i)
+      Bool_v leftLanes = (nstp<=fMaxNoSteps) && (x < x2) && (!lastStep) ;
+      int countLeftLanes=0;
+      int indLastLane;
+      // std::cout << " leftLanes is: " << leftLanes << std::endl;
+      if( !vecgeom::IsEmpty(leftLanes) )
       {
-        if (leftLanes[i] == 1)
+        for (int i = 0; i < kVectorSize; ++i)
         {
-          countLeftLanes++;
-          indLastLane = i;
-          // std::cout << indLastLane << std::endl;
+          if (leftLanes[i] == 1)
+          {
+            countLeftLanes++;
+            indLastLane = i;
+            // std::cout << indLastLane << std::endl;
+          }
         }
+      }
+
+      // std::cout<< "countLeftLanes is: "<<countLeftLanes << std::endl;
+
+      if (countLeftLanes == 1)
+      {
+        // double hstepOneLane = hStepLane[indLastLane] - hTotalDoneSoFar[indLastLane];
+        vecgeom::Vector3D<double> Pos, Mom;
+        for (int i = 0; i < 3; ++i)
+         {
+           Pos[i] = y[i][indLastLane];
+           Mom[i] = y[i+3][indLastLane];
+         } 
+        GUFieldTrack y_input(Pos, Mom); 
+        GUFieldTrack y_output(Pos, Mom);
+        // y_input.SetCurveLength( hTotalDoneSoFar[indLastLane] ) ;
+        fpScalarDriver->AccurateAdvance(y_input, hstep[ fIndex[indLastLane] ] - hTotalDoneSoFar[indLastLane], epsilon, y_output );
+
+        isDoneLane[indLastLane] == true;
+        // Store Output
+        double y_output_arr[12];
+        y_output.DumpToArray(y_output_arr);
+        yOutput[fIndex[indLastLane]].LoadFromArray(y_output_arr);
       }
     }
 
-    // std::cout<< "countLeftLanes is: "<<countLeftLanes << std::endl;
 
-    if (countLeftLanes == 1)
-    {
-      // double hstepOneLane = hStepLane[indLastLane] - hTotalDoneSoFar[indLastLane];
-      vecgeom::Vector3D<double> Pos, Mom;
-      for (int i = 0; i < 3; ++i)
-       {
-         Pos[i] = y[i][indLastLane];
-         Mom[i] = y[i+3][indLastLane];
-       } 
-      GUFieldTrack y_input(Pos, Mom); 
-      GUFieldTrack y_output(Pos, Mom);
-      // y_input.SetCurveLength( hTotalDoneSoFar[indLastLane] ) ;
-      fpScalarDriver->AccurateAdvance(y_input, hstep[ fIndex[indLastLane] ] - hTotalDoneSoFar[indLastLane], epsilon, y_output );
-
-      isDoneLane[indLastLane] == true;
-      // Store Output
-      double y_output_arr[12];
-      y_output.DumpToArray(y_output_arr);
-      yOutput[fIndex[indLastLane]].LoadFromArray(y_output_arr);
-    }*/
 
   } // end of while loop
 
@@ -2606,6 +2584,7 @@ TemplateGUIntegrationDriver<Backend>
 {
   fpScalarStepper = pScalarStepper; 
   fpScalarDriver  = pScalarDriver;
+  scalarDriverInput = true;
 }
 
 
