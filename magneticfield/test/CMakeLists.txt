@@ -26,10 +26,6 @@ add_executable(testMagFieldEquation testMagFieldEquation.cxx) ## ${sources} ${he
 target_link_libraries(testMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testMagFieldEquation")
 
-add_executable(testVectorMagFieldEquation testVectorMagFieldEquation.cxx) ## ${sources} ${headers})
-target_link_libraries(testVectorMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-#message(STATUS "Created target for testVectorMagFieldEquation")
-
 add_executable(testTemplateMagFieldEquation testTemplateMagFieldEquation.cxx) ## ${sources} ${headers})
 target_link_libraries(testTemplateMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
@@ -90,10 +86,6 @@ message(STATUS "Created target for testIntegrationDriver")
 add_executable(testGUPropagateField testGUPropagateField.cxx) ## ${sources} ${headers})
 target_link_libraries(testGUPropagateField Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testGUPropagateField")
-
-add_executable(testConstVecFieldStepper testConstVecFieldStepper.cxx) ## ${sources} ${headers})
-target_link_libraries(testConstVecFieldStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for testConstVecFieldStepper")
 
 ## add_executable(testFieldPropagator TestGUFieldPropagator.cxx) ## ${sources} ${headers})
 ## target_link_libraries(testFieldPropagator Vmagfield  ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
