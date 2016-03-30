@@ -2,3 +2,27 @@
 
 2. A method to enforce that required functionalities exist in all steppers.(for design with only functions backend dependent, and not classes)
    Currently, need to check by hand or by implementing in driver
+
+
+Dev Note:  30 March 2016 (Ananya, recorded by John A.)
+
+1) Fully working - previous design with single classes for both Vector and scalar, with template on Backend 
+  testVectorIntegrationDriver.cxx
+  BenchmarkIntegrationDriver.cxx
+
+  testVectorMagFieldEquation.cxx   ( tests only vector equation  GUV_VectorEquationOfMotion unused in any version )
+
+
+2) The revised 'experimental' design, in which a single class is responsible for both scalar and vector stepping is contained in the classes:
+  VecGUTCashKarpRKF45.h
+  VecGUVField.h
+  VecGUVMagneticField.h
+  VecTMagFieldEquation.h
+  VecTUniformMagField.h
+
+These classes are no longer templated on 'Backend'
+
+The test programs for this are:
+  TestVecCashKarpStepper.cxx
+  TestVecMagFieldEquation.cxx 
+
