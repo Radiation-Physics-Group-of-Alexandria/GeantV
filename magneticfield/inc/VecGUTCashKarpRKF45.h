@@ -164,7 +164,7 @@ VecGUTCashKarpRKF45<T_Equation,Nvar>::
   std::cout<<"\n----Entered constructor of VecGUTCashKarpRKF45 "<<std::endl;
   std::cout<<"----In VecGUTCashKarpRKF45 constructor, Nvar is: "<<Nvar<<std::endl;
  #endif
-  assert( dynamic_cast<VecTMagFieldEquation*>(EqRhs) != 0 );
+  assert( dynamic_cast<T_Equation*>(EqRhs) != 0 );
 
   assert( (numStateVariables == 0) || (numStateVariables >= Nvar) );
  
@@ -231,7 +231,7 @@ VecGUTCashKarpRKF45<T_Equation,Nvar>::
   fOwnTheEquation=true;
    // fEquation_Rhs= right.GetEquationOfMotion()->Clone());
   
-  assert( dynamic_cast<TemplateGUVEquationOfMotion<Backend>*>(fEquation_Rhs) != 0 );  
+  assert( dynamic_cast<T_Equation *>(fEquation_Rhs) != 0 );  
   assert( this->GetNumberOfStateVariables() >= Nvar);
 
 #if 1
