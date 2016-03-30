@@ -50,10 +50,6 @@ target_link_libraries(testIntegrationDriverCashKarp Vmagfield -lGeant_v ${VECGEO
 #message(STATUS "Created target for testIntegrationDriverCashKarp")
 
 
-add_executable(testToyClass testToyClass.cxx) ## ${sources} ${headers})
-target_link_libraries(testToyClass Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for testToyClass")
-
 add_executable(testVectorIntegrationDriver testVectorIntegrationDriver.cxx) ## ${sources} ${headers})
 target_link_libraries(testVectorIntegrationDriver Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testVectorIntegrationDriver")
@@ -78,10 +74,6 @@ message(STATUS "Created target for TestVecCashKarpStepper")
 #add_executable(TestConstBzStepper TestConstBzStepper.cxx) ## ${sources} ${headers})
 #target_link_libraries(TestConstBzStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-
-add_executable(ReproduceError ReproduceError.cxx) ## ${sources} ${headers})
-target_link_libraries(ReproduceError Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-#message(STATUS "Created target for testVectorMagFieldEquation")
 
 # add_executable(testTClassicalRK4 testTClassicalRK4.cxx) ## ${sources} ${headers})
 # target_link_libraries(testTClassicalRK4 Vmagfield ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
