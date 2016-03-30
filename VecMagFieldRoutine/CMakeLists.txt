@@ -60,7 +60,3 @@ target_link_libraries(TestAOS3D  ${ALL_LIBRARIES}) # ${VECGEOM_LIBRARIES} ${VECG
 
 #add_executable(VecBoundariesGraph ${CMAKE_CURRENT_SOURCE_DIR}/test/visualizations/GraphsForBoundaries.cpp ${sources})
 #target_link_libraries(VecBoundariesGraph ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB})
-
-
-add_executable(smallTest ${CMAKE_CURRENT_SOURCE_DIR}/test/smallTest.cpp ${sources})
-target_link_libraries(smallTest ${VECGEOM_LIBRARIES} ${VECGEOM_LIBRARIES_EXTERNAL} ${USERKERNELLIB})

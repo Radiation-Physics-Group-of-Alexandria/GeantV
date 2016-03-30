@@ -26,37 +26,6 @@ add_executable(testMagFieldEquation testMagFieldEquation.cxx) ## ${sources} ${he
 target_link_libraries(testMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for testMagFieldEquation")
 
-add_executable(testTemplateMagFieldEquation testTemplateMagFieldEquation.cxx) ## ${sources} ${headers})
-target_link_libraries(testTemplateMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-
-add_executable(testStepperFixedCashKarp testStepperFixedCashKarp.cxx) ## ${sources} ${headers})
-target_link_libraries(testStepperFixedCashKarp Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for testStepperFixedCashKarp")
-
-add_executable(testTemplateStepperFixedCashKarp testTemplateStepperFixedCashKarp.cxx) ## ${sources} ${headers})
-target_link_libraries(testTemplateStepperFixedCashKarp Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-#message(STATUS "Created target for testTemplateStepperFixedCashKarp")
-
-add_executable(testTemplateStepperFixedCashKarp2 testTemplateStepperFixedCashKarp2.cxx) ## ${sources} ${headers})
-target_link_libraries(testTemplateStepperFixedCashKarp2 Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-#message(STATUS "Created target for testTemplateStepperFixedCashKarp2")
-
-add_executable(testIntegrationDriverCashKarp testIntegrationDriverCashKarp.cxx) ## ${sources} ${headers})
-target_link_libraries(testIntegrationDriverCashKarp Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-#message(STATUS "Created target for testIntegrationDriverCashKarp")
-
-
-add_executable(testVectorIntegrationDriver testVectorIntegrationDriver.cxx) ## ${sources} ${headers})
-target_link_libraries(testVectorIntegrationDriver Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for testVectorIntegrationDriver")
-
-add_executable(BenchmarkIntegrationDriver BenchmarkIntegrationDriver.cxx) ## ${sources} ${headers})
-target_link_libraries(BenchmarkIntegrationDriver Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for BenchmarkIntegrationDriver")
-
-add_executable(TestDriver2 TestDriver2.cxx) ## ${sources} ${headers})
-target_link_libraries(TestDriver2 Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for TestDriver2")
 
 add_executable(TestVecMagFieldEquation TestVecMagFieldEquation.cxx) ## ${sources} ${headers})
 target_link_libraries(TestVecMagFieldEquation Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
