@@ -35,27 +35,6 @@ add_executable(TestVecCashKarpStepper TestVecCashKarpStepper.cxx) ## ${sources} 
 target_link_libraries(TestVecCashKarpStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 message(STATUS "Created target for TestVecCashKarpStepper")
 
-
-#add_executable(TestConstBzStepper TestConstBzStepper.cxx) ## ${sources} ${headers})
-#target_link_libraries(TestConstBzStepper Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-
-
-# add_executable(testTClassicalRK4 testTClassicalRK4.cxx) ## ${sources} ${headers})
-# target_link_libraries(testTClassicalRK4 Vmagfield ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-# message(STATUS "Created target for testTClassicalRK4")
-
-add_executable(testStepperFixed testStepperFixed.cxx) ## ${sources} ${headers})
-target_link_libraries(testStepperFixed Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for testStepperFixed")
-
-add_executable(testIntegrationDriver testIntegrationDriver.cxx) ## ${sources} ${headers})
-target_link_libraries(testIntegrationDriver Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for testIntegrationDriver")
-
-add_executable(testGUPropagateField testGUPropagateField.cxx) ## ${sources} ${headers})
-target_link_libraries(testGUPropagateField Vmagfield -lGeant_v ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-message(STATUS "Created target for testGUPropagateField")
-
 ## add_executable(testFieldPropagator TestGUFieldPropagator.cxx) ## ${sources} ${headers})
 ## target_link_libraries(testFieldPropagator Vmagfield  ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 ## # ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} -lGeom -lEG -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -lXsec -lGeant_v)
