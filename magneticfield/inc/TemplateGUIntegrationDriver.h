@@ -2487,6 +2487,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 
             nstp      [i] = 1;     // logically part of InsertNewTrack, not done so to reduce
             lastStep  [i] = false; // number of parameters to be passed to the function
+            x1        [i] = startCurveLength[i];
             x         [i] = x1[i]; // ?? Needed? Find something to set x<x2 
             h         [i] = hStepLane[i];// Can absorb in InsertNewTrack as well, leads to too many variables though
                                         // Maybe ask John interpretation of this h and then put in InsertNewTrack
