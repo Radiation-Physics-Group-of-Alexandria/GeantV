@@ -335,8 +335,9 @@ class TemplateGUIntegrationDriver : public AlignedBase
 #ifdef NEWACCURATEADVANCE
      //Variables required for track insertion algorithm
      int kVectorSize = 4; //can be templated on the backend somehow
-     int *fIndex; // or int fIndex[kVectorSize]
+     int *fIndex;       // Id of original track index    // or int fIndex[kVectorSize]
      int fNTracks;
+
      int fStepperCalls = 0;
      GUVIntegrationStepper *fpScalarStepper;
      GUIntegrationDriver *fpScalarDriver;
@@ -2364,8 +2365,9 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
   // Say continue if isDoneLane is not 1111 and rest all conditions are not 0000
   // while ( !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) || trackNextInput < nTracks  )
   while ( (!vecgeom::IsFull(isDoneLane) && 
-           !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) ) || 
-           trackNextInput < nTracks  )
+           !vecgeom::IsEmpty((nstp<=fMaxNoSteps) && (x < x2) && (!lastStep)) 
+          ) 
+          || trackNextInput < nTracks  )
   {
 #ifdef DEBUG
     std::cout<<"----hStepLane is: "<< hStepLane << std::endl;
@@ -2383,7 +2385,8 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
       fpStepper->RightHandSideVIS( y, charge, dydx );   // TODO: change to inline
       OneStep( y, dydx, x, h, epsilon, hdid, hnext);
     }
-    else KeepStepping( y, dydx, x, h, epsilon, hdid, hnext, hStepLane, hTotalDoneSoFar) ;
+    else 
+      KeepStepping( y, dydx, x, h, epsilon, hdid, hnext, hStepLane, hTotalDoneSoFar) ;
 
     fNoTotalSteps++;
     // KeepStepping( y, dydx, x, h, epsilon, hdid, hnext, hStepLane, hTotalDoneSoFar) ;
@@ -2455,39 +2458,21 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 #endif
     nstp++;
 
-    Bool_v CondNoOfSteps     = nstp<=fMaxNoSteps;
-    Bool_v CondXLessThanx2   = x < x2;
-    Bool_v CondIsNotLastStep = !lastStep; // lastStep is false
-
-    bool condNoOfSteps     = vecgeom::IsFull(CondNoOfSteps    );
-    bool condXLessThanx2   = vecgeom::IsFull(CondXLessThanx2  ); 
-    bool condIsNotLastStep = vecgeom::IsFull(CondIsNotLastStep);
-
     Bool_v finishedLane;
 
     succeededLane = (x>=x2); // If it was a "forced" last step
 
-    if ( !( condNoOfSteps && condXLessThanx2 && condIsNotLastStep ) )
-    // Condition inside if can be stored in a variable and used for while condition. 
-    // Saves some evaluations
+    Bool_v continueLane = ( nstp<=fMaxNoSteps ) && ( !succeededLane ) && !lastStep; 
+    if( ! vecgeom::IsFull( continueLane ) )
     {
-      finishedLane =  
-              ( !CondNoOfSteps || !CondXLessThanx2 || !CondIsNotLastStep );
- #ifdef DEBUG
-      if (partDebug)
-      {
-        std::cout<<" finishedLane:     "<< finishedLane     << std::endl;
-        std::cout<<" CondNoOfSteps:    "<< CondNoOfSteps    << std::endl;
-        std::cout<<" CondXLessThanx2:  "<< CondXLessThanx2  << std::endl;
-        std::cout<<" CondIsNotLastStep:"<< CondIsNotLastStep<< std::endl;        
-      }
-#endif
+      finishedLane =  ! continueLane;
+
       for (int i = 0; i < kVectorSize; ++i)
       {
-        if (finishedLane[i] == 1 &&  fIndex[i] != -1)
+        if (finishedLane[i] &&  fIndex[i] != -1)
         {
           // can be replaced with succeeded[fIndex[i]] = x[i] >= x2[i], one Vc vector reduced thus
-          succeeded[fIndex[i]] = succeededLane[i]; //Final succeeded bool // might be absorbed in StoreOutput
+          succeeded[fIndex[i]] = succeededLane[i]; //Final succeess - can absorb into StoreOutput
           
           // Keep StoreOutput after succeeded[fIndex[i]] = succeededLane[i]; so that
           // succeeded can be changed again. Needs to be changed in case of h<=0
