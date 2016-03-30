@@ -251,17 +251,6 @@ void GeantTrack::Clear(const char *) {
   fPending = false;
 }
 
-#if 0
-//______________________________________________________________________________
-double GeantTrack::Curvature() const {
-  // Curvature
-  if (fCharge == 0)
-    return 0.;
-  const double tiny = 1.E-30;
-  return fabs(kB2C * fCharge * gPropagator->fBmag / (Pt() + tiny));
-}
-#endif
-
 //______________________________________________________________________________
 Volume_t const*GeantTrack::GetVolume() const {
 #ifdef USE_VECGEOM_NAVIGATOR
@@ -1492,6 +1481,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   // - snext step (bdr=1)
 
   // Double_t c = 0.;
+  constexpr double toKiloGauss= 1.0 / fieldUnits::kilogauss;
 
   bool useRungeKutta;
   GUFieldPropagator *fieldPropagator = nullptr;
@@ -1532,7 +1522,7 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
   // static unsigned long icount= 0;
   // if( icount++ < 2 )  std::cout << " PropagateInVolumeSingle: useRungeKutta= " << useRungeKutta << std::endl;
 
-  double curvaturePlus= fabs(kB2C * fChargeV[i] * bmag) / (fPV[i] + 1.0e-30);  // norm for step
+  double curvaturePlus= fabs(kB2C * fChargeV[i] * bmag * toKiloGauss ) / (fPV[i] + 1.0e-30);  // norm for step
   // 'Curvature' along the full track - not just in the plane perpendicular to the B-field vector
 
   constexpr double numRadiansMax= 10.0;   //  Too large an angle - many RK steps.  Potential change -> 2.0*PI;
@@ -1551,8 +1541,8 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
 
 #ifdef DEBUG_FIELD
   printf("--PropagateInVolumeSingle: \n");
-  printf("Curvature= %8.4g   CurvPlus= %8.4g  step= %f   Bmag=%8.4g   momentum mag=%f  angle= %g\n"
-         Curvature(td, i), curvaturePlus, crtstep, bmag, fPV[i], angle );
+  printf("Curvature= %8.4g   CurvPlus= %8.4g  step= %f   Bmag=%8.4g kG  momentum mag=%f  angle= %g\n",
+         Curvature(td, i), curvaturePlus, crtstep, bmag * toKiloGauss, fPV[i], angle );
 #endif
 
 #ifdef USE_VECGEOM_NAVIGATOR
@@ -1599,7 +1589,10 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
      if ( dominantBz ) {
         // printf("h"); std::cout << "h";
         propagationType= 2;
-        // Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g ) Kilo Gauss\n", Bz, Bx, By );
+        // double Bx = BfieldInitial[0] * toKiloGauss;
+        // double By = BfieldInitial[1] * toKiloGauss;
+        // if( verbose )
+        //   Printf("Called Helix-Bz.  Bz= %g , ( Bx = %g, By= %g ) Kilo Gauss\n", Bz, Bx, By );
 
         // Constant field in Z-direction
         Geant::ConstBzFieldHelixStepper stepper( Bz ); //
@@ -1614,12 +1607,18 @@ void GeantTrack_v::PropagateInVolumeSingle(int i, double crtstep, GeantTaskData 
         if( ! CheckDirection( i, 1.0e-4 ) )
            PrintTrack(i, "Failed check of *direction* - input to General Helix stepper.");
 
-        Printf("Called Helix-General.  Bz= %g , Bx = %g, By= %g ", Bz, Bx, By );
-        double BfieldKG[3]= { Bx, By, Bz };
-           // BfieldInitial[0] * toKiloGauss, BfieldInitial[1] * toKiloGauss, BfieldInitial[2] * toKiloGauss );
-        Geant::ConstVecFieldHelixStepper stepper( BfieldKG ); // double Bfield[3] );
-        stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
-                                         PositionNewHlx, DirectionNewHlx);
+        if( fabs( Bx ) + fabs ( By ) + fabs( Bz ) > 0.0 ) {
+           // if( verbose )
+           //    Printf("Called Helix-General.  Bz= %g , Bx = %g, By= %g ", Bz, Bx, By );
+           double BfieldKG[3]= { Bx, By, Bz };
+           Geant::ConstVecFieldHelixStepper stepper( BfieldKG ); // double Bfield[3] );
+           stepper.DoStep<ThreeVector,double,int>(Position,    Direction,  fChargeV[i], fPV[i], crtstep,
+                                                  PositionNewHlx, DirectionNewHlx);
+        } else {
+           // Printf("Called Helix-General.  Bz= %g , Bx = %g, By= %g ", Bz, Bx, By );           
+           PositionNewHlx  = Position + crtstep * Direction;
+           DirectionNewHlx = Direction; 
+        }
      }
 
      PositionNew =  PositionNewHlx;
@@ -2954,6 +2953,7 @@ double GeantTrack_v::Curvature(GeantTaskData *td, int i) const {
 
   // Curvature for general field
   const double tiny = 1.E-30;
+  constexpr double toKiloGauss= 1.0 / fieldUnits::kilogauss;  // Could include in KB2C 
 
   double Bfield[3], bmag= 0.0;
 
@@ -2971,7 +2971,7 @@ double GeantTrack_v::Curvature(GeantTaskData *td, int i) const {
 
   double Pt_mag = PtransB.Mag();
 
-  return fabs(kB2C * fChargeV[i] * bmag / (Pt_mag + tiny));
+  return fabs(kB2C * fChargeV[i] * bmag * toKiloGauss / (Pt_mag + tiny));
 }
 
 //______________________________________________________________________________

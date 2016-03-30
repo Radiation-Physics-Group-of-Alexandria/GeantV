@@ -394,7 +394,7 @@ void *WorkloadManager::TransportTracks() {
     
     GeantTrack_v &input = basket->GetInputTracks();
 
-#define ENERGY_BALANCE 1
+// #define ENERGY_BALANCE 1
 
 #ifdef ENERGY_BALANCE    
     double sumEin= 0.0;
@@ -550,8 +550,8 @@ void *WorkloadManager::TransportTracks() {
         //  output.PrintTracks();        
 
       }
-      Geant::Print("","============= WrkMgr After UsePhysics - Basket: %s\n", basket->GetName());
-      output.PrintTracks();       
+      // Geant::Print("","============= WrkMgr After UsePhysics - Basket: %s\n", basket->GetName());
+      // output.PrintTracks();       
     }
     
 #ifdef ENERGY_BALANCE
@@ -608,18 +608,18 @@ void *WorkloadManager::TransportTracks() {
 
       // Geant::Print("WrkMgr",": ...
 
-      // if( std::fabs(eBalance) > 0.03 * sumEin ) {
+      if( std::fabs(eBalance) > 0.03 * sumEin ) {
         Printf("WrkMgr: #tracks: in=%4d out= %4d Ein= %13.4f  Edep = %10.4f   Eout= %13.4f  Ekilled = %9.4f  Exiting = %6.3g Physics= %14.6f - Balance= %12.6g",  // Remains= %8.6f 
              // numTracksIn,
              ninput, output.GetNtracks(),
              sumEin*eConv, sumEdep*eConv, sumEout*eConv, sumEkilled*eConv,
              sumEexiting*eConv, sumEphysics*eConv, // sumEremains*eConv,
              eBalance*eConv);
-       // }
+      }
 
 #endif
-      Geant::Print("","====== WorkloadManager: Output tracks - after physics");
-      output.PrintTracks("Output Tracks: ");
+       // Geant::Print("","====== WorkloadManager: Output tracks - after physics");
+       // output.PrintTracks("Output Tracks: ");
 
 
     // Report problem tracks (option in comments) -- and correct them!
