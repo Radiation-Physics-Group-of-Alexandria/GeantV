@@ -214,7 +214,7 @@ int main(/*int argc, char *args[]*/)
 
     // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
 
-    int nTracks = 16;
+    constexpr int nTracks = 16;
     FieldTrack yInput[nTracks], yOutput[nTracks];
     double hstep[nTracks];
     bool   succeeded[nTracks];

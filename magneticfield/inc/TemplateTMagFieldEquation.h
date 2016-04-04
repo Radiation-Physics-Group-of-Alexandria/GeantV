@@ -83,12 +83,10 @@ class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
 
      REALLY_INLINE
      void FieldFromY(const Double_v y[], 
-                     const Double_v charge,
                            Double_v Bfield[] ) const;
 
      REALLY_INLINE
      void FieldFromY(const Double_v y[], 
-                    /* const Double_v charge,*/
                            vecgeom::Vector3D<Double_v> &Bfield ) const;
 
      REALLY_INLINE
@@ -171,7 +169,7 @@ REALLY_INLINE
     // std::cout<<"\n\n\n AM I BEING CALLED SOMEHOW?"<<std::endl;
     // vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
 
-    Double_v cof = fParticleCharge*fCof*inv_momentum_magnitude;
+    Double_v cof = charge * fCof * inv_momentum_magnitude;
 
     dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
     dydx[1] = y[4]*inv_momentum_magnitude;       //  (d/ds)y = Vy/V
@@ -191,7 +189,6 @@ REALLY_INLINE
 void
 TemplateTMagFieldEquation<Backend,Field,Size>
    ::FieldFromY(const typename Backend::precision_v y[], 
-                const typename Backend::precision_v charge,  
                       typename Backend::precision_v Bfield[3] ) const
 {
     // double  Bfield[3];  //G4maximum_number_of_field_components];

@@ -158,6 +158,8 @@ class TemplateGUIntegrationDriver : public AlignedBase
      
      TemplateGUVEquationOfMotion<Backend>* GetEquationOfMotion() { return fpStepper->GetEquationOfMotion(); }
      const TemplateGUVEquationOfMotion<Backend>* GetEquationOfMotion() const { return fpStepper->GetEquationOfMotion(); } 
+
+     static constexpr int ncompSVEC = TemplateGUFieldTrack<vecgeom::kVc>::ncompSVEC;
      
      // Auxiliary methods
      inline double GetHmin()        const { return fMinimumStep; } 
@@ -233,36 +235,36 @@ class TemplateGUIntegrationDriver : public AlignedBase
      void     SetSmallestFraction( double val ); 
 
    protected:  // without description
-     void WarnSmallStepSize( Double_v hnext, 
-                             Double_v hstep, 
-                             Double_v h,     
-                             Double_v xDone,
-                             int      noSteps) {} //;  //warnings per track, probably neeed to change all to double :ananya
-     void WarnTooManySteps ( Double_v x1start, 
-                             Double_v x2end, 
-                             Double_v xCurrent) {} //;
-     void WarnEndPointTooFar( Double_v  endPointDist, 
-                              Double_v  hStepSize , 
-                              Double_v  epsilonRelative,
-                              int     debugFlag) {} //;
+     void WarnSmallStepSize( Double_v , // hnext, 
+                             Double_v , // hstep, 
+                             Double_v , // h,     
+                             Double_v , // xDone,
+                             int      /*noSteps*/ ) {} //;  //warnings per track, probably neeed to change all to double :ananya
+     void WarnTooManySteps ( Double_v , // x1start, 
+                             Double_v , // x2end, 
+                             Double_v /*xCurrent*/ ) {} //;
+     void WarnEndPointTooFar( Double_v  , // endPointDist, 
+                              Double_v  , // hStepSize , 
+                              Double_v  , // epsilonRelative,
+                              int     /*debugFlag*/ ) {} //;
      //  Issue warnings for undesirable situations
      //add index in order to print one at a time :ananya 
-     void PrintStatus(  const Double_v*      StartArr,
-                              Double_v       xstart,
-                        const Double_v*      CurrentArr, 
-                              Double_v       xcurrent, 
-                              Double_v       requestStep, 
-                              int          subStepNo ) {} //;
-     void PrintStatus(  const TemplateGUFieldTrack<Backend>&  StartFT,
-                        const TemplateGUFieldTrack<Backend>&  CurrentFT, 
-                              double       requestStep, 
-                              int          subStepNo ) {} //;
-     void PrintStat_Aux( const TemplateGUFieldTrack<Backend>& aGUFieldTrack,
-                               double      requestStep, 
-                               double      actualStep,
-                               int         subStepNo,
-                               double      subStepSize,
-                               double      dotVelocities ) {} //;       
+     void PrintStatus(  const Double_v*      , // StartArr,
+                              Double_v       , // xstart,
+                        const Double_v*      , // CurrentArr, 
+                              Double_v       , // xcurrent, 
+                              Double_v       , // requestStep, 
+                              int          /* subStepNo */  ) {} //;
+     void PrintStatus(  const TemplateGUFieldTrack<Backend>&  /*StartFT*/,
+                        const TemplateGUFieldTrack<Backend>&  /*CurrentFT*/, 
+                              double       /*requestStep*/, 
+                              int          /*subStepNo*/ ) {} //;
+     void PrintStat_Aux( const TemplateGUFieldTrack<Backend>& , // aGUFieldTrack,
+                               double      , // requestStep, 
+                               double      , // actualStep,
+                               int         , // subStepNo,
+                               double      , // subStepSize,
+                               double      /*dotVelocities*/ ) {} //;       
      //  Verbose output for debugging
 
      void PrintStatisticsReport() {} //;
@@ -334,7 +336,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
      // Could be varied during tracking - to help identify issues
 #ifdef NEWACCURATEADVANCE
      //Variables required for track insertion algorithm
-     int kVectorSize = 4; //can be templated on the backend somehow
+     static constexpr int kVectorSize = vecgeom::kVectorSize; // 4; //can be templated on the backend somehow
      int *fIndex; // or int fIndex[kVectorSize]
      int fNTracks;
      int fStepperCalls = 0;
@@ -761,9 +763,9 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
   int ncompSVEC = TemplateGUFieldTrack<vecgeom::kScalar>::ncompSVEC; //12, //to be derived from TemplateGUFieldTrack
 
 #ifdef GUDEBUG_FIELD
-  static int dbg=1;
-  static int nStpPr=50;   // For debug printing of long integrations
-  double ySubStepStart[ncompSVEC];
+  // static int dbg=1;
+  // static int nStpPr=50;   // For debug printing of long integrations
+  // double ySubStepStart[ncompSVEC];
 
   // std::cout << " AccurateAdvance called with hstep= " << hstep << std::endl;
 #endif
@@ -777,11 +779,10 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
 
   double startCurveLength;
 
-  int  noFullIntegr=0, noSmallIntegr = 0 ;
-  // G4ThreadLocal
-  static int  noGoodSteps =0 ;  // Bad = chord > curve-len 
+  // int  noFullIntegr=0, noSmallIntegr = 0 ;
+  // ThreadLocal
+  // int  noGoodSteps =0 ;  // Bad = chord > curve-len 
   const  int  nvar= fNoVars;
-
 
   //  Ensure that hstep > 0
   if( hstep <= 0.0 )
@@ -847,10 +848,10 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
     ThreeVector EndPos( y[0], y[1], y[2] );
 
     // Check the endpoint
-    const double edx= y[0] - StartPosAr[0];
-    const double edy= y[1] - StartPosAr[1];
-    const double edz= y[2] - StartPosAr[2];
-    double endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); 
+    // const double edx= y[0] - StartPosAr[0];
+    // const double edy= y[1] - StartPosAr[1];
+    // const double edz= y[2] - StartPosAr[2];
+    // double endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; // (EndPos-StartPos).Mag(); 
 
     //Ananya: discuss. What exactly is happening here?
     bool avoidNumerousSmallSteps = (h < epsilon * hstep) || (h < fSmallestFraction * startCurveLength);
@@ -1746,9 +1747,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
   Double_v errmax_sq;
   Double_v h, htemp, xnew ;
 
-  int ncompSVEC = TemplateGUFieldTrack<vecgeom::kVc>::ncompSVEC;
-
-  Double_v yerr [ncompSVEC], 
+  Double_v yerr [ncompSVEC],
            ytemp[ncompSVEC];
 
   h = htry ; // Set stepsize to the initial trial value
@@ -2259,7 +2258,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 
   Double_v x, hnext, hdid, h;
 
-  int ncompSVEC = TemplateGUFieldTrack<vecgeom::kVc>::ncompSVEC; //12, to be derived from TemplateGUFieldTrack
+  constexpr int ncompSVEC = TemplateGUFieldTrack<vecgeom::kVc>::ncompSVEC; //12, to be derived from TemplateGUFieldTrack
 
 #ifdef GUDEBUG_FIELD
   // static int dbg=1;
@@ -2390,12 +2389,14 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 
     ThreeVector EndPos( y[0], y[1], y[2] );
 
+    /****
     // Check the endpoint
     const Double_v edx= y[0] - StartPosAr[0];
     const Double_v edy= y[1] - StartPosAr[1];
     const Double_v edz= y[2] - StartPosAr[2];
     Double_v endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; 
-
+     ****/
+    
     // Ananya: discuss. What exactly is happening here?
     // h<=0 case: first condition false, second condition always true assuming smallest fraction and 
     // startCurveLength are positive. But what if startCurveLength is 0? Ask John what would happen
