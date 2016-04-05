@@ -127,7 +127,7 @@ public:
                              vecgeom::Vector3D<double> &xyzField);
 
     void GetFieldValue(const vecgeom::Vector3D<double>      &pos,
-                             vecgeom::Vector3D<float> &xyzField);
+                             vecgeom::Vector3D<float> &xyzField)  override final;
 
     // void GetFieldValue(const vecgeom::Vector3D<typename vecgeom::kVc::precision_v>     &pos,
     //                          vecgeom::Vector3D<double> &xyzField) /*override final*/ ;

@@ -66,7 +66,7 @@ int main(/*int argc, char *args[]*/)
     /* Parameters of test
      - Modify values  */
     
-    int no_of_steps = 20;         // No. of Steps for the stepper
+    // int no_of_steps = 20;         // No. of Steps for the stepper
     int stepper_no  =  5;         // Choose stepper no., for refernce see above
     double step_len_mm = 200.;    // meant as millimeter;  //Step length 
     double z_field_in  = DBL_MAX;
@@ -80,7 +80,7 @@ int main(/*int argc, char *args[]*/)
         no_of_steps = atoi(args[3]);
     if(argc > 4)
        z_field_in = (float) (stof(args[4]));     // tesla*/
-    double step_len = step_len_mm * fieldUnits::millimeter;
+    // double step_len = step_len_mm * fieldUnits::millimeter;
     
     //Set Charge etc.
     double particleCharge = +1.0;      // in e+ units
@@ -197,7 +197,7 @@ int main(/*int argc, char *args[]*/)
 
     // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
 
-    int nTracks = 16;
+    constexpr int nTracks = 16;
     FieldTrack yInput[nTracks], yOutput[nTracks];
     // double posMom[] ={0., 0., 0., 0., 1., 1.};
 
@@ -207,6 +207,8 @@ int main(/*int argc, char *args[]*/)
 #define DebuggingSection
 // #define CALCULATETIME 
 
+#ifndef DebuggingSection
+#ifndef MAINTESTING    
     double
       x_pos = 20.,                 //pos - position  : input unit = mm
       y_pos = 20.,
@@ -218,9 +220,6 @@ int main(/*int argc, char *args[]*/)
     const double mmGVf = fieldUnits::millimeter;
     const double ppGVf = fieldUnits::GeV ; 
 
-#ifndef DebuggingSection
-#ifndef MAINTESTING    
-    
     double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                        x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
     // double posMom[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };
