@@ -169,7 +169,7 @@ REALLY_INLINE
     // std::cout<<"\n\n\n AM I BEING CALLED SOMEHOW?"<<std::endl;
     // vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
 
-    Double_v cof = charge * fCof * inv_momentum_magnitude;
+    Double_v cof = charge * Double_v(fCof) * inv_momentum_magnitude;
 
     dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
     dydx[1] = y[4]*inv_momentum_magnitude;       //  (d/ds)y = Vy/V
