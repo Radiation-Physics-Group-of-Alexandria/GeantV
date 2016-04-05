@@ -125,7 +125,7 @@ public:
     //Takes as input x,y,z; Gives output Bx,By,Bz
     // template <class Backend>
     void GetFieldValue(const vecgeom::Vector3D<typename Backend::precision_v>      &pos,
-                             vecgeom::Vector3D<typename Backend::precision_v> &xyzField);
+                             vecgeom::Vector3D<typename Backend::precision_v> &xyzField) override final;
 
     // void GetFieldValue(const vecgeom::Vector3D<typename vecgeom::kVc::precision_v>     &pos,
     //                          vecgeom::Vector3D<typename Backend::precision_v> &xyzField) /*override final*/ ;
