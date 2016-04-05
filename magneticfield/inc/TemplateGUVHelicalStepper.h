@@ -270,8 +270,7 @@ TemplateGUVHelicalStepper<Backend>::
   // OLD  approc_limit = 0.05 gives max.error=x^5/5!=(0.05)^5/5!=2.6*e-9
   // NEW  approc_limit = 0.005 gives max.error=x^5/5!=2.6*e-14
 
-  const double approc_limit = 0.005;
-
+  // const double approc_limit = 0.005;
 
   typedef typename Backend::precision_v Double_v;
   typedef vecgeom::Vector3D<typename Backend::precision_v > ThreeVectorSimd;

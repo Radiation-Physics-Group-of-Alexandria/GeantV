@@ -301,7 +301,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
     else
     {
       GUFieldTrack yFldTrk( ThreeVector(0,0,0), 
-                            ThreeVector(0,0,0), 0., 0. );
+                            ThreeVector(0,0,0) );
       // double dchord_step;
       double dyerr_len_sq, dyerr_mom_rel_sq;   // What to do with these ?
       yFldTrk.LoadFromArray(y, fNoIntegrationVariables); 
@@ -946,8 +946,7 @@ void GUIntegrationDriver::PrintStatus( const double*   StartArr,
   //                                 stepTaken(hdid)  - last step taken
   //                                 nextStep (hnext) - proposal for size
 {
-   GUFieldTrack  StartFT(ThreeVector(0,0,0),
-                 ThreeVector(0,0,0), 0., 0. );
+   GUFieldTrack  StartFT(ThreeVector(0,0,0),  ThreeVector(0,0,0)  );
    GUFieldTrack  CurrentFT (StartFT);
 
    StartFT.LoadFromArray( StartArr, fNoIntegrationVariables); 

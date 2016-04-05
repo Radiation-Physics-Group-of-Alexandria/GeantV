@@ -2389,12 +2389,14 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 
     ThreeVector EndPos( y[0], y[1], y[2] );
 
+    /****
     // Check the endpoint
     const Double_v edx= y[0] - StartPosAr[0];
     const Double_v edy= y[1] - StartPosAr[1];
     const Double_v edz= y[2] - StartPosAr[2];
     Double_v endPointDist2= vecgeom::Sqrt(edx*edx+edy*edy+edz*edz) ; 
-
+     ****/
+    
     // Ananya: discuss. What exactly is happening here?
     // h<=0 case: first condition false, second condition always true assuming smallest fraction and 
     // startCurveLength are positive. But what if startCurveLength is 0? Ask John what would happen
