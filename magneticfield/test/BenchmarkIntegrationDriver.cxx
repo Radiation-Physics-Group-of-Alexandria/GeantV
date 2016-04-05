@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <ctime>
 
+#include <numeric>
+
 #include "Units.h"
 
 // using fieldUnits::meter;
@@ -136,7 +138,7 @@ int main(int argc, char *args[])
       no_of_steps = atoi(args[3]);
   if(argc > 4)
      z_field_in = (float) (stof(args[4]));     // tesla
-  double step_len = step_len_mm * fieldUnits::millimeter;
+  // double step_len = step_len_mm * fieldUnits::millimeter;
   
   // Set Charge etc.
   double particleCharge = +1.0;      // in e+ units
@@ -187,7 +189,7 @@ int main(int argc, char *args[])
 
   myStepper->InitializeCharge( particleCharge );
 
-  const double mmGVf = fieldUnits::millimeter;
+  // const double mmGVf = fieldUnits::millimeter;
   const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
                                        //   Else it must be divided by fieldUnits::c_light;
 
@@ -229,7 +231,7 @@ int main(int argc, char *args[])
   testVectorDriver->SetSteppingMethod(chooseSteppingMethod); 
 
 
-  double total_step = 0.;
+  // double total_step = 0.;
 
   typedef typename Backend::bool_v Bool;
   Bool goodAdvance(true);
@@ -237,8 +239,9 @@ int main(int argc, char *args[])
 
   // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
 
-  int nTracks = 16;
-  FieldTrack yInput[nTracks], yOutput[nTracks];
+  constexpr int nTracks = 16;
+  FieldTrack yInput[nTracks];
+  FieldTrack yOutput[nTracks];
   // double posMom[] ={0., 0., 0., 0., 1., 1.};
 
   double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
@@ -254,7 +257,7 @@ int main(int argc, char *args[])
 
 #ifdef TIMINGTESTING 
   int nRepititions = 1;
-  int noOfVectorCalls = 1; // scalarcalls = nTracks*noOfVectorCalls
+  constexpr int noOfVectorCalls = 128; // scalarcalls = nTracks*noOfVectorCalls
   no_of_steps = 1;
 
   // bool debugValue ; 
@@ -265,8 +268,8 @@ int main(int argc, char *args[])
   cin >> no_of_steps;
   cout << "Give nRepititions: "    << endl;
   cin >> nRepititions;
-  cout << "Give noOfVectorCalls: " << endl;
-  cin >> noOfVectorCalls;
+  //  cout << "Give noOfVectorCalls: " << endl;
+  //  cin >> noOfVectorCalls;
 
   std::vector<double> speedUp, scalarTime, vectorTime;
   // std::vector<GUFieldTrack> vectorGUFieldTrack;
@@ -289,7 +292,7 @@ int main(int argc, char *args[])
 
   for (int step = 0; step < no_of_steps; ++step)
   {
-    double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
+     // double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
     double X_Mom[nTracks], Y_Mom[nTracks], Z_Mom[nTracks];
     double posMomMatrix[nTracks][6];
     FieldTrack yInputMatrix[noOfVectorCalls][nTracks]; // [6];
