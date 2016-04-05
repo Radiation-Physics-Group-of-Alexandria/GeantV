@@ -817,12 +817,12 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>
   nstp=1;
 
 
-  double StartPosAr[3];
+  // double StartPosAr[3];
   double charge(-1.);
 
   while ( ((nstp++)<=fMaxNoSteps) && (x < x2) && (!lastStep) )
   {
-    StartPosAr[0]= y[0]; StartPosAr[1]= y[1];  StartPosAr[2]= y[2]; 
+    // StartPosAr[0]= y[0]; StartPosAr[1]= y[1];  StartPosAr[2]= y[2]; 
     
     fpStepper->RightHandSideVIS( y, charge, dydx );   // TODO: change to inline
 
@@ -1958,7 +1958,8 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
   static int tot_no_trials = 0;  // thread_local
   const  int max_trials    = 100; 
 
-  int finished[kVectorSize] = {0}; // This makes all elements of array 0
+  int finished[kVectorSize] = {0}; // This makes all elements of array 0 
+  // for (int i = 0; i < kVectorSize; ++i ) finished[i] = 0;
 
   Double_v hFinal(0.), hnextFinal, xFinal, hdidFinal, errmax_sqFinal;
   Double_v yFinal[TemplateGUFieldTrack<vecgeom::kVc>::ncompSVEC]; // = y[]
@@ -2345,7 +2346,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
   Bool_v   lastStep(false);
   Double_v nstp(1); 
 
-  Double_v StartPosAr[3];
+  // Double_v StartPosAr[3];
 
   // Ananya : making random charge now
   // needs to be passed in some other way finally
@@ -2367,7 +2368,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 #ifdef DEBUG
     std::cout<<"----hStepLane is: "<< hStepLane << std::endl;
 #endif 
-    StartPosAr[0] = y[0]; StartPosAr[1] = y[1];  StartPosAr[2] = y[2]; 
+    // StartPosAr[0] = y[0]; StartPosAr[1] = y[1];  StartPosAr[2] = y[2]; 
     
 
     // Perform the Integration
