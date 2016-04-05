@@ -267,7 +267,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
                                double      /*dotVelocities*/ ) {} //;       
      //  Verbose output for debugging
 
-     void PrintStatisticsReport() {} //;
+     void PrintStatisticsReport() ; // {} //;
      //  Report on the number of steps, maximum errors etc.
 
 #ifdef QUICK_ADV_ARRAY_IN_AND_OUT      
@@ -330,6 +330,8 @@ class TemplateGUIntegrationDriver : public AlignedBase
      Double_v fDyerr_max, fDyerr_mx2;
      Double_v fDyerrPos_smTot, fDyerrPos_lgTot, fDyerrVel_lgTot; 
      Double_v fSumH_sm, fSumH_lg; 
+
+     int     fOneGoodStepCallsVector, fOneStepCallsScalar;
      // Step Statistics 
 
      int  fVerboseLevel;   // Verbosity level for printing (debug, ..)
@@ -502,6 +504,7 @@ TemplateGUIntegrationDriver<Backend>
      fDyerr_max(0.0), fDyerr_mx2(0.0), 
      fDyerrPos_smTot(0.0), fDyerrPos_lgTot(0.0), fDyerrVel_lgTot(0.0), 
      fSumH_sm(0.0), fSumH_lg(0.0),
+     fOneGoodStepCallsVector(0), fOneStepCallsScalar(0),
      fVerboseLevel(3)
 {  
   // In order to accomodate "Laboratory Time", which is [7], fMinNoVars=8
@@ -643,9 +646,9 @@ TemplateGUIntegrationDriver<vecgeom::kScalar>::OneGoodStep(  double y[],        
   int ncompSVEC = TemplateGUFieldTrack<vecgeom::kScalar>::ncompSVEC;
   double yerr[ncompSVEC], ytemp[ncompSVEC];
 
-  bool verbose= false;
-  if( verbose ) 
-     std::cout << "OneGoodStep called with htry= " << htry << std::endl;
+  // bool verbose= false;
+  // if( verbose ) std::cout << "OneGoodStep called with htry= " << htry << std::endl;
+  fOneStepCallsScalar++,
   
   h = htry ; // Set stepsize to the initial trial value
 
@@ -1029,6 +1032,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
            ytemp[TemplateGUFieldTrack<vecgeom::kVc>::ncompSVEC];
 
   // std::cout << "OneGoodStep called with htry= " << htry << std::endl;
+  fOneGoodStepCallsVector++;
   
   h = htry ; // Set stepsize to the initial trial value
 
@@ -1487,6 +1491,7 @@ void TemplateGUIntegrationDriver<Backend>
     }
     std::cout << std::endl;
 }
+***/
 
 // ---------------------------------------------------------------------------
 template <class Backend>
@@ -1505,6 +1510,7 @@ TemplateGUIntegrationDriver<Backend>
          << " Non-initial small= " << (fNoSmallSteps-fNoInitialSmallSteps)
          << std::endl;
 
+  std::cout << " Calles to Step methods:  1-Good/Vector " << fOneGoodStepCallsVector <<  " 1-step/Scalar: " << fOneStepCallsScalar << std::endl;
 #ifdef GVFLD_STATS
   std::cout << "MID dyerr: " 
          << " maximum= " << fDyerr_max 
@@ -1536,7 +1542,7 @@ TemplateGUIntegrationDriver<Backend>
 #endif 
 
  std::cout.precision(oldPrec);
-}*/
+}
  
 // ---------------------------------------------------------------------------
 template <class Backend>
@@ -2270,7 +2276,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
 #ifdef PARTDEBUG
   if (partDebug)
   {
-    std::cout << " AccurateAdvance called with hstep= " ;
+    // if( verbose ) std::cout << " AccurateAdvance called with hstep= " ;
     for (int i = 0; i < nTracks; ++i)
     {
       std::cout<< hstep[i]<< " ";

@@ -242,6 +242,8 @@ int main(int argc, char *args[])
   // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
 
   constexpr int nTracks = 16;
+
+  std::cout << " Running with nTracks = " << nTracks << std::endl;
   FieldTrack yInput[nTracks];
   FieldTrack yOutput[nTracks];
   // double posMom[] ={0., 0., 0., 0., 1., 1.};
@@ -268,16 +270,19 @@ int main(int argc, char *args[])
   // testVectorDriver->SetPartDebug(debugValue);
   cout << "Give no_of_steps: "     << endl;
   cin >> no_of_steps;
+  cout << "Obtained no_of_steps= "  << no_of_steps << endl;
+  
   cout << "Give nRepititions: "    << endl;
   cin >> nRepititions;
+  cout << "Got  nRepititions= "  << nRepititions << endl;  
   //  cout << "Give noOfVectorCalls: " << endl;
   //  cin >> noOfVectorCalls;
 
   std::vector<double> speedUp, scalarTime, vectorTime;
   // std::vector<GUFieldTrack> vectorGUFieldTrack;
-  long double outputVarForScalar = 0, outputVarForVector = 0;
+  long double outputVarForScalar = 0.0, outputVarForVector = 0.0;
   int indOutputVar = 2;
-  
+
   int randVal = time(NULL);
   // srand(time(NULL));
   cout<<"Give seed for rng" << endl;
@@ -355,7 +360,6 @@ int main(int argc, char *args[])
     {
       // hstep[i] = (float) rand()/(RAND_MAX) *200.; 
     }
-
     clock_t clock1 = clock();
     for (int repeat = 0; repeat < nRepititions; ++repeat)
     {
@@ -373,8 +377,11 @@ int main(int argc, char *args[])
     clock1 = clock() - clock1 ;
     float clock1InFloat = ((float)clock1)/CLOCKS_PER_SEC;
     vectorTime.push_back(clock1InFloat);
-    cout<<"Vector time is: "<<clock1InFloat/(nRepititions*noOfVectorCalls*nTracks)*1e+6<<" ms"<<endl;
-
+    cout << "Vector time is:  per track " << clock1InFloat/(nRepititions*noOfVectorCalls*nTracks)*1e+6 << " ms" 
+         << "  total run-time " << clock1InFloat << " sec " << endl;
+    
+    // For performance evaluation ( e.g. with Vtune or igprof ) can finish here.
+    // exit(1);
 
     const ThreeVector_d  startPos( x_pos, y_pos, z_pos);
     const ThreeVector_d  startMom( x_mom, y_mom, z_mom);
@@ -395,20 +402,25 @@ int main(int argc, char *args[])
 
           outputVarForScalar += yTrackOut.SixVector[indOutputVar];
           indScalar++;
-        }      
+        }
       }
     }
     clock2 = clock() - clock2 ;
     float clock2InFloat = ((float)clock2)/CLOCKS_PER_SEC;
     scalarTime.push_back(clock2InFloat);
-    cout<<"scalar time is: "<<clock2InFloat/(nRepititions*noOfVectorCalls*nTracks)*1e+6<<" ms"<< endl;
+    cout << "Scalar time is:  per track " << clock2InFloat/(nRepititions*noOfVectorCalls*nTracks)*1e+6 << " ms" 
+         << "  total run-time " << clock2InFloat << " sec " << endl;
+
     speedUp.push_back(clock2InFloat/clock1InFloat);
 
+    cout << " Quick speedup = " << clock2InFloat/clock1InFloat << endl;
   }
 
+  cout << " Output variables:  (ensuring use of RK output)" << endl;
+
   // cout<<"indPosVec at end is: " << indPosVec <<" should be equal to: " << nTracks*noOfVectorCalls*no_of_steps << endl;
-  cout<<"outputVarForScalar: "<< outputVarForScalar<< endl;
-  cout<<"outputVarForVector: "<< outputVarForVector<< endl;
+  cout << "outputVarForScalar: "<< outputVarForScalar<< endl;
+  cout << "outputVarForVector: "<< outputVarForVector<< endl;
   int sizeOfRatioVector = speedUp.size(); // no_steps;
   cout<<"Size of speedUp is: "<<speedUp.size()<<endl;
   cout<<"Time ratios are: "<<endl;

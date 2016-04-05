@@ -84,16 +84,15 @@
 
 // using namespace std;
 
-
-#ifdef FORCE_INLINE
-// #if !(EQUAL($FORCE_INLINE,"Never"))
-// #define INLINE_CHOICE inline __attribute__ ((always_inline))
-// #else
+#ifdef  NO_INLINE
 #define INLINE_CHOICE __attribute__ ((noinline))
-// #endif
+#else
+#ifdef FORCE_INLINE
+#define INLINE_CHOICE inline __attribute__ ((always_inline))
 #else
 //  Default configuration
 #define INLINE_CHOICE inline
+#endif
 #endif
 
 template<typename dataType>
@@ -131,6 +130,8 @@ public:
      // Return value: success of finding and reading file.
     
     ~CMSmagField();
+
+    void ReportVersion();
 
 public: 
     //  Invariants -- parameters of the field 
@@ -202,21 +203,31 @@ private:
 CMSmagField::CMSmagField() :fReadData(false), fVerbose(true), fPrimary(false) {
     fMagvArray = new MagVector3<float>[kNoZValues*kNoRValues];
     fVcMagVector3 = new Vc::vector<MagVector3<float>>;
-    if( fVerbose ) {
-      printf( "%s", "CMSmagField class: Version: Reorder2 (floats)");
+    if( fVerbose ) {   ReportVersion();  }
+}
+
+CMSmagField::CMSmagField(std::string inputMap) : CMSmagField() 
+{
+   fMagvArray = new MagVector3<float>[kNoZValues*kNoRValues];
+
+   if( fVerbose ) {   
+     // ReportVersion();  
+     std::cout<<"- CMSmagField c-tor #2" << std::endl;
+   }
+   // std::cout<<" Version: Reorder2 (floats) (with VC_NO_MEMBER_GATHER enabled if required)"<<std::endl;
+   fReadData= CMSmagField::ReadVectorData(inputMap);
+   if( fVerbose ) {
+     std::cout<<"- CMSmagField c-tor #2: data has been read." << std::endl;
+   }
+   fPrimary= true;   // Own the data!
+}
+
+void CMSmagField::ReportVersion()
+{
+      printf( "\n%s", "CMSmagField class: Version: Reorder2 (floats)");
 #ifdef VC_NO_MEMBER_GATHER
       printf( "%s", ", with VC_NO_MEMBER_GATHER enabled." );
 #endif
-    }
-}
-
-CMSmagField::CMSmagField(std::string inputMap) : CMSmagField() {
-    fMagvArray = new MagVector3<float>[kNoZValues*kNoRValues];
-
-   std::cout<<"- CMSmagField c-tor #2" << std::endl;
-   // std::cout<<" Version: Reorder2 (floats) (with VC_NO_MEMBER_GATHER enabled if required)"<<std::endl;
-   fReadData= CMSmagField::ReadVectorData(inputMap);
-   fPrimary= true;   // Own the data!
 }
 
 CMSmagField::CMSmagField(const CMSmagField &right) :
@@ -336,12 +347,14 @@ void CMSmagField::Gather2<vecgeom::kVcFloat>(const typename vecgeom::kVcFloat::p
 #ifdef VC_NO_MEMBER_GATHER
     typedef Vc::Vector<float> float_v;
     float_v::IndexType indexes1 = (float_v::IndexType) index;
+    float_v::IndexType indexes2 = indexes1 +kNoZValues;
+    
     B1[0] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Br];
+    B2[0] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Br];
+
     B1[1] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Bphi];
     B1[2] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Bz];
 
-    float_v::IndexType indexes2 = (float_v::IndexType) (index+kNoZValues);
-    B2[0] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Br];
     B2[1] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Bphi];
     B2[2] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Bz];
 #else 
