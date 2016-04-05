@@ -39,8 +39,8 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
 
      virtual void EvaluateRhsGivenB( const Double_v yVec[],
                                      const vecgeom::Vector3D<Double_v> B,  // Was double B[3],
-                                           Double_v charge, 
-                                           Double_v dydx[]             ) const = 0;
+                                           Double_v charge,
+                                           Double_v dydx[]   ) const = 0;
        // Given the value of the  field "B", this function 
        // calculates the value of the derivative dydx.
        // --------------------------------------------------------
@@ -267,7 +267,7 @@ TemplateGUVEquationOfMotion<Backend>::EvaluateRhsReturnB( const typename Backend
    PositionAndTime[0] = y[0];
    PositionAndTime[1] = y[1];
    PositionAndTime[2] = y[2];
-   PositionAndTime[3] = y[7];  
+   // PositionAndTime[3] = y[7];
 
    GetFieldValue( PositionAndTime, Field) ;
    EvaluateRhsGivenB( y, Field, charge, dydx );

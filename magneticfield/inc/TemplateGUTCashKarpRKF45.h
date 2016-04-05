@@ -56,14 +56,16 @@ class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>, 
 
     REALLY_INLINE
     #ifdef NoPointers
-    void StepWithErrorEstimate(const Double_v yInput[],    // Consider __restrict__
+    void StepWithErrorEstimate(const Double_v  yInput[],    // Consider __restrict__
                                const Double_v  dydx[],
+                               const Double_v  charge,
                                      Double_v  Step,
                                      Double_v  yOut[],
                                      Double_v  yErr[]) override;
    #else 
-    void StepWithErrorEstimate(const Double_v* yInput,    // Consider __restrict__
+    void StepWithErrorEstimate(const Double_v*  yInput,    // Consider __restrict__
                                const Double_v*  dydx,
+                               const Double_v   charge,
                                      Double_v   Step,
                                      Double_v*  yOut,
                                      Double_v*  yErr) override;
@@ -73,8 +75,8 @@ class TemplateGUTCashKarpRKF45 : public TemplateGUVIntegrationStepper<Backend>, 
     Double_v DistChord() const override ;
 
     REALLY_INLINE
-    void RightHandSideInl(Double_v y[], Double_v dydx[]) 
-    {fEquation_Rhs->T_Equation::RightHandSide(y, dydx);}
+       void RightHandSideInl(Double_v y[], Double_v charge, Double_v dydx[]) 
+    { fEquation_Rhs->T_Equation::RightHandSide(y, charge, dydx); }
 
     void SetEquationOfMotion(T_Equation* equation);
     
@@ -303,14 +305,16 @@ template <class Backend, class T_Equation, unsigned int Nvar>
 inline void
 TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
 #ifdef NoPointers
-  StepWithErrorEstimate(const typename Backend::precision_v  yInput[],    
+  StepWithErrorEstimate(const typename Backend::precision_v  yInput[],
                         const typename Backend::precision_v  dydx[],
+                        const typename Backend::precision_v  charge,
                               typename Backend::precision_v   Step,
                               typename Backend::precision_v  yOut[],
                               typename Backend::precision_v  yErr[])
-#else 
+#else
   StepWithErrorEstimate(const typename Backend::precision_v*  yInput, // [],    
-                        const typename Backend::precision_v*  dydx, // [],
+                        const typename Backend::precision_v*  dydx,   // [],
+                        const typename Backend::precision_v   charge,
                               typename Backend::precision_v   Step,
                               typename Backend::precision_v*  yOut, // [],
                               typename Backend::precision_v*  yErr  ) // [])
@@ -350,39 +354,39 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
     {
         yIn[i]=yInput[i];
     }
-    // RightHandSideInl(yIn, dydx) ;              // 1st Step
+    // RightHandSideInl(yIn, charge, dydx) ;              // 1st Step
 
     for(i=0;i<Nvar;i++) 
     {
         yTemp[i] = yIn[i] + b21*Step*dydx[i] ;
     }
-    this->RightHandSideInl(yTemp, ak2) ;              // 2nd Step
+    this->RightHandSideInl(yTemp, charge, ak2) ;              // 2nd Step
 
     for(i=0;i<Nvar;i++)
     {
         yTemp[i] = yIn[i] + Step*(b31*dydx[i] + b32*ak2[i]) ;
     }
-    this->RightHandSideInl(yTemp, ak3) ;              // 3rd Step
+    this->RightHandSideInl(yTemp, charge, ak3) ;              // 3rd Step
 
     for(i=0;i<Nvar;i++)
     {
         yTemp[i] = yIn[i] + Step*(b41*dydx[i] + b42*ak2[i] + b43*ak3[i]) ;
     }
-    this->RightHandSideInl(yTemp, ak4) ;              // 4th Step
+    this->RightHandSideInl(yTemp, charge, ak4) ;              // 4th Step
 
     for(i=0;i<Nvar;i++)
     {
         yTemp[i] = yIn[i] + Step*(b51*dydx[i] + b52*ak2[i] + b53*ak3[i] +
                 b54*ak4[i]) ;
     }
-    this->RightHandSideInl(yTemp, ak5) ;              // 5th Step
+    this->RightHandSideInl(yTemp, charge, ak5) ;              // 5th Step
 
     for(i=0;i<Nvar;i++)
     {
         yTemp[i] = yIn[i] + Step*(b61*dydx[i] + b62*ak2[i] + b63*ak3[i] +
                 b64*ak4[i] + b65*ak5[i]) ;
     }
-    this->RightHandSideInl(yTemp, ak6) ;              // 6th Step
+    this->RightHandSideInl(yTemp, charge, ak6) ;              // 6th Step
 
     for(i=0;i<Nvar;i++)
     {
@@ -422,7 +426,8 @@ TemplateGUTCashKarpRKF45<Backend,T_Equation,Nvar>::
     typedef typename Backend::precision_v Double_v;
     typedef vecgeom::Vector3D<Double_v> ThreeVector;
 
-    Double_v distLine, distChord; 
+    // Double_v distLine;
+    Double_v distChord= 1234.00; 
     ThreeVector initialPoint, finalPoint, midPoint;
 
     // Store last initial and final points (they will be overwritten in self-Stepper call!)

@@ -82,8 +82,7 @@ bool TestEquation(TemplateGUVEquationOfMotion<Backend>* equation)
   typedef typename Backend::precision_v Double;
   typedef typename Backend::bool_v Bool_v;
 
-
-  Double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
+  // Double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
 
   Double dydx[gNposmom];
   Double PositionMomentum[gNposmom];

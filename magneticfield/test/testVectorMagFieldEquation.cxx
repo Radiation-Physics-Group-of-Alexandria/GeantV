@@ -75,9 +75,8 @@ ThreeVector_f      FieldValue2(1.0, 2.0, 3.0);
 ThreeVectorSimd_f  FieldValueV(1.0, 2.0, 3.0);
 
 
-int main(int argc, char *argv[]){
-
-
+int main(int /*argc*/, char ** /* *argv[] */ )
+{
   GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue1 );
   TestEquation(eq);
 
@@ -113,7 +112,7 @@ bool TestEquation(GUVVectorEquationOfMotion* equation)
   ThreeVectorSimd_d MomentumVec( 0., 0.1, 1.);
   ThreeVectorSimd_f FieldVec( 0., 0., 1.);  // Magnetic field value (constant)
 
-  Double_v PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
+  // Double_v PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
 
   Double_v dydx[gNposmom];
   Double_v PositionMomentum[gNposmom];

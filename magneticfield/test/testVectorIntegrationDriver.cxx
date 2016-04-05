@@ -66,7 +66,7 @@ int main(/*int argc, char *args[]*/)
     /* Parameters of test
      - Modify values  */
     
-    int no_of_steps = 20;         // No. of Steps for the stepper
+    // int no_of_steps = 20;         // No. of Steps for the stepper
     int stepper_no  =  5;         // Choose stepper no., for refernce see above
     double step_len_mm = 200.;    // meant as millimeter;  //Step length 
     double z_field_in  = DBL_MAX;
@@ -80,7 +80,7 @@ int main(/*int argc, char *args[]*/)
         no_of_steps = atoi(args[3]);
     if(argc > 4)
        z_field_in = (float) (stof(args[4]));     // tesla*/
-    double step_len = step_len_mm * fieldUnits::millimeter;
+    // double step_len = step_len_mm * fieldUnits::millimeter;
     
     //Set Charge etc.
     double particleCharge = +1.0;      // in e+ units
@@ -177,7 +177,7 @@ int main(/*int argc, char *args[]*/)
 
     auto myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-    myStepper->InitializeCharge( particleCharge );
+    // myStepper->InitializeCharge( particleCharge );
 
     // auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar);
     auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar, testScalarDriver);
@@ -197,26 +197,28 @@ int main(/*int argc, char *args[]*/)
 
     // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
 
-    int nTracks = 16;
-    FieldTrack yInput[nTracks], yOutput[nTracks];
+    constexpr int nTracks = 16;
+    FieldTrack yInput[nTracks];
+    FieldTrack yOutput[nTracks];
     // double posMom[] ={0., 0., 0., 0., 1., 1.};
 
-    double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
+    double hstep[nTracks] = { 11.0, 2.0, 33.0, 4.0, 55.0, 6.0, 77.0, 8.0, 9.0, 100.0, 11.0, 12.0, 13.0, 14.0, 15.3, 16.9 };
+    double charge[nTracks] = { 1.0, -2.0, 3.0, -4.0, 5.0, -6.0, 7.0, -8.0, 9.0, -10.0, 11.0, -12.0, 13.0, -14.0, 15., -16. };    
+        // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
     bool   succeeded[nTracks];
 
 #define DebuggingSection
 // #define CALCULATETIME 
 
-    double
+    /* double
       x_pos = 20.,                 //pos - position  : input unit = mm
       y_pos = 20.,
-      z_pos = 20.;
-    double   
-      x_mom = 0.,                 //mom - momentum  : input unit = GeV / c
-      y_mom = 1.,
-      z_mom = 1.;
-    const double mmGVf = fieldUnits::millimeter;
-    const double ppGVf = fieldUnits::GeV ; 
+      z_pos = 20.;  */
+    //  double x_mom = 0. ;               //mom - momentum  : input unit = GeV / c
+    //  double y_mom = 1. ;
+    //  double z_mom = 1. ;
+    // const double mmGVf = fieldUnits::millimeter;
+    // const double ppGVf = fieldUnits::GeV ; 
 
 #ifndef DebuggingSection
 #ifndef MAINTESTING    
@@ -413,7 +415,13 @@ int main(/*int argc, char *args[]*/)
       GUFieldTrack yTrackIn ( startPosition, startMomentum );  // yStart
       GUFieldTrack yTrackOut( startPosition, startMomentum );  // yStart
 
-      testVectorDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
+      testVectorDriver->AccurateAdvance( yInput,
+                                         charge,
+                                         hstep,
+                                         epsTol,
+                                         yOutput,
+                                         nTracks,
+                                         succeeded );
       // testScalarDriver->AccurateAdvance( yTrackIn, hstep[11], epsTol, yTrackOut );
 
       for (int i = 0; i < nTracks; ++i)

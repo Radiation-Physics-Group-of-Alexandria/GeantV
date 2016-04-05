@@ -146,7 +146,7 @@ int main(/*int argc, char *args[]*/)
 
     TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-    myStepper->InitializeCharge( particleCharge );
+    // myStepper->InitializeCharge( particleCharge );
 
     //Initialising coordinates
     const double mmGVf = fieldUnits::millimeter;
@@ -154,8 +154,15 @@ int main(/*int argc, char *args[]*/)
                                          //   Else it must be divided by fieldUnits::c_light;
     // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
-    Double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-                    x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
+    Double yIn[6]; //  = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                   //  x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
+
+    yIn[0] = x_pos * mmGVf ;
+    yIn[1] = y_pos * mmGVf ;
+    yIn[2] = z_pos * mmGVf ;
+    yIn[3] = x_mom * ppGVf ;
+    yIn[4] = y_mom * ppGVf ,
+    yIn[5] = z_mom * ppGVf};
 
 /*    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
 
@@ -214,16 +221,16 @@ int main(/*int argc, char *args[]*/)
 
     // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
 
-    int nTracks = 16;
-    FieldTrack yInput[nTracks], yOutput[nTracks];
+    constexpr int nTracks = 16;
+    FieldTrack yInput[nTracks];
+    FieldTrack yOutput[nTracks];
+
     double hstep[nTracks];
     bool   succeeded[nTracks];
-    testDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
-
+    testDriver->AccurateAdvance( yInput, charge, hstep, epsTol, yOutput, nTracks, succeeded );
 
 
     //========================End testing IntegrationDriver=======================
-
 
 
     /*---------------------------------------------------*/
@@ -372,8 +379,7 @@ int main(/*int argc, char *args[]*/)
 
         if( j > 0 )  // Let's print the initial points!
         {
-           myStepper->StepWithErrorEstimate(yIn,dydx,step_len,yout,yerr);   //Call the 'trial' stepper
-
+           myStepper->StepWithErrorEstimate(yIn, dydx, charge, step_len, yout, yerr);   //Call the 'trial' stepper
         }
         //-> Then print the data
         cout.setf (ios_base::fixed);
