@@ -103,9 +103,9 @@ else()
   if(USE_ROOT)
     set(sources ${sources} G__Geant.cxx)
   endif()
-  add_library(Geant_v SHARED ${sources})
-  target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield GeantNuma ${ROOT_LIBRARIES} )
-  
+  add_library(Geant_v SHARED ${sources}) 
+  target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield NewPhysics GeantNuma ${ROOT_LIBRARIES} )
+
   if( VECGEOM_FOUND )
     target_link_libraries(Geant_v ${VC_LIBRARIES})
     
