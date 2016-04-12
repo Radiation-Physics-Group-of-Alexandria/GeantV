@@ -7,8 +7,9 @@
 //===----------------------------------------------------------------------===//
 /**
  * @file   (CMS)TemplateCMSmagField.h
- * @brief  Bi-linear interpolation of CMS field
- * @author Ananya
+ * @brief  Bi-linear interpolation of CMS-like magnetic field
+ * @author Ananya           - Design and first implementation Oct 2015-Mar 2016
+ * @author John Apostolakis - Revision, improvement
  */
 //===----------------------------------------------------------------------===//
 
@@ -55,6 +56,7 @@
 #define Vc_FOUND 1
 
 #define FORCE_INLINE   1
+// #define NO_INLINE   1
 
 // Start - Configuration for Vc Vector Backend
 #ifdef Vc_FOUND
@@ -87,16 +89,15 @@
 
 // using namespace std;
 
-
-#ifdef FORCE_INLINE
-// #if !(EQUAL($FORCE_INLINE,"Never"))
-// #define INLINE_CHOICE inline __attribute__ ((always_inline))
-// #else
+#ifdef  NO_INLINE
 #define INLINE_CHOICE __attribute__ ((noinline))
-// #endif
+#else
+#ifdef FORCE_INLINE
+#define INLINE_CHOICE inline __attribute__ ((always_inline))
 #else
 //  Default configuration
 #define INLINE_CHOICE inline
+#endif
 #endif
 
 template<typename dataType>
@@ -136,11 +137,10 @@ public:
     //Reads data from given 2D magnetic field map. Can be easily modified to read a given 2D map, in case the file changes
     bool ReadVectorData(std::string inputMap);
      // Return value: success of finding and reading file.
-    
-    ~TemplateCMSmagField(){
-    if( fPrimary )
-      delete[] fMagvArray;
-    }
+
+    void ReportVersion();    
+
+    ~TemplateCMSmagField(){ if( fPrimary ) { delete[] fMagvArray; } }
 ;
 
 public: 
@@ -213,11 +213,8 @@ TemplateCMSmagField<Backend>
 {
     fMagvArray = new MagVector3<float>[kNoZValues*kNoRValues];
     fVcMagVector3 = new Vc::vector<MagVector3<float>>;
-    if( fVerbose ) {
-      printf( "%s", "- TemplateCMSmagField class: Version: Reorder2 (floats)");
-#ifdef VC_NO_MEMBER_GATHER
-      printf( "%s", ", with VC_NO_MEMBER_GATHER enabled." );
-#endif
+    if( fVerbose ) { 
+       ReportVersion();  
     }
 }
 
@@ -246,7 +243,36 @@ TemplateCMSmagField<Backend>
    fVcMagVector3= right.fVcMagVector3;
 }
 
-// TemplateCMSmagField::~TemplateCMSmagField()
+
+template <class Backend>
+void TemplateCMSmagField<Backend>
+  ::ReportVersion()
+{
+  printf( "\n%s", "TemplatedCMSmagField class: Version: Reorder2 (floats)");
+
+#ifdef VC_NO_MEMBER_GATHER
+  printf( "%s", ", with VC_NO_MEMBER_GATHER enabled" );
+#endif
+
+  printf( ", Inline option= ");
+#ifdef NO_INLINE
+  printf( "None" );
+#else
+#ifdef FORCE_INLINE
+  printf( "Forced");
+#else
+  printf( "Default - 'just' inline" ); 
+#endif
+#endif
+
+#ifdef FOUR_COMP
+  printf("%s", "- MagVec3: Extra unused component - ie FourComp.");
+#else
+  printf("%s", "- MagVec3: Plain - 3 components only.");
+#endif
+  printf( ".\n" );
+}
+
 
 template <class Backend>
 // INLINE_CHOICE
@@ -377,12 +403,14 @@ void TemplateCMSmagField<vecgeom::kVc>
 #ifdef VC_NO_MEMBER_GATHER
     typedef Vc::Vector<double> float_v;
     float_v::IndexType indexes1 = (float_v::IndexType) index;
+    // float_v::IndexType indexes2 = (float_v::IndexType) (index+kNoZValues);
+    float_v::IndexType indexes2 = indexes1 + kNoZValues;
     B1[0] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Br];
+    B2[0] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Br];
+
     B1[1] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Bphi];
     B1[2] = (*fVcMagVector3)[indexes1][&MagVector3<float>::Bz];
 
-    float_v::IndexType indexes2 = (float_v::IndexType) (index+kNoZValues);
-    B2[0] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Br];
     B2[1] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Bphi];
     B2[2] = (*fVcMagVector3)[indexes2][&MagVector3<float>::Bz];
 #else 
@@ -551,5 +579,10 @@ TemplateGUVField<Backend>* TemplateCMSmagField<Backend>
 {
    return new TemplateCMSmagField<Backend>( *this );
 }
+
+#undef NO_INLINE
+#undef FORCE_INLINE
+#undef INLINE_CHOICE
+
 #endif
 
