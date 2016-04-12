@@ -243,7 +243,7 @@ int main(int argc, char *args[])
   FieldTrack yInput[nTracks], yOutput[nTracks];
   // double posMom[] ={0., 0., 0., 0., 1., 1.};
 
-  double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
+  // double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
   bool   succeeded[nTracks];
 
 
@@ -350,10 +350,10 @@ int main(int argc, char *args[])
       }
     }
 
-    for (int i = 0; i < nTracks; ++i)
-    {
-      hstep[i] = (float) rand()/(RAND_MAX) *200.; 
-    }
+    // for (int i = 0; i < nTracks; ++i)
+    // {
+    //   hstep[i] = (float) rand()/(RAND_MAX) *200.; 
+    // }
 
 
     clock_t clock1 = clock();
