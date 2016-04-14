@@ -55,7 +55,7 @@ class GUVVectorField //  : public GUVField
 
       //Vector interface with specialization
       virtual void GetFieldValue( const vecgeom::Vector3D<typename vecgeom::kVc::precision_v>      &Position,
-                                        vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &FieldValue ) = 0;
+                                  vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &FieldValue ) = 0;                             //                              vecgeom::Vector3D<typename vecgeom::kVc::precision_v> &FieldValue ) = 0; // Was VcFloat
 
       bool DoesFieldChangeEnergy() const { return fChangesEnergy; } 
       int  GetNumberOfComponents() const { return fNumberOfComponents; } 

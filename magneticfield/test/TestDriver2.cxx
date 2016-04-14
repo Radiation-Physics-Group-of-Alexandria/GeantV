@@ -1,6 +1,8 @@
 //
 //  Compare the output of different steppers
-// 
+//
+//  Created by Ananya <ananya.ananya@cern.ch>
+//*****************************************************************
 //  Based on testStepperFixed.cc
 //    was the work of Somnath Banerjee in GSoC 2015
 //
@@ -125,23 +127,20 @@ int main(int argc, char *args[])
    - Modify values  */
   
   int no_of_steps = 20;         // No. of Steps for the stepper
-  int stepper_no  =  5;         // Choose stepper no., for refernce see above
+  // int stepper_no  =  5;         // Choose stepper no., for refernce see above
   double step_len_mm = 200.;    // meant as millimeter;  //Step length 
   double z_field_in = DBL_MAX;
   
   // Checking for command line values :
-  if(argc>1)
-      stepper_no = atoi(args[1]);
+  // if(argc>1) stepper_no = atoi(args[1]);
   if(argc > 2)
      step_len_mm = (float)(stof(args[2]));   // *mm);
   if(argc > 3)
       no_of_steps = atoi(args[3]);
   if(argc > 4)
      z_field_in = (float) (stof(args[4]));     // tesla
-  //  double step_len = step_len_mm * fieldUnits::millimeter;
-  
-  // Set Charge etc.
-  double particleCharge = +1.0;      // in e+ units
+
+  // double step_len = step_len_mm * fieldUnits::millimeter;
   
   // Set coordinates here
   /***  double
@@ -189,8 +188,6 @@ int main(int argc, char *args[])
 
   TemplateGUVIntegrationStepper<Backend1> *myStepper = new TemplateGUTCashKarpRKF45<Backend1,GvEquationType,Nposmom>(gvEquation);
 
-  myStepper->InitializeCharge( particleCharge );
-
 //  const double mmGVf = fieldUnits::millimeter;
   const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
                                        //   Else it must be divided by fieldUnits::c_light;
@@ -223,7 +220,7 @@ int main(int argc, char *args[])
   auto testScalarDriver= new TemplateGUIntegrationDriver<Backend2>
                                                 ( hminimum,
                                                   myStepperScalar);
-  // testScalarDriver->InitializeCharge( particleCharge );
+
   auto testVectorDriver = new TemplateGUIntegrationDriver<Backend1>(hminimum, myStepper);
 
   bool chooseSteppingMethod;
@@ -237,15 +234,18 @@ int main(int argc, char *args[])
   Bool goodAdvance(true);
   double epsTol = 1.0e-5;
 
-  // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
+  // double charge1 = -1.0;
+  // goodAdvance = testDriver->AccurateAdvance( yTrackIn, charge1, total_step, epsTol, yTrackOut );
 
   constexpr int nTracks = 16;
-  FieldTrack yInput[nTracks], yOutput[nTracks];
+
+  FieldTrack yInput[nTracks];
+  // FieldTrack yOutput[nTracks];
+
   // double posMom[] ={0., 0., 0., 0., 1., 1.};
-
   // double hstep[nTracks] = {0}; // = {0, 0, 0, 1, -.3, .4, 20, 178., 920.}; 
-  bool   succeeded[nTracks];
 
+  bool   succeeded[nTracks];
 
 #define TIMINGTESTING 
 #define CALCULATETIME
@@ -256,7 +256,9 @@ int main(int argc, char *args[])
 
 #ifdef TIMINGTESTING 
   int nRepititions = 1;
+
   constexpr int noOfVectorCalls = 32; // scalarcalls = nTracks*noOfVectorCalls
+
   no_of_steps = 1;
 
   // bool debugValue ; 
@@ -269,7 +271,9 @@ int main(int argc, char *args[])
   cin >> nRepititions;
   // cout << "Give noOfVectorCalls: " << endl;
   // cin >> noOfVectorCalls;
+  // cout << "Using noOfVectorCalls: " << noOfVectorCalls << endl;
   cout << "Compiled parameter: noOfVectorCalls = " << noOfVectorCalls << endl;
+
   
   std::vector<double> speedUp, scalarTime, vectorTime;
   // std::vector<GUFieldTrack> vectorGUFieldTrack;
@@ -296,6 +300,7 @@ int main(int argc, char *args[])
     double X_Mom[nTracks], Y_Mom[nTracks], Z_Mom[nTracks];
     double posMomMatrix[nTracks][6];
     FieldTrack yInputMatrix[noOfVectorCalls][nTracks]; // [6];
+    FieldTrack yOutput[nTracks]; // [6];    
     // std::vector<GUFieldTrack> vectorGUFieldTrack;
     std::vector<TemplateGUFieldTrack<Backend2> > vectorGUFieldTrack;
 
@@ -342,11 +347,13 @@ int main(int argc, char *args[])
     // x, y, z values are multiplied with mmRef before being passed to function
     // the value of which is 0.1, so passing 200 directly would be in cm
     double hstepMatrix[noOfVectorCalls][nTracks];
+    double charge[noOfVectorCalls][nTracks];    
     for (int j = 0; j < noOfVectorCalls; ++j)
     {
       for (int i = 0; i < nTracks; ++i)
       {
-        hstepMatrix[j][i] = (float) rand()/(RAND_MAX) *200.; 
+        hstepMatrix[j][i] = (float) rand()/(RAND_MAX) *200.;
+        charge[j][i] = ( i < j ) ? -1.0 : +1.0 ;
       }
     }
 
@@ -355,18 +362,23 @@ int main(int argc, char *args[])
     //   hstep[i] = (float) rand()/(RAND_MAX) *200.; 
     // }
 
-
     clock_t clock1 = clock();
     for (int repeat = 0; repeat < nRepititions; ++repeat)
     {
       for (int j = 0; j < noOfVectorCalls; ++j)
       {
-        testVectorDriver->AccurateAdvance( yInputMatrix[j], hstepMatrix[j], epsTol, yOutput, nTracks, succeeded );
-        // testVectorDriver->AccurateAdvance( yInputMatrix[j], hstep, epsTol, yOutput, nTracks, succeeded );
+        testVectorDriver->AccurateAdvance( yInputMatrix[j],
+                                           charge[j],
+                                           hstepMatrix[j],
+                                           epsTol,
+                                           yOutput,
+                                           nTracks,
+                                           succeeded );
+        // testVectorDriver->AccurateAdvance( yInputMatrix[j], charge[j], hstep, epsTol, yOutput, nTracks, succeeded );
         for (int i = 0; i < nTracks; ++i)
         {
           // cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< " for hstep: " << hstepMatrix[j][i] << endl;
-          outputVarForVector += yOutput[i].PosMomVector[indOutputVar];
+          outputVarForVector += yOutput[i].GetComponent(indOutputVar);// .PosMomVector[indOutputVar];          
         }      
       }
     }
@@ -390,7 +402,7 @@ int main(int argc, char *args[])
         {
           // testScalarDriver->AccurateAdvance( vectorGUFieldTrack[i], hstep[i%nTracks], epsTol, yTrackOut );
           // testScalarDriver->AccurateAdvance( vectorGUFieldTrack[indScalar], hstep[i], epsTol, yTrackOut );
-          testScalarDriver->AccurateAdvance( vectorGUFieldTrack[indScalar], hstepMatrix[j][i], epsTol, yTrackOut );
+           testScalarDriver->AccurateAdvance( vectorGUFieldTrack[indScalar], charge[j][i], hstepMatrix[j][i], epsTol, yTrackOut );
           // cout<<" yTrackOut is : " << yTrackOut <<" for yTrackIn: "<<vectorGUFieldTrack[indScalar] <<" for hstep: "<< hstepMatrix[j][i] << endl;
 
           outputVarForScalar += yTrackOut.fPositionMomentum[indOutputVar];
@@ -436,7 +448,6 @@ int main(int argc, char *args[])
 
 
   /*------ Clean up ------*/
-  myStepper->InformDone(); 
   delete myStepper; 
   delete gvField;
 

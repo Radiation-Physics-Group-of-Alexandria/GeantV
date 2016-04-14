@@ -48,13 +48,15 @@ class TemplateGUVIntegrationStepper
         // ---------------------
         virtual void StepWithErrorEstimate( const Double_v y[],
                                             const Double_v dydx[],
+                                            const Double_v charge,
                                                   Double_v h,
                                                   Double_v yout[],
                                                   Double_v yerr[]  ) = 0;
         // Integrate typically using Runge Kutta 
         // Input:
         //          y[] = initial derivative
-        //       dydx[] = initial derivative        
+        //       dydx[] = initial derivative
+        //       charge = charge
         //          h   = requested step
         // Output:
         //       yout[] = output values of integration
@@ -99,11 +101,8 @@ class TemplateGUVIntegrationStepper
         // As some steppers require access to other methods of Eq_of_Mot
         void SetEquationOfMotion(TemplateGUVEquationOfMotion<Backend>* newEquation); 
 
-        virtual void InitializeCharge(double particleCharge) { GetEquationOfMotion()->InitializeCharge(particleCharge); }
+// virtual void InitializeCharge(double particleCharge) { GetEquationOfMotion()->InitializeCharge(particleCharge); }
            // Some steppers may need the value(s) / or status - they can intercept        
-
-        void InformDone() { GetEquationOfMotion()->InformDone();}
-          // InvalidateParameters()
 
     private:
 
@@ -131,9 +130,11 @@ void TemplateGUVIntegrationStepper<Backend>::
                            typename Backend::precision_v dydx[] )
 {
    fAbstrEquation-> RightHandSide(y, charge, dydx);
-/*   #ifdef DEBUGAnanya
+/*   
+#ifdef DEBUGAnanya
    std::cout<<"\n----y to RightHandSideVIS is: "<<y[3]<<std::endl;
-   #endif */
+   #endif 
+*/
 }
 
 template <class Backend> 

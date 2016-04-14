@@ -133,17 +133,28 @@ template
 <class Field, unsigned int Size>
    TMagFieldEquation<Field,Size>*
    TMagFieldEquation<Field,Size>
+   ::Clone() const
+{
+   // bool safe= false;  // Field* pField= fPtrField->CloneOrSafeSelf(safe);
+   Field* cloneField= fPtrField->Clone();   
+   std::cerr << " #TMagFieldEquation<Field,Size>::Clone() called# " << std::endl;
+   return new TMagFieldEquation( cloneField );
+}
+
+template
+<class Field, unsigned int Size>
+   TMagFieldEquation<Field,Size>*
+   TMagFieldEquation<Field,Size>
    ::CloneOrSafeSelf(bool& safe)
 {
    TMagFieldEquation<Field,Size>* equation;
    Field* pField=
       fPtrField->CloneOrSafeSelf(safe);
-
-   std::cerr << " #TMagFieldEquation<Field,Size>::CloneOrSafeSelf(bool& safe) called# " << std::endl;
-
    // If Field does not have such a method:
    //  = new Field( fPtrField ); // Need copy constructor.
    //  safe= false;
+
+   std::cerr << " #TMagFieldEquation<Field,Size>::CloneOrSafeSelf(bool& safe) called# " << std::endl;
 
    // safe = safe && fClassSafe;
    // if( safe )  {  equation = this; }
@@ -153,6 +164,8 @@ template
       equation = new TMagFieldEquation( pField );
       safe= false;
    // }
+
+   return equation;   
 }
 
 template
@@ -163,9 +176,9 @@ template
 {
    bool safeLocal;
    std::cerr << " #TMagFieldEquation<Field,Size>::CloneOrSafeSelf(bool* safe) called#" << std::endl;
-
    if( !pSafe ) pSafe= &safeLocal;
-   return CloneOrSafeSelf(*pSafe);
+   auto equation= CloneOrSafeSelf( pSafe );
+   return equation;   
 }
 
 
@@ -317,8 +330,6 @@ TMagFieldEquation<Field,Size>
 
 
 #include <iostream>   // For debuging only
-using std::cout;
-using std::endl;
 
 template
 <class Field, unsigned int Size>
@@ -334,22 +345,22 @@ TMagFieldEquation<Field,Size>
     FieldFromY( y, Bfield );
     TEvaluateRhsGivenB(y, Bfield, dydx);
 
-    cout.precision(8);
+    std::cout.precision(8);
 
     // cout.setf (std::ios_base::fixed);
-    // cout << " Position = " << y[0] << " " << y[1] << " " << y[3] << endl;
+    // cout << " Position = " << y[0] << " " << y[1] << " " << y[3] << std::endl;
     // cout.unsetf(std::ios_base::fixed);
-    cout << "\n# Input & B field \n";
-    cout.setf (std::ios_base::scientific);
-    cout << " Position = " << y[0] << " " << y[1] << " " << y[2] << endl;
-    cout << " Momentum = " << y[3] << " " << y[4] << " " << y[5] << endl;
-    cout << " B-field  = " << Bfield[0] << " " << Bfield[1] << " " << Bfield[2] << endl;
-    cout.unsetf(std::ios_base::scientific);
+    std::cout << "\n# Input & B field \n";
+    std::cout.setf (std::ios_base::scientific);
+    std::cout << " Position = " << y[0] << " " << y[1] << " " << y[2] << std::endl;
+    std::cout << " Momentum = " << y[3] << " " << y[4] << " " << y[5] << std::endl;
+    std::cout << " B-field  = " << Bfield[0] << " " << Bfield[1] << " " << Bfield[2] << std::endl;
+    std::cout.unsetf(std::ios_base::scientific);
 
-    cout << "\n# 'Force' from B field \n";
-    cout.setf (std::ios_base::fixed);
-    cout << " dy/dx [0-2] (=dX/ds) = " << dydx[0]   << " " << dydx[1]   << " " << dydx[2] << endl;
-    cout << " dy/dx [3-5] (=dP/ds) = " << dydx[3]   << " " << dydx[4]   << " " << dydx[5] << endl;
-    cout.unsetf(std::ios_base::fixed);
+    std::cout << "\n# 'Force' from B field \n";
+    std::cout.setf (std::ios_base::fixed);
+    std::cout << " dy/dx [0-2] (=dX/ds) = " << dydx[0]   << " " << dydx[1]   << " " << dydx[2] << std::endl;
+    std::cout << " dy/dx [3-5] (=dP/ds) = " << dydx[3]   << " " << dydx[4]   << " " << dydx[5] << std::endl;
+    std::cout.unsetf(std::ios_base::fixed);
 }
 #endif  // TMAGFIELDEQUATION_H

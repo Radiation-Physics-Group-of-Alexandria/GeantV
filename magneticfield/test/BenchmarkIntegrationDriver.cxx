@@ -143,7 +143,7 @@ int main(int argc, char *args[])
   // double step_len = step_len_mm * fieldUnits::millimeter;
   
   // Set Charge etc.
-  double particleCharge = +1.0;      // in e+ units
+  // double particleCharge = +1.0;      // in e+ units
   
   // Set coordinates here
   double
@@ -187,9 +187,10 @@ int main(int argc, char *args[])
   
   // Create a stepper :
 
-  TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
+  TemplateGUVIntegrationStepper<Backend> *myStepper =
+     new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-  myStepper->InitializeCharge( particleCharge );
+  // myStepper->InitializeCharge( particleCharge );
 
   // const double mmGVf = fieldUnits::millimeter;
   const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
@@ -224,14 +225,13 @@ int main(int argc, char *args[])
                                                   myStepperScalar,
                                                   Nposmom,
                                                   statisticsVerbosity); 
-  testScalarDriver->InitializeCharge( particleCharge );
+  // testScalarDriver->InitializeCharge( particleCharge );
   auto testVectorDriver = new TemplateGUIntegrationDriver<Backend>(hminimum, myStepper, myStepperScalar, testScalarDriver);
 
   bool chooseSteppingMethod;
   cout<<"Give 1 for OneStep and 0 for KeepStepping" << endl;
   cin >> chooseSteppingMethod;
   testVectorDriver->SetSteppingMethod(chooseSteppingMethod); 
-
 
   // double total_step = 0.;
 
@@ -261,7 +261,9 @@ int main(int argc, char *args[])
 
 #ifdef TIMINGTESTING 
   int nRepititions = 1;
+
   constexpr int noOfVectorCalls = 128; // scalarcalls = nTracks*noOfVectorCalls
+
   no_of_steps = 1;
 
   // bool debugValue ; 
@@ -274,10 +276,12 @@ int main(int argc, char *args[])
   
   cout << "Give nRepititions: "    << endl;
   cin >> nRepititions;
+  
   cout << "Got  nRepititions= "  << nRepititions << endl;  
   //  cout << "Give noOfVectorCalls: " << endl;
   //  cin >> noOfVectorCalls;
-
+  cout << "Using noOfVectorCalls: " << endl;
+  
   std::vector<double> speedUp, scalarTime, vectorTime;
   // std::vector<GUFieldTrack> vectorGUFieldTrack;
   long double outputVarForScalar = 0.0, outputVarForVector = 0.0;
@@ -299,12 +303,13 @@ int main(int argc, char *args[])
 
   for (int step = 0; step < no_of_steps; ++step)
   {
-     // double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
+    // double X_Pos[nTracks], Y_Pos[nTracks], Z_Pos[nTracks];
     double X_Mom[nTracks], Y_Mom[nTracks], Z_Mom[nTracks];
     double posMomMatrix[nTracks][6];
     FieldTrack yInputMatrix[noOfVectorCalls][nTracks]; // [6];
     std::vector<GUFieldTrack> vectorGUFieldTrack;
-
+    double charge[nTracks];
+    
     int indPosVec = 0;
     GenVecCart( posVec, noOfVectorCalls * nTracks);
 
@@ -318,6 +323,8 @@ int main(int argc, char *args[])
         X_Mom[i] = (float) rand()/(RAND_MAX) ;
         Y_Mom[i] = (float) rand()/(RAND_MAX) ;
         Z_Mom[i] = (float) rand()/(RAND_MAX) ;
+
+        charge[i] = (double)  2.0 * (rand() / (RAND_MAX) ) - 1.0;  // Unphysical - not an int ... but in [-1, +1)
 
 /*        posMomMatrix[i][0] = X_Pos[i] * mmGVf;
         posMomMatrix[i][1] = Y_Pos[i] * mmGVf;
@@ -365,12 +372,13 @@ int main(int argc, char *args[])
     {
       for (int j = 0; j < noOfVectorCalls; ++j)
       {
-        testVectorDriver->AccurateAdvance( yInputMatrix[j], hstepMatrix[j], epsTol, yOutput, nTracks, succeeded );
+        testVectorDriver->AccurateAdvance( yInputMatrix[j], charge, hstepMatrix[j], epsTol, yOutput, nTracks, succeeded );
         // testVectorDriver->AccurateAdvance( yInputMatrix[j], hstep, epsTol, yOutput, nTracks, succeeded );
+        // yOutput[i].DumpToArray( PosMomVector[indOutputVar];
         for (int i = 0; i < nTracks; ++i)
         {
           // cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< " for hstep: " << hstepMatrix[j][i] << endl;
-          outputVarForVector += yOutput[i].PosMomVector[indOutputVar];
+          outputVarForVector += yOutput[i].GetComponent(indOutputVar);// .PosMomVector[indOutputVar];
         }      
       }
     }
@@ -448,7 +456,6 @@ int main(int argc, char *args[])
 
 
   /*------ Clean up ------*/
-  myStepper->InformDone(); 
   delete myStepper; 
   delete gvField;
 

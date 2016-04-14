@@ -34,38 +34,23 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
   public:  // with description
 
      TemplateGUVEquationOfMotion( TemplateGUVField<Backend> *Field, unsigned int verbose=0 );
+
      virtual ~TemplateGUVEquationOfMotion();
        // Constructor and virtual destructor. No operations, just checks
 
      virtual void EvaluateRhsGivenB( const Double_v yVec[],
                                      const vecgeom::Vector3D<Double_v> B,  // Was double B[3],
-                                           Double_v charge, 
-                                           Double_v dydx[]             ) const = 0;
+                                           Double_v charge,
+                                           Double_v dydx[]   ) const = 0;
        // Given the value of the  field "B", this function 
        // calculates the value of the derivative dydx.
        // --------------------------------------------------------
        // This is the _only_ function a subclass must define.
        // The other two functions use Rhs_givenB.
-
       
-      virtual void InitializeCharge(double particleCharge)=0;
-       // Must be called to correctly initialise and provide charge
-      virtual void InvalidateParameters()=0;
-      
-      inline void InformReady(); // All parameters have been set (charge+)
-      inline void InformDone();  // Invalidate charge, other parameters
-      inline void CheckInitialization() const; // Ensure initialization
-      inline void CheckDone() const;
-
-     // virtual void SetChargeMomentumMass(double particleCharge,
-     //                                    double MomentumXc,
-     //                                    double MassXc2) = 0;
-     //   // Set the charge, momentum and mass of the current particle
-     //   // --> used to set the equation's coefficients ...
-
-      inline void RightHandSide( const  Double_v y[],
-                                        Double_v charge ,
-                                        Double_v dydx[] ) const;
+     inline void RightHandSide( const Double_v y[],
+                                      Double_v charge ,
+                                      Double_v dydx[] ) const;
        // This calculates the value of the derivative dydx at y.
        // It is the usual enquiry function.
        // ---------------------------
@@ -95,7 +80,6 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
 
      void SetFieldObj(TemplateGUVField<Backend>* pField){fField=pField;}
 
-     bool         Initialised() const { return fInitialised; } 
      unsigned int GetId() const       { return fEquationId; }
      static unsigned int GetNumCreated() { return fNumObjectsCreated; }
      static unsigned int GetNumLive() { return fNumObjectsCreated - fNumObjectsDeleted; }
@@ -103,8 +87,6 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
      template <class Backend_>
      friend std::ostream&
              operator<<( std::ostream& os, const TemplateGUVEquationOfMotion<Backend_>& eq);
-
-   
 
   public:
      static const unsigned int idxTime=3;  // Convention for location of time 't' in vector
@@ -116,11 +98,8 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
      enum { GUVmaximum_number_of_field_components = 24 } ;
 
      TemplateGUVField<Backend> *     fField;
-     unsigned int   fEquationId;  //
+     unsigned int   fEquationId;
      unsigned short fVerbose;
-     bool           fInitialised;
-
-
 };
 
 template <class Backend>
@@ -135,8 +114,7 @@ TemplateGUVEquationOfMotion<Backend>::TemplateGUVEquationOfMotion(TemplateGUVFie
    : // GUVEquationOfMotion(pField, verbose),
      fField(pField), 
      fEquationId(fNumObjectsCreated++),
-     fVerbose(verbose), 
-     fInitialised(false)
+     fVerbose(verbose)
 {
    if(fVerbose)
    {
@@ -147,26 +125,6 @@ TemplateGUVEquationOfMotion<Backend>::TemplateGUVEquationOfMotion(TemplateGUVFie
      std::cout<<"----Entered constructor of TemplateGUVEquationOfMotion "<<std::endl;
   #endif
 
-}
-
-template <class Backend>
-inline
-void TemplateGUVEquationOfMotion<Backend>::InformReady() // was Initialize()
-{
-   fInitialised= true;
-}
-
-template <class Backend>
-inline
-void TemplateGUVEquationOfMotion<Backend>::InformDone()  // was Clear() and before Finished();
-{
-   if(fVerbose)
-   {
-     std::cout << " Called TemplateGUVEquationOfMotion::InformDone() " << std::endl;
-     // std::cout << *this << std::endl;
-   }
-   assert( fInitialised );
-   fInitialised= false;
 }
 
 template <class Backend>
@@ -207,7 +165,6 @@ TemplateGUVEquationOfMotion<Backend>::RightHandSide( const typename Backend::pre
                                                            typename Backend::precision_v dydx[] ) const
 {
    using ThreeVectorD = vecgeom::Vector3D<typename Backend::precision_v>;
-   CheckInitialization();
 
    ThreeVectorD  Field_3vf;
    ThreeVectorD  Position( y[0], y[1], y[2] );
@@ -227,31 +184,8 @@ TemplateGUVEquationOfMotion<Backend>::RightHandSide( const typename Backend::pre
 #include <iostream>
 
 template <class Backend>
-void TemplateGUVEquationOfMotion<Backend>::CheckInitialization() const
-{
-#ifdef GUVERBOSE
-   if( fVerbose && !fInitialised ){
-      std::cerr << "TemplateGUVEquationOfMotion is not Initialised" << std::endl;
-   }
-#endif
-   // assert( fInitialised ); //Ananya:temp
-}
-
-template <class Backend>
-void TemplateGUVEquationOfMotion<Backend>::CheckDone() const
-{
-#ifdef GUVERBOSE
-   if( fVerbose && fInitialised ){
-      std::cerr << "TemplateGUVEquationOfMotion was NOT told it is Done!" << std::endl;
-   }
-#endif
-   assert( !fInitialised );
-}
-
-template <class Backend>
 TemplateGUVEquationOfMotion<Backend>::~TemplateGUVEquationOfMotion()
 {
-  CheckDone();
   fNumObjectsDeleted++;
 }
 
@@ -267,7 +201,7 @@ TemplateGUVEquationOfMotion<Backend>::EvaluateRhsReturnB( const typename Backend
    PositionAndTime[0] = y[0];
    PositionAndTime[1] = y[1];
    PositionAndTime[2] = y[2];
-   PositionAndTime[3] = y[7];  
+   // PositionAndTime[3] = y[7];
 
    GetFieldValue( PositionAndTime, Field) ;
    EvaluateRhsGivenB( y, Field, charge, dydx );

@@ -1,12 +1,19 @@
+//===----------------------------------------------------------------------===//
+/**
+ * @file TemplateGUVMagneticField.h
+ * @brief  Abstract field class for Geant-V prototype
+ * @author Ananya
+ *         Based on GUVMagneticField from John Apostolakis
+ */
+//===----------------------------------------------------------------------===//
+
 #ifndef TemplateGUVMagneticField_H
 #define TemplateGUVMagneticField_H
 
 #include "TemplateGUVField.h"
 
-
 template <class Backend>
 class TemplateGUVMagneticField :  public TemplateGUVField<Backend> 
-
 {
 
   typedef typename Backend::precision_v      Double_v;
@@ -23,8 +30,9 @@ class TemplateGUVMagneticField :  public TemplateGUVField<Backend>
 
     virtual ~TemplateGUVMagneticField(){}; 
 
-    void  GetFieldValue( const Double_v  Point[4],     // The old interface
-                               Double_v* Field );
+    /*** void  GetFieldValue( const Double_v  Point[4],     // The old interface
+     ***                            Double_v* Field );
+     ***/
     
     virtual void GetFieldValue( const vecgeom::Vector3D<Double_v> &Position, 
                                       vecgeom::Vector3D<Double_v> &FieldValue ) = 0;
@@ -33,11 +41,12 @@ class TemplateGUVMagneticField :  public TemplateGUVField<Backend>
     //  Copy 'standard' components ...
 };
 
-
+/***
 template <class Backend>
 void
-TemplateGUVMagneticField<Backend>::GetFieldValue( const typename Backend::precision_v  Point[4],     // The old interface
-                                                        typename Backend::precision_v* FieldArr )
+TemplateGUVMagneticField<Backend>
+  ::GetFieldValue( const typename Backend::precision_v  Point[4],     // The old interface
+                         typename Backend::precision_v* FieldArr )
 {
    typedef typename vecgeom::kVc::precision_v Double_v;
 
@@ -48,4 +57,5 @@ TemplateGUVMagneticField<Backend>::GetFieldValue( const typename Backend::precis
    FieldArr[1]= Field_v3f.y();
    FieldArr[2]= Field_v3f.z();
 }
+ ***/
 #endif

@@ -65,7 +65,7 @@ int main(/*int argc, char *args[]*/)
     double step_len = step_len_mm * fieldUnits::millimeter;
     
     //Set Charge etc.
-    double particleCharge = +1.0;      // in e+ units
+    // double particleCharge = +1.0;      // in e+ units
     
     //Choice of output coordinates
     int
@@ -146,7 +146,7 @@ int main(/*int argc, char *args[]*/)
 
     TemplateGUVIntegrationStepper<Backend> *myStepper = new TemplateGUTCashKarpRKF45<Backend,GvEquationType,Nposmom>(gvEquation);
 
-    myStepper->InitializeCharge( particleCharge );
+    // myStepper->InitializeCharge( particleCharge );
 
     //Initialising coordinates
     const double mmGVf = fieldUnits::millimeter;
@@ -154,10 +154,17 @@ int main(/*int argc, char *args[]*/)
                                          //   Else it must be divided by fieldUnits::c_light;
     // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
-    Double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
-                    x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
+    Double yIn[6]; //  = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                   //  x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
-/*    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
+    yIn[0] = x_pos * mmGVf ;
+    yIn[1] = y_pos * mmGVf ;
+    yIn[2] = z_pos * mmGVf ;
+    yIn[3] = x_mom * ppGVf ;
+    yIn[4] = y_mom * ppGVf ;
+    yIn[5] = z_mom * ppGVf ;
+
+    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
 
     for (int i = 0; i < 4; ++i)
     {
@@ -171,12 +178,13 @@ int main(/*int argc, char *args[]*/)
     }
     cout<<"New X position is: "<<X_pos<<endl;
 
-    Double yIn[] = {X_pos * mmGVf, Y_pos * mmGVf ,Z_pos * mmGVf,
-                    X_mom * ppGVf ,Y_mom * ppGVf ,Z_mom * ppGVf};*/
-
+    // Double yIn[] = { X_pos * mmGVf, Y_pos * mmGVf ,Z_pos * mmGVf,
+    //                  X_mom * ppGVf ,Y_mom * ppGVf ,Z_mom * ppGVf};
+    double yOneIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                       x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
     #ifdef DEBUGAnanya
-      cout<<yIn[0]<<endl;
+      cout << yIn[0] << endl;
     #endif 
        
 
@@ -189,7 +197,6 @@ int main(/*int argc, char *args[]*/)
 
 
     std::cout << "# step_len_mm = " << step_len_mm;
-    
     
     //Empty buckets for results
     Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
@@ -208,22 +215,29 @@ int main(/*int argc, char *args[]*/)
     TemplateGUFieldTrack<Backend>  yTrackOut( startPosition, startMomentum );  // yStart
     // Double total_step = 0.;
 
-    typedef typename Backend::bool_v Bool;
-    Bool goodAdvance(true);
+    typedef typename Backend::bool_v Bool_v;
+    Bool_v succeded(true);
     double epsTol = 1.0e-5;
 
     // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
 
     constexpr int nTracks = 16;
-    FieldTrack yInput[nTracks], yOutput[nTracks];
+    FieldTrack yInput[nTracks];
+    FieldTrack yOutput[nTracks];
     double hstep[nTracks];
+    double charge[nTracks];
     bool   succeeded[nTracks];
-    testDriver->AccurateAdvance( yInput, hstep, epsTol, yOutput, nTracks, succeeded );
-
-
+    for (int i=0; i < nTracks; i++){
+       charge[i] =  2.0 * ( i % 2 ) - 1.0;
+       hstep[i]  = i;
+       yInput[i] = FieldTrack( yOneIn ); // startPosition, startMomentum, 0.0 );
+       yOutput[i]= FieldTrack( yOneIn ); // startPosition, startMomentum, 0.0 );
+       succeded[i] = false;
+    }
+    
+    testDriver->AccurateAdvance( yInput, charge, hstep, epsTol, yOutput, nTracks, succeeded );
 
     //========================End testing IntegrationDriver=======================
-
 
 
     /*---------------------------------------------------*/
@@ -372,8 +386,7 @@ int main(/*int argc, char *args[]*/)
 
         if( j > 0 )  // Let's print the initial points!
         {
-           myStepper->StepWithErrorEstimate(yIn,dydx,step_len,yout,yerr);   //Call the 'trial' stepper
-
+           myStepper->StepWithErrorEstimate(yIn, dydx, charge, step_len, yout, yerr);   //Call the 'trial' stepper
         }
         //-> Then print the data
         cout.setf (ios_base::fixed);
@@ -441,8 +454,6 @@ int main(/*int argc, char *args[]*/)
 
 
     /*------ Clean up ------*/
-    myStepper->InformDone(); 
-
     #ifdef DEBUGAnanya
       cout<<"----Informing done "<<endl;
     #endif 
