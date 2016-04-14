@@ -174,7 +174,7 @@ int main(int argc, char *args[])
        myStepper = cloneStepper;
     }
 
-    myStepper->InitializeCharge( particleCharge );
+    // myStepper->InitializeCharge( particleCharge );
     
     //Initialising coordinates
     const double mmGVf = fieldUnits::millimeter;
@@ -309,10 +309,9 @@ int main(int argc, char *args[])
 
         if( j > 0 )  // Let's print the initial points!
         {
-           myStepper->StepWithErrorEstimate(yIn,dydx,step_len,yout,yerr);   //Call the 'trial' stepper
-        
+           myStepper->StepWithErrorEstimate( yIn, dydx, charge, step_len, yout, yerr );   //Call the 'trial' stepper
           #ifdef  BASELINESTEPPER
-           exactStepperGV->StepWithErrorEstimate(yInX,dydxRef,stepLengthRef,youtX,yerrX); //call the reference stepper
+           exactStepperGV->StepWithErrorEstimate(yInX,dydxRef,charge,stepLengthRef,youtX,yerrX); //call the reference stepper
           #endif
         }
         //-> Then print the data

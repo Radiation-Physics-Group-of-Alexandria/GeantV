@@ -44,7 +44,7 @@ main( int, char** )
   TestEquation(eq);
 
 #ifdef CMS_FIELD
-  GUVEquationOfMotion* eq2 = CreateFieldAndEquation("cmsMagneticField.txt");
+  GUVEquationOfMotion* eq2 = CreateFieldAndEquation("cmsMagneticField2015.txt");
   TestEquation(eq2);
 #endif
   
