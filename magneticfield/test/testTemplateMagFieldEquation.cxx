@@ -30,11 +30,9 @@ constexpr unsigned int gNposmom= 6; // Position 3-vec + Momentum 3-vec
 ThreeVector_d  FieldValue(0.0, 0.0, 1.0);
 // ThreeVector_f  FieldValue(1.0, 1.0, 1.0);
 
-
 int
 main( int, char** )
 {
-   
   TemplateGUVEquationOfMotion<vecgeom::kVc>* eq = CreateFieldAndEquation<vecgeom::kVc>( FieldValue );
 
   TestEquation(eq);
@@ -71,25 +69,25 @@ int gVerbose= 1;
 template <class Backend>
 bool TestEquation(TemplateGUVEquationOfMotion<Backend>* equation)
 {
+  using ThreeVector_v = typename vecgeom::Vector3D<typename Backend::precision_v>; 
+  using      Double_v = typename Backend::precision_v;
+  using        Bool_v = typename Backend::bool_v;
+   
   constexpr double perMillion = 1e-6;
   bool   hasError = false;  // Return value
   
   // vecgeom::Vector3D<typename Backend::precision_v> 
-  vecgeom::Vector3D<typename Backend::precision_v> PositionVec( 1., 2.,  3.);  // initial
-  vecgeom::Vector3D<typename Backend::precision_v> MomentumVec( 0., 0.1, 1.);
-  vecgeom::Vector3D<typename Backend::precision_v> FieldVec   ( 0., 0.,  1.);  // Magnetic field value (constant)
+  ThreeVector_v PositionVec( 1., 2.,  3.);  // initial
+  ThreeVector_v MomentumVec( 0., 0.1, 1.);
+  ThreeVector_v FieldVec   ( 0., 0.,  1.);  // Magnetic field value (constant)
 
-  typedef typename Backend::precision_v Double;
-  typedef typename Backend::bool_v Bool_v;
+  // Double_v PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
 
+  Double_v dydx[gNposmom];
+  Double_v PositionMomentum[gNposmom];
 
-  Double PositionTime[4] = { PositionVec.x(), PositionVec.y(), PositionVec.z(), 0.0};
-
-  Double dydx[gNposmom];
-  Double PositionMomentum[gNposmom];
-
-  double charge= -1;  
-  Double Charge(-1);
+  // double charge= -1;  
+  Double_v ChargeVec( 1. );
 
   PositionMomentum[0] = PositionVec[0];
   PositionMomentum[1] = PositionVec[1];
@@ -98,23 +96,22 @@ bool TestEquation(TemplateGUVEquationOfMotion<Backend>* equation)
   PositionMomentum[4] = MomentumVec[1];
   PositionMomentum[5] = MomentumVec[2];
 
-  
-  equation->InitializeCharge( charge );
+  // equation->InitializeCharge( charge );
 
-  equation->EvaluateRhsGivenB( PositionMomentum, FieldVec, Charge, dydx );
+  equation->EvaluateRhsGivenB( PositionMomentum, FieldVec, ChargeVec, dydx );
 
   vecgeom::Vector3D<typename Backend::precision_v>  ForceVec( dydx[3], dydx[4], dydx[5]);
 
   // Check result
-  Double MdotF = MomentumVec.Dot(ForceVec);
+  Double_v MdotF = MomentumVec.Dot(ForceVec);
   vecgeom::Vector3D<typename Backend::precision_v>  doubleFieldVec;
-  // for(int i=0; i<3;i++) doubleFieldVec[i] = (Double) FieldVec[i];
+  // for(int i=0; i<3;i++) doubleFieldVec[i] = (Double_v) FieldVec[i];
 
-  Double BdotF = FieldVec.Dot(ForceVec);
+  Double_v BdotF = FieldVec.Dot(ForceVec);
 
-  Double momentumMag = MomentumVec.Mag();
-  Double fieldMag =   FieldVec.Mag();
-  Double ForceMag =   ForceVec.Mag();
+  Double_v momentumMag = MomentumVec.Mag();
+  Double_v fieldMag =   FieldVec.Mag();
+  Double_v ForceMag =   ForceVec.Mag();
 
   cout<<"\n";
   cout<<" momentumMag: "<<momentumMag<<endl;
@@ -124,19 +121,18 @@ bool TestEquation(TemplateGUVEquationOfMotion<Backend>* equation)
   cout<<" abs(MdotF):  "<<CustomAbs(MdotF)<<endl;
 
   bool cond1 = !( vecgeom::IsEmpty( ForceMag != momentumMag*fieldMag ) );
-  bool cond2 = !( vecgeom::IsEmpty( CustomAbs(MdotF) > perMillion * MomentumVec.Mag()    * ForceVec.Mag() ) );
-  bool cond3 = !( vecgeom::IsEmpty( CustomAbs(BdotF) > perMillion * FieldVec.Mag() * ForceVec.Mag() ) );
+  bool cond2 = !( vecgeom::IsEmpty( CustomAbs(MdotF) > perMillion * MomentumVec.Mag() * ForceVec.Mag() ) );
+  bool cond3 = !( vecgeom::IsEmpty( CustomAbs(BdotF) > perMillion * FieldVec.Mag()    * ForceVec.Mag() ) );
 
   Bool_v print1 = (ForceMag != momentumMag*fieldMag) ;
-  Bool_v print2 = CustomAbs(MdotF) > perMillion * MomentumVec.Mag()    * ForceVec.Mag();
-  Bool_v print3 = CustomAbs(BdotF) > perMillion * FieldVec.Mag() * ForceVec.Mag();
+  Bool_v print2 = CustomAbs(MdotF) > perMillion * MomentumVec.Mag() * ForceVec.Mag();
+  Bool_v print3 = CustomAbs(BdotF) > perMillion * FieldVec.Mag()    * ForceVec.Mag();
 
   cout<<"\nPrinting Bool_v "<<endl;
   cout<< print1 <<" and "<<cond1<<endl;
   cout<< print2 <<" and "<<cond2<<endl;
   cout<< print3 <<" and "<<cond3<<endl;
   cout<<"\n"<<endl;
-
 
   if( cond1 ) {
      std::cerr << "ERROR: Force magnitude is not equal to momentum * field."  << std::endl;  

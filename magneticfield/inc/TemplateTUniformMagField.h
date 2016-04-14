@@ -19,19 +19,16 @@ class TemplateTUniformMagField : public TemplateGUVMagneticField<Backend>
   public:  // with description
 
     typedef typename Backend::precision_v Double_v;
-    
+
+    // Create a field, with value equal to FieldVector.
     TemplateTUniformMagField(const vecgeom::Vector3D<double>& FieldVector )
-       : TemplateGUVMagneticField<Backend>() //NumberOfComponents(3)
-        // A field with value equal to FieldVector.
+       : TemplateGUVMagneticField<Backend>()
     {
       fFieldComponents = FieldVector;
     }
 
-    TemplateTUniformMagField(double vField,
-                             double vTheta,
-                             double vPhi  );
+    TemplateTUniformMagField(double vField, double vTheta, double vPhi, char );
 
-    // virtual
     ~TemplateTUniformMagField() {}
 
     TemplateTUniformMagField(const TemplateTUniformMagField &p)   // : G4MagneticField(p)
@@ -59,8 +56,10 @@ class TemplateTUniformMagField : public TemplateGUVMagneticField<Backend>
     void GetFieldValue( const vecgeom::Vector3D<Double_v> &, // Position,
                               vecgeom::Vector3D<Double_v> &FieldValue )
     {
-      for (int i=0; i<3; i++) FieldValue[i] = fFieldComponents[i];
-     // FieldValue= fFieldComponents;
+      // for (int i=0; i<3; i++) FieldValue[i] = fFieldComponents[i];
+      FieldValue[0] = fFieldComponents[0];
+      FieldValue[1] = fFieldComponents[1];
+      FieldValue[2] = fFieldComponents[2];
     }
 
     void SetFieldValue(const vecgeom::Vector3D<double>& fieldValue)
@@ -100,7 +99,8 @@ class TemplateTUniformMagField : public TemplateGUVMagneticField<Backend>
 template <class Backend>
 TemplateTUniformMagField<Backend>::TemplateTUniformMagField(double vField,
                                                             double vTheta,
-                                                            double vPhi     )
+                                                            double vPhi,
+                                                            char   )
 {
  if ( (vField<0) || (vTheta<0) || (vTheta>Constants::pi) || (vPhi<0) || (vPhi>Constants::twopi) )
  {

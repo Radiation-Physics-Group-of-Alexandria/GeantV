@@ -945,7 +945,7 @@ void GUIntegrationDriver::PrintStatus( const double*   StartArr,
   //                                 stepTaken(hdid)  - last step taken
   //                                 nextStep (hnext) - proposal for size
 {
-   GUFieldTrack  StartFT(ThreeVector(0,0,0),  ThreeVector(0,0,0)  );
+   GUFieldTrack  StartFT( ThreeVector(0.,0.,0.), ThreeVector(0.,0.,0.), 0. );
    GUFieldTrack  CurrentFT (StartFT);
 
    StartFT.LoadFromArray( StartArr, fNoIntegrationVariables); 
