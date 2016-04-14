@@ -34,6 +34,7 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
   public:  // with description
 
      TemplateGUVEquationOfMotion( TemplateGUVField<Backend> *Field, unsigned int verbose=0 );
+
      virtual ~TemplateGUVEquationOfMotion();
        // Constructor and virtual destructor. No operations, just checks
 
@@ -103,8 +104,6 @@ class TemplateGUVEquationOfMotion //: public GUVEquationOfMotion
      template <class Backend_>
      friend std::ostream&
              operator<<( std::ostream& os, const TemplateGUVEquationOfMotion<Backend_>& eq);
-
-   
 
   public:
      static const unsigned int idxTime=3;  // Convention for location of time 't' in vector

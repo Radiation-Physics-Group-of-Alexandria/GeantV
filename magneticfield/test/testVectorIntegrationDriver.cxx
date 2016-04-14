@@ -198,8 +198,7 @@ int main(/*int argc, char *args[]*/)
     // goodAdvance = testDriver->AccurateAdvance( yTrackIn, total_step, epsTol, yTrackOut );
 
     constexpr int nTracks = 16;
-    FieldTrack yInput[nTracks];
-    FieldTrack yOutput[nTracks];
+    FieldTrack yInput[nTracks], yOutput[nTracks];
     // double posMom[] ={0., 0., 0., 0., 1., 1.};
 
     double hstep[nTracks] = { 11.0, 2.0, 33.0, 4.0, 55.0, 6.0, 77.0, 8.0, 9.0, 100.0, 11.0, 12.0, 13.0, 14.0, 15.3, 16.9 };
@@ -210,7 +209,9 @@ int main(/*int argc, char *args[]*/)
 #define DebuggingSection
 // #define CALCULATETIME 
 
-    /* double
+#ifndef DebuggingSection
+#ifndef MAINTESTING    
+    double
       x_pos = 20.,                 //pos - position  : input unit = mm
       y_pos = 20.,
       z_pos = 20.;  */
@@ -220,9 +221,6 @@ int main(/*int argc, char *args[]*/)
     // const double mmGVf = fieldUnits::millimeter;
     // const double ppGVf = fieldUnits::GeV ; 
 
-#ifndef DebuggingSection
-#ifndef MAINTESTING    
-    
     double posMom[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                        x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
     // double posMom[] = {0.0513401, 0.095223, 0.0916195, 0.635712, 0.717297, 0.141603 };

@@ -44,7 +44,7 @@ main( int, char** )
   TestEquation(eq);
 
 #ifdef CMS_FIELD
-  GUVEquationOfMotion* eq2 = CreateFieldAndEquation("cmsMagneticField.txt");
+  GUVEquationOfMotion* eq2 = CreateFieldAndEquation("cmsMagneticField2015.txt");
   TestEquation(eq2);
 #endif
   
@@ -99,9 +99,10 @@ bool TestEquation(GUVEquationOfMotion* equation)
   // double magField[3];
 
   double dydx[gNposmom];
-  double PositionMomentum[gNposmom];
-
   double charge= -1;
+
+  /**
+  double PositionMomentum[gNposmom];
 
   PositionMomentum[0] = PositionVec[0];
   PositionMomentum[1] = PositionVec[1];
@@ -109,6 +110,7 @@ bool TestEquation(GUVEquationOfMotion* equation)
   PositionMomentum[3] = MomentumVec[0];
   PositionMomentum[4] = MomentumVec[1];
   PositionMomentum[5] = MomentumVec[2];
+   **/
 
   // double FieldArr[3]= { FieldVec.x(), FieldVec.y(), FieldVec.z() };
   

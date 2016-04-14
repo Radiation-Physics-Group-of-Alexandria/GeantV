@@ -64,7 +64,6 @@ GUFieldPropagator::DoStep( ThreeVector const & startPosition, ThreeVector const 
   GUFieldTrack yTrackIn( startPosition, 
                         startDirection * startMomentumMag,
                         // fCharge, 
-                        // 0.0,  // time
                         0.0); // s_0  xo
   GUFieldTrack yTrackOut( yTrackIn );
   

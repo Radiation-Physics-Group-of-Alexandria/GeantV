@@ -1,5 +1,3 @@
-
-
 //===--- (CMS)ScalarCMSmagField.h - Geant-V ------------------------------*- C++ -*-===//
 //
 //                     Geant-V Prototype
@@ -7,7 +5,7 @@
 //===----------------------------------------------------------------------===//
 /**
  * @file   (CMS)ScalarCMSmagField.h
- * @brief  Bi-linear interpolation of CMS field
+ * @brief  Bi-linear interpolation of CMS-like field
  * @author Ananya
  */
 //===----------------------------------------------------------------------===//
@@ -87,16 +85,15 @@
 
 // using namespace std;
 
-
-#ifdef FORCE_INLINE
-// #if !(EQUAL($FORCE_INLINE,"Never"))
-// #define INLINE_CHOICE inline __attribute__ ((always_inline))
-// #else
+#ifdef  NO_INLINE
 #define INLINE_CHOICE __attribute__ ((noinline))
-// #endif
+#else
+#ifdef FORCE_INLINE
+#define INLINE_CHOICE inline __attribute__ ((always_inline))
 #else
 //  Default configuration
 #define INLINE_CHOICE inline
+#endif
 #endif
 
 /*template<typename dataType>
@@ -465,5 +462,10 @@ GUVField* ScalarCMSmagField::Clone() const
 {
    return new ScalarCMSmagField( *this );
 }
+
+#undef  NO_INLINE
+#undef FORCE_INLINE
+#undef INLINE_CHOICE
+
 #endif
 

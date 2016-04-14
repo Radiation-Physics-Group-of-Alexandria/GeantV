@@ -177,7 +177,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
   //  - the return value is 'true' if integration succeeded to the end of the interval,
   //    and 'false' otherwise.
   
-  std::cout << "AccurateAdvance of GUIntegrationDriver" << std::endl;
+  // std::cout << "AccurateAdvance of GUIntegrationDriver" << std::endl;
 
   constexpr double perMillion  = 1.0e-6;
   constexpr double perThousand = 1.0e-3;
@@ -191,8 +191,8 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
   static int nStpPr=50;   // For debug printing of long integrations
   double ySubStepStart[GUFieldTrack::ncompSVEC];
   // GUFieldTrack  yFldTrkStart(y_current);
-  std::cout << " AccurateAdvance called with hstep= " << hstep
-            << " hinitial = " << hinitial  << std::endl;
+  // std::cout << " AccurateAdvance called with hstep= " << hstep
+            // << " hinitial = " << hinitial  << std::endl;
 #endif
 
   double y[GUFieldTrack::ncompSVEC], dydx[GUFieldTrack::ncompSVEC];
@@ -286,9 +286,9 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
     //      
     if( h > fMinimumStep )
     { 
-      std::cout << "here1" << std::endl;
+      // std::cout << "Calling       OneGoodStep " << std::endl;
       OneGoodStep(y,dydx,x,h,epsilon,hdid,hnext) ;
-      std::cout << "here2" << std::endl;
+      // std::cout << "Returned from OneGoodStep" << std::endl;
 
       //--------------------------------------
       lastStepSucceeded= (hdid == h);   
@@ -301,7 +301,7 @@ GUIntegrationDriver::AccurateAdvance(const GUFieldTrack& yInput,
     else
     {
       GUFieldTrack yFldTrk( ThreeVector(0,0,0), 
-                            ThreeVector(0,0,0) ); // , 0., 0. );
+                            ThreeVector(0,0,0) );
       // double dchord_step;
       double dyerr_len_sq, dyerr_mom_rel_sq;   // What to do with these ?
       yFldTrk.LoadFromArray(y, fNoIntegrationVariables); 
@@ -638,9 +638,8 @@ GUIntegrationDriver::OneGoodStep(  double y[],        // InOut
 
   double yerr[GUFieldTrack::ncompSVEC], ytemp[GUFieldTrack::ncompSVEC];
 
-  bool verbose= true;
-  if( verbose ) 
-     std::cout << "OneGoodStep called with htry= " << htry << std::endl;
+  // bool verbose= false; // true;
+  // if( verbose ) std::cout << "OneGoodStep called with htry= " << htry << std::endl;
   
   h = htry ; // Set stepsize to the initial trial value
 

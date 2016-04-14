@@ -95,20 +95,12 @@ class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
                                  const Double_v charge,  
                                        Double_v dydx[] ) const;
 
-     //Discuss
-     //Function needed? probably not if we don't care about particleCharge
-     //or not take any input but just do InformReady?
-     REALLY_INLINE
-     void InitializeCharge(double particleCharge) final 
-      {  fParticleCharge= particleCharge; TemplateGUVEquationOfMotion<Backend>::InformReady();  }
-
       //should get this func. from inheritance
       void InvalidateParameters() final { TemplateGUVEquationOfMotion<Backend>::InformDone();}
 
    private:
-     enum { G4maximum_number_of_field_components = 24 };
+     enum { G4maximum_number_of_field_components = 3 };
      T_Field *fPtrField;
-     double   fParticleCharge;
 };
 
 template
@@ -132,18 +124,44 @@ template
    TemplateTMagFieldEquation<Backend,Field,Size>
    ::CloneOrSafeSelf(bool& safe)
 {
-   TemplateTMagFieldEquation<Backend,Field,Size>* equation;
-   Field* pField=
-      fPtrField->CloneOrSafeSelf(safe);
+   // TemplateTMagFieldEquation<Backend,Field,Size>* equation;
+   Field* pField= fPtrField->CloneOrSafeSelf(safe);
 
    std::cerr << " #TemplateTMagFieldEquation<Backend,Field,Size>::CloneOrSafeSelf(bool& safe) called# " << std::endl;
 
-   equation = new TemplateTMagFieldEquation( pField );
-   safe= false;
+   // This class is stateless - so it is thread-safe
+   auto equation = this;
+   // In case field is stateless / thread-safe    
+   if( !safe )
+      equation = new TemplateTMagFieldEquation( pField );
 
+   return equation;   
 }
 
 
+template
+<class Backend, class Field, unsigned int Size>
+   TemplateTMagFieldEquation<Backend,Field,Size>*
+   TemplateTMagFieldEquation<Backend,Field,Size>
+   ::CloneOrSafeSelf(bool* pSafe)
+{
+   bool locSafe;
+   if( !pSafe ) pSafe= &locSafe; 
+   auto equation= CloneOrSafeSelf( pSafe );
+   return equation;
+}
+
+template
+<class Backend, class Field, unsigned int Size>
+   TemplateTMagFieldEquation<Backend,Field,Size>*
+   TemplateTMagFieldEquation<Backend,Field,Size>
+   ::Clone() const
+{
+   Field* pField= fPtrField->Clone();
+   std::cerr << " #TemplateTMagFieldEquation<Backend,Field,Size>::Clone() called# " << std::endl;
+   auto equation = new TemplateTMagFieldEquation( pField );
+   return equation;   
+}
 
 template
 <class Backend, class Field, unsigned int Size>
@@ -169,7 +187,7 @@ REALLY_INLINE
     // std::cout<<"\n\n\n AM I BEING CALLED SOMEHOW?"<<std::endl;
     // vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
 
-    Double_v cof = charge * fCof * inv_momentum_magnitude;
+    Double_v cof = charge * Double_v(fCof) * inv_momentum_magnitude;
 
     dydx[0] = y[3] * inv_momentum_magnitude;       //  (d/ds)x = Vx/V
     dydx[1] = y[4] * inv_momentum_magnitude;       //  (d/ds)y = Vy/V
