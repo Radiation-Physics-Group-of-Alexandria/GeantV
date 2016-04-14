@@ -1,6 +1,10 @@
 //
 //  Compare the output of different steppers
-// 
+//     TClassicalRK4
+//     GUTCashKarpRKF45
+//  against each other.
+//  NOTE: *Scalar* implementations only
+//
 //  Based on testStepperFixed.cc
 //    was the work of Somnath Banerjee in GSoC 2015
 //
@@ -331,7 +335,7 @@ int main(int argc, char *args[])
         for(int i=0; i<6;i++)   // Print auxiliary components
         {
            double unitGVf=1;  
-           double unitRef=1;
+           // double unitRef=1;
            // if( i < 3 )             // length / length
 
            if( i >= 3 ){
