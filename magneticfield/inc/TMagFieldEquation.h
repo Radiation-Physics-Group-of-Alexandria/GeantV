@@ -133,17 +133,28 @@ template
 <class Field, unsigned int Size>
    TMagFieldEquation<Field,Size>*
    TMagFieldEquation<Field,Size>
+   ::Clone() const
+{
+   // bool safe= false;  // Field* pField= fPtrField->CloneOrSafeSelf(safe);
+   Field* cloneField= fPtrField->Clone();   
+   std::cerr << " #TMagFieldEquation<Field,Size>::Clone() called# " << std::endl;
+   return new TMagFieldEquation( cloneField );
+}
+
+template
+<class Field, unsigned int Size>
+   TMagFieldEquation<Field,Size>*
+   TMagFieldEquation<Field,Size>
    ::CloneOrSafeSelf(bool& safe)
 {
    TMagFieldEquation<Field,Size>* equation;
    Field* pField=
       fPtrField->CloneOrSafeSelf(safe);
-
-   std::cerr << " #TMagFieldEquation<Field,Size>::CloneOrSafeSelf(bool& safe) called# " << std::endl;
-
    // If Field does not have such a method:
    //  = new Field( fPtrField ); // Need copy constructor.
    //  safe= false;
+
+   std::cerr << " #TMagFieldEquation<Field,Size>::CloneOrSafeSelf(bool& safe) called# " << std::endl;
 
    // safe = safe && fClassSafe;
    // if( safe )  {  equation = this; }
@@ -153,6 +164,8 @@ template
       equation = new TMagFieldEquation( pField );
       safe= false;
    // }
+
+   return equation;   
 }
 
 template
@@ -163,9 +176,9 @@ template
 {
    bool safeLocal;
    std::cerr << " #TMagFieldEquation<Field,Size>::CloneOrSafeSelf(bool* safe) called#" << std::endl;
-
    if( !pSafe ) pSafe= &safeLocal;
-   return CloneOrSafeSelf(*pSafe);
+   auto equation= CloneOrSafeSelf( pSafe );
+   return equation;   
 }
 
 

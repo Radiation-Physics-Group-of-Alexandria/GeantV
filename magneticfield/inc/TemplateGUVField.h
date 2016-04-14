@@ -2,7 +2,8 @@
 /**
  * @file TemplateGUVField.h
  * @brief  Abstract field class for Geant-V prototype
- * @author John Apostolakis
+ * @author Ananya
+ *         Based on GUVField from John Apostolakis
  */
 //===----------------------------------------------------------------------===//
 

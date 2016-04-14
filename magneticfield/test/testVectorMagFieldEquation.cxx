@@ -75,9 +75,8 @@ ThreeVector_f      FieldValue2(1.0, 2.0, 3.0);
 ThreeVectorSimd_f  FieldValueV(1.0, 2.0, 3.0);
 
 
-int main( /* int argc, char *argv[] */ ){
-
-
+int main(int /*argc*/, char ** /* *argv[] */ )
+{
   GUVVectorEquationOfMotion* eq = CreateFieldAndEquation( FieldValue1 );
   TestEquation(eq);
 
