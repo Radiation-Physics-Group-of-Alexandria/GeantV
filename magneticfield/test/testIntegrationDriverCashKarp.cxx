@@ -47,7 +47,7 @@ typedef vecgeom::Vector3D<double>  ThreeVector;
 using namespace std;
 // using namespace CLHEP;
 
-int main(int /*argc*/, char ** /*args*/)
+int main(int /*argc*/, char ** /*args*/ )
 {
     constexpr unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
 
