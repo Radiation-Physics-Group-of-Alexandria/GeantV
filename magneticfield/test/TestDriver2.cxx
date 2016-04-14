@@ -125,7 +125,7 @@ int main(int argc, char *args[])
    - Modify values  */
   
   int no_of_steps = 20;         // No. of Steps for the stepper
-  int stepper_no  =  5;         // Choose stepper no., for refernce see above
+  // int stepper_no  =  5;         // Choose stepper no., for refernce see above
   double step_len_mm = 200.;    // meant as millimeter;  //Step length 
   double z_field_in = DBL_MAX;
   
