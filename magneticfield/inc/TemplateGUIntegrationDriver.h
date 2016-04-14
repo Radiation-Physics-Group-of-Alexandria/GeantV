@@ -1964,7 +1964,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
   static int tot_no_trials = 0;  // thread_local
   const  int max_trials    = 100; 
 
-  int finished[kVectorSize] = {0}; // This makes all elements of array 0 
+  // int finished[kVectorSize] = {0}; // This makes all elements of array 0 
   // for (int i = 0; i < kVectorSize; ++i ) finished[i] = 0;
 
   Double_v hFinal(0.), hnextFinal, xFinal, hdidFinal, errmax_sqFinal;
@@ -2048,7 +2048,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
           {
 
             //----- StoreFinalValues() ---- 
-            finished         [i] = -1;
+            // finished         [i] = -1;
             errMaxLessThanOne[i] = 1;
             xnew             [i] = x[i] + hFinal[i];
             if (xnew[i] < x2[i] )
@@ -2120,7 +2120,7 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
           {
 
             /* StoreFinalValues() */
-            finished   [i] = -1;
+            // finished   [i] = -1;
             hIsZeroCond[i] = 1;
             xnew       [i] = x[i] + hFinal[i];
             if (xnew[i] < x2[i] )
