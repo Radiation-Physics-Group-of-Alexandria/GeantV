@@ -41,8 +41,8 @@ int main(int argc, char *args[])
     constexpr unsigned int Nposmom= 6; // Position 3-vec + Momentum 3-vec
 
     using Backend = vecgeom::kVc ;
-    typedef typename Backend::precision_v Double;
-    // typedef vecgeom::Vector3D<Double> ThreeVectorSimd;
+    typedef typename Backend::precision_v Double_v;
+    // typedef vecgeom::Vector3D<Double_v> ThreeVectorSimd;
     typedef vecgeom::Vector3D<double> ThreeVector_d;
 
     using  GvEquationType=  TemplateTMagFieldEquation<Backend, TemplateTUniformMagField<Backend>, Nposmom>;
@@ -67,9 +67,6 @@ int main(int argc, char *args[])
     if(argc > 4)
        z_field_in = (float) (stof(args[4]));     // tesla
     double step_len = step_len_mm * fieldUnits::millimeter;
-    
-    //Set Charge etc.
-    double particleCharge = +1.0;      // in e+ units
     
     //Choice of output coordinates
     int
@@ -136,8 +133,6 @@ int main(int argc, char *args[])
        // new GvEquationType(gvField);
        // new TMagFieldEquation<TUniformMagField, Nposmom>(gvField);
 
-    // gvEquation->InitializeCharge( particleCharge );  // Send it via Stepper instead    
-
     /*-------------------------PREPARING STEPPER-----------------------------*/
     
     //Create a stepper :
@@ -174,8 +169,6 @@ int main(int argc, char *args[])
        myStepper = cloneStepper;
     }
 
-    // myStepper->InitializeCharge( particleCharge );
-    
     //Initialising coordinates
     const double mmGVf = fieldUnits::millimeter;
     const double ppGVf = fieldUnits::GeV ;  //   it is really  momentum * c_light
@@ -183,7 +176,7 @@ int main(int argc, char *args[])
     // const double ppGVf = fieldUnits::GeV / Constants::c_light;     // OLD
 
     // double yIn[] = {x_pos,y_pos,z_pos,x_mom,y_mom,z_mom};
-    Double yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+    Double_v yIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
                     x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
     #ifdef DEBUGAnanya
       cout<<yIn[0]<<endl;
@@ -212,7 +205,7 @@ int main(int argc, char *args[])
        // new GUExactHelixStepper(gvEquation2);
 
     // Configure Stepper for current particle
-    exactStepperGV->InitializeCharge( particleCharge ); // Passes to Equation, is cached by stepper
+    // exactStepperGV->InitializeCharge( particleCharge ); // Passes to Equation, is cached by stepper
     // gvEquation2->InitializeCharge( particleCharge ); //  Different way - in case this works
     
     auto exactStepper = exactStepperGV;
@@ -220,18 +213,18 @@ int main(int argc, char *args[])
     std::cout << "# step_len_mm = " << step_len_mm;
     std::cout << " mmRef= " << mmRef << "   ppRef= " << ppRef << std::endl;
     
-    // Double yInX[] = {x_pos * mmRef, y_pos * mmRef ,z_pos * mmRef,
+    // Double_v yInX[] = {x_pos * mmRef, y_pos * mmRef ,z_pos * mmRef,
                      // x_mom * ppRef ,y_mom * ppRef ,z_mom * ppRef};
 
     // double stepLengthRef = step_len_mm * mmRef;
     
     //Empty buckets for results
-    Double dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
+    Double_v dydx[8] = {0.,0.,0.,0.,0.,0.,0.,0.},  // 2 extra safety buffer
         // dydxRef[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
            yout[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
           // youtX[8] = {0.,0.,0.,0.,0.,0.,0.,0.},
            yerr[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
-    // Double yerrX[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
+    // Double_v yerrX[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
     
     /*-----------------------END PREPARING STEPPER---------------------------*/
     
@@ -301,7 +294,7 @@ int main(int argc, char *args[])
     for(int j=0; j<no_of_steps; j++)
     {
         cout<<setw(6)<<j ;           //Printing Step number
-        Double charge(-1.);
+        Double_v charge(-1.);
         myStepper->RightHandSideVIS(yIn, charge, dydx);               //compute dydx - to supply the stepper
         #ifdef baseline
         exactStepper->RightHandSideVIS(yInX, dydxRef);   //compute the value of dydx for the exact stepper
@@ -424,8 +417,6 @@ int main(int argc, char *args[])
 
 
     /*------ Clean up ------*/
-    myStepper->InformDone(); 
-
     #ifdef DEBUGAnanya
       cout<<"----Informing done "<<endl;
     #endif 

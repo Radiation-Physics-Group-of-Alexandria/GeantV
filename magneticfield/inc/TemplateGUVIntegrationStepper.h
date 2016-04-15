@@ -104,9 +104,6 @@ class TemplateGUVIntegrationStepper
 // virtual void InitializeCharge(double particleCharge) { GetEquationOfMotion()->InitializeCharge(particleCharge); }
            // Some steppers may need the value(s) / or status - they can intercept        
 
-        void InformDone() { GetEquationOfMotion()->InformDone();}
-          // InvalidateParameters()
-
     private:
 
         TemplateGUVIntegrationStepper& operator=(const TemplateGUVIntegrationStepper&);

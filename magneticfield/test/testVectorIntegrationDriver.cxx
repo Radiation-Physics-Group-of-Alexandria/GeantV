@@ -444,14 +444,9 @@ int main(/*int argc, char *args[]*/)
     cout<<" Vector Stepper function calls are: "<< testVectorDriver->fStepperCalls <<" and OneStep calls are "<<testVectorDriver->fNoTotalSteps << endl;
 
 
-
-
-
     //========================End testing IntegrationDriver=======================
 
-
     /*------ Clean up ------*/
-    myStepper->InformDone(); 
     delete myStepper; 
     delete gvField;
 
