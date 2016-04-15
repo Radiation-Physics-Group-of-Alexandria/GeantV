@@ -374,10 +374,11 @@ int main(int argc, char *args[])
       {
         testVectorDriver->AccurateAdvance( yInputMatrix[j], charge, hstepMatrix[j], epsTol, yOutput, nTracks, succeeded );
         // testVectorDriver->AccurateAdvance( yInputMatrix[j], hstep, epsTol, yOutput, nTracks, succeeded );
+        // yOutput[i].DumpToArray( PosMomVector[indOutputVar];
         for (int i = 0; i < nTracks; ++i)
         {
           // cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< " for hstep: " << hstepMatrix[j][i] << endl;
-          outputVarForVector += yOutput[i].PosMomVector[indOutputVar];
+          outputVarForVector += yOutput[i].GetComponent(indOutputVar);// .PosMomVector[indOutputVar];
         }      
       }
     }
@@ -455,7 +456,6 @@ int main(int argc, char *args[])
 
 
   /*------ Clean up ------*/
-  myStepper->InformDone(); 
   delete myStepper; 
   delete gvField;
 

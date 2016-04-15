@@ -65,7 +65,7 @@ int main(/*int argc, char *args[]*/)
     double step_len = step_len_mm * fieldUnits::millimeter;
     
     //Set Charge etc.
-    double particleCharge = +1.0;      // in e+ units
+    // double particleCharge = +1.0;      // in e+ units
     
     //Choice of output coordinates
     int
@@ -164,7 +164,7 @@ int main(/*int argc, char *args[]*/)
     yIn[4] = y_mom * ppGVf ;
     yIn[5] = z_mom * ppGVf ;
 
-/*    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
+    Double X_pos, Y_pos, Z_pos, X_mom, Y_mom, Z_mom;
 
     for (int i = 0; i < 4; ++i)
     {
@@ -178,9 +178,10 @@ int main(/*int argc, char *args[]*/)
     }
     cout<<"New X position is: "<<X_pos<<endl;
 
-    Double yIn[] = {X_pos * mmGVf, Y_pos * mmGVf ,Z_pos * mmGVf,
-                    X_mom * ppGVf ,Y_mom * ppGVf ,Z_mom * ppGVf};*/
-
+    // Double yIn[] = { X_pos * mmGVf, Y_pos * mmGVf ,Z_pos * mmGVf,
+    //                  X_mom * ppGVf ,Y_mom * ppGVf ,Z_mom * ppGVf};
+    double yOneIn[] = {x_pos * mmGVf, y_pos * mmGVf ,z_pos * mmGVf,
+                       x_mom * ppGVf ,y_mom * ppGVf ,z_mom * ppGVf};
 
     #ifdef DEBUGAnanya
       cout << yIn[0] << endl;
@@ -229,8 +230,8 @@ int main(/*int argc, char *args[]*/)
     for (int i=0; i < nTracks; i++){
        charge[i] =  2.0 * ( i % 2 ) - 1.0;
        hstep[i]  = i;
-       yInput[i] = FieldTrack( yIn ); // startPosition, startMomentum, 0.0 );
-       yOutput[i]= FieldTrack( yIn ); // startPosition, startMomentum, 0.0 );
+       yInput[i] = FieldTrack( yOneIn ); // startPosition, startMomentum, 0.0 );
+       yOutput[i]= FieldTrack( yOneIn ); // startPosition, startMomentum, 0.0 );
        succeded[i] = false;
     }
     
@@ -453,8 +454,6 @@ int main(/*int argc, char *args[]*/)
 
 
     /*------ Clean up ------*/
-    myStepper->InformDone(); 
-
     #ifdef DEBUGAnanya
       cout<<"----Informing done "<<endl;
     #endif 

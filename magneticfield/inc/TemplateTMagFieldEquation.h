@@ -79,7 +79,7 @@ class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
      void EvaluateRhsGivenB( const Double_v y[],
                              const vecgeom::Vector3D<Double_v> B,  // Was const double B[3],
                              const Double_v charge,  // = -1.,
-                                   Double_v dydx[]   /* = 0. */ ) const
+                                   Double_v dydx[]   /* = 0. */ ) const override final
      { TEvaluateRhsGivenB( y, B, charge, dydx); }
 
      REALLY_INLINE
@@ -94,9 +94,6 @@ class TemplateTMagFieldEquation :  public TemplateGUVEquationOfMotion<Backend>
      void PrintInputFieldAndDyDx(const Double_v y[],  
                                  const Double_v charge,  
                                        Double_v dydx[] ) const;
-
-      //should get this func. from inheritance
-      void InvalidateParameters() final { TemplateGUVEquationOfMotion<Backend>::InformDone();}
 
    private:
      enum { G4maximum_number_of_field_components = 3 };
