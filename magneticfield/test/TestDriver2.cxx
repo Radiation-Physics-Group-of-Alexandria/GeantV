@@ -132,8 +132,7 @@ int main(int argc, char *args[])
   double z_field_in = DBL_MAX;
   
   // Checking for command line values :
-  if(argc>1)
-      stepper_no = atoi(args[1]);
+  // if(argc>1) stepper_no = atoi(args[1]);
   if(argc > 2)
      step_len_mm = (float)(stof(args[2]));   // *mm);
   if(argc > 3)
@@ -379,7 +378,7 @@ int main(int argc, char *args[])
         for (int i = 0; i < nTracks; ++i)
         {
           // cout<<" yOutput["<<i<<"] is: "<< yOutput[i]<<" for yInput: "  <<yInput[i]<< " for hstep: " << hstepMatrix[j][i] << endl;
-          outputVarForVector += yOutput[i].PosMomVector[indOutputVar];
+          outputVarForVector += yOutput[i].GetComponent(indOutputVar);// .PosMomVector[indOutputVar];          
         }      
       }
     }
@@ -449,7 +448,6 @@ int main(int argc, char *args[])
 
 
   /*------ Clean up ------*/
-  myStepper->InformDone(); 
   delete myStepper; 
   delete gvField;
 
