@@ -118,7 +118,7 @@ class TemplateGUIntegrationDriver : public AlignedBase
                          const Double_v  htry,
                          const Double_v  eps,      //  memb variables ?
                          const Double_v  hTotalLane,
-                               Double_v& hdid,
+                      //       Double_v& hdid,
                                Double_v& hnext,
                                Double_v& hTotalDoneSoFar,
                                Double_v& stepsLane    // Number of steps 
@@ -1968,14 +1968,15 @@ TemplateGUIntegrationDriver<vecgeom::kVc>  // TemplateGUIntegrationDriver<Backen
 //   @param   x       - independent variable  ( in= initial value, out = current value)
 //   @param   charge  - particle charge                 - In (const)
 //   @param   htry    - proposed size for first step    - In (const)
-//   @param   epsRel  - required relative accuracy      - In (const)
 //   @param   hTotalLane - total size of integration    - In (const)
-                        typename vecgeom::kVc::precision_v& stepsLane, // Out
+//   @param   epsRel  - required relative accuracy      - In (const)
 //   @param   hnext   - proposed next step size         - Out
 //   @param   hDone   -  total step size achieved       - Out 
 //   @param   stepsLane - number of steps taken in lane - In/Out
 // Supressed:
 //   @param   hdid    - step size achieved in call, in last step ???  - Out  
+// Extension: (tbc)
+//   @param   lastWork - This is the last set of lanes. Return when all is done. - In (const)
 
 template </*class Backend*/>
 void
@@ -1985,15 +1986,21 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
                         typename vecgeom::kVc::precision_v& x,          // InOut
                   const typename vecgeom::kVc::precision_v  charge,
                   const typename vecgeom::kVc::precision_v  htry,
-                  const typename vecgeom::kVc::precision_v  epsRel,
                   const typename vecgeom::kVc::precision_v  hTotalLane,
-                //      typename vecgeom::kVc::precision_v& hdid,      // Out
+                  const typename vecgeom::kVc::precision_v  epsRel,
+                //      bool                                lastWork,  
                         typename vecgeom::kVc::precision_v& hnext,     // Out
-                        typename vecgeom::kVc::precision_v& hDone
-                        typename vecgeom::kVc::precision_v& stepsLane  // InOut
+                        typename vecgeom::kVc::precision_v& hDone,
+                        typename vecgeom::kVc::precision_v& numStepsLane,  // InOut
      )
 
 // Build starting from OneGoodStep
+
+//  All lanes step together.
+//  When one lane is completely done, the method returns with
+//   the results:
+//    - final values at least one lane, (or abandon due to underflow)
+//    - intermediate integration results in the remaining lanes
 
 {
 #ifdef PARTDEBUG
@@ -2365,9 +2372,6 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
   Double_v startCurveLength, hTotalLane, chargeLane;
   Double_v hDone(0.); // To keep track of hDone in KeepStepping
 
-  Double_v numStepsLane= 0;   //  Counter for use between calls to KeepStepping (or later OneStep?)
-      //  Effectively an integer ...  
-
   Bool_v   succeededLane(true);
   Bool_v   isDoneLane(false); // set true when there is a return statement 
   int trackNextInput = 4; 
@@ -2451,8 +2455,9 @@ TemplateGUIntegrationDriver<vecgeom::kVc>
     }
     else
     {
-      KeepStepping( y,    dydx, chargeLane, x, h, epsilon, hnext, hTotalLane, hDone, numStepsLane) ;
-      // Different from OneStep:
+       KeepStepping( y,    dydx, chargeLane, x, h, hTotalLane, epsilon, // lastLanes,
+                     hnext, hDone, numStepsLane) ;
+      // Differences from OneStep:
       //    hTotalLane   - 
       //    hDone        -
       //    numStepsLane - for 'score-keeping'
