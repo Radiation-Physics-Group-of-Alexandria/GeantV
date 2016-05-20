@@ -634,7 +634,7 @@ int TTabPhysMgr::SampleFinalStates(int imat, int ntracks, GeantTrack_v &tracks, 
         j = 1;
       // loop over the secondaries and put them into tracks if they good to track:
       // j=0 -> including stopped primary as well if isSurv = kTRUE;
-      // j=1 -> skipp the primary in the list of secondaries (was already updated in tracks above)
+      // j=1 -> skip the primary in the list of secondaries (was already updated in tracks above)
       for (int i = j; i < nSecPart; ++i) {
         if (pid[i] >= TPartIndex::I()->NPart()) { // fragment: put its Ekin to energy deposit
           int idummy = pid[i] - 1000000000;

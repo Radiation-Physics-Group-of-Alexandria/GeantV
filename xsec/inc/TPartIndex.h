@@ -34,23 +34,23 @@ using vecgeom::Particle;
 #define NELEM 118  // Total number of materials
 
 enum GVproc {
-  kTransport,
-  kMultScatt,
-  kIonisation,
-  kDecay,
-  kinElastic,
-  kElastic,
-  kRestCapture,
-  kBrehms,
-  kPairProd,
-  kAnnihilation,
-  kCoulombScatt,
-  kPhotoel,
-  kCompton,
-  kConversion,
-  kCapture,
-  kKiller,
-  kTotal
+  kTransport,   //  Transport: 0
+  kMultScatt,   //  Multiple scattering: 1
+  kIonisation,  //  Ionisation: 2
+  kDecay,       //  Decay: 3
+  kinElastic,   //  inElastinc: 4
+  kElastic,     //  Elastic: 5
+  kRestCapture, //  RestCapture: 6
+  kBrehms,      //  Brehms: 7
+  kPairProd,    //  PairProd: 8
+  kAnnihilation,//  Annihilation: 9
+  kCoulombScatt,//  CoulombScattering: 10
+  kPhotoel,     //  Photoel: 11
+  kCompton,     //  Compton : 12
+  kConversion,  //  Conversion: 13
+  kCapture,     //  Capture: 14
+  kKiller,      //  Killer: 15
+  kTotal        //  Total: 16
 };
 
 class TPartIndex {

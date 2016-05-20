@@ -14,7 +14,7 @@ VECCORE_CUDA_HOST
 ComptonKleinNishina::ComptonKleinNishina(Random_t* states, int tid)
   : EmModelBase<ComptonKleinNishina>(states,tid)
 {
-  SetLowEnergyLimit(10.*keV);
+  //SetLowEnergyLimit(10.*keV); commented out for the moment
   Initialization();
 }
 
@@ -23,7 +23,7 @@ ComptonKleinNishina::ComptonKleinNishina(Random_t* states, int tid,
                                          GUAliasSampler* sampler)
   : EmModelBase<ComptonKleinNishina>(states,tid,sampler)
 {
-  SetLowEnergyLimit(10.*keV);
+  //SetLowEnergyLimit(10.*keV); commented out for the moment
 }
 
 VECCORE_CUDA_HOST
@@ -43,9 +43,10 @@ VECCORE_CUDA_HOST void
 ComptonKleinNishina::Initialization()
 {
   if(fSampleType == kAlias) {
-    fAliasSampler = new GUAliasSampler(fRandomState, fThreadId,
-				       fLowEnergyLimit, fHighEnergyLimit,
-                                       100, 200);
+      
+      fAliasSampler = new GUAliasSampler(fRandomState, fThreadId, fLowEnergyLimit, fHighEnergyLimit,100, 200);
+      //fAliasSampler = new GUAliasSampler(fRandomState, fThreadId, 0.1e-3, fHighEnergyLimit,100, 200);
+      std::cout<<"ComptonKleinNishina::Initialization, fLowEnergyLimit: "<<fLowEnergyLimit<<"\n";
     BuildAliasTable();
   }
 }

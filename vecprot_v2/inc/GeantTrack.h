@@ -587,7 +587,7 @@ public:
   double *fYdirV;
   double *fZdirV;
   double *fPV;      /** Momentum */
-  double *fEV;      /** Energies */
+  double *fEV;      /** TOTAL Energies=kinEn+Mass */
   double *fTimeV;   /** Time */
   double *fEdepV;   /** Energy depositions */
   double *fPstepV;  /** Selected physical steps */

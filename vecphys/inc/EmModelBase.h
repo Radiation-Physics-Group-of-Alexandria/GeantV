@@ -180,6 +180,8 @@ EmModelBase<EmModel>::EmModelBase(Random_t* states, int tid)
     fSampleType(kAlias),
     fAliasSampler(0)
 {
+    std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<"\n";
+    std::cout<<"fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
 }
 
 template <class EmModel>
@@ -330,23 +332,40 @@ void EmModelBase<EmModel>::Interact(GUTrack_v& inProjectile,
                                     const int* targetElements,
                                     GUTrack_v& outSecondary)
 {
+  //std::cout<<" Interact \n";
+
   //check for the validity of energy
   int nTracks = inProjectile.numTracks;
+    //fEmin = 3.E-6 is out of vecphys model ranges as we interprets it to 1eV
+    //for (int i=0; i<nTracks; i++)
+    //{
+    //    inProjectile.E[i]*=1000;
+    //}
+    //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
 
   // this inclusive check may be redundant as this model/process should not be
   // selected if energy of the track is outside the valid energy region
-  //  if(inProjectile.E[0]         < fLowEnergyLimit ||
-  //     inProjectile.E[nTracks-1] > fHighEnergyLimit) return;
-
+    if(inProjectile.E[0]         < fLowEnergyLimit ||
+       inProjectile.E[nTracks-1] > fHighEnergyLimit)
+    {
+        //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
+        //if(inProjectile.E[0] < fLowEnergyLimit) std::cout<<" Low Energy: "<< inProjectile.E[0]<<"\n";
+        //if(inProjectile.E[nTracks-1] > fHighEnergyLimit) std::cout<<" High energy: "<< inProjectile.E[nTracks-1]<<"\n";
+        std::cout<<" EmModelBase<EmModel>::Interact ERROR, exiting. bye bye.\n";
+        return;
+    }
+    
   using Double_v = typename Backend::Double_v;
 
   for(int j = 0; j < nTracks  ; ++j) {
+      if((targetElements[j] < 0)  || (targetElements[j] > maximumZ )) std::cout<<"Z elemento: "<<targetElements[j]<<"\n";
     assert( (targetElements[j] > 0)  && (targetElements[j] <= maximumZ ) );
   }
 
   int ibase= 0;
   int numChunks= (nTracks/VectorSize<Double_v>());
-
+    
+  //std::cout<<" Interact: nTracks: "<<nTracks<<"  e  VectorSize<Double_v>(): "<<VectorSize<Double_v>()<<" numChunks: "<<numChunks<<", fSampleType: "<<fSampleType<<" e SamplingMethod::kAlias: "<<SamplingMethod::kAlias<<"\n";
   for(int i= 0; i < numChunks ; ++i) {
     Index_v<Double_v>  zElement(targetElements[ibase]);
     Double_v energyIn(&inProjectile.E[ibase]);
@@ -368,9 +387,12 @@ void EmModelBase<EmModel>::Interact(GUTrack_v& inProjectile,
       default :
         ;
     }
-
+    //std::cout<<" After Interact\n";
     ConvertXtoFinalState<Backend>(energyIn, energyOut, sinTheta, ibase, inProjectile, outSecondary);
+    //std::cout<<" After ConvertXtoFinalState\n";
     ibase+= VectorSize<Double_v>();
+    outSecondary.numTracks+= VectorSize<Double_v>();
+
   }
 
   //leftover - do scalar (temporary)
@@ -378,9 +400,16 @@ void EmModelBase<EmModel>::Interact(GUTrack_v& inProjectile,
 
     double senergyIn= inProjectile.E[i];
     double senergyOut, ssinTheta;
-
+    //std::cout<<"Alias anyway\n";
     static_cast<EmModel*>(this)-> template InteractKernel<backend::Scalar>(senergyIn,targetElements[i],senergyOut,ssinTheta);
     ConvertXtoFinalState_Scalar<backend::Scalar>(senergyIn, senergyOut, ssinTheta, i, inProjectile, outSecondary);
+
+    //std::cout<<"parentId["<<i<<"]: ";
+    //std::cout<<inProjectile.id[i]<<"\n";
+    
+    //outSecondary.parentId[i]=inProjectile.id[i];
+    outSecondary.numTracks++;
+    //std::cout<<"parentId: "<<inProjectile.id[i]<<"\n";
   }
 }
 
@@ -646,6 +675,10 @@ void EmModelBase<EmModel>::ConvertXtoFinalState(double energyIn,
   outSecondary.pz = outSecondary.E*(zhat-what);
 
   //fill other information
+  outSecondary.parentId=inProjectile.id;
+  //std::cout<<"Store scalare del parendId: "<<inProjectile.id<<"\n";
+    
+  
 }
 
 #ifndef VECCORE_NVCC
@@ -660,6 +693,7 @@ EmModelBase<EmModel>::ConvertXtoFinalState(typename Backend::Double_v energyIn,
                                            GUTrack_v& secondary) // const
 {
     using Double_v = typename Backend::Double_v;
+    using Int_v= typename Backend::Int_v;
 
     //need to rotate the angle with respect to the line of flight
     Double_v px(&primary.px[ibase]);
@@ -698,9 +732,15 @@ EmModelBase<EmModel>::ConvertXtoFinalState(typename Backend::Double_v energyIn,
     pxSec.store(&secondary.px[ibase]);
     pySec.store(&secondary.py[ibase]);
     pzSec.store(&secondary.pz[ibase]);
-
-  //fill other information
-
+    
+    //secondary.numTracks++;
+    //std::cout<<"secondary numTracks: "<<secondary.numTracks<<"\n";
+    
+    //Fill other information
+    Int_v idParent =primary.id[ibase];
+    idParent.store(&secondary.parentId[ibase]);
+    //std::cout<<"Store vettoriale del parendId.\n";
+    
 }
 
 template<class EmModel>
@@ -741,7 +781,8 @@ EmModelBase<EmModel>::ConvertXtoFinalState_Scalar(typename Backend::Double_v ene
   secondary.py[ibase] = secE*(yhat-vhat);
   secondary.pz[ibase] = secE*(zhat-what);
 
-  //fill other information
+  //Fill other information
+  secondary.parentId[ibase]=ibase;
 }
 #endif
 

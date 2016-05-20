@@ -40,6 +40,11 @@
 #include "GeantFactoryStore.h"
 #include "TThreadMergingFile.h"
 
+#if USE_VECPHYS == 1
+#include "VecPhysOrchestrator.h"
+#include "GVectorPhysicsProcess.h"
+#endif
+
 using namespace Geant;
 using std::max;
 
@@ -328,6 +333,7 @@ void *WorkloadManager::TransportTracks() {
 
   // Start the feeder
   propagator->Feeder(td);
+  std::cout<<"Feeder started first time\n";
   Material_t *mat = 0;
   int *waiting = wm->GetWaiting();
 //  condition_locker &sched_locker = wm->GetSchLocker();
@@ -347,7 +353,10 @@ void *WorkloadManager::TransportTracks() {
 #endif
   //   int iev[500], itrack[500];
   // TGeoBranchArray *crt[500], *nxt[500];
-  while (1) {
+    int counterMari=0;
+   while (1)
+  {
+      counterMari++;
     // Call the feeder if in priority mode
     auto feedres = wm->CheckFeederAndExit(*prioritizer, *propagator, *td);
     if (feedres == FeederResult::kFeederWork) {
@@ -433,15 +442,19 @@ void *WorkloadManager::TransportTracks() {
     ncross = 0;
     generation = 0;
 
-    while (ntotransport) {
+    while (ntotransport)
+    {
+        //std::cout<<"Transport ntotransport: "<<ntotransport<<"\n";
       // Interrupt condition here. Work stealing could be also implemented here...
       generation++;
       // Use fNsteps track data to detect geometry anomalies
-      for (auto itr=0; itr<ntotransport; ++itr) {
+      for (auto itr=0; itr<ntotransport; ++itr)
+      {
         input.fNstepsV[itr]++;
         if ((input.fStatusV[itr] != kKilled) &&
             (input.fNstepsV[itr] > gPropagator->fNstepsKillThr) &&
-            input.fBoundaryV[itr] && (input.fSnextV[itr]<1.e-9)) {
+            input.fBoundaryV[itr] && (input.fSnextV[itr]<1.e-9))
+        {
           Error("TransportTracks", "track %d seems to be stuck -> killing it after next step", input.fParticleV[itr]);
           Error("TransportTracks", "Transport will continue, but this is a fatal error");
           input.PrintTrack(itr, "stuck");
@@ -457,7 +470,8 @@ void *WorkloadManager::TransportTracks() {
       else
         ncross += input.PropagateTracks(td);
       ntotransport = input.GetNtracks();
-    }
+    }//end while(ntotransport)
+      
     // All tracks are now in the output track vector. Possible statuses:
     // kCrossing - particles crossing boundaries
     // kPhysics - particles reaching the point where the discrete physics process
@@ -475,7 +489,8 @@ void *WorkloadManager::TransportTracks() {
 
     // Post-step actions by continuous processes for all particles. There are no
     // new generated particles at this point.
-    if (propagator->fUsePhysics) {
+    if (propagator->fUsePhysics)
+    {
       nphys = 0;
       nextra_at_rest = 0;
       // count phyics steps here
@@ -491,7 +506,8 @@ void *WorkloadManager::TransportTracks() {
 
       // Discrete processes only
       nphys = output.SortByLimitingDiscreteProcess(); // only those that kPhysics and not continous limit
-      if (nphys) {
+      if (nphys)
+      {
         // reset number-of-interaction-legth-left
         for (auto itr = 0; itr < nphys; ++itr)
           output.fNintLenV[itr] = -1.0;
@@ -517,11 +533,26 @@ void *WorkloadManager::TransportTracks() {
 //            inserted to the track vector
 //
 #if USE_VECPHYS == 1
-        propagator->fVectorPhysicsProcess->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
+          
+          
+          propagator->fVecPhysOrchestrator->ApplyPostStepProcess(output, nphys, td->fTid);
+          
+          //std::cout<<"Post ApplyPostStepProcess\n";
+          //propagator->fVecPhysOrchestrator->FilterTracksForTabPhys(output, nphys);
+          //propagator->fVecPhysOrchestrator->WriteBackTracks(output, td->fTid);
+          
+          //NB: No more reactions
+          //       output.fProcessV[t] = -1;
+          //       output.fEindexV[t] = -1;
+          
+          //propagator->fVectorPhysicsProcess->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
+          //std::cout<<"End\n";
+    
 #endif
         // second: sample final states (based on the inf. regarding sampled
         //         target and type of interaction above), insert them into
         //         the track vector, update primary tracks;
+        
         propagator->Process()->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
 
         if (0 /*ntotnext*/) {
@@ -530,6 +561,7 @@ void *WorkloadManager::TransportTracks() {
         }
       }
     }
+    
     if (gPropagator->fStdApplication)
       gPropagator->fStdApplication->StepManager(output.GetNtracks(), output, td);
     gPropagator->fApplication->StepManager(output.GetNtracks(), output, td);
@@ -591,6 +623,7 @@ void *WorkloadManager::TransportTracks() {
       basket = 0; // signal reusability by non-null pointer
     }
   }
+  std::cout<<"Infinite loop executed n. :"<<counterMari<<" times.\n";
 
   // WP
   if (concurrentWrite) {
@@ -613,7 +646,6 @@ void *WorkloadManager::TransportTracks() {
   if (concurrentWrite) {
     delete file;
   }
-
   return 0;
 }
 
@@ -654,6 +686,7 @@ void *WorkloadManager::TransportTracksCoprocessor(TaskBroker *broker) {
   prioritizer->SetFeederQueue(feederQ);
   // Start the feeder
   propagator->Feeder(td);
+    std::cout<<"Feeder started second time\n";
   // TGeoMaterial *mat = 0;
   int *waiting = wm->GetWaiting();
 //  condition_locker &sched_locker = wm->GetSchLocker();

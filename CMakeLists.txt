@@ -456,6 +456,10 @@ include_directories("${PROJECT_SOURCE_DIR}/fastsim/inc")
 include_directories("${PROJECT_SOURCE_DIR}/examples/inc")
 
 
+if(USE_VECPHYS)
+include_directories("${PROJECT_SOURCE_DIR}/vectphysproc/inc/")
+endif()
+
 message(STATUS "VECGEOM_INSTALL_DIR is: ${VECGEOM_INSTALL_DIR}")
 message(STATUS "VECGEOM_INCLUDE_DIR is: ${VECGEOM_INCLUDE_DIR}")
 message(STATUS "VECGEOM_DEFINITIONS is: ${VECGEOM_DEFINITIONS}")
@@ -475,7 +479,7 @@ if (WITH_GEANT4)
   add_subdirectory (tabxsec)
 endif()
 add_subdirectory (magneticfield)
-add_subdirectory (fastsim)
+#add_subdirectory (fastsim)
 
 if (WITH_GEANT4)
 add_subdirectory (test-small)

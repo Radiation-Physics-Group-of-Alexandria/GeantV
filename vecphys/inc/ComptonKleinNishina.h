@@ -325,7 +325,10 @@ void ComptonKleinNishina::ModelInteract(GUTrack&  inProjectile,
   double energyIn = inProjectile.E;
 
   //check for the validity of energy
-  if(energyIn < fLowEnergyLimit || energyIn > fHighEnergyLimit) return;
+  if(energyIn < fLowEnergyLimit || energyIn > fHighEnergyLimit)
+  {
+      std::cout<<"Energy not valid!\n";
+      return;}
 
   double energyOut =0;
   double sinTheta = 0;

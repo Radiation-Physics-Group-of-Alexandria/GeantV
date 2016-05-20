@@ -15,11 +15,16 @@
 #include "WorkloadManager.h"
 #include "GeantPropagator.h"
 #include "ExN03Application.h"
+#ifdef USE_VECPHYS
+#include "GVectorPhysicsProcess.h"
+#include "VecPhysOrchestrator.h"
+#endif 
 
-static int n_events = 50;
+
+static int n_events = 1; // was 50
 static int n_buffered = 10;
-static int n_threads = 4;
-static int n_track_max = 500;
+static int n_threads = 1; //was 4
+static int n_track_max = 10; //was 500
 static int n_learn_steps = 0;
 static bool monitor = false, score = false, debug = false, coprocessor = false;
 
@@ -182,9 +187,11 @@ int main(int argc, char *argv[]) {
   propagator->fProcess = new TTabPhysProcess("tab_phys", xsec_filename.c_str(), fstate_filename.c_str());
 
   // for vector physics -OFF now
-  // propagator->fVectorPhysicsProcess = new GVectorPhysicsProcess(propagator->fEmin, nthreads);
+#if USE_VECPHYS==1
+    propagator->fVecPhysOrchestrator = new VecPhysOrchestrator(12,propagator->fEmin, n_threads ); //12 is Compton, here for now
+    propagator->fVectorPhysicsProcess = new GVectorPhysicsProcess(propagator->fEmin, n_threads);
+#endif 
   propagator->fPrimaryGenerator = new GunGenerator(propagator->fNaverage, 11, propagator->fEmax, -8, 0, 0, 1, 0, 0);
-
    // Number of steps for learning phase (tunable [0, 1e6])
    // if set to 0 disable learning phase
   propagator->fLearnSteps = n_learn_steps;

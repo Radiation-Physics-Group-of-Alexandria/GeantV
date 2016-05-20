@@ -12,10 +12,14 @@ endif()
 set(sources 
 ${CMAKE_CURRENT_SOURCE_DIR}/src/GVectorPhysicsProcess.cc
 ${CMAKE_CURRENT_SOURCE_DIR}/src/GVComptonProcess.cc
+${CMAKE_CURRENT_SOURCE_DIR}/src/VecPhysCompton.cc
+${CMAKE_CURRENT_SOURCE_DIR}/src/VecPhysOrchestrator.cc
 )
 set(headers
 ${CMAKE_CURRENT_SOURCE_DIR}/inc/GVectorPhysicsProcess.h
 ${CMAKE_CURRENT_SOURCE_DIR}/inc/GVComptonProcess.h
+${CMAKE_CURRENT_SOURCE_DIR}/inc/VecPhysCompton.h
+${CMAKE_CURRENT_SOURCE_DIR}/inc/VecPhysOrchestrator.h
 )
 
 #----------------------------------------------------------------------------
@@ -23,6 +27,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/inc/GVComptonProcess.h
 #----------------------------------------------------------------------------
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
 include_directories(${PROJECT_SOURCE_DIR}/xsec/inc)
+include_directories(${PROJECT_SOURCE_DIR}/vecphys/inc)
 
 # print include directories
 #get_property(inc_dirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
@@ -34,13 +39,23 @@ include_directories(${PROJECT_SOURCE_DIR}/xsec/inc)
 ROOT_GENERATE_DICTIONARY(vphysprocDict ${headers} MODULE libVphysproc LINKDEF inc/LinkDef.h OPTIONS "-DVC_COMMON_SIMDIZE_H_=1")
 
 #----------------------------------------------------------------------------
-# Add traget library and dependencies
+# Add target library and dependencies
 #----------------------------------------------------------------------------
 add_library(Vphysproc SHARED ${sources} vphysprocDict.cxx)
 target_link_libraries(Vphysproc ${VC_LIBRARIES} Xsec Geant_v ${ROOT_LIBRARIES} EG Geom)
 
 add_custom_target(VectPhysProc DEPENDS Vphysproc)
 
+#install(TARGETS Vphysproc DESTINATION lib)
+#install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libVphysproc.rootmap
+#              ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libVphysproc_rdict.pcm DESTINATION lib)
+
+if(APPLE)
+# for some reason the installation process alters the libraries on Mac, and the program fails
+install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libVphysproc.dylib DESTINATION lib)
+else()
 install(TARGETS Vphysproc DESTINATION lib)
-install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libVphysproc.rootmap 
-              ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libVphysproc_rdict.pcm DESTINATION lib)
+endif()
+
+install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libVphysproc.rootmap
+${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libVphysproc_rdict.pcm DESTINATION lib)
