@@ -183,10 +183,12 @@ GeantTrack &GeantPropagator::GetTempTrack(int tid) {
 int GeantPropagator::Feeder(GeantTaskData *td) {
   // Feeder called by any thread to inject the next event(s)
   // Only one thread at a time
+  //std::cout<<"Inside GeantPropagator::Feeder\n";
   if (fFeederLock.test_and_set(std::memory_order_acquire))
     return -1;
   int nbaskets = 0;
   if (!fLastEvent) {
+    //std::cout<<"Inside GeantPropagator::Feeder: !fLastEvent\n";
     nbaskets = ImportTracks(fNevents, 0, 0, td);
     fLastEvent = fNevents;
     fFeederLock.clear(std::memory_order_release);
@@ -194,10 +196,12 @@ int GeantPropagator::Feeder(GeantTaskData *td) {
   }
   // Check and mark finished events
   for (int islot = 0; islot < fNevents; islot++) {
+    //std::cout<<"Inside GeantPropagator::Feeder: Check and mark finished events\n";
     GeantEvent *evt = fEvents[islot];
     if (fDoneEvents->TestBitNumber(evt->GetEvent()))
       continue;
-    if (evt->Transported()) {
+    //std::cout<<"Inside GeantPropagator::Feeder: evt->Transported(): "<<evt->Transported()<<"\n"; : 0
+    if (evt->Transported()) { //Problems here?
       fPriorityEvents--;
       evt->Print();
       
@@ -373,6 +377,7 @@ void GeantPropagator::Initialize() {
   fProcess->Initialize();
 #if USE_VECPHYS == 1
   fVectorPhysicsProcess->Initialize();
+  //fVecPhysOrchestrator->Initialize();
 #endif
 
   if (fUseRungeKutta) {
@@ -576,7 +581,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
     printf("No user application attached - aborting");
     return;
   }
-  Initialize();
+      Initialize();
   // Initialize geometry and current volume
   if (!LoadGeometry(geomfile))
     return;
@@ -589,6 +594,7 @@ void GeantPropagator::PropagatorGeom(const char *geomfile, int nthreads, bool gr
   }
   called = true;
 
+    
   fPrimaryGenerator->InitPrimaryGenerator();
   //   int itrack;
 

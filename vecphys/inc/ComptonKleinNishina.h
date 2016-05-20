@@ -299,8 +299,11 @@ VECCORE_ATT_HOST_DEVICE void ComptonKleinNishina::ModelInteract(GUTrack &inProje
 {
   double energyIn = inProjectile.E;
 
-  // check for the validity of energy
-  if (energyIn < fLowEnergyLimit || energyIn > fHighEnergyLimit) return;
+  //check for the validity of energy
+  if(energyIn < fLowEnergyLimit || energyIn > fHighEnergyLimit) {
+    std::cout<<"Energy not valid!\n";
+    return;
+  }
 
   double energyOut = 0;
   double sinTheta  = 0;
