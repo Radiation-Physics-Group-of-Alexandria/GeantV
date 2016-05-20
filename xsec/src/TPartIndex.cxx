@@ -224,10 +224,10 @@ void TPartIndex::Print(const char *option) const {
 //______________________________________________________________________________
 void TPartIndex::SetPDGToGVMap(TPartIndex::Map_t &theMap) {
   fPDGToGVMap = theMap;
-  fSpecGVIndices[0] = fPDGToGVMap.find(11)->second;   // e-
-  fSpecGVIndices[1] = fPDGToGVMap.find(-11)->second;  // e+
-  fSpecGVIndices[2] = fPDGToGVMap.find(22)->second;   // gamma
-  fSpecGVIndices[3] = fPDGToGVMap.find(2212)->second; // proton
+  fSpecGVIndices[0] = fPDGToGVMap.find(11)->second;   // e- : 11
+  fSpecGVIndices[1] = fPDGToGVMap.find(-11)->second;  // e+ : -11
+  fSpecGVIndices[2] = fPDGToGVMap.find(22)->second;   // gamma : 22
+  fSpecGVIndices[3] = fPDGToGVMap.find(2212)->second; // proton : 2212
 }
 
 

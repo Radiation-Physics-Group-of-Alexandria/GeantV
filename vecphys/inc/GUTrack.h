@@ -10,10 +10,10 @@ struct GUTrack {
   double x;     // x position - rarely relevant
   double y;     // y position - ditto
   double z;     // z position - ditto
-  double px;
+  double px;    // momentum (px,py,pz)
   double py;
   double pz;
-  double E;
+  double E;      // NB: KINETIC energy!!!
   double q;      // charge ?
   double nint;   // number of interaction length left
   double lambda; // interaction length
@@ -34,7 +34,7 @@ struct GUTrack_v {
   double *px; // momentum (px,py,pz)
   double *py;
   double *pz;
-  double *E;      // total energy
+  double *E;      // NB: KINETIC energy!!!
   double *q;      // charge
   double *nint;   // number of interaction length left
   double *lambda; // interaction length

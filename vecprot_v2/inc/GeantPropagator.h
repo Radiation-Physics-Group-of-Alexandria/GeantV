@@ -41,6 +41,10 @@ class GeantVTaskMgr;
 class PrimaryGenerator;
 class MCTruthMgr;
 class TaskBroker;
+#if USE_VECPHYS ==1
+class VecPhysOrchestrator;
+class VecPhysCompton;
+#endif
 
 #include "GeantFwd.h"
 
@@ -131,7 +135,11 @@ public:
   #endif
 
   PhysicsProcess *fProcess;              /** For now the only generic process pointing to the tabulated physics */
-  PhysicsProcess *fVectorPhysicsProcess; /** interface to vector physics final state sampling */
+#if USE_VECPHYS ==1
+    PhysicsProcess *fVectorPhysicsProcess;        /** interface to vector physics final state sampling */
+    VecPhysOrchestrator *fVecPhysOrchestrator;     /**Orchestrator of the vectorized physics*/
+#endif
+    
   //   PhysicsProcess **fProcesses; //![fNprocesses] Array of processes
   GeantTrack_v *fStoredTracks;         /** Stored array of tracks (history?) */
   PrimaryGenerator *fPrimaryGenerator; /** Primary generator */

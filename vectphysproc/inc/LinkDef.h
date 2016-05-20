@@ -6,5 +6,7 @@
 
 #pragma link C++ class GVectorPhysicsProcess+;
 #pragma link C++ class GVComptonProcess+;
+#pragma link C++ class VecPhysOrchestrator+;
+#pragma link C++ class VecPhysCompton+;
 
 #endif

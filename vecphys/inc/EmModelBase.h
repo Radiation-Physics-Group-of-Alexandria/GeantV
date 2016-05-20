@@ -138,6 +138,8 @@ VECCORE_ATT_HOST EmModelBase<EmModel>::EmModelBase(Random_t *states, int tid)
     : fRandomState(states), fThreadId(tid), fAtomicDependentModel(false), fLowEnergyLimit(0.1 * keV),
       fHighEnergyLimit(1.0 * TeV), fSampleType(kAlias), fAliasSampler(0)
 {
+    std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<"\n";
+    std::cout<<"fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
 }
 
 template <class EmModel>
@@ -263,12 +265,25 @@ void EmModelBase<EmModel>::Interact(GUTrack_v &inProjectile, const int *targetEl
 {
   // check for the validity of energy
   int nTracks = inProjectile.numTracks;
+    //fEmin = 3.E-6 is out of vecphys model ranges as we interprets it to 1eV
+    //for (int i=0; i<nTracks; i++)
+    //{
+    //    inProjectile.E[i]*=1000;
+    //}
+    //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
 
   // this inclusive check may be redundant as this model/process should not be
   // selected if energy of the track is outside the valid energy region
-  //  if(inProjectile.E[0]         < fLowEnergyLimit ||
-  //     inProjectile.E[nTracks-1] > fHighEnergyLimit) return;
-
+    if(inProjectile.E[0]         < fLowEnergyLimit ||
+       inProjectile.E[nTracks-1] > fHighEnergyLimit)
+    {
+        //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
+        //if(inProjectile.E[0] < fLowEnergyLimit) std::cout<<" Low Energy: "<< inProjectile.E[0]<<"\n";
+        //if(inProjectile.E[nTracks-1] > fHighEnergyLimit) std::cout<<" High energy: "<< inProjectile.E[nTracks-1]<<"\n";
+        std::cout<<" EmModelBase<EmModel>::Interact ERROR, exiting. bye bye.\n";
+        return;
+    }
+    
   using Double_v = typename Backend::Double_v;
 
   for (int j = 0; j < nTracks; ++j) {
@@ -297,9 +312,11 @@ void EmModelBase<EmModel>::Interact(GUTrack_v &inProjectile, const int *targetEl
       break;
     default:;
     }
-
+    //std::cout<<" After Interact\n";
     ConvertXtoFinalState<Backend>(energyIn, energyOut, sinTheta, ibase, inProjectile, outSecondary);
-    ibase += VectorSize<Double_v>();
+    //std::cout<<" After ConvertXtoFinalState\n";
+    ibase+= VectorSize<Double_v>();
+    outSecondary.numTracks+= VectorSize<Double_v>();
   }
 
   // leftover - do scalar (temporary)
@@ -308,9 +325,9 @@ void EmModelBase<EmModel>::Interact(GUTrack_v &inProjectile, const int *targetEl
     double senergyIn = inProjectile.E[i];
     double senergyOut, ssinTheta;
 
-    static_cast<EmModel *>(this)->template InteractKernel<ScalarBackend>(senergyIn, targetElements[i], senergyOut,
-                                                                           ssinTheta);
+    static_cast<EmModel *>(this)->template InteractKernel<ScalarBackend>(senergyIn, targetElements[i], senergyOut, ssinTheta);
     ConvertXtoFinalState_Scalar<ScalarBackend>(senergyIn, senergyOut, ssinTheta, i, inProjectile, outSecondary);
+    outSecondary.numTracks++;
   }
 }
 
@@ -548,6 +565,7 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(double e
   outSecondary.pz = outSecondary.E * (zhat - what);
 
   // fill other information
+  outSecondary.parentId=inProjectile.id;
 }
 
 template <class EmModel>
@@ -599,6 +617,10 @@ void EmModelBase<EmModel>::ConvertXtoFinalState(typename Backend::Double_v energ
   Store(pzSec, &secondary.pz[ibase]);
 
   // fill other information
+  //secondary.numTracks++;
+    
+  Int_v idParent(primary.id[ibase]);
+  Store(idParent, &secondary.parentId[ibase]);
 }
 
 template <class EmModel>
@@ -638,6 +660,7 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState_Scalar(t
   secondary.pz[ibase] = secE * (zhat - what);
 
   // fill other information
+  secondary.parentId[ibase]=ibase;
 }
 
 template <class EmModel>
