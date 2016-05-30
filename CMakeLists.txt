@@ -471,10 +471,6 @@ include_directories("${PROJECT_SOURCE_DIR}/fastsim/inc")
 include_directories("${PROJECT_SOURCE_DIR}/examples/inc")
 include_directories("${PROJECT_SOURCE_DIR}/vecprot_v2_tbb/inc")
 
-if(USE_VECPHYS)
-include_directories("${PROJECT_SOURCE_DIR}/vectphysproc/inc/")
-endif()
-
 string(REPLACE " -DVECGEOM_ROOT" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 
 #----------------------------------------------------------------------------------------------
@@ -501,9 +497,9 @@ endif()
 add_subdirectory (magneticfield)
 if(USE_ROOT)
   add_subdirectory (fastsim)
-  if (ROOT_mathmore_FOUND)
-    add_subdirectory (Nudy)
-  endif()
+endif()
+if (ROOT_mathmore_FOUND) 
+  add_subdirectory (Nudy)
 endif()
 
 if(USE_VECPHYS)

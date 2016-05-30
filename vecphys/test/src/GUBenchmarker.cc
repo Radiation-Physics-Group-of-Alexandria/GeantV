@@ -19,7 +19,7 @@ static int fElementMode = 1;
 //   1  - Single material
 //
 
-static bool verbose = false; // true;
+static bool verbose = false;
 
 // #define UNIT_CORRECTION 1000
 
@@ -181,6 +181,9 @@ void GUBenchmarker::RunGeant4()
 #ifdef VECPHYS_ROOT
         histogram->RecordTime(k, elapsedT[k]);
         for (int i = 0; i < fNtracks; ++i) {
+          if(itrack_aos[i].E<0 || otrack_aos[i].E<0 ) {
+            std::cout<<"**** GEANT4: Recording negative values: itrack_aos["<<i<<"]: "<<itrack_aos[i].E<<" and otrack_aos.E["<<i<<"]: "<<otrack_aos[i].E<<"\n";
+          }
           histogram->RecordHistos(k, track_aos[i].E, itrack_aos[i].E, itrack_aos[i].pz / itrack_aos[i].E,
                                   otrack_aos[i].E, otrack_aos[i].pz / otrack_aos[i].E);
         }
@@ -205,6 +208,7 @@ void GUBenchmarker::RunGeant4()
 
 void GUBenchmarker::RunVector()
 {
+  int negativeValues=0;
 #ifdef VECPHYS_ROOT
   GUHistogram *histogram = new GUHistogram("vector.root", fMaxP); // maxE = fMaxP
 #endif
@@ -245,6 +249,10 @@ void GUBenchmarker::RunVector()
 #ifdef VECPHYS_ROOT
         histogram->RecordTime(k, elapsedT[k]);
         for (int i = 0; i < fNtracks; ++i) {
+          if(itrack_soa.E[i]<0 || otrack_soa.E[i]<0 ) {
+            std::cout<<"**** VECTOR: Recording negative values: itrack_soa.E["<<i<<"]: "<<itrack_soa.E[i]<<" and otrack_soa.E["<<i<<"]: "<<otrack_soa.E[i]<<"\n";
+            negativeValues++;
+          }
           histogram->RecordHistos(k, track_soa.E[i], itrack_soa.E[i], itrack_soa.pz[i] / itrack_soa.E[i],
                                   otrack_soa.E[i], otrack_soa.pz[i] / otrack_soa.E[i]);
         }
@@ -258,6 +266,7 @@ void GUBenchmarker::RunVector()
       printf("%s  Vector Total time of %3d reps = %6.3f sec\n", GUPhysicsModelName[k], fRepetitions, elapsedTotal[k]);
     }
   }
+  std::cout<<"Total negative values recorded: "<<negativeValues<<"\n";
   delete handler_in;
   delete handler_out;
   delete[] targetElements;
