@@ -38,9 +38,15 @@ public:
     void ConvertEnergiesToVecPhys();
     void ConvertEnergiesFromVecPhys();
     void DebugTracksEnergies(GeantTrack_v &gTrackV, int numtracks, GUTrack_v &primaries, bool checkIdentity);
+    void DebugPrimaryAndSecondaryTracks();
+    void CheckEnergyConservation(GeantTrack_v &gTrackV, int numtracks, GUTrack_v &primaries, GUTrack_v &secondaries);
+    void CheckDirectionUnitVector(GeantTrack_v &gTrackV, GUTrack_v &primaries, GUTrack_v &secondaries);
+    void RotateNewTrack(double oldXdir, double oldYdir, double oldZdir, GeantTrack_v &track, int index);
+    int     fComptonTotTracks; //temporary
 private:
     int     fProcessId;       // Index of the physics process as stored in tabulated physics (TPartIndex)
     double  fEnergyLimit;     // Tracking cut in kinetic energy (In GeantV units [GeV])
+    
     vecphys::ComptonKleinNishina*  fVComptonModel;  // Compton Vector physics model
     
     // Intermediate containers
