@@ -105,25 +105,32 @@ void GUAliasSampler::BuildAliasTable( int Zelement,
   //
 
   //temporary array
-  int *a     = (int*)   malloc(fSampledNumEntries*sizeof(int));
-  double *ap = (double*)malloc(fSampledNumEntries*sizeof(double));
+  int *a     = (int*)   malloc(fSampledNumEntries*sizeof(int)); //index alias? ->SampledNumEntried
+  double *ap = (double*)malloc(fSampledNumEntries*sizeof(double)); //alias probability?
 
   //likelihood per equal probable event
   const double cp = 1.0/fSampledNumEntries;
 
   GUAliasTable* table = new GUAliasTable((fInNumEntries+1)*fSampledNumEntries);
 
-  for(int ir = 0; ir <= fInNumEntries ; ++ir) {
+    int counter=0;
+    int recipCopy=0;
+  for(int ir = 0; ir <= fInNumEntries ; ++ir)
+  {
 
     //copy and initialize
     for(int i = 0; i < fSampledNumEntries ; ++i) {
 
        int ipos= ir*fSampledNumEntries+i;
-       table->fpdf[ipos] = pdf[ipos];
+       table->fpdf[ipos] = pdf[ipos]; //copy the pdf to ipos
 
        a[i] = -1;
        ap[i] = pdf[ipos]; // pdf[ir*fSampledNumEntries+i];
     }
+    
+    /* It's necessary to initialize properly
+     table->fAlias[] and table->fProbQ[]
+     */
 
     //O(n) iterations
     int iter = fSampledNumEntries;
@@ -148,19 +155,30 @@ void GUAliasSampler::BuildAliasTable( int Zelement,
       }
 
       //alias and non-alias probability
-
+      //to debug
+      recipCopy=recip;
+      //donorCopy=donor;
       table->fAlias[ir*fSampledNumEntries+recip] = donor;
-      table->fProbQ[ir*fSampledNumEntries+recip] = fSampledNumEntries*ap[recip];
+      table->fProbQ[ir*fSampledNumEntries+recip] = fSampledNumEntries*ap[recip]; //If one entry is never considered a recip, then fAlias and aProbQ entries must be correctly initialized
+        
+        if(table->fAlias[ir*fSampledNumEntries+recipCopy]<0 || table->fProbQ[ir*fSampledNumEntries+recipCopy]<0)
+        {
+            //std::cout<<"GUAliasSampler::BuildAliasTable:table->fAlias["<<ir*fSampledNumEntries+recipCopy<<"]: "<<table->fAlias[ir*fSampledNumEntries+recipCopy]<<", table->fProbQ["<<ir*fSampledNumEntries+recipCopy<<"]: "<<table->fProbQ[ir*fSampledNumEntries+recipCopy]<<" and Zelement: "<<Zelement<<"\n";
+            counter++;
+        }
 
       //update pdf
       ap[donor] = ap[donor] - (cp-ap[recip]);
       ap[recip] = 0.0;
       --iter;
 
+
     }
     while (iter > 0);
-  }
-
+  
+  }// end for fInNumEntries
+  
+  //std::cout<<"GUAliasSampler::BuildAliasTable: "<<counter<<" negative entries in the Alias Table\n";
   fAliasTableManager->AddAliasTable(Zelement,table);
 
   free(a);

@@ -4,6 +4,7 @@
 #include "base/Global.h"
 #include "base/SystemOfUnits.h"
 
+
 #include "GUConstants.h"
 
 #include "GUTrack.h"
@@ -332,46 +333,39 @@ void EmModelBase<EmModel>::Interact(GUTrack_v& inProjectile,
                                     const int* targetElements,
                                     GUTrack_v& outSecondary)
 {
-  //std::cout<<" Interact \n";
-
+  //std::cout<<"EmModelBase<EmModel>::Interact: START.\n";
   //check for the validity of energy
   int nTracks = inProjectile.numTracks;
-    //fEmin = 3.E-6 is out of vecphys model ranges as we interprets it to 1eV
-    //for (int i=0; i<nTracks; i++)
-    //{
-    //    inProjectile.E[i]*=1000;
-    //}
-    //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
-
+    
   // this inclusive check may be redundant as this model/process should not be
   // selected if energy of the track is outside the valid energy region
     if(inProjectile.E[0]         < fLowEnergyLimit ||
        inProjectile.E[nTracks-1] > fHighEnergyLimit)
     {
-        //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
-        //if(inProjectile.E[0] < fLowEnergyLimit) std::cout<<" Low Energy: "<< inProjectile.E[0]<<"\n";
-        //if(inProjectile.E[nTracks-1] > fHighEnergyLimit) std::cout<<" High energy: "<< inProjectile.E[nTracks-1]<<"\n";
+        std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
+        if(inProjectile.E[0] < fLowEnergyLimit) std::cout<<" Low Energy: "<< inProjectile.E[0]<<"\n";
+        if(inProjectile.E[nTracks-1] > fHighEnergyLimit) std::cout<<" High energy: "<< inProjectile.E[nTracks-1]<<"\n";
         std::cout<<" EmModelBase<EmModel>::Interact ERROR, exiting. bye bye.\n";
-        return;
+        exit(0);
     }
     
   using Double_v = typename Backend::Double_v;
 
   for(int j = 0; j < nTracks  ; ++j) {
-      if((targetElements[j] < 0)  || (targetElements[j] > maximumZ )) std::cout<<"Z elemento: "<<targetElements[j]<<"\n";
+      if((targetElements[j] < 0)  || (targetElements[j] > maximumZ )) std::cout<<"Z element: "<<targetElements[j]<<"\n";
     assert( (targetElements[j] > 0)  && (targetElements[j] <= maximumZ ) );
   }
 
   int ibase= 0;
   int numChunks= (nTracks/VectorSize<Double_v>());
     
-  //std::cout<<" Interact: nTracks: "<<nTracks<<"  e  VectorSize<Double_v>(): "<<VectorSize<Double_v>()<<" numChunks: "<<numChunks<<", fSampleType: "<<fSampleType<<" e SamplingMethod::kAlias: "<<SamplingMethod::kAlias<<"\n";
   for(int i= 0; i < numChunks ; ++i) {
+
     Index_v<Double_v>  zElement(targetElements[ibase]);
     Double_v energyIn(&inProjectile.E[ibase]);
-
+      
     Double_v sinTheta(0.);
-    Double_v energyOut;
+    Double_v energyOut(0.);
 
     //eventually there will be no switch as we select one Kernel for each model
     switch(fSampleType) {
@@ -387,9 +381,8 @@ void EmModelBase<EmModel>::Interact(GUTrack_v& inProjectile,
       default :
         ;
     }
-    //std::cout<<" After Interact\n";
+
     ConvertXtoFinalState<Backend>(energyIn, energyOut, sinTheta, ibase, inProjectile, outSecondary);
-    //std::cout<<" After ConvertXtoFinalState\n";
     ibase+= VectorSize<Double_v>();
     outSecondary.numTracks+= VectorSize<Double_v>();
 
@@ -398,19 +391,23 @@ void EmModelBase<EmModel>::Interact(GUTrack_v& inProjectile,
   //leftover - do scalar (temporary)
   for(int i = numChunks*VectorSize<Double_v>() ; i < nTracks ; ++i) {
 
+
     double senergyIn= inProjectile.E[i];
     double senergyOut, ssinTheta;
-    //std::cout<<"Alias anyway\n";
     static_cast<EmModel*>(this)-> template InteractKernel<backend::Scalar>(senergyIn,targetElements[i],senergyOut,ssinTheta);
+      
     ConvertXtoFinalState_Scalar<backend::Scalar>(senergyIn, senergyOut, ssinTheta, i, inProjectile, outSecondary);
-
-    //std::cout<<"parentId["<<i<<"]: ";
-    //std::cout<<inProjectile.id[i]<<"\n";
-    
-    //outSecondary.parentId[i]=inProjectile.id[i];
     outSecondary.numTracks++;
-    //std::cout<<"parentId: "<<inProjectile.id[i]<<"\n";
   }
+    
+    /*for (int k=0; k<nTracks; k++)
+    {
+        double momentum=sqrt(inProjectile.px[k]*inProjectile.px[k]+inProjectile.py[k]*inProjectile.py[k]+inProjectile.pz[k]*inProjectile.pz[k]);
+        std::cout<<"---@ inProjectile.E["<<k<<"]: "<<inProjectile.E[k]<<", momentum: "<<momentum<<"\n";
+        std::cout<<"---@ outSecondary.E["<<k<<"]: "<<outSecondary.E[k]<<"\n";
+        
+    }*/
+    
 }
 
 //this is temporary implementation for the purpose of testing and will be removed
@@ -627,8 +624,8 @@ EmModelBase<EmModel>::RotateAngle(typename Backend::Double_v sinTheta,
   Double_v vhat = sinTheta*sinphi; // sin(phi);
   Double_v what = math::Sqrt((1.-sinTheta)*(1.+sinTheta));
 
-  Mask_v<Double_v> positive = ( pt > 0. );
-  Mask_v<Double_v> negativeZ = ( zhat < 0. );
+  Mask_v<Double_v> positive = ( pt > 0. );      //to distinguish the case in which is =0.
+  Mask_v<Double_v> negativeZ = ( zhat < 0. );   //for phi = 0 or phi=180 degree.
 
   Double_v phat = math::Sqrt(pt);
 
@@ -650,11 +647,13 @@ void EmModelBase<EmModel>::ConvertXtoFinalState(double energyIn,
                                                 GUTrack& inProjectile,
                                                 GUTrack& outSecondary )
 {
-  //need to rotate the angle with respect to the line of flight
-  double invp = 1./energyIn;
-  double xhat = inProjectile.px*invp;
-  double yhat = inProjectile.py*invp;
-  double zhat = inProjectile.pz*invp;
+  //need to rotate the angle with respect to the line of flight ---> deviation
+  //double invp = 1./energyIn;
+  double momentum=sqrt(inProjectile.px*inProjectile.px+inProjectile.py*inProjectile.py+inProjectile.pz*inProjectile.pz); //this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
+  double invMomentum=1.0/momentum;
+  double xhat = inProjectile.px*invMomentum;
+  double yhat = inProjectile.py*invMomentum;
+  double zhat = inProjectile.pz*invMomentum;
 
   double uhat = 0.;
   double vhat = 0.;
@@ -663,7 +662,7 @@ void EmModelBase<EmModel>::ConvertXtoFinalState(double energyIn,
   RotateAngle<Backend>(sinTheta,xhat,yhat,zhat,uhat,vhat,what);
 
   //update primary
-  inProjectile.E  = energyOut;
+  inProjectile.E  = energyOut; //kinetic Energy
   inProjectile.px = energyOut*uhat;
   inProjectile.py = energyOut*vhat;
   inProjectile.pz = energyOut*what;
@@ -700,10 +699,13 @@ EmModelBase<EmModel>::ConvertXtoFinalState(typename Backend::Double_v energyIn,
     Double_v py(&primary.py[ibase]);
     Double_v pz(&primary.pz[ibase]);
 
-    Double_v invp = 1./energyIn;
-    Double_v xhat = px*invp;
-    Double_v yhat = py*invp;
-    Double_v zhat = pz*invp;
+    //Double_v invp = 1./energyIn;
+    Double_v  momentum=sqrt(px*px+py*py+pz*pz);//this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
+
+    Double_v  invMomentum=1.0/momentum;
+    Double_v xhat = px*invMomentum;
+    Double_v yhat = py*invMomentum;
+    Double_v zhat = pz*invMomentum;
 
     Double_v uhat = 0.;
     Double_v vhat = 0.;
@@ -756,10 +758,13 @@ EmModelBase<EmModel>::ConvertXtoFinalState_Scalar(typename Backend::Double_v ene
   using Double_v = typename backend::Scalar::Double_v;
 
   //need to rotate the angle with respect to the line of flight
-  Double_v invp = 1./energyIn;
-  Double_v xhat = primary.px[ibase]*invp;
-  Double_v yhat = primary.py[ibase]*invp;
-  Double_v zhat = primary.pz[ibase]*invp;
+  //Double_v invp = 1./energyIn;
+    double momentum=sqrt(primary.px[ibase]*primary.px[ibase]+primary.py[ibase]*primary.py[ibase]+primary.pz[ibase]*primary.pz[ibase]);//this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
+
+  double invMomentum=1.0/momentum;
+  Double_v xhat = primary.px[ibase]*invMomentum;
+  Double_v yhat = primary.py[ibase]*invMomentum;
+  Double_v zhat = primary.pz[ibase]*invMomentum;
 
   Double_v uhat = 0.;
   Double_v vhat = 0.;

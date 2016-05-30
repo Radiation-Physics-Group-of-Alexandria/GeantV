@@ -479,7 +479,7 @@ if (WITH_GEANT4)
   add_subdirectory (tabxsec)
 endif()
 add_subdirectory (magneticfield)
-#add_subdirectory (fastsim)
+add_subdirectory (fastsim)
 
 if (WITH_GEANT4)
 add_subdirectory (test-small)

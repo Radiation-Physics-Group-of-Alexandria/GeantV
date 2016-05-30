@@ -306,6 +306,7 @@ void *WorkloadManager::TransportTracks() {
   td->fBmgr = prioritizer;
   prioritizer->SetThreshold(propagator->fNperBasket);
   prioritizer->SetFeederQueue(feederQ);
+     int counterStuckedTracks=0;
 
   // IO handling
 
@@ -441,7 +442,8 @@ void *WorkloadManager::TransportTracks() {
 
     ncross = 0;
     generation = 0;
-
+      
+     
     while (ntotransport)
     {
         //std::cout<<"Transport ntotransport: "<<ntotransport<<"\n";
@@ -455,6 +457,8 @@ void *WorkloadManager::TransportTracks() {
             (input.fNstepsV[itr] > gPropagator->fNstepsKillThr) &&
             input.fBoundaryV[itr] && (input.fSnextV[itr]<1.e-9))
         {
+            counterStuckedTracks++;
+            std::cout<<"input.fStatusV["<<itr<<"]:"<<input.fStatusV[itr]<<", input.fNstepsV["<<itr<<"]:"<<input.fNstepsV[itr]<<", gPropagator->fNstepsKillThr: "<<gPropagator->fNstepsKillThr<<" input.fBoundaryV["<<itr<<"]: "<<input.fBoundaryV[itr]<<", input.fSnextV["<<itr<<"]: "<<input.fSnextV[itr]<<"\n";
           Error("TransportTracks", "track %d seems to be stuck -> killing it after next step", input.fParticleV[itr]);
           Error("TransportTracks", "Transport will continue, but this is a fatal error");
           input.PrintTrack(itr, "stuck");
@@ -629,6 +633,8 @@ void *WorkloadManager::TransportTracks() {
   if (concurrentWrite) {
     file->Write();
   }
+    
+  std::cout<<"In total "<<counterStuckedTracks<<" stucked\n";
 
   wm->DoneQueue()->push(0);
   delete prioritizer;

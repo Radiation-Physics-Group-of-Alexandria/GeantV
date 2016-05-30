@@ -58,7 +58,7 @@
 
    where the valid argument for 
    samplingType: [0=kAlias, 1=kRejection, 2=kUnpack]      
-   model: [-1=AllModels, 0=KleinNishina, 1= BetheHeitler, 2=SauterGavrila, 3=MollerBhabha, 4=SeltzerBerger]
+   model: [-1=AllModels, 0=KleinNishina, 1=HybridKleinNishina, 2= BetheHeitler, 3=SauterGavrila, 4=MollerBhabha, 5=SeltzerBerger]
    materialMode: [0=Multiple elements from a table, 1=One Material] 
 
    3.4 data file

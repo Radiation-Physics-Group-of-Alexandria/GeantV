@@ -182,9 +182,7 @@ Real_t VectorKleinNishina(GUTrack_v& itrack_soa,
   }
   else {
     timer.Start();
-
     model.Interact<backend::VcVector>(itrack_soa, targetElements, otrack_soa);
-
     elapsedTime = timer.Stop();
   }
 

@@ -346,6 +346,11 @@ GatherAlias(Index_v<typename Backend::Double_v>    index,
 
   probNA=   (fAliasTableManager->GetAliasTable(zElement))->fProbQ[ intIndex ];
   aliasInd= (fAliasTableManager->GetAliasTable(zElement))->fAlias[ intIndex ];
+    if(probNA<0 || aliasInd<0)
+    {
+        std::cout<<"probNA: "<<probNA<<", aliasInd: "<<aliasInd<<", Z element: "<<zElement<<", index: "<<index<<"\n";
+        exit(0);
+    }
 }
 
 template<class Backend>
@@ -373,9 +378,15 @@ GatherAlias(Index_v<typename Backend::Double_v>    index,
             Index_v<typename Backend::Double_v>   &aliasInd
            ) const
 {
+  //std::cout<<"GatherAlias scalare - Beccata mascherina\n";
   int     intIndex= (int) index;
   probNA =   (fAliasTableManager->GetAliasTable(0))->fProbQ[ intIndex ];
   aliasInd = (fAliasTableManager->GetAliasTable(0))->fAlias[ intIndex ];
+    if(probNA<0 || aliasInd<0)
+    {
+        //std::cout<<"probNA: "<<probNA<<", aliasInd: "<<aliasInd<<", index: "<<index<<"\n";
+        //exit(0);
+    }
 }
 
 
@@ -421,6 +432,12 @@ GatherAlias<backend::VcVector>(Index_v<typename backend::VcVector::Double_v>    
 
     probNA[i]=   (fAliasTableManager->GetAliasTable(z))->fProbQ[ ind ];
     aliasInd[i]= (fAliasTableManager->GetAliasTable(z))->fAlias[ ind ];
+    
+    if(probNA[i]<0 || aliasInd[i]<0)
+    {
+        std::cout<<"probNA["<<i<<"]: "<<probNA[i]<<", aliasInd["<<i<<"]: "<<aliasInd[i]<<", Z element: "<<z<<", index: "<<ind<<"\n";
+        exit(0);
+    }
   }
 }
 
@@ -462,12 +479,17 @@ GatherAlias<backend::VcVector>(Index_v<typename backend::VcVector::Double_v>    
                  Index_v<typename backend::VcVector::Double_v>   &aliasInd
                 ) const
 {
-  //gather for alias table lookups - (backend type has no ptr arithmetic)
+   //gather for alias table lookups - (backend type has no ptr arithmetic)
   for(size_t i = 0; i < VectorSize(index) ; ++i)
   {
-    int ind = index[i];
+    int ind = index[i]; //13424 da dove viene?
     probNA[i]=   (fAliasTableManager->GetAliasTable(0))->fProbQ[ ind ];
     aliasInd[i]= (fAliasTableManager->GetAliasTable(0))->fAlias[ ind ];
+    if(probNA[i]<0 || aliasInd[i]<0)
+    {
+          std::cout<<"probNA["<<i<<"]: "<<probNA[i]<<", aliasInd["<<i<<"]: "<<aliasInd[i]<<", index: "<<index<<" corrispondenti a fAliasTableManager->GetAliasTable(0))->fProbQ[ ind ] with ind: "<<ind<<"\n";
+          exit(0);
+    }
   }
 }
 
