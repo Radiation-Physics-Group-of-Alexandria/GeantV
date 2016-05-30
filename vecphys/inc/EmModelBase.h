@@ -5,6 +5,7 @@
 #include "base/SystemOfUnits.h"
 #include "base/VecPhys.h"
 
+
 #include "GUConstants.h"
 
 #include "GUAliasSampler.h"
@@ -49,7 +50,6 @@ public:
   VECCORE_ATT_HOST_DEVICE void Interact(GUTrack &projectile, const int targetElement, GUTrack &secondary);
 
 // vector
-#if !defined(VECCORE_CUDA) && defined(VECCORE_ENABLE_VC)
   template <typename Backend>
   void AtomicCrossSection(GUTrack_v &inProjectile, const int *targetElements, double *sigma);
 
@@ -59,8 +59,6 @@ public:
   // temporary method for testing
   template <typename Backend>
   void InteractUnpack(GUTrack_v &inProjectile, const int *targetElements, GUTrack_v &outSecondary);
-
-#endif
 
   // validation
   VECCORE_ATT_HOST
@@ -106,7 +104,6 @@ protected:
   VECCORE_ATT_HOST_DEVICE void ConvertXtoFinalState(double energyIn, double energyOut, double sinTheta,
                                                      GUTrack &primary, GUTrack &secondary);
 
-#if !defined(VECCORE_CUDA) && defined(VECCORE_ENABLE_VC)
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE void ConvertXtoFinalState(typename Backend::Double_v energyIn,
                                                      typename Backend::Double_v energyOut,
@@ -120,7 +117,6 @@ protected:
                                                             typename Backend::Double_v energyOut,
                                                             typename Backend::Double_v sinTheta, int index,
                                                             GUTrack_v &primary, GUTrack_v &secondary);
-#endif
 
   // data members
 protected:
@@ -235,7 +231,6 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::Interact(GUTrack &inProjectil
   ConvertXtoFinalState<Backend>(energyIn, energyOut, sinTheta, inProjectile, outSecondary);
 }
 
-#if !defined(VECCORE_CUDA) && defined(VECCORE_ENABLE_VC)
 template <class EmModel>
 template <typename Backend>
 void EmModelBase<EmModel>::AtomicCrossSection(GUTrack_v &inProjectile, const int *targetElements, double *sigma)
@@ -272,28 +267,24 @@ void EmModelBase<EmModel>::Interact(GUTrack_v &inProjectile, const int *targetEl
 {
   // check for the validity of energy
   int nTracks = inProjectile.numTracks;
-    //fEmin = 3.E-6 is out of vecphys model ranges as we interprets it to 1eV
-    //for (int i=0; i<nTracks; i++)
-    //{
-    //    inProjectile.E[i]*=1000;
-    //}
-    //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
-
+    
   // this inclusive check may be redundant as this model/process should not be
   // selected if energy of the track is outside the valid energy region
     if(inProjectile.E[0]         < fLowEnergyLimit ||
        inProjectile.E[nTracks-1] > fHighEnergyLimit)
     {
-        //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
-        //if(inProjectile.E[0] < fLowEnergyLimit) std::cout<<" Low Energy: "<< inProjectile.E[0]<<"\n";
-        //if(inProjectile.E[nTracks-1] > fHighEnergyLimit) std::cout<<" High energy: "<< inProjectile.E[nTracks-1]<<"\n";
+        std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
+        if(inProjectile.E[0] < fLowEnergyLimit) std::cout<<" Low Energy: "<< inProjectile.E[0]<<"\n";
+        if(inProjectile.E[nTracks-1] > fHighEnergyLimit) std::cout<<" High energy: "<< inProjectile.E[nTracks-1]<<"\n";
         std::cout<<" EmModelBase<EmModel>::Interact ERROR, exiting. bye bye.\n";
-        return;
+        exit(0);
     }
     
   using Double_v = typename Backend::Double_v;
 
   for (int j = 0; j < nTracks; ++j) {
+    if ((targetElements[j] < 0)  || (targetElements[j] > maximumZ))
+      std::cout << "Z element: " << targetElements[j] << "\n";
     assert((targetElements[j] > 0) && (targetElements[j] <= maximumZ));
   }
 
@@ -305,7 +296,7 @@ void EmModelBase<EmModel>::Interact(GUTrack_v &inProjectile, const int *targetEl
     Double_v energyIn = FromPtr<Double_v>(&inProjectile.E[ibase]);
 
     Double_v sinTheta(0.);
-    Double_v energyOut;
+    Double_v energyOut(0.);
 
     // eventually there will be no switch as we select one Kernel for each model
     switch (fSampleType) {
@@ -319,9 +310,8 @@ void EmModelBase<EmModel>::Interact(GUTrack_v &inProjectile, const int *targetEl
       break;
     default:;
     }
-    //std::cout<<" After Interact\n";
+
     ConvertXtoFinalState<Backend>(energyIn, energyOut, sinTheta, ibase, inProjectile, outSecondary);
-    //std::cout<<" After ConvertXtoFinalState\n";
     ibase+= VectorSize<Double_v>();
     outSecondary.numTracks+= VectorSize<Double_v>();
   }
@@ -336,6 +326,15 @@ void EmModelBase<EmModel>::Interact(GUTrack_v &inProjectile, const int *targetEl
     ConvertXtoFinalState_Scalar<ScalarBackend>(senergyIn, senergyOut, ssinTheta, i, inProjectile, outSecondary);
     outSecondary.numTracks++;
   }
+    
+    /*for (int k=0; k<nTracks; k++)
+    {
+        double momentum=sqrt(inProjectile.px[k]*inProjectile.px[k]+inProjectile.py[k]*inProjectile.py[k]+inProjectile.pz[k]*inProjectile.pz[k]);
+        std::cout<<"---@ inProjectile.E["<<k<<"]: "<<inProjectile.E[k]<<", momentum: "<<momentum<<"\n";
+        std::cout<<"---@ outSecondary.E["<<k<<"]: "<<outSecondary.E[k]<<"\n";
+        
+    }*/
+    
 }
 
 // this is temporary implementation for the purpose of testing and will be removed
@@ -492,8 +491,6 @@ void EmModelBase<EmModel>::InteractUnpack(GUTrack_v &inProjectile, const int *ta
   }
 }
 
-#endif
-
 template <class EmModel>
 template <typename Backend>
 VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::InteractG4(GUTrack &inProjectile, const int targetElement,
@@ -529,8 +526,8 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::RotateAngle(
   Double_v vhat = sinTheta * sinphi; // sin(phi);
   Double_v what = math::Sqrt((1. - sinTheta) * (1. + sinTheta));
 
-  Mask_v<Double_v> positive = (pt > 0.);
-  Mask_v<Double_v> negativeZ = (zhat < 0.);
+  Mask_v<Double_v> positive = (pt > 0.); // to distinguish the case in which is =0.
+  Mask_v<Double_v> negativeZ = (zhat < 0.); // for phi = 0 or phi=180 degree.
 
   Double_v phat = math::Sqrt(pt);
 
@@ -549,11 +546,13 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(double e
                                                                          double sinTheta, GUTrack &inProjectile,
                                                                          GUTrack &outSecondary)
 {
-  // need to rotate the angle with respect to the line of flight
-  double invp = 1. / energyIn;
-  double xhat = inProjectile.px * invp;
-  double yhat = inProjectile.py * invp;
-  double zhat = inProjectile.pz * invp;
+  // need to rotate the angle with respect to the line of flight ---> deviation
+  // this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
+  double momentum = Sqrt(inProjectile.px*inProjectile.px+inProjectile.py*inProjectile.py+inProjectile.pz*inProjectile.pz);
+  double invMomentum = 1.0 / momentum;
+  double xhat = inProjectile.px * invMomentum;
+  double yhat = inProjectile.py * invMomentum;
+  double zhat = inProjectile.pz * invMomentum;
 
   double uhat = 0.;
   double vhat = 0.;
@@ -562,7 +561,7 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(double e
   RotateAngle<Backend>(sinTheta, xhat, yhat, zhat, uhat, vhat, what);
 
   // update primary
-  inProjectile.E = energyOut;
+  inProjectile.E = energyOut; //kinetic Energy
   inProjectile.px = energyOut * uhat;
   inProjectile.py = energyOut * vhat;
   inProjectile.pz = energyOut * what;
@@ -577,7 +576,6 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(double e
   outSecondary.parentId=inProjectile.id;
 }
 
-#if !defined(VECCORE_CUDA) && defined(VECCORE_ENABLE_VC)
 template <class EmModel>
 template <typename Backend>
 VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(typename Backend::Double_v energyIn,
@@ -593,10 +591,12 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(typename
   Double_v py = FromPtr<Double_v>(&primary.py[ibase]);
   Double_v pz = FromPtr<Double_v>(&primary.pz[ibase]);
 
-  Double_v invp = 1. / energyIn;
-  Double_v xhat = px * invp;
-  Double_v yhat = py * invp;
-  Double_v zhat = pz * invp;
+  // this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
+  Double_v momentum = Sqrt(px*px+py*py+pz*pz);
+  Double_v invMomentum = 1.0 / momentum;
+  Double_v xhat = px * invMomentum;
+  Double_v yhat = py * invMomentum;
+  Double_v zhat = pz * invMomentum;
 
   Double_v uhat = 0.;
   Double_v vhat = 0.;
@@ -627,8 +627,6 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(typename
   Store(pzSec, &secondary.pz[ibase]);
 
   // fill other information
-  //secondary.numTracks++;
-    
   Int_v idParent(primary.id[ibase]);
   Store(idParent, &secondary.parentId[ibase]);
 }
@@ -644,10 +642,13 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState_Scalar(t
   using Double_v = typename ScalarBackend::Double_v;
 
   // need to rotate the angle with respect to the line of flight
-  Double_v invp = 1. / energyIn;
-  Double_v xhat = primary.px[ibase] * invp;
-  Double_v yhat = primary.py[ibase] * invp;
-  Double_v zhat = primary.pz[ibase] * invp;
+  // this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
+  Double_v momentum = Sqrt(primary.px[ibase]*primary.px[ibase]+primary.py[ibase]*primary.py[ibase]+primary.pz[ibase]*primary.pz[ibase]);
+
+  Double_v invMomentum = 1.0/momentum;
+  Double_v xhat = primary.px[ibase]*invMomentum;
+  Double_v yhat = primary.py[ibase]*invMomentum;
+  Double_v zhat = primary.pz[ibase]*invMomentum;
 
   Double_v uhat = 0.;
   Double_v vhat = 0.;
@@ -670,9 +671,8 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState_Scalar(t
   secondary.pz[ibase] = secE * (zhat - what);
 
   // fill other information
-  secondary.parentId[ibase]=ibase;
+  secondary.parentId[ibase] = ibase;
 }
-#endif
 
 template <class EmModel>
 VECCORE_ATT_HOST_DEVICE double EmModelBase<EmModel>::ComputeCoulombFactor(double Zeff)
@@ -722,5 +722,3 @@ VECCORE_ATT_HOST double EmModelBase<EmModel>::G4CrossSectionPerVolume(const vecg
 
 } // end namespace impl
 } // end namespace vecphys
-
-#endif

@@ -23,7 +23,7 @@
 
 static int n_events = 50;
 static int n_buffered = 10;
-static int n_threads = 4;
+static int n_threads = 1;
 static int n_track_max = 500;
 static int n_learn_steps = 0;
 static int n_reuse = 100000;
@@ -46,7 +46,7 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {0, 0, 0, 0}};
 
 void help() {
-  printf("\nUsage: cmsapp [OPTIONS] INPUT_FILE\n\n");
+  printf("\nUsage: runapp [OPTIONS] INPUT_FILE\n\n");
 
   for (int i = 0; options[i].name != NULL; i++) {
     printf("\t-%c  --%s\t%s\n", options[i].val, options[i].name, options[i].has_arg ? options[i].name : "");
@@ -56,6 +56,7 @@ void help() {
 
 int main(int argc, char *argv[]) {
   std::cout << "Avoid ctest truncation of output: CTEST_FULL_OUTPUT" << std::endl;
+  std::string events_filename("pp14TeVminbias.root");
   std::string exn03_geometry_filename("ExN03.root");
   std::string xsec_filename("xsec_FTFP_BERT.root");
   std::string fstate_filename("fstate_FTFP_BERT.root");
@@ -151,6 +152,7 @@ int main(int argc, char *argv[]) {
     }
   }
   bool performance = true;
+    
   TGeoManager::Import(exn03_geometry_filename.c_str());
   WorkloadManager *wmanager = WorkloadManager::Instance(n_threads);
   TaskBroker *broker = nullptr;
@@ -205,8 +207,10 @@ int main(int argc, char *argv[]) {
   propagator->LoadVecGeomGeometry();
 #endif
 
-  // for vector physics -OFF now
-  // propagator->fVectorPhysicsProcess = new GVectorPhysicsProcess(propagator->fEmin, nthreads);
+#if USE_VECPHYS==1
+    propagator->fVecPhysOrchestrator = new VecPhysOrchestrator(12, propagator->fEmin, n_threads ); //12 is Compton, here for now
+    propagator->fVectorPhysicsProcess = new GVectorPhysicsProcess(propagator->fEmin, n_threads);
+#endif 
   propagator->fPrimaryGenerator = new GunGenerator(propagator->fNaverage, 11, propagator->fEmax, -8, 0, 0, 1, 0, 0);
 
    // Number of steps for learning phase (tunable [0, 1e6])
@@ -232,6 +236,7 @@ int main(int argc, char *argv[]) {
   propagator->fUseAppMonitoring = false;
 
   propagator->PropagatorGeom(exn03_geometry_filename.c_str(), n_threads, monitor);
+  std::cout<<"The end, "<<propagator->fVecPhysOrchestrator->fComptonTotTracks<<" tracks with Compton\n";
   return 0;
 }
 #endif
