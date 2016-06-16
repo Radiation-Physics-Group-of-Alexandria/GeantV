@@ -93,17 +93,14 @@ void GUAliasSampler::BuildAliasTable(int Zelement, const double *pdf)
     for (int i = 0; i < fSampledNumEntries; ++i) {
 
       int ipos = ir * fSampledNumEntries + i;
-      table->fpdf[ipos] = pdf[ipos];
+      table->fpdf[ipos] = pdf[ipos]; //copy the pdf to ipos
+      table->fAlias[ipos] = ipos; //my Alias is myself at the beginning
+      table->fProbQ[ipos] = 1;    //the non-Alias probability is 1 at the beginning, unless I find a donor
 
       a[i] = -1;
       ap[i] = pdf[ipos]; // pdf[ir*fSampledNumEntries+i];
     }
     
-    /* It's necessary to initialize properly
-     table->fAlias[] and table->fProbQ[]
-     */
-
-    // O(n) iterations
     int iter = fSampledNumEntries;
 
     do {

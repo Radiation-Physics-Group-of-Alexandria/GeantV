@@ -42,8 +42,8 @@ void GUAliasTable::Allocate(int /*ngrid*/)
 
   for (int i = 0 ; i < fNGrid ; ++i) {
     fpdf[i]   = -1;
-    fProbQ[i] = 1; //prob-nonAlias= 1 and prob-Alias=0 -->unless I find a donor!
-    fAlias[i] = i; //initial values --> my Alias is myself--> unless I find a donor
+    fProbQ[i] = -1; 
+    fAlias[i] = -1;
   }
 }
 
