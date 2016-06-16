@@ -101,7 +101,7 @@ VECCORE_ATT_HOST_DEVICE double ComptonKleinNishina::CalculateDiffCrossSection(in
                                                                                double energy0, double energy1) const
 {
   // based on Geant4 : KleinNishinaCompton
-  // input  : energy0 (incomming photon energy)
+  // input  : energy0 (incoming photon energy)
   //          energy1 (scattered photon energy)
   // output : dsigma  (differential cross section)
 
