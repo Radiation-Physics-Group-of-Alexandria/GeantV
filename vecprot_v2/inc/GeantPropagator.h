@@ -110,12 +110,12 @@ public:
   bool fUseStdScoring;    /** Use standard scoring */
   bool fTransportOngoing; /** Flag for ongoing transport */
   bool fSingleTrack;      /** Use single track transport mode */
-  Bool_t fFillTree;       /** Enable I/O */
+  bool fFillTree;       /** Enable I/O */
   int fTreeSizeWriteThreshold; /** Maximum size of the tree (before automatic writing) **/  
-  Bool_t fConcurrentWrite;/** switch between single and mutlithreaded writing */
+  bool fConcurrentWrite;/** switch between single and mutlithreaded writing */
   bool fUseMonitoring;    /** Monitoring different features */
   bool fUseAppMonitoring; /** Monitoring the application */
-  TMutex fTracksLock;       /** Mutex for adding tracks */
+  std::mutex fTracksLock;       /** Mutex for adding tracks */
 
 
   UserDetectorConstruction *fUserDetectorCtion; /** Class to initialize detector, field */
