@@ -1,15 +1,25 @@
 //
 //
-// Derived from G4MagInt_Drv class of Geant4 (in G4MagIntegratorDriver.hh/cc)
-//
 // Class description:
 //
-// Provides a driver that talks to the Integrator Stepper, and ensures that 
-// the error is within acceptable bounds.
+//  'Drives' integration in multiple lanes, asking the Integrator Stepper to do
+//     the integration work for a few lanes at a time.   Similarly to the original
+//     sequential version, it ensures that the step's error remains within acceptable
+//     bounds.
+//   Different approaches are available to handle 'divergence' - i.e. some lanes 
+//     finished while others are continuing (failed attempts or require further
+//     sub-steps):
+//     - OneStep() just finishes the integration of all vector lanes (simplest)
+//     - KeepStepping() stores the results for finished lanes, and reuses its
+//         working array(s) for further lanes  (optimisation)
+//
+//   Started on GUVIntegrationDriver; introduces template on backend.
+//   First implementation:  Ananya.   Supervision:  J. Apostolakis
 //
 // History:
-// - Created. J.Apostolakis.
-// --------------------------------------------------------------------
+// - First version created by Ananya,  Feb 2016, 
+//   Revisions by J.Apostolakis,   Apr-Jun 2016
+// -----------------------------------------------------------------------------
 
 #ifndef TemplateGUIntegrationDriver_Def
 #define TemplateGUIntegrationDriver_Def
@@ -22,10 +32,10 @@
 
 #include "base/Vector.h"
 
-// Adding because adding scalar stepper for new constructor (KeepStepping)
+// Needed for scalar stepper for new constructor (KeepStepping)
 #include "GUVIntegrationStepper.h"
 
-// Adding to send in scalar driver to deal with 1/2 remaining lanes
+// Needed to send work to scalar driver to deal with 1/2 remaining lanes
 #include "GUIntegrationDriver.h"
 #include "GUFieldTrack.h"
 
