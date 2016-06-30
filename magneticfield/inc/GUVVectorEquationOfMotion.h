@@ -17,6 +17,7 @@
 #include <iostream>
 
 // #include <vector>
+#include "backend/Backend.h"   // From VecGeom
 #include "base/Vector3D.h"
 
 // #include "GUVTypes.hh"      // "globals.hh"
@@ -31,17 +32,20 @@ class GUVVectorEquationOfMotion //: public GUVEquationOfMotion
   
   typedef typename vecgeom::kVc::precision_v      Double_v;
   typedef typename vecgeom::kVcFloat::precision_v Float_v;
+//  Tried alternative: 
+//     typedef typename vecgeom::kVc::precision_v      kVcFloat::precision_v
 
   public:  // with description
 
      GUVVectorEquationOfMotion( GUVVectorField *Field, unsigned int verbose=0 );
-     virtual ~GUVVectorEquationOfMotion();
+     virtual ~GUVVectorEquationOfMotion();     
        // Constructor and virtual destructor. No operations, just checks
 
-     virtual void EvaluateRhsGivenB( const  Double_v yVec[],
-                                     const  vecgeom::Vector3D<Float_v> B,  // Was double B[3],
-                                            Double_v charge, 
-                                            Double_v dydx[]             ) const = 0;
+     virtual
+     void EvaluateRhsGivenB( const  Double_v yVec[],
+                             const  vecgeom::Vector3D<Float_v> B,  // Was double B[3],
+                             const  Double_v charge, 
+                                    Double_v dydx[]             ) const = 0;
        // Given the value of the  field "B", this function 
        // calculates the value of the derivative dydx.
        // --------------------------------------------------------
@@ -159,7 +163,9 @@ void GUVVectorEquationOfMotion::GetFieldValue( const typename vecgeom::kVc::prec
                                                      typename vecgeom::kVc::precision_v Field[] ) const
 {
    vecgeom::Vector3D<typename vecgeom::kVc::precision_v> Position( Point[0], Point[1], Point[2] );
+   // vecgeom::Vector3D<Double_v> Position( Point[0], Point[1], Point[2] );   
    vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v>  FieldVec;
+   // vecgeom::Vector3D<Float_v>  FieldVec;   
    fField-> GetFieldValue( Position, FieldVec );
    Field[0] = (Double_v) FieldVec[0];
    Field[1] = (Double_v) FieldVec[1];
@@ -167,9 +173,10 @@ void GUVVectorEquationOfMotion::GetFieldValue( const typename vecgeom::kVc::prec
 }
 
 inline
-void GUVVectorEquationOfMotion::GetFieldValue( const Double_v Point[4],
-                        // const vecgeom::Vector3D<double> &Position,
-                                                     vecgeom::Vector3D<vecgeom::kVcFloat::precision_v>  &FieldValue ) const
+void GUVVectorEquationOfMotion::GetFieldValue( const Double_v Point[4], // Was: const vecgeom::Vector3D<double> &Position,
+                                               // Tried alternative: vecgeom::Vector3D<Float_v>  &FieldValue
+                                               vecgeom::Vector3D<vecgeom::kVcFloat::precision_v>  &FieldValue                                               
+   ) const   
 {
    vecgeom::Vector3D<Double_v> Position( Point[0], Point[1], Point[2] );
    fField-> GetFieldValue( Position, FieldValue );
@@ -177,7 +184,8 @@ void GUVVectorEquationOfMotion::GetFieldValue( const Double_v Point[4],
 
 inline
 void GUVVectorEquationOfMotion::GetFieldValue( const vecgeom::Vector3D<typename vecgeom::kVc::precision_v>      &Position,
-                                                     vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &FieldValue ) const
+                                                     vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &FieldValue                                                          // Tried alternative: vecgeom::Vector3D<Float_v>  &FieldValue
+   ) const
 {
    fField-> GetFieldValue( Position, FieldValue );
 }
@@ -189,7 +197,8 @@ GUVVectorEquationOfMotion::RightHandSide( const typename vecgeom::kVc::precision
                                                 typename vecgeom::kVc::precision_v dydx[] ) const
 {
    using ThreeVectorF = vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v>;
-   using ThreeVectorD = vecgeom::Vector3D<typename vecgeom::kVc::precision_v>;
+   // using ThreeVectorF = vecgeom::Vector3D<Float_v>;  // Tried alternative
+   using ThreeVectorD = vecgeom::Vector3D<Double_v>; // Was: typename vecgeom::kVc::precision_v>;
    CheckInitialization();
 
    ThreeVectorF  Field_3vf;
