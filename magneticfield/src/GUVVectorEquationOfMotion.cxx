@@ -22,7 +22,9 @@ GUVVectorEquationOfMotion::
 EvaluateRhsReturnB( const typename vecgeom::kVc::precision_v  y[],
                           typename vecgeom::kVc::precision_v  dydx[],
                           typename vecgeom::kVc::precision_v  charge,
-                                   vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &Field ) const
+                                   vecgeom::Vector3D<Float_v> &Field                    
+                           // Was: vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &Field
+   ) const
 {
    typedef typename vecgeom::kVc::precision_v Double_v;
    Double_v  PositionAndTime[4];

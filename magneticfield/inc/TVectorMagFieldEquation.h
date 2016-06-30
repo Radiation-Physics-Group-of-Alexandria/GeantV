@@ -32,12 +32,13 @@ class TVectorMagFieldEquation :  public GUVVectorEquationOfMotion
 {
    public:
      typedef typename vecgeom::kVc::precision_v      Double_v;
-     typedef typename vecgeom::kVcFloat::precision_v Float_v;
-     typedef Field T_Field;
+     typedef typename vecgeom::kVc::precision_v      Float_v;    // Was kVcFloat::precision_v
+     
+     // typedef Field T_Field;
      static const unsigned int  N   = Size;
      static constexpr double fCof   = Constants::c_light;  
 
-     TVectorMagFieldEquation(T_Field* pF) : GUVVectorEquationOfMotion(pF) { fPtrField = pF; }
+     TVectorMagFieldEquation(Field* pF) : GUVVectorEquationOfMotion(pF) { fPtrField = pF; }
 
      TVectorMagFieldEquation(const TVectorMagFieldEquation& );
      ~TVectorMagFieldEquation()  {}  // Was virtual - but now no inheritance
@@ -50,7 +51,7 @@ class TVectorMagFieldEquation :  public GUVVectorEquationOfMotion
      void GetFieldValue(const Double_v Point[4],
                               Double_v Value[]) const
      {
-        fPtrField->T_Field::GetFieldValue(Point, Value);
+        fPtrField->Field::GetFieldValue(Point, Value);
      }
 
      inline 
@@ -96,7 +97,7 @@ class TVectorMagFieldEquation :  public GUVVectorEquationOfMotion
 
    private:
      enum { G4maximum_number_of_field_components = 24 };
-     T_Field *fPtrField;
+     Field *fPtrField;
      double   fParticleCharge;
 };
 
@@ -139,7 +140,7 @@ template
 REALLY_INLINE
    void  TVectorMagFieldEquation<Field, Size>
    ::TEvaluateRhsGivenB( const typename vecgeom::kVc::precision_v y[],
-                         const vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> Bfloat,  
+                         const vecgeom::Vector3D<Float_v>         Bfloat,  
                          const typename vecgeom::kVc::precision_v charge,
                                typename vecgeom::kVc::precision_v dydx[]  ) const
 {
@@ -187,8 +188,8 @@ template
 REALLY_INLINE
 void
 TVectorMagFieldEquation<Field,Size>
-   ::FieldFromY(const typename vecgeom::kVc::precision_v                                  y[],  
-                               vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v> &Bfield ) const
+   ::FieldFromY(const typename vecgeom::kVc::precision_v     y[],  
+                               vecgeom::Vector3D<Float_v>   &Bfield ) const
 {
     vecgeom::Vector3D<typename vecgeom::kVc::precision_v> Position( y[0], y[1], y[2] );
 
