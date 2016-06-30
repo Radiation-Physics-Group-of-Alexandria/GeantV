@@ -35,7 +35,7 @@ class TVectorMagFieldEquation :  public GUVVectorEquationOfMotion
      typedef typename vecgeom::kVcFloat::precision_v Float_v;
      typedef Field T_Field;
      static const unsigned int  N   = Size;
-     static constexpr double fCof   = Constants::c_light;  
+     // static constexpr double fCof   = Constants::c_light;  
 
      TVectorMagFieldEquation(T_Field* pF) : GUVVectorEquationOfMotion(pF) { fPtrField = pF; }
 
@@ -151,6 +151,7 @@ REALLY_INLINE
 
     vecgeom::Vector3D<Double_v> B( (Double_v) Bfloat[0], (Double_v) Bfloat[1], (Double_v) Bfloat[2] );
 
+    const double fCof   = Constants::c_light;  
     Double_v cof = charge * fCof * inv_momentum_magnitude;
 
     dydx[0] = y[3]*inv_momentum_magnitude;       //  (d/ds)x = Vx/V
