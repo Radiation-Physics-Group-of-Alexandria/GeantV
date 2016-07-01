@@ -202,10 +202,6 @@ namespace TransportManager {
   VECCORE_ATT_HOST_DEVICE
  bool BreakOnStep(TrackVec_t &tracks, int evt, int trk, int stp, int nsteps, const char *msg, int itr);
 
-  /** @brief Auxiliary function to fetch the field value */
-  VECCORE_ATT_HOST_DEVICE
-  void GetFieldValue( GeantTaskData *td, const GeantTrack& track, double B[3], double *bmag);
-   
 };
 
 } // GEANT_IMPL_NAMESPACE
