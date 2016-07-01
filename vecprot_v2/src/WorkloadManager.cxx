@@ -594,11 +594,10 @@ void *WorkloadManager::TransportTracks() {
         propagator->Process()->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
 
         // if (0 /*ntotnext*/) {
-        //  Geant::Print("","============= Basket: %s\n", basket->GetName());
-        //  output.PrintTracks();        
+        //   Geant::Print("","============= WrkMgr After UsePhysics - Basket: %s\n", basket->GetName());        
+        //   output.PrintTracks();
+        // }
       }
-      Geant::Print("","============= WrkMgr After UsePhysics - Basket: %s\n", basket->GetName());
-      output.PrintTracks();       
     }
     
 #ifdef ENERGY_BALANCE

@@ -20,8 +20,8 @@ class TVectorUniformMagField : public GUVVectorMagneticField
     public:  // with description
 
       typedef typename vecgeom::kVc::precision_v      Double_v;
-      typedef typename vecgeom::kVcFloat::precision_v Float_v;
-      
+      typedef typename vecgeom::kVc::precision_v      Float_v;    // Was kVcFloat::precision_v
+     
         TVectorUniformMagField(const vecgeom::Vector3D<float>& FieldVector )
            : GUVVectorMagneticField() //NumberOfComponents(3)
             // A field with value equal to FieldVector.

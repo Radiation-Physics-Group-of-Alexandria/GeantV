@@ -8,9 +8,8 @@
 class GUVVectorMagneticField :  public GUVVectorField 
 
 {
-
   typedef typename vecgeom::kVc::precision_v      Double_v;
-  typedef typename vecgeom::kVcFloat::precision_v Float_v;
+  typedef typename vecgeom::kVc::precision_v      Float_v;     // Was vecgeom::kVcFloat::precision_v 
 
   public:
     static constexpr int   fNumFieldComponents= 3;
@@ -37,8 +36,8 @@ GUVVectorMagneticField::GetFieldValue( const typename vecgeom::kVc::precision_v 
                                              typename vecgeom::kVc::precision_v* FieldArr )
 {
    typedef typename vecgeom::kVc::precision_v Double_v;
-   typedef typename vecgeom::kVcFloat::precision_v Float_v;
-
+   typedef typename vecgeom::kVc::precision_v Float_v;     // Was  vecgeom::kVcFloat::precision_v;
+   
    vecgeom::Vector3D<Double_v> PositionV3D( Point[0], Point[1], Point[2]);
    vecgeom::Vector3D<Float_v>  Field_v3f;
    this->GetFieldValue( PositionV3D, Field_v3f );
