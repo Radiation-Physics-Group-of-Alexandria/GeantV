@@ -53,6 +53,8 @@ using namespace std;
 
 typedef typename vecgeom::kVc::precision_v Double_v;
 typedef typename vecgeom::kVcFloat::precision_v Float_v;
+// typedef typename vecgeom::kVc::precision_v Float_v;      // Was: vecgeom::kVcFloat::precision_v 
+
 typedef typename vecgeom::kVc::int_v Int_v;
 typedef typename vecgeom::kVc::bool_v Bool_v;
 
@@ -61,7 +63,6 @@ using ThreeVector_d = vecgeom::Vector3D<double>;
 
 using ThreeVectorSimd_f = vecgeom::Vector3D<Float_v>;
 using ThreeVectorSimd_d = vecgeom::Vector3D<Double_v>;
-
 
 
 GUVVectorEquationOfMotion*  CreateFieldAndEquation(ThreeVector_f constFieldValue);
