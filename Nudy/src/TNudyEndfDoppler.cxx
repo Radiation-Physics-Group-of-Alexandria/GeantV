@@ -25,6 +25,11 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
            (X - Y) * exp(-(X + Y) * (X + Y)))
   awri  = aw;
   tk    = t2 - t1;
+  if(t1 == t2){
+    for (unsigned int j = 0; j < x1.size(); j++) {
+    sigma.push_back(x2[j]);  
+    }
+  }
   ALPHA = awri / (boltz * tk);
   ncrs  = x1.size();
   while (RATHIG - RATLOW > 1E-7) {
@@ -83,7 +88,7 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
       F3K2P = OVSQPI * (ONE - (1 + ZK22P) * EXPAP);
       F4K2P = HALF * THH * F0K2P - OVSQPI * ZK2P * (THH + ZK22P) * EXPAP;
     }
-    while (ZK2 < ZLIMI && KPP < ncrs - 2) {
+    while (ZK2 < ZLIMI && KPP < ncrs - 1) {
       E1  = E2;
       S1  = S2;
       KPP = KPP + 1;

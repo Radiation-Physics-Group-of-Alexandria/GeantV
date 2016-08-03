@@ -46,9 +46,8 @@ TNudyENDF::TNudyENDF() : fLogLev(0), fENDF(), fRENDF(NULL), fTape(NULL), fMat(NU
 
 //_______________________________________________________________________________
 TNudyENDF::TNudyENDF(const char *nFileENDF, const char *nFileRENDF, const char *opt, unsigned char loglev)
-    : fLogLev(loglev), fENDF(), fRENDF(NULL), fTape(NULL), fMat(NULL), ENDFSUB()
+    : fLogLev(loglev), fENDF(), fRENDF(NULL), fTape(NULL), fMat(NULL), ENDFSUB(), prepro(0)
 {
-
   fLine[0] = '\0';
   // Open input stream
 
