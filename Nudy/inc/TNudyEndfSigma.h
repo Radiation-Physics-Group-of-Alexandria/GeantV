@@ -47,6 +47,8 @@ public:
   virtual ~TNudyEndfSigma();
   void GetData(const char *irENDF, double isigDiff);
   double SetsigPrecision(double x1) { return sigDiff = x1; }
+  double SetInitTempDop(double t1) { return doppTemp1 = t1; }
+  double SetOutTempDop(double t2) { return doppTemp2 = t2; }
   std::fstream out, outtotal;
   std::string outstring, outstringTotal;
 
@@ -96,6 +98,7 @@ private:
   void fillPdf1d();
   void fillPdf2d();
   const char *rENDF;             // precision for cross-section reconstruction
+  double doppTemp1, doppTemp2 ;                // temperature t1 t2
   double sigDiff;                // precision for cross-section reconstruction
   matrixd4 cos4OfMts;            // cosine and pdf from file 4 for each reaction
   matrixd4 cosPdf4OfMts;         // cosine and pdf from file 4 for each reaction

@@ -142,7 +142,6 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
                        2 * Y * (AK + 2 * CKY2) * (F1K2P - F1K1P) + Y2 * (AK + CKY2) * (F0K2P - F0K1P));
       } // end of if
     }   // end of if
-    //    }while(KPP < ncrs - 1 && ZK2 < ZLIMI);
     // while loop
     FTAIL1 = x2[0] * (FTAIL(sqrt(x1[0] * ALPHA), Y) - FTAIL(ZERO, Y));
     XSUM   = XSUM + FTAIL1;
