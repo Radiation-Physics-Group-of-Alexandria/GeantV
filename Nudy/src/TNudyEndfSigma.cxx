@@ -875,146 +875,168 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
       for (int crs = 0; crs < NP; crs++) {
         eneTemp.push_back(tab1->GetX(crs));
         sigTemp.push_back(tab1->GetY(crs));
-        if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 2]){
-          eneTemp[eneTemp.size() - 1] += 0.01; // adding small difference for boundary points
-	}
-        if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 3]){
-          eneTemp[eneTemp.size() - 1] += 0.02; // adding small difference for boundary points
-	}
-        if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 4]){
-          eneTemp[eneTemp.size() - 1] += 0.03; // adding small difference for boundary points
+	if(prepro == 0){
+	  if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 2]){
+	    eneTemp[eneTemp.size() - 1] += 0.01; // adding small difference for boundary points
+	  }
+	  if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 3]){
+	    eneTemp[eneTemp.size() - 1] += 0.02; // adding small difference for boundary points
+	  }
+	  if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 4]){
+	    eneTemp[eneTemp.size() - 1] += 0.03; // adding small difference for boundary points
+	  }
 	}
         npp += 1;
       }
-      TNudyCore::Instance()->Sort(eneTemp, sigTemp);
-      TNudyCore::Instance()->ThinningDuplicate(eneTemp, sigTemp);
+      if(prepro == 0){
+	TNudyCore::Instance()->Sort(eneTemp, sigTemp);
+	TNudyCore::Instance()->ThinningDuplicate(eneTemp, sigTemp);
+      }
       NP = eneTemp.size();
       for (int crs = 0; crs < NP; crs++) {
         eLinearFile3.push_back(eneTemp[crs]);
         xLinearFile3.push_back(sigTemp[crs]);
       }
       // Linearization of file 3 data
-      for (int cr = 0; cr < NP - 1; cr++) {
-        recursionLinearFile3(eLinearFile3[cr], eLinearFile3[cr + 1], xLinearFile3[cr], xLinearFile3[cr + 1],
-                             eLinearFile3, xLinearFile3);
+      if(prepro == 0){
+	for (int cr = 0; cr < NP - 1; cr++) {
+	  recursionLinearFile3(eLinearFile3[cr], eLinearFile3[cr + 1], xLinearFile3[cr], xLinearFile3[cr + 1],
+			      eLinearFile3, xLinearFile3);
+	}
+	for (unsigned long ie = 0; ie < eneExtra.size(); ie++) {
+	  double sigExtra =
+	      TNudyCore::Instance()->Interpolate(nbt1, int1, NR, eLinearFile3, xLinearFile3, NP, eneExtra[ie]);
+	  if (sigExtra > 0.0) {
+	    eLinearFile3.push_back(eneExtra[ie]);
+	    xLinearFile3.push_back(sigExtra);
+	  }
+	}
+	TNudyCore::Instance()->Sort(eLinearFile3, xLinearFile3);
+	TNudyCore::Instance()->ThinningDuplicate(eLinearFile3, xLinearFile3);
+      } 
+
+//	Filling of array to interpolate and add with file 2 data if it is given
+	nbt1.clear();
+	int1.clear();
+
+	nbt1.push_back(eLinearFile3.size());
+	int1.push_back(2);
+	NR = 1;
+	/////////////////////////////////////////////////////////////////////
+//	resolved range is always added in file 3
+      if(prepro == 0){	
+	if (LRU != 0) {
+	  if (flagResolve != 0) {
+	    switch (MT) {
+	    case 2: {
+	      addFile3Resonance(eLo1, eHi1, eLinElastic, xLinElastic);
+	    } break;
+	    case 18: {
+	      addFile3Resonance(eLo1, eHi1, eLinFission, xLinFission);
+	    } break;
+	    case 102: {
+	      addFile3Resonance(eLo1, eHi1, eLinCapture, xLinCapture);
+	    } break;
+	    }
+	  }
+	  // unresolved resonance region is added if LSSF = 0
+	  if (flagUnResolve != 0) {
+	    switch (LSSF) {
+	    case 0: {
+	      switch (MT) {
+	      case 2: {
+		addFile3Resonance(eLo2, eHi2, eLinElastic, xLinElastic);
+	      } break;
+	      case 18: {
+		addFile3Resonance(eLo2, eHi2, eLinFission, xLinFission);
+	      } break;
+	      case 102: {
+		addFile3Resonance(eLo2, eHi2, eLinCapture, xLinCapture);
+	      } break;
+	      }
+	    } break;
+	    case 1: {
+	      switch (MT) {
+	      case 2: {
+		insertFile3(eLinElastic, xLinElastic);
+	      } break;
+	      case 18: {
+		insertFile3(eLinFission, xLinFission);
+	      } break;
+	      case 102: {
+		insertFile3(eLinCapture, xLinCapture);
+	      } break;
+	      }
+	    } break;
+	    }
+	  }
+	  // This adds additional points to the elastic, fission and capture below resolved range and above uresolved
+	  // range
+	  switch (MT) {
+	  case 2: {
+	    insertFile3High(eLinElastic, xLinElastic);
+	  } break;
+	  case 18: {
+	    insertFile3High(eLinFission, xLinFission);
+	  } break;
+	  case 102: {
+	    insertFile3High(eLinCapture, xLinCapture);
+	  } break;
+	  }
+	} else { // no resonance parameters are given
+	  switch (MT) {
+	  case 2: {
+	    for (unsigned long cr = 0; cr < eLinearFile3.size(); cr++) {
+	      eLinElastic.push_back(eLinearFile3[cr]);
+	      xLinElastic.push_back(xLinearFile3[cr]);
+	    }
+	  } break;
+	  case 18: {
+	    for (unsigned long cr = 0; cr < eLinearFile3.size(); cr++) {
+	      eLinFission.push_back(eLinearFile3[cr]);
+	      xLinFission.push_back(xLinearFile3[cr]);
+	    }
+	  } break;
+	  case 102: {
+	    for (unsigned long cr = 0; cr < eLinearFile3.size(); cr++) {
+	      eLinCapture.push_back(eLinearFile3[cr]);
+	      xLinCapture.push_back(xLinearFile3[cr]);
+	    }
+	  } break;
+	  }
+	}
+
+//	check the sum of cross sections with total cross-section given in the MT=1 + resonance
+//	    int size = eLinearFile3.size();
+	if (MT == 2) {
+	  sigmaMts.insert(std::end(sigmaMts), std::begin(eLinElastic), std::end(eLinElastic));
+	  sigmaMts.insert(std::end(sigmaMts), std::begin(xLinElastic), std::end(xLinElastic));
+	  energyUni.insert(std::end(energyUni), std::begin(eLinElastic), std::end(eLinElastic));
+	} else if (MT == 18) {
+	  sigmaMts.insert(std::end(sigmaMts), std::begin(eLinFission), std::end(eLinFission));
+	  sigmaMts.insert(std::end(sigmaMts), std::begin(xLinFission), std::end(xLinFission));
+	  energyUni.insert(std::end(energyUni), std::begin(eLinFission), std::end(eLinFission));
+	} else if (MT == 102) {
+	  sigmaMts.insert(std::end(sigmaMts), std::begin(eLinCapture), std::end(eLinCapture));
+	  sigmaMts.insert(std::end(sigmaMts), std::begin(xLinCapture), std::end(xLinCapture));
+	  energyUni.insert(std::end(energyUni), std::begin(eLinCapture), std::end(eLinCapture));
+	} else if (MT != 2 && MT != 18 && MT != 102) {
+	  sigmaMts.insert(std::end(sigmaMts), std::begin(eLinearFile3), std::end(eLinearFile3));
+	  sigmaMts.insert(std::end(sigmaMts), std::begin(xLinearFile3), std::end(xLinearFile3));
+	  energyUni.insert(std::end(energyUni), std::begin(eLinearFile3), std::end(eLinearFile3));
+	}
       }
-      for (unsigned long ie = 0; ie < eneExtra.size(); ie++) {
-        double sigExtra =
-            TNudyCore::Instance()->Interpolate(nbt1, int1, NR, eLinearFile3, xLinearFile3, NP, eneExtra[ie]);
-        if (sigExtra > 0.0) {
-          eLinearFile3.push_back(eneExtra[ie]);
-          xLinearFile3.push_back(sigExtra);
+      if(prepro == 1){
+	if (MT == 2) {
+	  eLinElastic.insert(std::end(eLinElastic), std::begin(eLinearFile3), std::end(eLinearFile3));
+	  xLinElastic.insert(std::end(xLinElastic), std::begin(xLinearFile3), std::end(xLinearFile3));
+	} else if (MT == 18) {
+	  eLinFission.insert(std::end(eLinFission), std::begin(eLinearFile3), std::end(eLinearFile3));
+	  xLinFission.insert(std::end(xLinFission), std::begin(xLinearFile3), std::end(xLinearFile3));
+	} else if (MT == 102) {
+	  eLinCapture.insert(std::end(eLinCapture), std::begin(eLinearFile3), std::end(eLinearFile3));
+	  xLinCapture.insert(std::end(xLinCapture), std::begin(xLinearFile3), std::end(xLinearFile3));
         }
-      }
-      TNudyCore::Instance()->Sort(eLinearFile3, xLinearFile3);
-      TNudyCore::Instance()->ThinningDuplicate(eLinearFile3, xLinearFile3);
-
-
-      // Filling of array to interpolate and add with file 2 data if it is given
-      nbt1.clear();
-      int1.clear();
-
-      nbt1.push_back(eLinearFile3.size());
-      int1.push_back(2);
-      NR = 1;
-      /////////////////////////////////////////////////////////////////////////
-      // resolved range is always added in file 3
-      if (LRU != 0) {
-        if (flagResolve != 0) {
-          switch (MT) {
-          case 2: {
-            addFile3Resonance(eLo1, eHi1, eLinElastic, xLinElastic);
-          } break;
-          case 18: {
-            addFile3Resonance(eLo1, eHi1, eLinFission, xLinFission);
-          } break;
-          case 102: {
-            addFile3Resonance(eLo1, eHi1, eLinCapture, xLinCapture);
-          } break;
-          }
-        }
-        // unresolved resonance region is added if LSSF = 0
-        if (flagUnResolve != 0) {
-          switch (LSSF) {
-          case 0: {
-            switch (MT) {
-            case 2: {
-              addFile3Resonance(eLo2, eHi2, eLinElastic, xLinElastic);
-            } break;
-            case 18: {
-              addFile3Resonance(eLo2, eHi2, eLinFission, xLinFission);
-            } break;
-            case 102: {
-              addFile3Resonance(eLo2, eHi2, eLinCapture, xLinCapture);
-            } break;
-            }
-          } break;
-          case 1: {
-            switch (MT) {
-            case 2: {
-              insertFile3(eLinElastic, xLinElastic);
-            } break;
-            case 18: {
-              insertFile3(eLinFission, xLinFission);
-            } break;
-            case 102: {
-              insertFile3(eLinCapture, xLinCapture);
-            } break;
-            }
-          } break;
-          }
-        }
-        // This adds additional points to the elastic, fission and capture below resolved range and above uresolved
-        // range
-        switch (MT) {
-        case 2: {
-          insertFile3High(eLinElastic, xLinElastic);
-        } break;
-        case 18: {
-          insertFile3High(eLinFission, xLinFission);
-        } break;
-        case 102: {
-          insertFile3High(eLinCapture, xLinCapture);
-        } break;
-        }
-      } else { // no resonance parameters are given
-        switch (MT) {
-        case 2: {
-          for (unsigned long cr = 0; cr < eLinearFile3.size(); cr++) {
-            eLinElastic.push_back(eLinearFile3[cr]);
-            xLinElastic.push_back(xLinearFile3[cr]);
-          }
-        } break;
-        case 18: {
-          for (unsigned long cr = 0; cr < eLinearFile3.size(); cr++) {
-            eLinFission.push_back(eLinearFile3[cr]);
-            xLinFission.push_back(xLinearFile3[cr]);
-          }
-        } break;
-        case 102: {
-          for (unsigned long cr = 0; cr < eLinearFile3.size(); cr++) {
-            eLinCapture.push_back(eLinearFile3[cr]);
-            xLinCapture.push_back(xLinearFile3[cr]);
-          }
-        } break;
-        }
-      }
-
-      // check the sum of cross sections with total cross-section given in the MT=1 + resonance
-      //      int size = eLinearFile3.size();
-      if (MT == 2) {
-        sigmaMts.insert(std::end(sigmaMts), std::begin(eLinElastic), std::end(eLinElastic));
-        sigmaMts.insert(std::end(sigmaMts), std::begin(xLinElastic), std::end(xLinElastic));
-        energyUni.insert(std::end(energyUni), std::begin(eLinElastic), std::end(eLinElastic));
-      } else if (MT == 18) {
-        sigmaMts.insert(std::end(sigmaMts), std::begin(eLinFission), std::end(eLinFission));
-        sigmaMts.insert(std::end(sigmaMts), std::begin(xLinFission), std::end(xLinFission));
-        energyUni.insert(std::end(energyUni), std::begin(eLinFission), std::end(eLinFission));
-      } else if (MT == 102) {
-        sigmaMts.insert(std::end(sigmaMts), std::begin(eLinCapture), std::end(eLinCapture));
-        sigmaMts.insert(std::end(sigmaMts), std::begin(xLinCapture), std::end(xLinCapture));
-        energyUni.insert(std::end(energyUni), std::begin(eLinCapture), std::end(eLinCapture));
-      } else if (MT != 2 && MT != 18 && MT != 102) {
         sigmaMts.insert(std::end(sigmaMts), std::begin(eLinearFile3), std::end(eLinearFile3));
         sigmaMts.insert(std::end(sigmaMts), std::begin(xLinearFile3), std::end(xLinearFile3));
         energyUni.insert(std::end(energyUni), std::begin(eLinearFile3), std::end(eLinearFile3));
@@ -1936,6 +1958,7 @@ void TNudyEndfSigma::Linearize(int flagNer)
 //******************** Get Resonant PArameter and cross-section data from ENDF file **********
 void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
 {
+  TFile *junk = TFile::Open("junk.root", "recreate");
   sigDiff = isigDiff;
   TFile *rEND = TFile::Open(rENDF, "UPDATE");
   if (!rEND || rEND->IsZombie()) printf("Error: TFile :: Cannot open file %s\n", rENDF);
@@ -1944,6 +1967,8 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
   TNudyEndfMat *tMat      = 0;
   TList *mats             = (TList *)rENDFVol->GetMats();
   int nmats               = mats->GetEntries();
+  mats->Write();
+  junk->Close();
   for (int iMat = 0; iMat < nmats; iMat++) {
     tMat = (TNudyEndfMat *)mats->At(iMat);
     TIter iter(tMat->GetFiles());
@@ -1976,6 +2001,16 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
         std::cout << "file 3 OK " << std::endl;
         fixupTotal(energyUni, sigmaUniTotal);
 //          std::cout << "before elstic Doppler begins " << std::endl;
+//         std::cout << eLinElastic.size() << std::endl;
+//         for (unsigned long j = 0; j < eLinElastic.size(); j++)
+//           std::cout << std::setprecision(12) << eLinElastic[j] << "  " << xLinElastic[j] << std::endl;
+//         std::cout << eLinCapture.size() << std::endl;
+//         for (unsigned long j = 0; j < eLinCapture.size(); j++)
+//           std::cout << std::setprecision(12) << eLinCapture[j] << "  " << xLinCapture[j] << std::endl;
+//         std::cout << eLinFission.size() << std::endl;
+//         for (unsigned long j = 0; j < eLinFission.size(); j++)
+//           std::cout << std::setprecision(12) << eLinFission[j] << "  " << xLinFission[j] << std::endl;
+	
         broadSigma(eLinElastic, xLinElastic, xBroadElastic);
 	//Thinning(eLinElastic, xBroadElastic);
         // std::cout << eLinElastic.size() << std::endl;
