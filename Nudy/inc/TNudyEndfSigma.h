@@ -49,6 +49,7 @@ public:
   double SetsigPrecision(double x1) { return sigDiff = x1; }
   double SetInitTempDop(double t1) { return doppTemp1 = t1; }
   double SetOutTempDop(double t2) { return doppTemp2 = t2; }
+  int SetPreProcess(int x1) {return  prepro = x1; }
   std::fstream out, outtotal;
   std::string outstring, outstringTotal;
 
@@ -207,6 +208,7 @@ private:
   rowd D, GX, GNO, GG, GF;     // URR parameters
   rowd PhiEr, ShiftEr;         // penetration and shift factors
   rowd eneTemp, sigTemp;       // temporary vectors to store energy and sigma
+  int prepro = 0 ;
   TNudyEndfDoppler *doppler;
   TNudyEndfAng *recoAng;
   TNudyEndfEnergy *recoEnergy;
