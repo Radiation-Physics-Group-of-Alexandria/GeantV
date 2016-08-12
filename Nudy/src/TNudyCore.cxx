@@ -185,7 +185,7 @@ int TNudyCore::BinarySearch(std::vector<double> array, int len, double val)
 double TNudyCore::InterpolateScale(double x[2], double y[2], int law, double xx)
 {
   double yy    = -1;
-  double small = 1e-20;
+  double small = 1e-304;
   //  Info("InterpolateScale","x1,y1 = %e,%e x2,y2 = %e,%e INT = %d xx = %e",x[0],y[0],x[1],y[1],law,xx);
   if (law == 1 || x[1] <= x[0]) {
     yy                 = y[0];
