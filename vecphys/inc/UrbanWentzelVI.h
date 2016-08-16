@@ -80,7 +80,7 @@ private:
 };
 
 template <class Backend>
-VECCORE_CUDA_HOST_DEVICE typename Backend::Double_v UrbanWentzelVI::CrossSectionKernel(
+VECCORE_ATT_HOST_DEVICE typename Backend::Double_v UrbanWentzelVI::CrossSectionKernel(
    typename Backend::Double_v /*energy*/, Index_v<typename Backend::Double_v> /*Z*/)
 {
   // vector version of CrossSection
