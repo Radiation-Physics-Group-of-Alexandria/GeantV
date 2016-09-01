@@ -255,7 +255,7 @@ WorkloadManager::FeederResult WorkloadManager::CheckFeederAndExit(GeantBasketMgr
                                                                   GeantTaskData &td) {
     
     if (!prioritizer.HasTracks() && (propagator.GetNpriority() || GetNworking() == 1)) {
-        std::cout<<"Calling the feeder\n";
+        //std::cout<<"Calling the feeder\n";
         bool didFeeder = propagator.Feeder(&td);
         // Check exit condition
         if (propagator.TransportCompleted()) {
@@ -289,7 +289,7 @@ void *WorkloadManager::TransportTracks() {
     int nnew = 0;
     int ntot = 0;
     int nkilled = 0;
-    int nphys = 0;
+    int nphys = 0; //n. of tracks that are undergoing to a physics process
     int nout = 0;
     int ngcoll = 0;
     GeantBasket *basket = 0;
@@ -501,7 +501,7 @@ void *WorkloadManager::TransportTracks() {
             // count phyics steps here
             for (auto itr = 0; itr < nout; ++itr)
                 if (output.fStatusV[itr] == kPhysics)
-                    nphys++;
+                    nphys++; //update the n. of tracks undergoing to physics
             
             propagator->Process()->Eloss(mat, output.GetNtracks(), output, nextra_at_rest, td);
             //         if (nextra_at_rest) Geant::Print("","Extra particles: %d", nextra_at_rest);
@@ -540,7 +540,7 @@ void *WorkloadManager::TransportTracks() {
 #if USE_VECPHYS == 1
                 
                 
-                propagator->fVecPhysOrchestrator->ApplyPostStepProcess(output, nphys, td->fTid);
+                propagator->fVecPhysOrchestrator->ApplyPostStepProcess(output, nphys, td->fTid); //nphys is considered as the number of tracks that has to be elaborated
                 
                 //std::cout<<"Post ApplyPostStepProcess\n";
                 //propagator->fVecPhysOrchestrator->FilterTracksForTabPhys(output, nphys);
