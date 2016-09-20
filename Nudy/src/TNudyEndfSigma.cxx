@@ -1020,19 +1020,19 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	if (MT == 2) {
 	  sigmaMts.insert(std::end(sigmaMts), std::begin(eLinElastic), std::end(eLinElastic));
 	  sigmaMts.insert(std::end(sigmaMts), std::begin(xLinElastic), std::end(xLinElastic));
-	  energyUni.insert(std::end(energyUni), std::begin(eLinElastic), std::end(eLinElastic));
+// 	  energyUni.insert(std::end(energyUni), std::begin(eLinElastic), std::end(eLinElastic));
 	} else if (MT == 18) {
 	  sigmaMts.insert(std::end(sigmaMts), std::begin(eLinFission), std::end(eLinFission));
 	  sigmaMts.insert(std::end(sigmaMts), std::begin(xLinFission), std::end(xLinFission));
-	  energyUni.insert(std::end(energyUni), std::begin(eLinFission), std::end(eLinFission));
+// 	  energyUni.insert(std::end(energyUni), std::begin(eLinFission), std::end(eLinFission));
 	} else if (MT == 102) {
 	  sigmaMts.insert(std::end(sigmaMts), std::begin(eLinCapture), std::end(eLinCapture));
 	  sigmaMts.insert(std::end(sigmaMts), std::begin(xLinCapture), std::end(xLinCapture));
-	  energyUni.insert(std::end(energyUni), std::begin(eLinCapture), std::end(eLinCapture));
+// 	  energyUni.insert(std::end(energyUni), std::begin(eLinCapture), std::end(eLinCapture));
 	} else if (MT != 2 && MT != 18 && MT != 102) {
 	  sigmaMts.insert(std::end(sigmaMts), std::begin(eLinearFile3), std::end(eLinearFile3));
 	  sigmaMts.insert(std::end(sigmaMts), std::begin(xLinearFile3), std::end(xLinearFile3));
-	  energyUni.insert(std::end(energyUni), std::begin(eLinearFile3), std::end(eLinearFile3));
+// 	  energyUni.insert(std::end(energyUni), std::begin(eLinearFile3), std::end(eLinearFile3));
 	}
       }
       if(prepro == 1){
@@ -1048,7 +1048,7 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
         }
         sigmaMts.insert(std::end(sigmaMts), std::begin(eLinearFile3), std::end(eLinearFile3));
         sigmaMts.insert(std::end(sigmaMts), std::begin(xLinearFile3), std::end(xLinearFile3));
-        energyUni.insert(std::end(energyUni), std::begin(eLinearFile3), std::end(eLinearFile3));
+//         energyUni.insert(std::end(energyUni), std::begin(eLinearFile3), std::end(eLinearFile3));
       }
       eLinearFile3.clear();
       xLinearFile3.clear();
@@ -2017,7 +2017,8 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
         ReadFile3(file);
         sigma.clear();
         std::cout << "file 3 OK " << std::endl;
-//        fixupTotal(energyUni, sigmaUniTotal);
+        dopplerAll();
+        fixupTotal(energyUni, sigmaUniTotal);
 	
            std::cout << "before elstic Doppler begins " << eLinElastic.size() <<"  "<< xLinElastic.size() << std::endl;
 //          for (unsigned long j = 0 ; j < eLinElastic.size() ; j++)
@@ -2062,7 +2063,7 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
         xLinFission.clear();
         xBroadFission.clear();
 
-        //ReWriteFile3(file);
+        ReWriteFile3(file);
         MtNumbers.clear();
       } break;
 
@@ -2109,32 +2110,32 @@ void TNudyEndfSigma::fixupTotal(std::vector<double> &x1, std::vector<double> &x2
 {
   std::sort(x1.begin(), x1.end()); // Unionization of energy grid for cross-section
   TNudyCore::Instance()->ThinningDuplicate(x1);
-  for (unsigned long i = 0; i < sigmaOfMts.size(); i++) {
-    int size = sigmaOfMts[i].size() / 2;
+  for (unsigned long i = 0; i < sigmaOfMtsDop.size(); i++) {
+    int size = sigmaOfMtsDop[i].size() / 2;
     for (unsigned long k = 0; k < x1.size(); k++) {
       int min = 0;
       int max = size - 1;
       int mid = 0;
-      if (x1[k] <= sigmaOfMts[i][min])
+      if (x1[k] <= sigmaOfMtsDop[i][min])
         min = 0;
-      else if (x1[k] >= sigmaOfMts[i][max])
+      else if (x1[k] >= sigmaOfMtsDop[i][max])
         min = max - 1;
       else {
         while (max - min > 1) {
           mid = (min + max) / 2;
-          if (x1[k] < sigmaOfMts[i][mid])
+          if (x1[k] < sigmaOfMtsDop[i][mid])
             max = mid;
           else
             min = mid;
         }
       }
-      if (x1[k] == sigmaOfMts[i][min] && sigmaOfMts[i][size + min] > 1E-20) {
+      if (x1[k] == sigmaOfMtsDop[i][min] && sigmaOfMtsDop[i][size + min] > 1E-20) {
         eneTemp.push_back(x1[k]);
-        sigTemp.push_back(sigmaOfMts[i][size + min]);
+        sigTemp.push_back(sigmaOfMtsDop[i][size + min]);
       } else {
-        double sigmaAdd = sigmaOfMts[i][size + min] +
-                          (sigmaOfMts[i][size + min + 1] - sigmaOfMts[i][size + min]) * (x1[k] - sigmaOfMts[i][min]) /
-                              (sigmaOfMts[i][min + 1] - sigmaOfMts[i][min]); // linear interpolation
+        double sigmaAdd = sigmaOfMtsDop[i][size + min] +
+                          (sigmaOfMtsDop[i][size + min + 1] - sigmaOfMtsDop[i][size + min]) * (x1[k] - sigmaOfMtsDop[i][min]) /
+                              (sigmaOfMtsDop[i][min + 1] - sigmaOfMtsDop[i][min]); // linear interpolation
         if (sigmaAdd > 1E-20) {
           eneTemp.push_back(x1[k]);
           sigTemp.push_back(sigmaAdd);
@@ -2144,14 +2145,12 @@ void TNudyEndfSigma::fixupTotal(std::vector<double> &x1, std::vector<double> &x2
         energyLocationMts.push_back(k);
       }
     }
-    broadSigma(eneTemp, sigTemp, sigma);
-    sigmaUniOfMts.push_back(sigma);
+    sigmaUniOfMts.push_back(sigTemp);
     eneTemp.clear();
     sigTemp.clear();
-    sigma.clear();
   }
   x2.resize(x1.size());
-  sigmaOfMts.clear();
+  sigmaOfMtsDop.clear();
   for (unsigned long i = 0; i < sigmaUniOfMts.size(); i++) {
     int size = sigmaUniOfMts[i].size();
     // std::cout<<"size "<<  energyLocationMts.size  << std::endl;
@@ -2163,6 +2162,29 @@ void TNudyEndfSigma::fixupTotal(std::vector<double> &x1, std::vector<double> &x2
   for (unsigned long j = 0; j < x1.size(); j++) {
     outtotal << x1[j] << "  " << x2[j] << std::endl;
   }
+}
+//------------------------------------------------------------------------------------------------------
+void TNudyEndfSigma::dopplerAll()
+{
+  for (unsigned long i = 0; i < sigmaOfMts.size(); i++) {
+    int size = sigmaOfMts[i].size() / 2;
+    for (int k = 0; k < size ; k++) {
+      if (sigmaOfMts[i][size + k] > 1E-20) {
+        eneTemp.push_back ( sigmaOfMts [ i ][ k ] );
+        sigTemp.push_back ( sigmaOfMts [ i ][ size + k ] );
+      } 
+    }
+    broadSigma(eneTemp, sigTemp, sigma);
+    sigmaMts.insert(std::end(sigmaMts), std::begin(eneTemp), std::end(eneTemp));
+    sigmaMts.insert(std::end(sigmaMts), std::begin(sigma), std::end(sigma));
+    sigmaOfMtsDop.push_back(sigmaMts);
+    energyUni.insert(std::end(energyUni), std::begin(eneTemp), std::end(eneTemp));
+    eneTemp.clear();
+    sigTemp.clear();
+    sigma.clear();
+    sigmaMts.clear();
+  }
+  
 }
 //------------------------------------------------------------------------------------------------------
 double TNudyEndfSigma::Thinning(std::vector<double> &x1, std::vector<double> &x2)
@@ -2654,6 +2676,7 @@ TNudyEndfSigma::~TNudyEndfSigma()
   energyUni.shrink_to_fit();
   sigmaUniTotal.shrink_to_fit();
   sigmaOfMts.shrink_to_fit();
+  sigmaOfMtsDop.shrink_to_fit();
   sigmaUniOfMts.shrink_to_fit();
   energyLocationMts.shrink_to_fit();
   MtNumbers.shrink_to_fit();
