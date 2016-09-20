@@ -507,6 +507,16 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::InteractG4(GUTrack &inProject
   ConvertXtoFinalState<Backend>(energyIn, energyOut, sinTheta, inProjectile, outSecondary);
 }
 
+    
+/* RotateAngle: rotate the secondary track in respect with the primary track and the scattering angle theta,
+* and uniformly distributed phi angle
+* @param: xhat: oldXdir - labFrame
+* @param: yhat: oldYdir - labFrame
+* @param: zhat: oldZdir - labFrame
+* @param: xr: newXdir   - labFrame -> NB: we have to make sure that they are unit vector in the end
+* @param: yr: newYdir   - labFrame
+* @param: zr: newZdir   - labFrame
+*/
 template <class EmModel>
 template <class Backend>
 VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::RotateAngle(
@@ -516,28 +526,66 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::RotateAngle(
 {
   using Double_v = typename Backend::Double_v;
 
+  //phi uniformly distributed
   Double_v phi = UniformRandom<Double_v>(fRandomState, fThreadId);
   Double_v pt = xhat * xhat + yhat * yhat;
 
+  //calculate sin and cos of phi1
   Double_v cosphi, sinphi;
   math::SinCos(phi, &sinphi, &cosphi);
 
-  Double_v uhat = sinTheta * cosphi; // cos(phi);
-  Double_v vhat = sinTheta * sinphi; // sin(phi);
-  Double_v what = math::Sqrt((1. - sinTheta) * (1. + sinTheta));
+  Double_v uhat = sinTheta * cosphi; // cos(phi); // u_x = sin(theta1)*cos(phi1); ---> newXdir'
+  Double_v vhat = sinTheta * sinphi; // sin(phi); // u_y = sin(theta1)*sin(phi1); ---> newYdir'
+  Double_v what = math::Sqrt((1. - sinTheta) * (1. + sinTheta)); //u_z = cos(theta1); ---> newZdir'
 
+  // To distinguish the case in which is pt=0. It's 0 either when Theta=0° or Theta=180°
   Mask_v<Double_v> positive = (pt > 0.); // to distinguish the case in which is =0.
-  Mask_v<Double_v> negativeZ = (zhat < 0.); // for phi = 0 or phi=180 degree.
+  /* IT WAS:
+   * Mask_v<Double_v> negativeZ = ( zhat < 0. ); //It means that cosTheta is negative then theta is between 90° and 270° degrees
+   * The negativeZ, means that cosTheta is negative, so 90°<theta<270° and this condition must be used together with pt=0.
+   * if (pt==0 && zhat<0) means that theta is equal to 180° and this means that the direction vector must become (-xhat, yhat, -zhat)
+   * else if (pt==0. && zhat>0.) means that theta is equal to 0° and the direction vector doesn't need to be changed.
+   */
 
   Double_v phat = math::Sqrt(pt);
 
+  //mb NOTE: since pt could be equal to zero, we should avoid division by zero!!
+  // xhat= sinTheta0 * cosPhi0
+  // yhat= sinTheta0 * sinPhi0
+  // zhat= cosTheta0
   Double_v px = (xhat * zhat * uhat - yhat * vhat) / phat + xhat * what;
-  Double_v py = (yhat * zhat * uhat - xhat * vhat) / phat + yhat * what;
+  //mb: IT WAS:
+  //Double_v py = (yhat*zhat*uhat - xhat*vhat)/phat + yhat*what; /// mb: ERROR! it should be (yhat*zhat*uhat + xhat*vhat)/phat + yhat*what;
+  //mb: it should be:
+  Double_v py = (yhat * zhat * uhat + xhat * vhat) / phat + yhat * what;
   Double_v pz = -phat * uhat + zhat * what;
 
-  xr = Blend(negativeZ, -xhat, Blend(positive, px, xhat));
-  yr = Blend(negativeZ, yhat, Blend(positive, py, yhat));
-  zr = Blend(negativeZ, -zhat, Blend(positive, pz, zhat));
+  //mb: ERROR: , but this doesn't mean that xhat and zhat -> -xhat and -zhat and yhat stays the same.
+  //mb: IT WAS:
+  //xr = Blend(negativeZ, -xhat, Blend(positive, px, xhat));
+  //yr = Blend(negativeZ,  yhat, Blend(positive, py, yhat));
+  //zr = Blend(negativeZ, -zhat, Blend(positive, pz, zhat));
+    
+  //mb: It should be: (unless we calculate the Theta angle with the arcos
+  //this is valid for (pt==0 && cosTheta>0)
+  xr=xhat;
+  yr=yhat;
+  zr=zhat;
+  
+  //this is valid for (pt>0.)
+  xr = Blend(positive, px, xhat);
+  yr = Blend(positive, py, yhat);
+  zr = Blend(positive, pz, zhat);
+    
+  //this is valid for (pt==0 && cosTheta<0)
+  Mask_v<Double_v> theta180 = ( zhat < 0. && !positive);
+  xr = Blend(theta180, px, -xhat);
+  yr = Blend(theta180, py, yhat);
+  zr = Blend(theta180, pz, -zhat);
+  
+//mb: TO CHECK:  how the secondary is generated cause it should be:
+//electronDir= gammaE0*gammaDir0 - gammaE1*gammaDir1
+//where gammaDir0 and gammaDir1 are the unit vector
 }
 
 template <class EmModel>
@@ -550,25 +598,29 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(double e
   // this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
   double momentum = Sqrt(inProjectile.px*inProjectile.px+inProjectile.py*inProjectile.py+inProjectile.pz*inProjectile.pz);
   double invMomentum = 1.0 / momentum;
-  double xhat = inProjectile.px * invMomentum;
-  double yhat = inProjectile.py * invMomentum;
-  double zhat = inProjectile.pz * invMomentum;
 
-  double uhat = 0.;
-  double vhat = 0.;
-  double what = 0.;
+  if (momentum != energyIn)
+   std::cout<<"Momentum= "<<momentum<<" and EnergyIn= "<<energyIn<<"\n";
+  
+  double xhat = inProjectile.px * invMomentum; //oldXdir
+  double yhat = inProjectile.py * invMomentum; //oldYdir
+  double zhat = inProjectile.pz * invMomentum; //oldZdir
+
+  double uhat = 0.; //newXdir
+  double vhat = 0.; //newYdir
+  double what = 0.; //newZdir
 
   RotateAngle<Backend>(sinTheta, xhat, yhat, zhat, uhat, vhat, what);
 
   // update primary
   inProjectile.E = energyOut; //kinetic Energy
-  inProjectile.px = energyOut * uhat;
+  inProjectile.px = energyOut * uhat; //xComponent of momentum KinEn*dirX
   inProjectile.py = energyOut * vhat;
   inProjectile.pz = energyOut * what;
 
   // create secondary
   outSecondary.E = (energyIn - energyOut);
-  outSecondary.px = outSecondary.E * (xhat - uhat);
+  outSecondary.px = outSecondary.E * (xhat - uhat); //why? it should be: EnergyIn*xhat - EnergyOut*uhat
   outSecondary.py = outSecondary.E * (yhat - vhat);
   outSecondary.pz = outSecondary.E * (zhat - what);
 
@@ -593,6 +645,10 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(typename
 
   // this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
   Double_v momentum = Sqrt(px*px+py*py+pz*pz);
+
+  if(momentum[0]!=energyIn[0])
+    std::cout<<"Momentum= "<<momentum[0]<<" and EnergyIn= "<<energyIn[0]<<"\n";
+
   Double_v invMomentum = 1.0 / momentum;
   Double_v xhat = px * invMomentum;
   Double_v yhat = py * invMomentum;
@@ -644,6 +700,7 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState_Scalar(t
   // need to rotate the angle with respect to the line of flight
   // this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
   Double_v momentum = Sqrt(primary.px[ibase]*primary.px[ibase]+primary.py[ibase]*primary.py[ibase]+primary.pz[ibase]*primary.pz[ibase]);
+  if(momentum!=energyIn) std::cout<<"Momentum= "<<momentum<<" and EnergyIn= "<<energyIn<<"\n";
 
   Double_v invMomentum = 1.0/momentum;
   Double_v xhat = primary.px[ibase]*invMomentum;
