@@ -120,10 +120,59 @@ void VecPhysOrchestrator::CheckDirectionUnitVector(GeantTrack_v &gTrackV, GUTrac
 
 
 //_____________________________________________________________________________
-// (oldxdir, oldydir, oldzdir) are the direction vector of parent track in lab.
+// (oldXdir, oldYdir, oldZdir) are the direction vector of parent track in lab.
 // frame; direction vector of the current track, measured from local Z is in
-// (newxdir, newydir, newzdir); here we rotate it to lab. frame -> taken from TabPhysics ONE TRACK
-void VecPhysOrchestrator::RotateNewTrack(double oldXdir, double oldYdir, double oldZdir, GeantTrack_v &track, int index) {
+// (newXdir', newYdir', newZdir'); here we rotate it to lab. frame -> (newXdir, newYdir, newZdir)
+// mb: taken from TabPhysics ONE TRACK
+// oldXdir = sinTheta0*cosPhi0
+// oldYdir = sinTheta0*sinPhi0
+// oldZdir = cosTheta0
+// newXdir' = sinTheta1*cosPhi1
+// newYdir' = sinTheta1*sinPhi1
+// newZdir' = cosTheta1
+// newXdir = (cosPhi0*cosTheta0) * newXdir' -(senPhi0) * newYdir' + (cosPhi0sinTheta0)  * newZdir'
+// newYdir = (sinPhi0*cosTheta0) * newXdir' +(cosPhi0) * newYdir' + (sinPhi0*sinTheta0) * newZdir'
+// newZdir = -(sinTheta0)        * newXdir' +(0)       * newYdir' + (cosTheta0)         * newZdir'
+
+void VecPhysOrchestrator::RotateVectorTrack(double oldXdir, double oldYdir, double oldZdir, GeantTrack_v &track, int index) {
+    const double one = 1.0;
+    const double zero = 0.0;
+    const double amin = 1.0e-10;
+    const double one5 = 1.5;
+    const double half = 0.5;
+    
+    double cosTheta0 = oldZdir;
+    double sinTheta0 = sqrt(oldXdir * oldXdir + oldYdir * oldYdir);
+    double cosPhi0;
+    double sinPhi0;
+    
+    if (sinTheta0 > amin) {
+        double invSinTheta0=1/ sinTheta0;
+        cosPhi0 = oldXdir *invSinTheta0;
+        sinPhi0 = oldYdir *invSinTheta0;
+    } else {
+        cosPhi0 = one;
+        sinPhi0 = zero;
+    }
+    
+    //
+    double h0 = track.fXdirV[index]; //senTheta1*cosPhi1
+    double h1 = sinTheta0 * track.fZdirV[index] + cosTheta0 * h0; //sinTheta0*cosTheta1+cosTheta0*senTheta1*cosPhi1
+    double h2 = track.fYdirV[index]; //senTheta1*senPhi1
+    
+    track.fXdirV[index] = h1 * cosPhi0 - h2 * sinPhi0;
+    track.fYdirV[index] = h1 * sinPhi0 + h2 * cosPhi0;
+    track.fZdirV[index] = track.fZdirV[index] * cosTheta0 - h0 * sinTheta0;
+    
+    // renormalization: -use 1-th order Taylor aprx. of 1/sqrt(x) around 1.0
+    // that should be almost exact since the vector almost normalized!
+    double delta = one5 - half * (track.fXdirV[index] * track.fXdirV[index] + track.fYdirV[index] * track.fYdirV[index] + track.fZdirV[index] * track.fZdirV[index]);
+    track.fXdirV[index] *= delta;
+    track.fYdirV[index] *= delta;
+    track.fZdirV[index] *= delta;
+}
+
+void VecPhysOrchestrator::RotateSingleTrack(double oldXdir, double oldYdir, double oldZdir, GeantTrack &track) {
     const double one = 1.0;
     const double zero = 0.0;
     const double amin = 1.0e-10;
@@ -143,21 +192,23 @@ void VecPhysOrchestrator::RotateNewTrack(double oldXdir, double oldYdir, double 
         sinPhi0 = zero;
     }
     
-    double h0 = track.fXdirV[index];
-    double h1 = sinTheta0 * track.fZdirV[index] + cosTheta0 * h0;
-    double h2 = track.fYdirV[index];
-
-    track.fXdirV[index] = h1 * cosPhi0 - h2 * sinPhi0;
-    track.fYdirV[index] = h1 * sinPhi0 + h2 * cosPhi0;
-    track.fZdirV[index] = track.fZdirV[index] * cosTheta0 - h0 * sinTheta0;
+    //
+    double h0 = track.fXdir; //senTheta1*cosPhi1
+    double h1 = sinTheta0 * track.fZdir + cosTheta0 * h0; //sinTheta0*cosTheta1+cosTheta0*senTheta1*cosPhi1
+    double h2 = track.fYdir; //senTheta1*senPhi1
+    
+    track.fXdir = h1 * cosPhi0 - h2 * sinPhi0;
+    track.fYdir = h1 * sinPhi0 + h2 * cosPhi0;
+    track.fZdir = track.fZdir * cosTheta0 - h0 * sinTheta0;
     
     // renormalization: -use 1-th order Taylor aprx. of 1/sqrt(x) around 1.0
     // that should be almost exact since the vector almost normalized!
-    double delta = one5 - half * (track.fXdirV[index] * track.fXdirV[index] + track.fYdirV[index] * track.fYdirV[index] + track.fZdirV[index] * track.fZdirV[index]);
-    track.fXdirV[index] *= delta;
-    track.fYdirV[index] *= delta;
-    track.fZdirV[index] *= delta;
+    double delta = one5 - half * (track.fXdir * track.fXdir + track.fYdir * track.fYdir + track.fZdir * track.fZdir);
+    track.fXdir *= delta;
+    track.fYdir *= delta;
+    track.fZdir *= delta;
 }
+
 
 
 
@@ -238,7 +289,10 @@ void VecPhysOrchestrator::FilterPrimaryTracks(GeantTrack_v &gTrackV, int numtrac
         ++totNumTracks;
         //std::cout<<"DEBUG ALL: Mass - gTrackV.fMassV["<<i<<"]: "<<gTrackV.fMassV[i]<<" and  Process - gTrackV.fProcessV["<<i<<"]: "<<gTrackV.fProcessV[i]<<"\n";
         if (gTrackV.fProcessV[i] == fProcessId)
+        {
+            std::cout<<"CHECK MOMENTUM1 : gTrackV.fEV["<<i<<"]: "<<gTrackV.fEV[i]<<", gTrackV.fPV["<<i<<"]:"<< gTrackV.fPV[i]<<"\n";
             ++numComptonTracks;
+        }
     }
     fComptonTotTracks+=numComptonTracks;
     if (numComptonTracks < 1) {
@@ -266,6 +320,10 @@ void VecPhysOrchestrator::FilterPrimaryTracks(GeantTrack_v &gTrackV, int numtrac
             fPrimaryTracks->px[j] = momentum * gTrackV.fXdirV[i];   // 3-momentum (px, py, pz)
             fPrimaryTracks->py[j] = momentum * gTrackV.fYdirV[i];
             fPrimaryTracks->pz[j] = momentum * gTrackV.fZdirV[i];
+            
+            double checkNormality=gTrackV.fXdirV[i]*gTrackV.fXdirV[i]+gTrackV.fYdirV[i]*gTrackV.fYdirV[i]+gTrackV.fZdirV[i]*gTrackV.fZdirV[i];
+            if(fabs(1.-checkNormality)>1.e-14)std::cout<<"NO NORMALITY! "<<checkNormality<<"\n";
+            
             fPrimaryTracks->E[j] = gTrackV.fEV[i] - gTrackV.fMassV[i] ; // Kinetic energy (NB: RestMass for gamma=0)
             if(gTrackV.fMassV[i]!=0) {std::cout<<"Error! Rest mass for gamma not equals to zero. Exiting.\n"; exit(0);}
             
@@ -502,24 +560,28 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
             gTrackV.fPV[indxP] = totalP; // update total P
             
             //TRY ROTATION HERE
-            //double oldxdir=gTrackV.fXdirV[indxP];
-            //double oldydir=gTrackV.fYdirV[indxP];
-            //double oldzdir=gTrackV.fZdirV[indxP];
-    
+            //store directions of the original track in the lab-frame
+            double oldxdir=gTrackV.fXdirV[indxP];
+            double oldydir=gTrackV.fYdirV[indxP];
+            double oldzdir=gTrackV.fZdirV[indxP];
+            
+            //store new directions in the interaction-frame
             gTrackV.fXdirV[indxP] = fPrimaryTracks->px[ip] * invTotalP; // update x-dir
             gTrackV.fYdirV[indxP] = fPrimaryTracks->py[ip] * invTotalP; // update y-dir
             gTrackV.fZdirV[indxP] = fPrimaryTracks->pz[ip] * invTotalP; // update z-dir
             
-            //RotateNewTrack(oldxdir,oldydir, oldzdir, gTrackV, indxP);
-
-    
+            //rotate new directions from interaction-frame back to the Lab-frame and store them into
+            //(gTrackV.fXdirV[indxP], gTrackV.fYdirV[indxP], gTrackV.fZdirV[indxP])
+            RotateVectorTrack(oldxdir,oldydir, oldzdir, gTrackV, indxP);
             
-           
+            // newXdir' = sinTheta1*cosPhi1
+            // newYdir' = sinTheta1*sinPhi1
+            // newZdir' = cosTheta1
             
         } else {                                                      // apply tracking cut:
-            gTrackV.fEdepV[indxP] += kinE;                              // put ekin to energy depo
-            gTrackV.fStatusV[indxP] = kKilled;                          // kill the primary track
-            gTrackV.fEV[indxP] = gTrackV.fMassV[indxP];                 //added
+            gTrackV.fEdepV[indxP] += kinE;                            // put ekin to energy depo
+            gTrackV.fStatusV[indxP] = kKilled;                        // kill the primary track
+            gTrackV.fEV[indxP] = gTrackV.fMassV[indxP];               //added
             // should make sure that at-rest process is invoked if needed (not no ofc.)
         }
     }
@@ -627,13 +689,29 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
             //gTrack.fXdir = fSecondaryTracks->px[isec] * secPtot;    // direction (x,y,z)
             //gTrack.fYdir = fSecondaryTracks->py[isec] * secPtot;
             //gTrack.fZdir = fSecondaryTracks->pz[isec] * secPtot;
+            
+            
+            //TRY ROTATION HERE
+            //store directions of the original track in the lab-frame
+            double oldxdir=gTrack.fXdir;
+            double oldydir=gTrack.fYdir;
+            double oldzdir=gTrack.fZdir;
+            
+            //store new directions in the "interaction-frame"
             gTrack.fXdir = fSecondaryTracks->px[isec] * invSecTotalP; //mb: direction (x,y,z)
             gTrack.fYdir = fSecondaryTracks->py[isec] * invSecTotalP;
             gTrack.fZdir = fSecondaryTracks->pz[isec] * invSecTotalP;
             
-            /*gTrack.fXdir = gTrackV.fXdirV[indxP]; //TRY: direction (x,y,z)
-            gTrack.fYdir = gTrackV.fYdirV[indxP];
-            gTrack.fZdir = gTrackV.fZdirV[indxP];*/
+            
+            //rotate new directions from interaction-frame back to the Lab-frame and store them into
+            //(gTrack.fXdir, gTrack.fYdirV, gTrack.fZdirV)
+            //RotateSingleTrack(oldxdir,oldydir, oldzdir, gTrack);
+            
+            // newXdir' = sinTheta1*cosPhi1
+            // newYdir' = sinTheta1*sinPhi1
+            // newZdir' = cosTheta1
+            //END Rotation
+
             gTrack.fP = secTotalP;                              // total momentum
             gTrack.fE = fSecondaryTracks->E[isec]+secMass;      // total energy
             //TotE= KinE+RestMass

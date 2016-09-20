@@ -41,7 +41,8 @@ public:
     void DebugPrimaryAndSecondaryTracks();
     void CheckEnergyConservation(GeantTrack_v &gTrackV, int numtracks, GUTrack_v &primaries, GUTrack_v &secondaries);
     void CheckDirectionUnitVector(GeantTrack_v &gTrackV, GUTrack_v &primaries, GUTrack_v &secondaries);
-    void RotateNewTrack(double oldXdir, double oldYdir, double oldZdir, GeantTrack_v &track, int index);
+    void RotateVectorTrack(double oldXdir, double oldYdir, double oldZdir, GeantTrack_v &track, int index);
+    void RotateSingleTrack(double oldXdir, double oldYdir, double oldZdir, GeantTrack &track);
     int     fComptonTotTracks; //temporary
 private:
     int     fProcessId;       // Index of the physics process as stored in tabulated physics (TPartIndex)
