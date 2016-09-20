@@ -32,10 +32,10 @@ if(USE_ROOT)
   ROOT_GENERATE_DICTIONARY(vphysprocDict ${headers} MODULE Vphysproc 
     LINKDEF inc/LinkDef.h OPTIONS "-DVC_COMMON_SIMDIZE_H_=1")
   add_library(Vphysproc SHARED ${sources} vphysprocDict.cxx)
-  target_link_libraries(Vphysproc -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${VC_LIBRARIES} Xsec Geant_v vecphys ${ROOT_LIBRARIES})
+  target_link_libraries(Vphysproc -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${VC_LIBRARIES} Xsec vecphys ${ROOT_LIBRARIES})
 else()
   add_library(Vphysproc SHARED ${sources})
-  target_link_libraries(Vphysproc -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${VC_LIBRARIES} Xsec Geant_v vecphys)
+  target_link_libraries(Vphysproc -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${VC_LIBRARIES} Xsec vecphys)
 endif()
 
 add_custom_target(VectPhysProc DEPENDS Vphysproc)

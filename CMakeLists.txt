@@ -470,6 +470,14 @@ include_directories("${PROJECT_SOURCE_DIR}/xsec/inc")
 include_directories("${PROJECT_SOURCE_DIR}/fastsim/inc")
 include_directories("${PROJECT_SOURCE_DIR}/examples/inc")
 include_directories("${PROJECT_SOURCE_DIR}/vecprot_v2_tbb/inc")
+if(USE_VECPHYS)
+include_directories("${PROJECT_SOURCE_DIR}/vectphysproc/inc")
+endif()
+
+message(STATUS "VECGEOM_INSTALL_DIR is: ${VECGEOM_INSTALL_DIR}")
+message(STATUS "VECGEOM_INCLUDE_DIR is: ${VECGEOM_INCLUDE_DIR}")
+message(STATUS "VECGEOM_DEFINITIONS is: ${VECGEOM_DEFINITIONS}")
+
 
 string(REPLACE " -DVECGEOM_ROOT" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 

@@ -3,7 +3,6 @@
 #
 include_directories(
   inc
-  ../vecphys/inc
   ../magneticfield/inc
   ../physics/particle/inc
   ../numa/inc
@@ -112,7 +111,7 @@ else()
   target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield GeantNuma ${ROOT_LIBRARIES} )
   
   if( VECGEOM_FOUND )
-    target_link_libraries(Geant_v Vmagfield ${VECGEOM_LIBRARIES} ${VC_LIBRARIES} Vphysproc)
+    target_link_libraries(Geant_v ${VC_LIBRARIES})
     
     if (VECGEOM_GEANT4)
       include(${Geant4_USE_FILE})
@@ -161,14 +160,14 @@ macro(build_executables EXECUTABLES)
     get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
     add_executable(${TARGET_NAME} ${EXECUTABLE})
     if(USE_VECGEOM_NAVIGATOR)
-      target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Xsec Geant_v GeantExamples ${ROOT_LIBRARIES} -lpthread ${VC_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES} Vphysproc)
+      target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Xsec Geant_v GeantExamples ${ROOT_LIBRARIES} -lpthread ${VC_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES})
     else()
-      target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v Xsec GeantExamples ${ROOT_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES} Vphysproc)
+      target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v Xsec GeantExamples ${ROOT_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES})
     endif()
     if (USE_TBB)
       target_link_libraries(${TARGET_NAME} Geant_tbb  ${TBB_LIBS})
     endif()
-    add_dependencies(${TARGET_NAME} Geant_v Xsec GeantExamples GeantNuma Vphysproc)
+    add_dependencies(${TARGET_NAME} Geant_v Xsec GeantExamples GeantNuma)
     set(GEANTV_EXECUTABLES ${EXECUTABLES} ${TARGET_NAME})
   endforeach()
 endmacro()
