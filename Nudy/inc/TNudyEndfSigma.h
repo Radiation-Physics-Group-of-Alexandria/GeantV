@@ -92,6 +92,7 @@ private:
   double insertFile3High(rowd &x1, rowd &x2);
   void broadSigma(rowd &x1, rowd &x2, rowd &x3);
   void fixupTotal(rowd &x1, rowd &x2);
+  void dopplerAll();
   double recursionLinearNuPh(double x1, double x2, double sig1, double sig2, std::vector<double> x,
                              std::vector<double> sig);
   double recursionLinearLeg(int i, double x1, double x2, double pdf1, double pdf2);
@@ -152,6 +153,7 @@ private:
       Mt6; // MT values for which angular, energy/ angular-energy distributions are given in file 4, 5, 6
   rowd energyUni, sigmaUniTotal;            // unionization of energy and total cross-section
   matrixd2 sigmaOfMts;                      // sigma for each reaction
+  matrixd2 sigmaOfMtsDop;                      // sigma for each reaction after doppler
   matrixd2 sigmaUniOfMts;                   // sigma for each reaction afte unionization of energy
   rowint energyLocationMts;                 // MT wise starting energy for cross-section
   rowint MtNumbers, MtNum4, MtNum5, MtNum6; // MT numbers
