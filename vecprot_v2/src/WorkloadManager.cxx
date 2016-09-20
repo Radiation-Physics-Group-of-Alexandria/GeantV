@@ -539,14 +539,14 @@ void *WorkloadManager::TransportTracks() {
                 //
 #if USE_VECPHYS == 1
                 
-                
+                std::cout<<"Calling ApplyPostStepProcess: COMPTON\n";
                 propagator->fVecPhysOrchestrator->ApplyPostStepProcess(output, nphys, td->fTid); //nphys is considered as the number of tracks that has to be elaborated
-                
+                 std::cout<<"FINISH ApplyPostStepProcess\n";
                 //std::cout<<"Post ApplyPostStepProcess\n";
                 //propagator->fVecPhysOrchestrator->FilterTracksForTabPhys(output, nphys);
                 //propagator->fVecPhysOrchestrator->WriteBackTracks(output, td->fTid);
                 
-                //NB: No more reactions
+                 //NB: No more reactions
                 //       output.fProcessV[t] = -1;
                 //       output.fEindexV[t] = -1;
                 
