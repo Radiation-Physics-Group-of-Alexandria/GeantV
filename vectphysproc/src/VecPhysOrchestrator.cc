@@ -792,7 +792,7 @@ void VecPhysOrchestrator::SetGeantTrack(GeantTrack &left, GeantTrack_v &right, i
     //left.fProcess = -1;                // init: mb: track.fProcess = 0; here?
     left.fProcess = 0;                // Transport
     //  left.fIzero = 0;               // init
-    left.fVindex = right.fVindexV[ip]; //mb: added
+    left.fBindex = right.fBindexV[ip]; //mb: added
     left.fNsteps = 0;                  // init
     left.fStatus = kNew;               // new track
     
