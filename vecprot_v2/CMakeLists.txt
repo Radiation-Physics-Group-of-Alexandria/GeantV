@@ -40,6 +40,8 @@ set(sources
    src/TransportManager.cxx
    src/LocalityManager.cxx
    src/MCTruthMgr.cxx
+   src/VecPhysOrchestrator.cc
+   src/VecPhysCompton.cc
 )
 
 set(headers
@@ -66,6 +68,8 @@ set(headers
    inc/LocalityManager.h
    inc/MCTruthMgr.h
    inc/cuckoohash_map.hh
+   inc/VecPhysOrchestrator.h
+   inc/VecPhysCompton.h
 )   
 
 if(USE_ROOT AND (NOT USE_VECGEOM_NAVIGATOR))
@@ -108,7 +112,7 @@ else()
     set(sources ${sources} G__Geant.cxx)
   endif()
   add_library(Geant_v SHARED ${sources})
-  target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield GeantNuma ${ROOT_LIBRARIES} )
+  target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY}  Vmagfield GeantNuma vecphys ${ROOT_LIBRARIES} )
   
   if( VECGEOM_FOUND )
     target_link_libraries(Geant_v ${VC_LIBRARIES})

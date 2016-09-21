@@ -4,14 +4,10 @@
 set(sources 
   src/GVectorPhysicsProcess.cc
   src/GVComptonProcess.cc
-  src/VecPhysCompton.cc
-  src/VecPhysOrchestrator.cc
   )
 set(headers
   inc/GVectorPhysicsProcess.h
   inc/GVComptonProcess.h
-  inc/VecPhysCompton.h
-  inc/VecPhysOrchestrator.h
   )
 
 #----------------------------------------------------------------------------

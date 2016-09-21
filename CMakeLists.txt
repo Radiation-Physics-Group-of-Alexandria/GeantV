@@ -618,6 +618,7 @@ include_directories("${PROJECT_SOURCE_DIR}/examples/inc")
 include_directories("${PROJECT_SOURCE_DIR}/vecprot_v2_tbb/inc")
 if(USE_VECPHYS)
 include_directories("${PROJECT_SOURCE_DIR}/vectphysproc/inc")
+include_directories("${PROJECT_SOURCE_DIR}/vecphys/inc")
 endif()
 
 message(STATUS "VECGEOM_INSTALL_DIR is: ${VECGEOM_INSTALL_DIR}")
