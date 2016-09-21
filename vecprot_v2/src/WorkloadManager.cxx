@@ -45,6 +45,8 @@
 #endif
 #include "GeantFactoryStore.h"
 
+#include "VecPhysOrchestrator.h"
+
 using namespace Geant;
 using std::max;
 
@@ -549,7 +551,8 @@ void *WorkloadManager::TransportTracks() {
 //            inserted to the track vector
 //
 #ifdef USE_VECPHYS
-        propagator->fVectorPhysicsProcess->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
+        //propagator->fVectorPhysicsProcess->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
+          propagator->fVecPhysOrchestrator->ApplyPostStepProcess(output, ntotnext,  td->fTid);
 #endif
         // second: sample final states (based on the inf. regarding sampled
         //         target and type of interaction above), insert them into
