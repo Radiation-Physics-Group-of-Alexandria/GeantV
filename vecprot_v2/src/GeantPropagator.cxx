@@ -60,6 +60,10 @@
 #include "PrimaryGenerator.h"
 #include "MCTruthMgr.h"
 
+#if USE_VECPHYS==1
+#include "VecPhysOrchestrator.h"
+#endif
+
 #ifdef USE_CALLGRIND_CONTROL
 #include <valgrind/callgrind.h>
 #endif
@@ -376,7 +380,7 @@ void GeantPropagator::Initialize() {
   // Initialize the process(es)
   fProcess->Initialize();
 #if USE_VECPHYS == 1
-  fVectorPhysicsProcess->Initialize();
+  //fVectorPhysicsProcess->Initialize();
   //fVecPhysOrchestrator->Initialize();
 #endif
 

@@ -209,7 +209,8 @@ int main(int argc, char *argv[]) {
 #endif
 
 #if USE_VECPHYS==1
-    propagator->fVecPhysOrchestrator = new VecPhysOrchestrator(12, propagator->fEmin, n_threads ); //12 is Compton, here for now
+    //12 is Compton, here for now
+    propagator->fVecPhysOrchestrator = new VecPhysOrchestrator(12, propagator->fEmin, n_threads );
     //propagator->fVectorPhysicsProcess = new GVectorPhysicsProcess(propagator->fEmin, n_threads);
 #endif 
   propagator->fPrimaryGenerator = new GunGenerator(propagator->fNaverage, 11, propagator->fEmax, -8, 0, 0, 1, 0, 0);

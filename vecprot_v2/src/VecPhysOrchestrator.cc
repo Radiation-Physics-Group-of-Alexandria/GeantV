@@ -67,13 +67,13 @@ void VecPhysOrchestrator::CheckEnergyConservation(GeantTrack_v &gTrackV, int num
     for (int i = 0; i < numtracks; ++i)//all the tracks
     {
         for (int j=0; j<primariesCompton; ++j)
-            if(primaries.parentId[j]==i) // i: tot track, j itera solo sui Compton -> j-esima track di fPrimaries corrisponde a i-esima track originaria
+            if(primaries.parentId[j]==i) // i: tot track, j iterate only on Compton -> j-th track of fPrimaries corresponds to i-th original track
             {
                 //std::cout<<"CheckEnergyConservation: "<<j<<"-th Compton track\n";
                 check=(gTrackV.fEV[i]-gTrackV.fMassV[i])*1000;
                 check-=primaries.E[j];
                 //check=check-secondaries.E[secondaries.parentId[j]];
-                check=check-secondaries.E[j]; //nel caso del Compton è una corrispondenza 1-1 (only valid for COMPTON)
+                check=check-secondaries.E[j]; //In case of Compton is a 1-1 correspondance (only valid for COMPTON)
 
                 //std::cout<<"CheckEnergyConservation: gTrackV.fEV["<<i<<"]-gTrackV.fMassV["<<i<<"]: "<< (gTrackV.fEV[i]-gTrackV.fMassV[i])*1000<< " \nprimaries.E["<<j<<"]: "<<primaries.E[j]<<"\nsecondaries.E["<<j<<"]: "<<secondaries.E[j]<<"\n";
                 if(check!=0)
@@ -97,7 +97,7 @@ void VecPhysOrchestrator::CheckDirectionUnitVector(GeantTrack_v &gTrackV, GUTrac
     for (int i = 0; i < numtracks; ++i)//all the GeantV tracks
     {
         for (int j=0; j<primariesCompton; ++j)
-            if(primaries.parentId[j]==i) // i: tot track, j itera solo sui Compton -> j-esima track di fPrimaries corrisponde a i-esima track originaria
+            if(primaries.parentId[j]==i) // i: tot track, j iterate only on Compton -> j-th track of fPrimaries corresponds to i-th original track
             {
                 checkX=gTrackV.fXdirV[i]*gTrackV.fXdirV[i];
                 checkY=gTrackV.fYdirV[i]*gTrackV.fYdirV[i];
@@ -286,7 +286,7 @@ void VecPhysOrchestrator::FilterPrimaryTracks(GeantTrack_v &gTrackV, int numtrac
         //std::cout<<"DEBUG ALL: Mass - gTrackV.fMassV["<<i<<"]: "<<gTrackV.fMassV[i]<<" and  Process - gTrackV.fProcessV["<<i<<"]: "<<gTrackV.fProcessV[i]<<"\n";
         if (gTrackV.fProcessV[i] == fProcessId)
         {
-            std::cout<<"CHECK MOMENTUM1 : gTrackV.fEV["<<i<<"]: "<<gTrackV.fEV[i]<<", gTrackV.fPV["<<i<<"]:"<< gTrackV.fPV[i]<<"\n";
+            //std::cout<<"CHECK MOMENTUM1 : gTrackV.fEV["<<i<<"]: "<<gTrackV.fEV[i]<<", gTrackV.fPV["<<i<<"]:"<< gTrackV.fPV[i]<<"\n";
             ++numComptonTracks;
         }
     }
@@ -423,7 +423,7 @@ void VecPhysOrchestrator::DebugPrimaryAndSecondaryTracks(){
     for(int i=0; i<numSecondaryTracks; ++i)
     std::cout<<"fSecondaryTracks->E["<<i<< "]: "<<fSecondaryTracks->E[i]<<"\n";
 
-    std::cout<<"***DebugPrimaryAndSecondaryTracks: END.\n";
+    //std::cout<<"***DebugPrimaryAndSecondaryTracks: END.\n";
 
 }
 
@@ -526,7 +526,9 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
     
     int numPrimaryTracks = fPrimaryTracks->numTracks; // number of primary tracks has been used
     //std::cout<<"WriteBackTracks: start, fPrimaryTracks: "<< numPrimaryTracks<<"\n";
-    for (int ip = 0; ip < numPrimaryTracks; ++ip) {
+    for (int ip = 0; ip < numPrimaryTracks; ++ip)
+    {
+        
         int indxP = fParentTrackIndices[ip]; // primary track indices in GeantTrack_v
         
         // set the selected process value for each Compton tracks in GeantTrack_v to -1
@@ -537,9 +539,9 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
         //double kinE = (fPrimaryTracks->E[ip]) - gTrackV.fMassV[indxP]; // should be [GeV]
         double kinE = fPrimaryTracks->E[ip]; //This is the kinEn
         
-        if(kinE<0)
-        {
-           std::cout<<"fPrimaryTracks->E[ip]: "<<fPrimaryTracks->E[ip]<<" e gTrackV.fMassV[indxP]: "<<gTrackV.fMassV[indxP]<<"\n";
+        if(kinE<0){
+           
+            std::cout<<"fPrimaryTracks->E[ip]: "<<fPrimaryTracks->E[ip]<<" e gTrackV.fMassV[indxP]: "<<gTrackV.fMassV[indxP]<<"\n";
             std::cout<<"kinE for the primary is negative, ERROR. Exiting, bye bye.\n";
             exit(0);
         }
@@ -574,10 +576,11 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
             // newYdir' = sinTheta1*sinPhi1
             // newZdir' = cosTheta1
             
-        } else {                                                      // apply tracking cut:
-            gTrackV.fEdepV[indxP] += kinE;                            // put ekin to energy depo
-            gTrackV.fStatusV[indxP] = kKilled;                        // kill the primary track
-            gTrackV.fEV[indxP] = gTrackV.fMassV[indxP];               //added
+        }
+        else {                                                      // apply tracking cut:
+            gTrackV.fEdepV[indxP] += kinE;                          // put ekin to energy depo
+            gTrackV.fStatusV[indxP] = kKilled;                      // kill the primary track
+            gTrackV.fEV[indxP] = gTrackV.fMassV[indxP];             //added
             // should make sure that at-rest process is invoked if needed (not no ofc.)
         }
     }
@@ -605,13 +608,12 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
     int numKilledTracks = 0;
     for (int isec = 0; isec < numSecondaries; ++isec) {
         
-        //std::cout<<"primary track indices in GeantTrack_v\n";
         //std::cout<<"isec: "<<isec<<"\n";
         //std::cout<<" fSecondaryTracks->parentId[isec]: "<<fSecondaryTracks->parentId[isec]<<"\n";
         //std::cout<<" fParentTrackIndices[fSecondaryTracks->parentId[isec]]: "<<fParentTrackIndices[fSecondaryTracks->parentId[isec]]<<"\n";
         // primary track indices in GeantTrack_v
         //int indxP = fParentTrackIndices[fSecondaryTracks->parentId[isec]]; // ---> TO be VERIFIED!!!!
-        int indxP = fParentTrackIndices[isec]; //vale solo per il Compton
+        int indxP = fParentTrackIndices[isec]; //valid only for Compton
         
         // check the kinetic energy of the secondary
         //double kinE = fSecondaryTracks->E[isec] - secMass; // should be [GeV]
@@ -632,8 +634,8 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
             GeantTrack &gTrack = propagator->GetTempTrack(tid);
             //std::cout<<"WriteBackTracks:0\n";
             // set some general properties: initial values or same as parent
-            SetGeantTrack(gTrack, gTrackV, indxP); //Qui copio i dati del parent nella nuova traccia
-        
+            SetGeantTrack(gTrack, gTrackV, indxP); //Here I copy data from the parent to the new track
+            
             /*
              track.fEvent = tracks.fEventV[t];                                  YES
              track.fEvslot = tracks.fEvslotV[t];                                YES
@@ -669,7 +671,6 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
              track.fPending = kFALSE;                       YES
              *track.fPath = *tracks.fPathV[t];              YES
              *track.fNextpath = *tracks.fPathV[t];          YES*/
-            
             
             // set additional members of gTrack
             double secTotalP = std::sqrt(kinE * (kinE + 2. * secMass)); // secondary total P [GeV]
@@ -724,18 +725,16 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, int tid) {
             // do not insert this track into GeantTrack_v
             gTrackV.fEdepV[indxP] += kinE; // put ekin to energy depo
             numKilledTracks++;
-            
             // should make sure that at-rest process is invoked if needed (not no ofc.)
         }
     }
-    //std::cout<<"CheckDirectionUnitVector dentro WriteTracks\n";
+    //std::cout<<"CheckDirectionUnitVector inside WriteTracks\n";
     CheckDirectionUnitVector(gTrackV, *fPrimaryTracks, *fSecondaryTracks);
     //std::cout<<"Put fSecondaryTracks->numTracks to zero.\n";
     fSecondaryTracks->numTracks=0;
-    //std::cout<<"WriteBackTracks: numPrimaryTracks: "<<numPrimaryTracks<<", numKilledTracks: "<<numKilledTracks<<", inserite n. "<<numInsertedTracks<<" tracks. End\n";
+    //std::cout<<"WriteBackTracks: numPrimaryTracks: "<<numPrimaryTracks<<", numKilledTracks: "<<numKilledTracks<<", inserted n. "<<numInsertedTracks<<" tracks. End\n";
     //std::cout<<"*** ApplyPostStepProcess. END ***\n";
     
-   
     return numInsertedTracks;
 }
 
@@ -779,7 +778,6 @@ void VecPhysOrchestrator::SetGeantTrack(GeantTrack &left, GeantTrack_v &right, i
      *track.fNextpath = *tracks.fPathV[t];          YES
      
      */
-    
     left.fEvent = right.fEventV[ip];   // same as parent
     left.fEvslot = right.fEvslotV[ip]; // same as parent
     //    left.fPDG      = secPDG;                              // will be set
@@ -812,6 +810,8 @@ void VecPhysOrchestrator::SetGeantTrack(GeantTrack &left, GeantTrack_v &right, i
     left.fBoundary = right.fBoundaryV[ip]; //added mb!
     //  left.fFrombdr = right.fFrombdrV[ip]; // init to (same as parent)
     left.fPending = kFALSE;              // init
-    *left.fPath = *right.fPathV[ip];     // init
-    *left.fNextpath = *right.fPathV[ip]; // init
+    if(right.fPathV[ip]!=NULL){ //NB: Check why sometimes this is NULL pointer. Need to understand how to properly initialize it.
+        //*left.fPath = *right.fPathV[ip];     // init
+        //*left.fNextpath = *right.fPathV[ip]; // init
+    }
 }
