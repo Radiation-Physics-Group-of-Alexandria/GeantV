@@ -599,8 +599,8 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(double e
   double momentum = math::Sqrt(inProjectile.px*inProjectile.px+inProjectile.py*inProjectile.py+inProjectile.pz*inProjectile.pz);
   double invMomentum = 1.0 / momentum;
 
-  if (momentum != energyIn)
-   std::cout<<"Momentum= "<<momentum<<" and EnergyIn= "<<energyIn<<"\n";
+  //if (abs(momentum-energyIn)<)
+  // std::cout<<"Momentum= "<<momentum<<" and EnergyIn= "<<energyIn<<"\n";
   
   double xhat = inProjectile.px * invMomentum; //oldXdir
   double yhat = inProjectile.py * invMomentum; //oldYdir
@@ -646,8 +646,8 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(typename
   // this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
   Double_v momentum = math::Sqrt(px*px+py*py+pz*pz);
 
-  if(momentum[0]!=energyIn[0])
-    std::cout<<"Momentum= "<<momentum[0]<<" and EnergyIn= "<<energyIn[0]<<"\n";
+  //if(momentum[0]!=energyIn[0])
+    //std::cout<<"Momentum= "<<momentum[0]<<" and EnergyIn= "<<energyIn[0]<<"\n";
 
   Double_v invMomentum = 1.0 / momentum;
   Double_v xhat = px * invMomentum;
@@ -700,7 +700,7 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState_Scalar(t
   // need to rotate the angle with respect to the line of flight
   // this is valid not only for gamma but also for other particles - necessary since sometimes the energyIn!=momentum --> need to verify why
   Double_v momentum = math::Sqrt(primary.px[ibase]*primary.px[ibase]+primary.py[ibase]*primary.py[ibase]+primary.pz[ibase]*primary.pz[ibase]);
-  if(momentum!=energyIn) std::cout<<"Momentum= "<<momentum<<" and EnergyIn= "<<energyIn<<"\n";
+  //if(momentum!=energyIn) std::cout<<"Momentum= "<<momentum<<" and EnergyIn= "<<energyIn<<"\n";
 
   Double_v invMomentum = 1.0/momentum;
   Double_v xhat = primary.px[ibase]*invMomentum;
