@@ -10,14 +10,14 @@
 #include "GeantTrack.h"
 
 #include "ComptonKleinNishina.h"
+#include "GeantTaskData.h"
 
-
-//class GUTrack_v;
 class VecPhysOrchestrator{
 public:
     
     using GeantTrack = Geant::GeantTrack;
     using GeantTrack_v = Geant::GeantTrack_v;
+    using GeantTaskData = Geant::GeantTaskData;
     
     VecPhysOrchestrator();
     VecPhysOrchestrator(int processId){fProcessId=processId;};
@@ -32,9 +32,9 @@ public:
     void PerformInteraction();
     void FilterPrimaryTracks(GeantTrack_v &gTrackV, int numtracks);
     void FilterTracksForTabPhys(GeantTrack_v &gTrackV, GeantTrack_v &gTabulatedPhysicsTracks, int numtracksIn, int &numtracksOut, int  *parentTrackIndices);
-    int  WriteBackTracks(GeantTrack_v& gTrackV, int tid);
+    int  WriteBackTracks(GeantTrack_v& gTrackV,  GeantTaskData* tid);
     void SetGeantTrack(GeantTrack &left, GeantTrack_v &right, int ip);
-    int ApplyPostStepProcess(GeantTrack_v &gTrackV, int numtracks, int tid);
+    int ApplyPostStepProcess(GeantTrack_v &gTrackV, int numtracks, GeantTaskData* tid);
     void ConvertEnergiesToVecPhys();
     void ConvertEnergiesFromVecPhys();
     void DebugTracksEnergies(GeantTrack_v &gTrackV, int numtracks, GUTrack_v &primaries, bool checkIdentity);
