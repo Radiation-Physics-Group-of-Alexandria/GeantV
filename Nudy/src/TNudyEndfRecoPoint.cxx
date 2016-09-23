@@ -43,8 +43,8 @@ void TNudyEndfRecoPoint::ReadFile3(TNudyEndfFile *file)
   TIter secIter(file->GetSections());
   TNudyEndfSec *sec;
   while ((sec = (TNudyEndfSec *)secIter.Next())) {
-    // std::cout <<"MT  "<<sec->GetMT() <<std::endl;
     int MT = sec->GetMT();
+//      std::cout <<"MT  "<<sec->GetMT() <<std::endl;
     if (MT != 1 && MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 &&
         MT < 250) {
       MtNumbers.push_back(MT);
@@ -61,15 +61,26 @@ void TNudyEndfRecoPoint::ReadFile3(TNudyEndfFile *file)
         eLinearFile3.push_back(tab1->GetX(crs));
         xLinearFile3.push_back(tab1->GetY(crs));
       }
-      if (MT==1) {
-         energyMts.insert(std::end(energyMts),std::begin(eLinearFile3),std::end(eLinearFile3));
-         sigmaMts.insert(std::end(sigmaMts),std::begin(xLinearFile3),std::end(xLinearFile3));
-      } else {
-         sigmaOfMts.push_back (eLinearFile3);
-         sigmaOfMts.push_back (xLinearFile3);
-      }
+      eneTemp.insert(std::end(eneTemp),std::begin(eLinearFile3),std::end(eLinearFile3));
+      eneTemp.insert(std::end(eneTemp),std::begin(xLinearFile3),std::end(xLinearFile3));
       eLinearFile3.clear();
       xLinearFile3.clear();
+      sigmaOfMts.push_back (eneTemp);
+      eneTemp.clear();
+    } if (MT==1){
+      TIter recIter(sec->GetRecords());
+      TNudyEndfCont *header = (TNudyEndfCont *)recIter.Next();
+       NR = header->GetN1();
+      NP = header->GetN2();
+      TNudyEndfTab1 *tab1 = (TNudyEndfTab1 *)(sec->GetRecords()->At(0));
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab1->GetX(crs));
+        xLinearFile3.push_back(tab1->GetY(crs));
+      }
+      energyMts.insert(std::end(energyMts),std::begin(eLinearFile3),std::end(eLinearFile3));
+      sigmaMts.insert(std::end(sigmaMts),std::begin(xLinearFile3),std::end(xLinearFile3));
+      eLinearFile3.clear();
+      xLinearFile3.clear();     
     }
   }
   MtValues.push_back(MtNumbers);
@@ -140,16 +151,16 @@ void TNudyEndfRecoPoint::GetData(int ielemId, const char *rENDF)
           TIter secIter(file->GetSections());
           TNudyEndfSec *sec;
           while ((sec = (TNudyEndfSec *)secIter.Next())) {
-    //    std::cout <<"MT  "<<sec->GetMT() <<std::endl;
-             int MT = sec->GetMT();
-             if (MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 && MT < 250) {
-                if (MT == 1) {
-                   eneUni.push_back (energyMts);
-                   sigUniT.push_back (sigmaMts);
-                   continue;
-                }
-                fixupTotal(energyMts);
-             }
+	    int MT = sec->GetMT();
+	    if (MT == 1) {
+		eneUni.push_back (energyMts);
+		sigUniT.push_back (sigmaMts);
+	      continue;
+	    }
+              if (MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 && MT < 250) {
+               fixupTotal(energyMts);
+	       break;
+              }
           }
                  energyMts.clear();
                  sigmaMts.clear();
@@ -177,7 +188,6 @@ void TNudyEndfRecoPoint::GetData(int ielemId, const char *rENDF)
 //------------------------------------------------------------------------------------------------------
 void TNudyEndfRecoPoint::fixupTotal(std::vector<double> &x1)
 {
-
   for (unsigned long i = 0; i < sigmaOfMts.size(); i++) {
     int size = sigmaOfMts[i].size()/ 2;
     for (unsigned long k = 0; k < x1.size(); k++) {
@@ -241,6 +251,7 @@ double TNudyEndfRecoPoint::GetSigmaTotal(int ielemId, double energyK)
 //------------------------------------------------------------------------------------------------------
 double TNudyEndfRecoPoint::GetSigmaPartial(int ielemId, int i, double energyK)
 {
+  std::cout<< eneUni[ielemId].size() <<std::endl;
   int min = 0;
   int max = eneUni[ielemId].size() - 1;
   int mid = 0;
