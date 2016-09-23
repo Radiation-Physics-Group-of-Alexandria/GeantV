@@ -552,13 +552,15 @@ void *WorkloadManager::TransportTracks() {
 //
 #ifdef USE_VECPHYS
         //propagator->fVectorPhysicsProcess->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
-          propagator->fVecPhysOrchestrator->ApplyPostStepProcess(output, ntotnext,  td->fTid);
+        //to check: Is mat necessary?
+        ntotnext= propagator->fVecPhysOrchestrator->ApplyPostStepProcess(output, nphys, td);
 #endif
+   
         // second: sample final states (based on the inf. regarding sampled
         //         target and type of interaction above), insert them into
         //         the track vector, update primary tracks;
         propagator->Process()->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
-
+       
         if (0 /*ntotnext*/) {
           Geant::Printf("","============= Basket.");
           output.PrintTracks();
