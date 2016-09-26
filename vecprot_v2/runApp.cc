@@ -16,7 +16,10 @@
 #include "WorkloadManager.h"
 #include "GeantPropagator.h"
 #include "ExN03Application.h"
+
+#ifdef USE_VECPHYS
 #include "VecPhysOrchestrator.h"
+#endif
 
 #ifdef GEANT_TBB
 #include "TaskMgrTBB.h"
@@ -246,7 +249,9 @@ int main(int argc, char *argv[]) {
   propagator->fUseAppMonitoring = false;
 
   propagator->PropagatorGeom(exn03_geometry_filename.c_str(), n_threads, monitor);
-  std::cout<<"The end, "<<propagator->fVecPhysOrchestrator->fComptonTotTracks<<" tracks with Compton\n";
+#if USE_VECPHYS==1
+  std::cout<<"\nEnd of runApp, "<<propagator->fVecPhysOrchestrator->fComptonTotTracks<<" tracks with Compton\n";
+#endif
   elapsedTime = timer.Stop();
   std::cout<<"Elapsed Time: "<<elapsedTime<<"\n";
   return 0;

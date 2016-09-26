@@ -102,7 +102,7 @@ GeantPropagator::GeantPropagator()
       fEpsilonRK(0.0003), fUsePhysics(true), fUseRungeKutta(false), fUseDebug(false), fUseGraphics(false),
       fUseStdScoring(false), fTransportOngoing(false), fSingleTrack(false), fFillTree(false),
       fTreeSizeWriteThreshold(100000), fConcurrentWrite(true), fUseMonitoring(false), fUseAppMonitoring(false),
-      fTracksLock(), fWMgr(0), fApplication(0), fStdApplication(0), fTaskMgr(0), fTimer(0), fProcess(0), fVectorPhysicsProcess(0),
+      fTracksLock(), fWMgr(0), fApplication(0), fStdApplication(0), fTaskMgr(0), fTimer(0), fProcess(0),
       fStoredTracks(0), fPrimaryGenerator(0), fTruthMgr(0), fNtracks(0), fEvents(0), fThreadData(0) {
   // Constructor
   fgInstance = this;
