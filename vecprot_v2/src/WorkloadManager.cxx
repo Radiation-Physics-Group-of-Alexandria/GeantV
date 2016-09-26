@@ -45,7 +45,9 @@
 #endif
 #include "GeantFactoryStore.h"
 
+#ifdef USE_VECPHYS
 #include "VecPhysOrchestrator.h"
+#endif
 
 using namespace Geant;
 using std::max;

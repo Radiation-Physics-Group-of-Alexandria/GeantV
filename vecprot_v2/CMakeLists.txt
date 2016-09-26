@@ -40,8 +40,6 @@ set(sources
    src/TransportManager.cxx
    src/LocalityManager.cxx
    src/MCTruthMgr.cxx
-   src/VecPhysOrchestrator.cc
-   src/VecPhysCompton.cc
 )
 
 set(headers
@@ -68,9 +66,12 @@ set(headers
    inc/LocalityManager.h
    inc/MCTruthMgr.h
    inc/cuckoohash_map.hh
-   inc/VecPhysOrchestrator.h
-   inc/VecPhysCompton.h
-)   
+)
+
+if(USE_VECPHYS)
+    set(sources ${sources} src/VecPhysOrchestrator.cc src/VecPhysCompton.cc)
+    set(headers ${headers} inc/VecPhysOrchestrator.h inc/VecPhysCompton.h)
+endif()
 
 if(USE_ROOT AND (NOT USE_VECGEOM_NAVIGATOR))
    set(sources ${sources} src/ScalarNavInterfaceTGeo.cxx)

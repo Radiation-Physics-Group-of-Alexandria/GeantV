@@ -2,7 +2,6 @@
  Author: M. Bandieramonte
  */
 #include "VecPhysOrchestrator.h"
-
 #include "GeantTaskData.h"
 #include "GeantVApplication.h"
 #include "WorkloadManager.h"
@@ -10,14 +9,11 @@
 #include "GeantTrack.h"
 #include "Geant/Error.h"
 #include "GeantTaskData.h"
-
-//mb:start
 #include "base/Global.h"
 #include "Geant/Typedefs.h"
 #include "GeantFwd.h"
 #include "Geant/Config.h"
 #include "TPartIndex.h"
-//mb:end
 
 #ifdef USE_VECGEOM_NAVIGATOR
 #include "navigation/NavigationState.h"
@@ -782,21 +778,17 @@ void VecPhysOrchestrator::SetGeantTrack(GeantTrack &left, GeantTrack_v &right, i
     //    left.fZdir     = pz*inv_Ptot;
     //    left.fP        = secPtot;                             // will be set
     //    left.fE        = secEtot;                             // will be set
-    left.fTime = right.fTimeV[ip]; // mb: global time
-    left.fEdep = 0.;                     // init
-    left.fPstep = 0.;                    // init
-    left.fStep = 0.;                     // init
-    left.fSnext = 0.;                    // init
-    left.fSafety = right.fSafetyV[ip];   // init to (same as parent)
-    
-    left.fBoundary = right.fBoundaryV[ip]; //added mb!
+    left.fTime = right.fTimeV[ip];         // global time
+    left.fEdep = 0.;                       // init
+    left.fPstep = 0.;                      // init
+    left.fStep = 0.;                       // init
+    left.fSnext = 0.;                      // init
+    left.fSafety = right.fSafetyV[ip];     // same as parent
+    left.fBoundary = right.fBoundaryV[ip]; // same as parent
     //  left.fFrombdr = right.fFrombdrV[ip]; // init to (same as parent)
-    left.fPending = kFALSE;              // init
-    //if(right.fPathV[ip]!=NULL){ //NB: Check why sometimes this is NULL pointer. Need to understand how to properly initialize it.
-    //std::cout<<"here right.fPathV["<<ip<<"]: "<<right.fPathV[ip]<<"\n";
-    //if(right.fPathV[ip]!=NULL) std::cout<<"here right.fGVcode["<<ip<<"]: "<<right.fGVcodeV[ip]<<"\n";
-    *left.fPath= *right.fPathV[ip];     // init
-    //std::cout<<"here2.\n";
-    *left.fNextpath = *right.fPathV[ip]; // init
-    //}
+    left.fPending = kFALSE;                // init
+    left.fMother = right.fParticleV[ip];   // added
+    *left.fPath= *right.fPathV[ip];        // init
+    *left.fNextpath = *right.fPathV[ip];   // init
+
 }
