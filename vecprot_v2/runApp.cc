@@ -22,6 +22,9 @@
 #include "TaskMgrTBB.h"
 #endif
 
+#include "base/Stopwatch.h"
+using vecgeom::Stopwatch;
+
 static int n_events = 50;
 static int n_buffered = 10;
 static int n_threads = 1;
@@ -56,6 +59,11 @@ void help() {
 }
 
 int main(int argc, char *argv[]) {
+    
+  static Stopwatch timer;
+  Real_t elapsedTime = 0.0;
+  timer.Start();
+  
   std::cout << "Avoid ctest truncation of output: CTEST_FULL_OUTPUT" << std::endl;
   //std::string events_filename("minbias_14TeV.root");
   std::string exn03_geometry_filename("ExN03.root");
@@ -239,6 +247,8 @@ int main(int argc, char *argv[]) {
 
   propagator->PropagatorGeom(exn03_geometry_filename.c_str(), n_threads, monitor);
   std::cout<<"The end, "<<propagator->fVecPhysOrchestrator->fComptonTotTracks<<" tracks with Compton\n";
+  elapsedTime = timer.Stop();
+  std::cout<<"Elapsed Time: "<<elapsedTime<<"\n";
   return 0;
 }
 #endif

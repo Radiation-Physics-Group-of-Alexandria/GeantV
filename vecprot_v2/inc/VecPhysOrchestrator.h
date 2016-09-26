@@ -34,7 +34,7 @@ public:
     void FilterTracksForTabPhys(GeantTrack_v &gTrackV, GeantTrack_v &gTabulatedPhysicsTracks, int numtracksIn, int &numtracksOut, int  *parentTrackIndices);
     int  WriteBackTracks(GeantTrack_v& gTrackV,  GeantTaskData* tid);
     void SetGeantTrack(GeantTrack &left, GeantTrack_v &right, int ip);
-    int ApplyPostStepProcess(GeantTrack_v &gTrackV, int numtracks, GeantTaskData* tid);
+    int ApplyPostStepProcess(Material_t *mat,GeantTrack_v &gTrackV, int numtracks, GeantTaskData* tid);
     void ConvertEnergiesToVecPhys();
     void ConvertEnergiesFromVecPhys();
     void DebugTracksEnergies(GeantTrack_v &gTrackV, int numtracks, GUTrack_v &primaries, bool checkIdentity);

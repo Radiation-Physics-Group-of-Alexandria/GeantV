@@ -553,7 +553,7 @@ void *WorkloadManager::TransportTracks() {
 #ifdef USE_VECPHYS
         //propagator->fVectorPhysicsProcess->PostStepFinalStateSampling(mat, nphys, output, ntotnext, td);
         //to check: Is mat necessary?
-        ntotnext= propagator->fVecPhysOrchestrator->ApplyPostStepProcess(output, nphys, td);
+        ntotnext= propagator->fVecPhysOrchestrator->ApplyPostStepProcess(mat, output, nphys, td);
 #endif
    
         // second: sample final states (based on the inf. regarding sampled
