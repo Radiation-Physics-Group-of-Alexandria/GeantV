@@ -139,8 +139,8 @@ VECCORE_ATT_HOST EmModelBase<EmModel>::EmModelBase(Random_t *states, int tid)
     : fRandomState(states), fThreadId(tid), fAtomicDependentModel(false), fLowEnergyLimit(0.1 * keV),
       fHighEnergyLimit(1.0 * TeV), fSampleType(kAlias), fAliasSampler(0)
 {
-    std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<"\n";
-    std::cout<<"fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
+    //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<"\n";
+    //std::cout<<"NO NORMALITY! "<<fHighEnergyLimit<<"\n";
 }
 
 template <class EmModel>
@@ -272,10 +272,10 @@ void EmModelBase<EmModel>::Interact(GUTrack_v &inProjectile, const int *targetEl
     if(inProjectile.E[0]         < fLowEnergyLimit ||
        inProjectile.E[nTracks-1] > fHighEnergyLimit)
     {
-        std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
-        if(inProjectile.E[0] < fLowEnergyLimit) std::cout<<" Low Energy: "<< inProjectile.E[0]<<"\n";
-        if(inProjectile.E[nTracks-1] > fHighEnergyLimit) std::cout<<" High energy: "<< inProjectile.E[nTracks-1]<<"\n";
-        std::cout<<" EmModelBase<EmModel>::Interact ERROR, exiting. bye bye.\n";
+        //std::cout<<"fLowEnergyLimit: "<<fLowEnergyLimit<<" and fHighEnergyLimit: "<<fHighEnergyLimit<<"\n";
+        //if(inProjectile.E[0] < fLowEnergyLimit) std::cout<<" Low Energy: "<< inProjectile.E[0]<<"\n";
+        //if(inProjectile.E[nTracks-1] > fHighEnergyLimit) std::cout<<" High energy: "<< inProjectile.E[nTracks-1]<<"\n";
+        //std::cout<<" EmModelBase<EmModel>::Interact ERROR, exiting. bye bye.\n";
         exit(0);
     }
     

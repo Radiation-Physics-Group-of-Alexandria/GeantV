@@ -247,12 +247,12 @@ void VecPhysOrchestrator::DebugTracksEnergies(GeantTrack_v &gTrackV, int numtrac
 }
 
 //------------------------------------------------------------------------------
-int VecPhysOrchestrator::ApplyPostStepProcess(GeantTrack_v &gTrackV, int numtracks, GeantTaskData *tid) {
+int VecPhysOrchestrator::ApplyPostStepProcess(Material_t *mat, GeantTrack_v &gTrackV, int numtracks, GeantTaskData *tid) {
     
     //update the fPrimaryTracks copying data of the tracks undergoing Compton and store the index that
     //the tracks had in the original gTrackV in fParentTrackIndices
     FilterPrimaryTracks(gTrackV, numtracks);
-    CheckDirectionUnitVector(gTrackV, *fPrimaryTracks, *fSecondaryTracks);
+    //CheckDirectionUnitVector(gTrackV, *fPrimaryTracks, *fSecondaryTracks);
     
     // if there is no track with Compton -> return
     if (fPrimaryTracks->numTracks == 0){
@@ -264,7 +264,7 @@ int VecPhysOrchestrator::ApplyPostStepProcess(GeantTrack_v &gTrackV, int numtrac
     ConvertEnergiesToVecPhys();
     //call KleinNishina Compton
     PerformInteraction();
-    CheckEnergyConservation(gTrackV, numtracks, *fPrimaryTracks, *fSecondaryTracks);
+    //CheckEnergyConservation(gTrackV, numtracks, *fPrimaryTracks, *fSecondaryTracks);
     //[MeV]->[GeV]
     ConvertEnergiesFromVecPhys();
     return WriteBackTracks(gTrackV, tid);
@@ -299,7 +299,7 @@ void VecPhysOrchestrator::FilterPrimaryTracks(GeantTrack_v &gTrackV, int numtrac
     // check if we have enough space: if not make sure that we have
     if (numComptonTracks > fPrimaryTracks->capacity)
     {
-        std::cout<<"Need to allocate more space.\n";
+        //std::cout<<"Need to allocate more space.\n";
         Deallocator();
         Allocator(numComptonTracks);
     }
@@ -318,11 +318,12 @@ void VecPhysOrchestrator::FilterPrimaryTracks(GeantTrack_v &gTrackV, int numtrac
             fPrimaryTracks->py[j] = momentum * gTrackV.fYdirV[i];
             fPrimaryTracks->pz[j] = momentum * gTrackV.fZdirV[i];
             
-            double checkNormality=gTrackV.fXdirV[i]*gTrackV.fXdirV[i]+gTrackV.fYdirV[i]*gTrackV.fYdirV[i]+gTrackV.fZdirV[i]*gTrackV.fZdirV[i];
-            if(fabs(1.-checkNormality)>1.e-14)std::cout<<"NO NORMALITY! "<<checkNormality<<"\n";
+            //commented out for the moment
+            //double checkNormality=gTrackV.fXdirV[i]*gTrackV.fXdirV[i]+gTrackV.fYdirV[i]*gTrackV.fYdirV[i]+gTrackV.fZdirV[i]*gTrackV.fZdirV[i];
+            //if(fabs(1.-checkNormality)>1.e-14)std::cout<<"NO NORMALITY! "<<checkNormality<<"\n";
             
             fPrimaryTracks->E[j] = gTrackV.fEV[i] - gTrackV.fMassV[i] ; // Kinetic energy (NB: RestMass for gamma=0)
-            if(gTrackV.fMassV[i]!=0) {std::cout<<"Error! Rest mass for gamma not equals to zero. Exiting.\n"; exit(0);}
+            //if(gTrackV.fMassV[i]!=0) {std::cout<<"Error! Rest mass for gamma not equals to zero. Exiting.\n"; exit(0);}
             
             //std::cout<<"DEBUG ONLY COMPTON: gTrackV.fMassV["<<i<<"]: "<<gTrackV.fMassV[i]<<" and  gTrackV.fProcessV["<<i<<"]: "<<gTrackV.fProcessV[i]<<", track: "<<gTrackV.fParticleV[i]<<" with fPrimaryTracks->E["<<j<<"]: "<<fPrimaryTracks->E[j]<< " and gTrackV.fEV["<<i<<"]: "<<gTrackV.fEV[i]<<" \n";
             
@@ -525,12 +526,12 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, GeantTaskData *t
         //double kinE = (fPrimaryTracks->E[ip]) - gTrackV.fMassV[indxP]; // should be [GeV]
         double kinE = fPrimaryTracks->E[ip]; //This is the kinEn
         
-        if(kinE<0){
+        /*if(kinE<0){
            
             std::cout<<"fPrimaryTracks->E[ip]: "<<fPrimaryTracks->E[ip]<<" e gTrackV.fMassV[indxP]: "<<gTrackV.fMassV[indxP]<<"\n";
             std::cout<<"kinE for the primary is negative, ERROR. Exiting.\n";
             exit(0);
-        }
+        }*/
         
         
         if (kinE > fEnergyLimit) {
@@ -605,13 +606,13 @@ int VecPhysOrchestrator::WriteBackTracks(GeantTrack_v &gTrackV, GeantTaskData *t
         //TotE= KinE+RestMass
         double kinE = fSecondaryTracks->E[isec];
         
-        if(kinE<0)
+        /*if(kinE<0)
         {
             std::cout<<"fSecondaryTracks->E[isec]: "<<fSecondaryTracks->E[isec]<<" [GeV]\nSecMass: "<<secMass<<" [GeV]\nfEnergyLimit: "<<fEnergyLimit<<"\n";
             std::cout<<"kinE for the secondary is negative, ERROR. Exiting.\n";
             std::cout<<"fSecondaryTracks->E["<<isec<<"]: "<<fSecondaryTracks->E[isec]<<" [GeV] \nfEnergyLimit: "<<fEnergyLimit<<"\n";
             exit(0);
-        }
+        }*/
         if (kinE > fEnergyLimit) {
             
             // above tracking cut -> insert into GeantTrack_v
