@@ -158,14 +158,16 @@ VECCORE_ATT_HOST_DEVICE void ComptonKleinNishina::InteractKernel(typename Backen
   Index_v<Double_v> irow;
   Index_v<Double_v> icol;
   Double_v fraction;
-
-  fAliasSampler->SampleLogBin<Backend>(energyIn, irow, icol, fraction);
+  
+  //retrieve irow and icol
+  fAliasSampler->SampleLogBin<Backend>(energyIn, irow, icol, fraction); //: fraction is not used!
 
   Double_v probNA;
   Index_v<Double_v> aliasInd;
 
   Index_v<Double_v> ncol(fAliasSampler->GetSamplesPerEntry());
   Index_v<Double_v> index = ncol * irow + icol;
+  //retrieve probNA and aliasInd
   fAliasSampler->GatherAlias<Backend>(index, probNA, aliasInd);
 
   Double_v mininumE = energyIn / (1 + 2.0 * energyIn * inv_electron_mass_c2);

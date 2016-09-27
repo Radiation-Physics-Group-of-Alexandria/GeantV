@@ -34,8 +34,9 @@ VECCORE_ATT_HOST void ComptonKleinNishina::BuildCrossSectionTablePerAtom(int /*Z
 VECCORE_ATT_HOST void ComptonKleinNishina::Initialization()
 {
   if (fSampleType == kAlias) {
-    fAliasSampler = new GUAliasSampler(fRandomState, fThreadId, fLowEnergyLimit, fHighEnergyLimit, 100, 200);
-    BuildAliasTable();
+    fAliasSampler = new GUAliasSampler(fRandomState, fThreadId, fLowEnergyLimit, fHighEnergyLimit, 100, 200); //why these values for the fInNumEntries and numEntriesSampled? this means that the grid of the alias table will be of 101*200 elements
+      fAliasSampler = new GUAliasSampler(fRandomState, fThreadId, fLowEnergyLimit, fHighEnergyLimit, 1, 5);
+      BuildAliasTable();
   }
 }
 

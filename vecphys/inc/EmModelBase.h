@@ -158,10 +158,10 @@ template <class EmModel>
 VECCORE_ATT_HOST void EmModelBase<EmModel>::BuildAliasTable(bool /*atomicDependentModel*/)
 {
   // size of the array for the alias table data
-  size_t sizeOfTable = (fAliasSampler->GetNumEntries() + 1) * fAliasSampler->GetSamplesPerEntry();
+  size_t sizeOfTable = (fAliasSampler->GetNumEntries() + 1) * fAliasSampler->GetSamplesPerEntry();//mb: why the +1 ?
   double *pdf = new double[sizeOfTable];
 
-  int z = -1;
+  int z = -1;          
   if (fAtomicDependentModel) {
     MaterialHandler *materialHander = MaterialHandler::Instance();
     int numberOfElements = materialHander->GetNumberOfElements();

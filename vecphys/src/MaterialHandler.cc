@@ -97,7 +97,7 @@ void MaterialHandler::PrepareTargetElements(int *targetElements, int ntracks, in
       targetElements[i] = fElementArray[0];
     }
   } else {
-    printf(" Illeagal - mode # = %d\n", elementMode);
+    printf(" Illegal - mode # = %d\n", elementMode);
     assert(0);
   }
 }

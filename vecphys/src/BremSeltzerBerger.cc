@@ -52,7 +52,7 @@ VECCORE_ATT_HOST void BremSeltzerBerger::Initialization()
     std::ifstream fin(sbDataFile);
     bool check = RetrieveSeltzerBergerData(fin, &fDataSB[iZ]);
     if (!check) {
-      printf("Failed To open eltzerBerger Data file for Z= %d\n", iZ + 1);
+      printf("Failed To open SeltzerBerger Data file for Z= %d\n", iZ + 1);
     }
   }
 

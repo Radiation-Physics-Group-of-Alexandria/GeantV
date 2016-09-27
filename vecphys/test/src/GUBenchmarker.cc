@@ -148,7 +148,8 @@ void GUBenchmarker::RunGeant4()
 #endif
 
   if (verbose)
-    std::cout << " Geant4 Run Output " << std::endl;
+    std::cout << "Geant4 Run" << std::endl;
+    
 
   int *targetElements = new int[fNtracks];
   GUTrack *itrack_aos = (GUTrack *)malloc(fNtracks * sizeof(GUTrack));
@@ -208,12 +209,11 @@ void GUBenchmarker::RunVector()
 #ifdef VECPHYS_ROOT
   GUHistogram *histogram = new GUHistogram("vector.root", fMaxP); // maxE = fMaxP
 #endif
-
   // output SOA tracks
-  GUTrackHandler *handler_out = new GUTrackHandler(fNtracks);
+  GUTrackHandler *handler_out = new GUTrackHandler(fNtracks); //: why do we need this variable?
   GUTrack_v otrack_soa = handler_out->GetSoATracks();
 
-  GUTrackHandler *handler_in = new GUTrackHandler(fNtracks);
+  GUTrackHandler *handler_in = new GUTrackHandler(fNtracks); //: why do we need this variable?
   GUTrack_v itrack_soa = handler_in->GetSoATracks();
 
   int *targetElements = new int[fNtracks];

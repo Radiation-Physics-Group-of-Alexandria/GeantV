@@ -362,8 +362,9 @@ endif()
 #
 if (GUBENCHMARK STREQUAL "Model")
   set(TEST_EXECUTABLES_BENCHMARK
-    test/GUModelBenchmark.cc
-    )
+      test/GUModelBenchmark.cc
+      test/AliasUnitTest.cc
+  )
 elseif (GUBENCHMARK STREQUAL "Process")
   set(TEST_EXECUTABLES_BENCHMARK
     test/ProcessBenchmark.cc
