@@ -72,11 +72,11 @@ void interactAlias(GUAliasTable* fAliasTable, TH1F *histo, int size, double lowE
     for(int i = 0; i < 1000000; i++){
         selectedBin=sampleBin(size);
         if(selectedBin>size || selectedBin<0) {std::cout<<"Error!\n"; return;}
-        std::cout<<"+++++ fAliasTable->fProbQ["<<selectedBin<<"]: "<<fAliasTable->fProbQ[selectedBin]<<"\n";
+        //std::cout<<"+++++ fAliasTable->fProbQ["<<selectedBin<<"]: "<<fAliasTable->fProbQ[selectedBin]<<"\n";
         
         //randomNumber=fRand(0,1);
         randomNumber=randomNew->Uniform(0, 1);
-        std::cout<<"rand(): "<<randomNumber<<"\n";
+        //std::cout<<"rand(): "<<randomNumber<<"\n";
         //randomHisto->Fill(randomNumber);
     
         takeNonAlias=(randomNumber <= fAliasTable->fProbQ[selectedBin]); //Non-alias probability, ir random<fProbQ, take the non-Alias
@@ -109,7 +109,7 @@ void interactAlias(GUAliasTable* fAliasTable, TH1F *histo, int size, double lowE
     int binmax = reconstructedPdf->GetMaximumBin();
     double x = reconstructedPdf->GetXaxis()->GetBinCenter(binmax);
     
-    std::cout<<"BinMax: "<<binmax<<" getBinCenter: "<<x<<"\n";
+    //std::cout<<"BinMax: "<<binmax<<" getBinCenter: "<<x<<"\n";
     
     histo->SetLineColor(kGreen);
     histo->Draw("same");
@@ -179,8 +179,9 @@ void testGaussian(){
     
     //*********** GAUSSIAN ***********//
     //gaussian
-    //auto *histo=new TH1F("h1", "histo from a gaussian", histo_bins, -3, 3); // size is 100 BIN+2 (underflow ad overflow bins = from 0 to 101)
-    //histo->FillRandom("gaus", histo_entries);
+    int histo_entries=1000000;
+    auto *histo=new TH1F("h1", "histo from a gaussian", histo_bins, -3, 3); // size is 100 BIN+2 (underflow ad overflow bins = from 0 to 101)
+    histo->FillRandom("gaus", histo_entries);
     
     //*********** POISSON 1 ***********//
     /*poisson
@@ -193,7 +194,7 @@ void testGaussian(){
     /*/
     
     //*********** POISSON 2 ***********//
-    TF1 pois("pois",poissonf,10,1,2); // x in [0;10], 2 parameters
+    /*TF1 pois("pois",poissonf,10,1,2); // x in [0;10], 2 parameters
     
     pois.SetParName(0,"Const");
     pois.SetParName(1,"#mu");
@@ -249,7 +250,7 @@ void testGaussian(){
         sumGaussianHistoScaled+=pdf[i];
     }
     
-    TCanvas *c1 = new TCanvas("c1","ciao",200,10,700,500);
+    TCanvas *c1 = new TCanvas("c1","histo",200,10,700,500);
     histo->Draw();
     c1->Update();
    
