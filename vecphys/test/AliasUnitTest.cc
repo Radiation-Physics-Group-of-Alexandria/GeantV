@@ -29,6 +29,7 @@ How to run:
 #include <sys/time.h>
 #include <TRandom3.h>
 #include <TMath.h>
+#include <TPaveText.h>
 
 typedef int Random_t;
 using namespace vecphys;
@@ -60,7 +61,6 @@ void interactAlias(GUAliasTable* fAliasTable, TH1F *histo, int size, double lowE
     //TH1F* randomHisto=new TH1F("randomHisto", "randomHisto", 100, -3, 3);
     
     int selectedBin;
-    double probNA;
     bool takeNonAlias=false;
     int sumAlias=0;
     double randomNumber=0.;
@@ -175,7 +175,6 @@ void testGaussian(){
     std::cout<<"\nAlias test with Gaussian: START.\n";
 
     //Create an histogram from a Gaussian distribution, with <histo_bins> bins + underflow and overflow, and fill with <histo_entries> entries
-    int histo_entries=10000000;
     int histo_bins=100; //n. bins of the histograms. (the total will be 100+2 in a ROOT histo)
     
     //*********** GAUSSIAN ***********//
@@ -217,8 +216,8 @@ void testGaussian(){
     histo->FillRandom("sqroot",histo_entries);
     //*/
     
-    double min=histo->GetMinimum();//min content of bins (i.e. 2916)
-    double max=histo->GetMaximum();//max content of bins (i.e. 240263)
+    //double min=histo->GetMinimum();//min content of bins (i.e. 2916)
+    //double max=histo->GetMaximum();//max content of bins (i.e. 240263)
     
     double lowEdge=histo->GetXaxis()->GetBinLowEdge(1);         //low edge on the x-axis (i.e. -3)
     double upEdge=histo->GetXaxis()->GetBinUpEdge(histo_bins);  //up edge on the x-axis (i.e. 3)
