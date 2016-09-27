@@ -115,7 +115,7 @@ GeantPropagator::~GeantPropagator() {
   delete fProcess;
   BitSet::ReleaseInstance(fDoneEvents);
 #if USE_VECPHYS == 1
-  delete fVectorPhysicsProcess;
+  //delete fVectorPhysicsProcess;
 #endif
 
   if (fEvents) {

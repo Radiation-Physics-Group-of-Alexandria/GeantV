@@ -136,7 +136,7 @@ public:
 
   PhysicsProcess *fProcess;              /** For now the only generic process pointing to the tabulated physics */
 #if USE_VECPHYS ==1
-    PhysicsProcess *fVectorPhysicsProcess;        /** interface to vector physics final state sampling */
+    //PhysicsProcess *fVectorPhysicsProcess;        /** interface to vector physics final state sampling */
     VecPhysOrchestrator *fVecPhysOrchestrator;     /**Orchestrator of the vectorized physics*/
 #endif
     

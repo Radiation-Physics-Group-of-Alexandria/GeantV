@@ -34,8 +34,8 @@ VecPhysOrchestrator::VecPhysOrchestrator(int processId, double energyLimit, int 
     fComptonTotTracks=0.;
     fPrimaryTracks = new GUTrack_v();
     fSecondaryTracks = new GUTrack_v();
-    Allocator(numtracks);                         // allocate numtracks GUTrack_v for primaries
-    
+    //Allocator(numtracks);                         // allocate numtracks GUTrack_v for primaries
+    Allocator(10000); //allocate enough space at the beginning
     // and secondaries and so on; will be increased if needed
     //fVComptonModel = new vecphys::ComptonKleinNishina(0,-1); // create the vector physics model
     fVComptonModel = new vecphys::cxx::ComptonKleinNishina(0,-1); // create the vector physics model
@@ -293,9 +293,7 @@ void VecPhysOrchestrator::FilterPrimaryTracks(GeantTrack_v &gTrackV, int numtrac
     }
     
     // check if we have enough space: if not make sure that we have
-    if (numComptonTracks > fPrimaryTracks->capacity)
-    {
-        //std::cout<<"Need to allocate more space.\n";
+    if (numComptonTracks > fPrimaryTracks->capacity){
         Deallocator();
         Allocator(numComptonTracks);
     }
