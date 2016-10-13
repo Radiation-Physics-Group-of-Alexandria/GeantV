@@ -158,6 +158,9 @@ public:
   void SetCoprocessorBroker(TaskBroker *broker) { fBroker = broker; }
 
   GEANT_FORCE_INLINE
+  GeantVApplication *GetUserApplication() const { return fApplication; }
+
+  GEANT_FORCE_INLINE
   void SetUserApplication(GeantVApplication *app) { fApplication = app; }
 
   GEANT_FORCE_INLINE
@@ -186,6 +189,9 @@ public:
 
   GEANT_FORCE_INLINE
   MCTruthMgr *GetMCTruthMgr() const { return fTruthMgr; } 
+
+  GEANT_FORCE_INLINE
+  bool IsInitialized() const { return fInitialized; } 
 
   /** @brief Function checking if transport is completed */
   bool TransportCompleted() const { return ((int)fDoneEvents->FirstNullBit() >= fConfig->fNtotal); }
