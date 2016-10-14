@@ -15,6 +15,7 @@
 
 #include "GeantVApplication.h"
 #include "tbb/task.h"
+#include "EventLoopTask.h"
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
@@ -27,7 +28,7 @@ public:
 
   /** @brief GeantApplicationTBB constructor */	
   GeantApplicationTBB(GeantRunManager *runmgr) : GeantVApplication(runmgr) {}
-
+  
   /** @brief GeantApplicationTBB destructor */
   virtual ~GeantApplicationTBB() {}
 
@@ -53,8 +54,15 @@ public:
   /** @brief User FinishRun function */
   virtual void FinishRun() = 0;
   
-  // User actions in terms of TBB tasks
+  /** @brief User actions in terms of TBB tasks */
   virtual tbb::task *SpawnUserEndRunTask() = 0;
+
+  /** @brief Spawn the event loop task */
+  tbb::task *SpawnEventLoopTask(int nevents) {
+    tbb::task &cont = *new (tbb::task::allocate_root()) tbb::empty_task();
+    EventLoopTask & evloopTask = *new(cont.allocate_child()) EventLoopTask( fRunMgr, nevents );
+    return & evloopTask;
+  }
 
 };
 
