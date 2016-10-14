@@ -20,11 +20,12 @@ inline namespace GEANT_IMPL_NAMESPACE {
 class EventLoopTask : public tbb::task
 {
 private:
-  Geant::GeantRunManager     *fRunMgr      = nullptr;
-  Geant::GeantApplicationTBB *fApplication = nullptr;
+  Geant::GeantRunManager     *fRunMgr      = nullptr; /** Run manager */
+  Geant::GeantApplicationTBB *fApplication = nullptr; /** TBB user application */
+  int fNevents = 0;                                   /** Number of events to be transported */
 
 public:
-  EventLoopTask(Geant::GeantRunManager *runmgr);
+  EventLoopTask(Geant::GeantRunManager *runmgr, int nevents);
   ~EventLoopTask() {}
 
   tbb::task* execute();

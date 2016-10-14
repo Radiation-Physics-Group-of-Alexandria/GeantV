@@ -54,7 +54,7 @@ public:
   virtual void FinishRun() = 0;
   
   // User actions in terms of TBB tasks
-  virtual tbb::task *SpawnUserEventFeeder(GeantEventServer *evserv) = 0;
+  virtual tbb::task *SpawnUserEndRunTask() = 0;
 
 };
 
