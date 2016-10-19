@@ -166,6 +166,7 @@ if(NOT (USE_REAL_PHYSICS))
 # -------
 set(TEST_EXECUTABLES
   CMSApp.cc
+  LHCbApp.cc
   runApp.cc
   testBasketizer.cc
   )
@@ -210,6 +211,12 @@ function(add_to_ctest EXECUTABLES)
         else()
           add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/cms2015.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT_G496p02_1mev.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT_G496p02_1mev.root -E ${CMAKE_SOURCE_DIR}/data/pp14TeVminbias.root)
         endif()
+      elseif(TARGET_NAME STREQUAL "LHCbApp")
+        if(CUDA)
+          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/cms2015.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT_G496p02_1mev.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT_G496p02_1mev.root -E ${CMAKE_SOURCE_DIR}/data/pp14TeVminbias.root -r true)
+        else()
+          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/cms2015.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT_G496p02_1mev.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT_G496p02_1mev.root -E ${CMAKE_SOURCE_DIR}/data/pp14TeVminbias.root)
+        endif()
       elseif(TARGET_NAME STREQUAL "testBasketizer")
         add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> 8)
       elseif(TARGET_NAME STREQUAL "testLocality")
@@ -229,7 +236,7 @@ if(CTEST)
   add_to_ctest("${TEST_EXECUTABLES}")
 endif()
 
-install(TARGETS CMSApp runApp testBasketizer DESTINATION bin)
+install(TARGETS CMSApp LHCbApp runApp testBasketizer DESTINATION bin)
 if(USE_ROOT)
   install(TARGETS testLocality DESTINATION bin)
 endif()
