@@ -251,6 +251,19 @@ else()
 endif()
 
 #----------------------------------------------------------------------------
+#Find JeMalloc and setup the libraries
+#
+find_package(JeMalloc)
+if(JEMALLOC_FOUND)
+  include_directories(AFTER SYSTEM ${JEMALLOC_INCLUDE_DIR})
+  get_filename_component(JEMALLOC_LIBDIR ${JEMALLOC_LIBRARIES} DIRECTORY)
+  get_filename_component(JEMALLOC_LIB ${JEMALLOC_LIBRARIES} NAME)
+  set( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -L${JEMALLOC_LIBDIR} -ljemalloc")
+else()
+  message(STATUS "JEMALLOC NOT FOUND : try setting JEMALLOC_ROOT_DIR")  
+endif()
+
+#----------------------------------------------------------------------------
 # Load macros
 #
 include(cmake/modules/GeantMacros.cmake)

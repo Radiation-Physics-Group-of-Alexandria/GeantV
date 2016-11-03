@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "e:f:g:l:B:b:t:x:r:i:u:p:", options, &optidx);
+    c = getopt_long(argc, argv, "e:f:g:l:B:m:b:t:x:r:i:u:p:", options, &optidx);
 
     if (c == -1)
       break;

@@ -1034,6 +1034,8 @@ void *WorkloadManager::MonitoringThread(GeantPropagator* prop) {
   const double MByte = 1024.;
   Geant::Info("MonitoringThread","Started monitoring ...");
   GeantPropagator *propagator = prop;
+  GeantRunManager *runmgr = propagator->fRunMgr;
+  GeantEventServer *evserv = runmgr->GetEventServer();
   WorkloadManager *wm = propagator->fWMgr;
   int nmon = prop->fConfig->GetMonFeatures();
   if (!nmon)
@@ -1055,7 +1057,7 @@ void *WorkloadManager::MonitoringThread(GeantPropagator* prop) {
   if (nmon == 1)
     cmon->Divide(1, 1);
   else
-    cmon->Divide(2, dmon);
+    cmon->Divide(1, nmon, 0, 0);
   TH1I *hqueue = 0;
   int nqueue[101] = {0};
   int ipad = 0;
@@ -1134,6 +1136,7 @@ void *WorkloadManager::MonitoringThread(GeantPropagator* prop) {
   int i, j, bin;
   int nmaxtot;
   while (1) { // exit condition here
+    gSystem->ProcessEvents();
     i = int(stamp);
     ipad = 0;
     gSystem->Sleep(50); // millisec
@@ -1160,7 +1163,7 @@ void *WorkloadManager::MonitoringThread(GeantPropagator* prop) {
         // Count tracks for all event slots
         int ntr = 0;
         for (int slot = 0; slot < propagator->fNbuff; slot++)
-          ntr += propagator->fEvents[slot]->GetNinflight();
+          ntr += evserv->GetEvent(slot)->GetNinflight();
         memmove(ntrackstot, &ntrackstot[1], 99 * sizeof(int));
         ntrackstot[99] = ntr;
         htrackstot->GetXaxis()->Set(100, stamp - 100, stamp);
@@ -1225,7 +1228,7 @@ void *WorkloadManager::MonitoringThread(GeantPropagator* prop) {
     if (htracksmax) {
       nmaxtot = 1;
       for (j = 0; j < nbuffered; j++) {
-        GeantEvent *evt = propagator->fEvents[j];
+        GeantEvent *evt = evserv->GetEvent(j);
         int nmax = evt->GetNmax();
         nmaxtot = max<int>(nmax, nmaxtot);
         htracksmax->SetBinContent(j + 1, nmax);

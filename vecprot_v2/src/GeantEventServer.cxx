@@ -47,7 +47,7 @@ GeantEventServer::GeantEventServer(int event_capacity, GeantRunManager *runmgr)
   LocalityManager *mgr = LocalityManager::Instance();
   if (!mgr->IsInitialized()) {
     mgr->SetNblocks(100);
-    mgr->SetBlockSize(10000);
+    mgr->SetBlockSize(1000);
     mgr->SetMaxDepth(runmgr->GetConfig()->fMaxDepth);
     mgr->Init();
   }

@@ -23,9 +23,15 @@
 #include "navigation/HybridNavigator2.h"
 #ifdef USE_ROOT
 #include "management/RootGeoManager.h"
+#include "TApplication.h"
+#include "TCanvas.h"
+#include "TH1.h"
 #endif
 #include "volumes/PlacedVolume.h"
 #else
+#include "TApplication.h"
+#include "TCanvas.h"
+#include "TH1.h"
 #include "TGeoVolume.h"
 #include "TGeoManager.h"
 #include "TGeoVoxelFinder.h"
@@ -392,6 +398,19 @@ void GeantRunManager::RunSimulation() {
   else
     Printf("  Runge-Kutta integration OFF");
   Printf("==========================================================================");
+
+#ifdef USE_ROOT
+  new TApplication("monitoring", 0, 0);
+  if (fConfig->fUseMonitoring) {
+    TCanvas *cmon = new TCanvas("cscheduler", "Scheduler monitor", 900, 600);
+    cmon->Update();
+  }
+
+  if (fConfig->fUseAppMonitoring) {
+    TCanvas *capp = new TCanvas("capp", "Application canvas", 700, 800);
+    capp->Update();
+  }
+#endif
 
   vecgeom::Stopwatch timer;
   timer.Start();
