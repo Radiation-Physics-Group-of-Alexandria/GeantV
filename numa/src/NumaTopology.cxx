@@ -26,10 +26,33 @@ NumaTopology::NumaTopology()
     fNphysical = FindPhysCores(fHT);
     fListNodes = new NumaNode*[fNodes];
     fNthreads = new int[fNodes];
+    int nrealnodes = 0;
     for (auto i=0; i<fNodes; ++i) {
       fListNodes[i] = new NumaNode(i, fNcpus);
       fListNodes[i]->fNphysical = fNphysical/fHT;
       fNthreads[i] = 0;
+      nrealnodes++;
+      if (fListNodes[i]->fNcpus == 0) {
+        delete fListNodes[i];
+        fListNodes[i] = nullptr;
+        nrealnodes--;
+      }
+    }
+    if (fNodes > nrealnodes) {
+      // Compact nodes
+      for (auto i=0; i<nrealnodes; ++i) {
+        if (fListNodes[i] == nullptr) {
+          // hole at 'i' - loop remaining nodes
+          for (auto j=i+1; j<fNodes; ++j) {
+            if (fListNodes[j] != nullptr) {
+              // Fill hole with node at 'j'
+              fListNodes[i] = fListNodes[j];
+              fListNodes[j] = nullptr;
+              break;
+            }
+          }
+        }
+      }
     }
   }
 #endif  
