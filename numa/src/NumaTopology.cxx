@@ -53,6 +53,7 @@ NumaTopology::NumaTopology()
           }
         }
       }
+      fNodes = nrealnodes;
     }
   }
 #endif  
