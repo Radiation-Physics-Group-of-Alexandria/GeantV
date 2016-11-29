@@ -6,9 +6,13 @@ if (USE_REAL_PHYSICS)
     inc
     ../magneticfield/inc
     ../realphysics/dummies/inc
+    ../realphysics/material/inc
     ../realphysics/physics/management/inc
+    ../realphysics/physics/models/EM/inc
+    ../realphysics/physics/processes/EM/inc
     ../examplesRP/GeantV/ExN03RP/inc
     ../examplesRP/GeantV/TestEm3RP/inc
+    ../examplesRP/GeantV/Tests/BremTestGV/inc
     ../numa/inc
     )
 else()
@@ -240,6 +244,7 @@ else()
 set(TEST_EXECUTABLES
   runAppRP.cc
   runAppTestEM3RP.cc
+  ../examplesRP/GeantV/Tests/BremTestGV/bremtestGV.cc
   )
 
 macro(build_executables EXECUTABLES)
