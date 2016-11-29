@@ -162,6 +162,8 @@ public:
    * @return    The index of the EMModel pointer in the EMModelManager container.
    */
   int AddModel(EMModel *model);
+    
+  const EMModelManager* GetModelManager() const {return fModelManager;}
 
 
   /**
