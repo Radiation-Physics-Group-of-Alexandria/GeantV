@@ -13,6 +13,7 @@
 
 #include <TNudyEndfSec.h>
 #include "TNudyEndfCont.h"
+using namespace std;
 #ifdef USE_ROOT
 ClassImp(TNudyEndfSec)
 #endif
@@ -32,9 +33,12 @@ ClassImp(TNudyEndfSec)
 TNudyEndfSec::TNudyEndfSec(int mat, int mf, int mt, double c1, double c2, int l1, int l2, int n1, int n2)
     : fMAT(mat), fMF(mf), fMT(mt), fC1(c1), fC2(c2), fL1(l1), fL2(l2), fN1(n1), fN2(n2)
 {
+//cout<<"dumppppppppppppp"<<fMAT<<"\t"<<fMF<<"\t"<<fMT<<endl;
   //
   // Standard constructor
   //
+  
+  //cout<<c1<<"\t"<<c2<<"\t"<<n2<<endl;
   snprintf(fName, 12, "%04d-%02d-%03d", fMAT, fMF, fMT);
   fRecs = new TList();
 }
@@ -57,6 +61,9 @@ TNudyEndfRecord *TNudyEndfSec::GetRecord(int RecNo)
   // RecNo = 0 is the first record after the HEAD
   // the maximum value of RecNo is the index of the last record before SEND
   //
+  
+  
+  
   if (RecNo >= 0 && RecNo <= fRecs->LastIndex())
     return (TNudyEndfRecord *)fRecs->At(RecNo);
   else {
@@ -68,6 +75,10 @@ TNudyEndfRecord *TNudyEndfSec::GetRecord(int RecNo)
 //______________________________________________________________________________
 void TNudyEndfSec::DumpENDF(int flags = 1)
 {
+
+
+
+
   // HEAD
   char s1[14], s2[14];
   TNudyEndfCont::F2F(fC1, s1);

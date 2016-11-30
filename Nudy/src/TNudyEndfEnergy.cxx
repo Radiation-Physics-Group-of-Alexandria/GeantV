@@ -17,7 +17,7 @@
 ClassImp(TNudyEndfEnergy)
 #include "TRandom3.h"
 #endif
-
+using namespace std;
     TNudyEndfEnergy::TNudyEndfEnergy()
 {
 }
@@ -25,6 +25,8 @@ ClassImp(TNudyEndfEnergy)
 //______________________________________________________________________________
 TNudyEndfEnergy::TNudyEndfEnergy(TNudyEndfFile *file)
 {
+
+ 
   TIter secIter(file->GetSections());
   TNudyEndfSec *sec;
   int mt455 = 1000;

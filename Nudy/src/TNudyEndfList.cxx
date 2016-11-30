@@ -19,7 +19,7 @@ ClassImp(TNudyEndfList)
 
     //_______________________________________________________________________________
     TNudyEndfList::TNudyEndfList()
-    : TNudyEndfCont(), fList(NULL)
+    : TNudyEndfCont(), fList(NULL)//, debugSize(0)
 {
   //
   // Default constructor
@@ -28,7 +28,7 @@ ClassImp(TNudyEndfList)
 
 //_______________________________________________________________________________
 TNudyEndfList::TNudyEndfList(double c1, double c2, int l1, int l2, int n1, int n2)
-    : TNudyEndfCont(c1, c2, l1, l2, n1, n2), fList(new double[n1])
+    : TNudyEndfCont(c1, c2, l1, l2, n1, n2), fList(new double[n1])//, debugSize(n1)
 {
   //
   // Standard constructor

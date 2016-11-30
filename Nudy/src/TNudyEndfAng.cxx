@@ -38,14 +38,14 @@ TNudyEndfAng::TNudyEndfAng(TNudyEndfFile *file)
     int LI  = header->GetL1();
     int LCT = header->GetL2();
     MtLct.push_back(LCT);
-//     printf("LCT = %d LTT = %d LI = %d\n",LCT, LTT, LI);
     // Legendre polynomial coefficients
+    //if(MT!=2 && MT!=18 && MT!=102){
     if (LTT == 1 && LI == 0) {
       TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter.Next();
       for (int i = 0; i < tab2->GetN2(); i++) {
         TNudyEndfList *tab = (TNudyEndfList *)recIter.Next();
         ein.push_back(tab->GetC2());
-        // std::cout<<"energy "<< tab->GetC2() << std::endl;
+        // std::cout<<"energy from TNudyEndfAng:\t"<< tab->GetC2() << std::endl;
         for (int j = 0; j < tab->GetNPL(); j++) {
           lCoef1.push_back(tab->GetLIST(j));
         }
@@ -177,9 +177,10 @@ TNudyEndfAng::TNudyEndfAng(TNudyEndfFile *file)
         fillPdf1d();
       }
       fillPdf2d();
-    }
+   // }
     // Low energy given by legendre polynomial and high energy by tabulated probability tables
   } // end while loop
+ }
   Mt4Values.push_back(MtNumbers);
   Mt4Lct.push_back(MtLct);
   energy4OfMts.push_back(ein2d);
@@ -229,6 +230,7 @@ TNudyEndfAng::~TNudyEndfAng()
   cos3d.shrink_to_fit();
   cdf3d.shrink_to_fit();
   pdf3d.shrink_to_fit();
+  delete fRnd;
 }
 
 double TNudyEndfAng::recursionLinearLeg(int i, double x1, double x2, double pdf1, double pdf2)

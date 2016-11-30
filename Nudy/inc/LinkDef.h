@@ -37,6 +37,18 @@
 #pragma link C++ class TNudyEndfPhAng + ;
 #pragma link C++ class TNudyEndfPhEnergy + ;
 #pragma link C++ class TNudySampling + ;
-
-
+#pragma link C++ class TNudyElastic +;
+#pragma link C++ class TNudyFission +;
+#pragma link C++ class TNudyCapture +;
+#pragma link C++ class TNudyInelastic +;
+#pragma link C++ class TNudyEndfThermal +;
+#pragma link C++ class TNudyElement +;
+#pragma link C++ class ParticleA + ;
+#pragma link C++ class geantphysics::DensityEffectData+;
+#pragma link C++ class geantphysics::Element+;
+#pragma link C++ class geantphysics::Isotope+;
+#pragma link C++ class geantphysics::Material+;
+#pragma link C++ class geantphysics::MaterialProperties+;
+#pragma link C++ class geantphysics::NISTElementData+;
+#pragma link C++ class geantphysics::NISTMaterialData+;
 #endif

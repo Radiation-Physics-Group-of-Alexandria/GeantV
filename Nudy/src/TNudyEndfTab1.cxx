@@ -8,6 +8,8 @@
 
 #include <TNudyEndfTab1.h>
 
+using namespace std;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfTab1)
 #endif
@@ -81,6 +83,12 @@ void TNudyEndfTab1::SetCont(double c1, double c2, int l1, int l2, int n1, int n2
 //______________________________________________________________________________
 void TNudyEndfTab1::DumpENDF(int mat, int mf, int mt, int &ns, int flags)
 {
+
+
+//cout<<"List of variables::"
+
+
+
   char s1[14], s2[14];
   F2F(fC1, s1);
   F2F(fC2, s2);
@@ -127,6 +135,10 @@ void TNudyEndfTab1::DumpENDF(int mat, int mf, int mt, int &ns, int flags)
   for (int i = 0; i < GetNP();) { // print 6I11
     F2F(GetX(i), s1);
     F2F(GetY(i), s2);
+   
+   //cout<<"Table-1:@@@@@@@@@@@@X:\t"<<GetX(i)<<"\t"<<GetY(i)<<endl;
+   
+   
     printf("%11s%11s", s1, s2);
     if ((++i) % 3 == 0) {
       printf("%4d%2d%3d%5d", mat, mf, mt, ns);

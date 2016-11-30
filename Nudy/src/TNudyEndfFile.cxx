@@ -12,7 +12,7 @@
 */
 
 #include <TNudyEndfFile.h>
-
+using namespace std;
 //_______________________________________________________________________________
 TNudyEndfFile::TNudyEndfFile() : fMAT(0), fMF(0)
 {
@@ -21,6 +21,9 @@ TNudyEndfFile::TNudyEndfFile() : fMAT(0), fMF(0)
   //
   strcpy(fName, "");
   fSecs = new TList();
+  
+// cout<<"default constructor:"<<endl;  
+  
 }
 
 //_______________________________________________________________________________
@@ -30,6 +33,9 @@ TNudyEndfFile::TNudyEndfFile(int mat, int mf) : fMAT(mat), fMF(mf)
   // Standard constructor
   //
   snprintf(fName, 8, "%04d-%02d", mat, mf);
+  
+  //cout<<"material and mf:\t"<<mat<<"\t"<<mf<<endl;
+  
   fSecs = new TList();
 }
 

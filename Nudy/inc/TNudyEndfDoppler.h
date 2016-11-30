@@ -7,6 +7,12 @@ class TNudyEndfDoppler : public TNudyEndfRecoPoint {
 public:
   TNudyEndfDoppler();
   TNudyEndfDoppler(double isigDiff, double aw, double t1, double t2, std::vector<double> &x1, std::vector<double> &x2);
+  /*
+   isigdiff: intolerence same as 1E-3
+         aw: mass
+t1 and t2 are ini and final temperature
+x1 and x2 are energy and cross-section vectors
+*/
   virtual ~TNudyEndfDoppler() {}
   std::vector<double> energy;
   std::vector<double> sigma;

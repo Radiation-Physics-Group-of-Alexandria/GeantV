@@ -40,9 +40,10 @@ public:
   double GetLIST(int i) const { return fList[i]; }
   void SetLIST(double el, int i) { fList[i] = el; }
   void DumpENDF(int mat, int mf, int mt, int &ns, int flags);
-
+ // int getDebugSize() const { return debugSize; }
 private:
   double *fList; //[fN1]
+  //int debugSize;
 
 #ifdef USE_ROOT
   ClassDef(TNudyEndfList, 1)
