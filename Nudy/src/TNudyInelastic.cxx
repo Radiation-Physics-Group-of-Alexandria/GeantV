@@ -1,7 +1,7 @@
 // Various interaction process of neutron: Selection of secondary particle type, its energy and angle
 //The final state product residues mass and charges are assigned considering the incident particle
 //as a neutron. The charge and mass of the residue will change depending upon incident particle as
-//a charge particle or photon.
+//a charged particle or photon.
 #include <iostream>
 #include "TNudyEndfEnergyAng.h"
 #include "ElementProp.h"
