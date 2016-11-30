@@ -13,7 +13,7 @@ ROOT_GENERATE_DICTIONARY(NudyDict ${headers} MODULE Nudy LINKDEF inc/LinkDef.h)
 #
 add_library(Nudy SHARED ${sources} NudyDict.cxx)
 target_link_libraries(Nudy -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${ROOT_LIBRARIES} RealPhysics MathMore ${VC_LIBRARIES} -L/usr/lib64 gfortran)
-link_directories(/home/shiba/geant/build/lib)
+#link_directories(/home/shiba/geant/build/lib)
 
 #----------------------------------------------------------------------------------------------
 # Install the files
@@ -38,5 +38,5 @@ if(DOXYGEN_FOUND)
 endif()
 
 
-add_subdirectory(testShiba)
+add_subdirectory(ntransport)
 

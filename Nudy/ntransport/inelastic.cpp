@@ -47,15 +47,12 @@
 #include "TVNudyModel.h"
 #include "TNudyEndfEnergy.h"
 #include "TNudyEndfSigma.h"
-//#include "TNudySampling.h"
+#include "TNudySampling.h"
 #include "TNudyEndfRecoPoint.h"
 #include "TNudyEndfTape.h"
 #include "TNudyEndfAng.h"
 #include "Particle.h"
 #include "ElementProp.h"
-#include "G4ParticleTable.hh"
-#include "G4ParticleTable.hh"
-#include "G4ParticleDefinition.hh"
 #include "TNudyEndfThermal.h"
 #include "TNudyInelastic.h"
 #include "TNudyElastic.h"
@@ -84,7 +81,7 @@ class TNudyENDF;
 class TNudyEndfAng;
 class TNudyEndfEnergy;
 class TNudyEndfSigma;
-//class TNudySampling;
+class TNudySampling;
 class TNudyEndfRecoPoint;
 class TNudyEndfTape;
 class TNudyEndfThermal;
@@ -94,7 +91,7 @@ class TNudyFission;
 class TNudyCapture;
 class TNudyElastic;
 class TNudyElement;
-//class Element;
+
 using namespace std;
 
 
@@ -109,7 +106,7 @@ using namespace std;
   gSystem->Load("libNudy");
   gSystem->Load("/usr/lib64/libgfortran.so");
 }
-//---------------------------------------------//
+//______________________________________________________________________________
 std::string atomicNumbertostring(int Z){
   int targetZ = Z;
   stringstream ss;
@@ -121,10 +118,9 @@ std::string atomicNumbertostring(int Z){
   str4="00" + strZ;
   }else{str4="0"+strZ;}
   return str4;
- }
-
+}
+//______________________________________________________________________________
 std::string atomicMasstostring(int A){
-
   int targetA = A;
   stringstream ssa;
   ssa << targetA;
@@ -133,19 +129,19 @@ std::string atomicMasstostring(int A){
   std::string strAf;
   if(lenA==1){
     strAf="00" + strA;
-  }else if(lenA==2){strAf="0"+strA;
-  }else{strAf=strA;}
+    }else if(lenA==2){strAf="0"+strA;
+     }else{
+         strAf=strA;}
   return strAf;
-
 }
-
+//______________________________________________________________________________
 std::string myreplace(std::string &s,
-                       std::string &toReplace,
-                       std::string &replaceWith)
+                      std::string &toReplace,
+                      std::string &replaceWith)
 {
     return(s.replace(s.find(toReplace), toReplace.length(), replaceWith));
 }
-
+//______________________________________________________________________________
 const char* fileName(std::string S,int tZ, int A1){
   std::string base="/home/shiba/endffile/n-ddd_XX_fff.endf";
   std::string str1;
@@ -155,11 +151,9 @@ const char* fileName(std::string S,int tZ, int A1){
   int zTarget=tZ;
   std::string Zf;
   Zf=atomicNumbertostring(zTarget);
-  //cout<<"atomic number to string:"<<Zf<<endl;
   int mTarget=A1;
   std::string Af;
   Af=atomicMasstostring(mTarget);
-  //cout<<"atomic mass to string:"<<Af<<endl;
   std::string s = "XX";
   std::string symbol = S; 
   std::string Z1 = "ddd";
@@ -171,10 +165,11 @@ const char* fileName(std::string S,int tZ, int A1){
   const char* file=str3.c_str();
   return file;
 }
-
-
+//______________________________________________________________________________
 //-------------------Main-------------------//
-int main(){
+int main()
+{
+
    
    std::cout<<"Entered Main : "<< std::endl;
    setEnv();   

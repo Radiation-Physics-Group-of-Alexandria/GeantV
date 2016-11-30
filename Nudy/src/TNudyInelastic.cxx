@@ -3,17 +3,14 @@
 //as a neutron. The charge and mass of the residue will change depending upon incident particle as
 //a charge particle or photon.
 #include <iostream>
-//#include "TNudyEndfDoppler.h"
-//#include "TNudyEndfAng.h"
-//#include "TNudyEndfEnergy.h"
 #include "TNudyEndfEnergyAng.h"
-//#include "TNudyEndfFissionYield.h"
 #include "ElementProp.h"
 #include "TNudyCore.h"
 #include "TNudyEndfRecoPoint.h"
 #include "TNudyInelastic.h"
 #include "TNudyEndfMat.h"
 #include "TNudyElement.h"
+
 #ifdef USE_ROOT
 #include "TRandom3.h"
 #endif
