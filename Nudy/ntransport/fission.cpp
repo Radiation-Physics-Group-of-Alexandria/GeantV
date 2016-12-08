@@ -53,9 +53,6 @@
 #include "TNudyEndfAng.h"
 #include "Particle.h"
 #include "ElementProp.h"
-#include "G4ParticleTable.hh"
-#include "G4ParticleTable.hh"
-#include "G4ParticleDefinition.hh"
 #include "TNudyEndfThermal.h"
 #include "TNudyInelastic.h"
 #include "TNudyElastic.h"
@@ -319,7 +316,8 @@ int main(){
     	//n-Fission process
         nProcFis->nFissionXsec(nuEn, elementProp); //provide neutron energy
      	//cout<< nuEn<<"\t"<<nProcFis->GetFissionXsec()<<"\t"<<endl;
-     	//cout<<"prompt neutron: "<<nProcFis->GetPromptneutron()<<" fission fragment mass "<< nProcFis->GetFissionFragmentmass()<<endl;//nProcFis->GetFissionProcessName()
+     	cout<<"No. of prompt neutron: "<<nProcFis->GetPromptneutron()<<" fission fragment mass "
+     	    << nProcFis->GetFissionFragmentmass()<<endl;//nProcFis->GetFissionProcessName()
      	
     	     // nProcFis->GetParticleFission()<<"\t"<<nProcFis->GetKiEnFission()<<"\t"<<
     	//for(int j=0; j<1 ; j++){

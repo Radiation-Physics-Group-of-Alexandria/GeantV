@@ -53,9 +53,6 @@
 #include "TNudyEndfAng.h"
 #include "Particle.h"
 #include "ElementProp.h"
-#include "G4ParticleTable.hh"
-#include "G4ParticleTable.hh"
-#include "G4ParticleDefinition.hh"
 #include "TNudyEndfThermal.h"
 #include "TNudyInelastic.h"
 #include "TNudyElastic.h"
@@ -284,10 +281,6 @@ int main(){
    int         targetZ1 = 26;
    std::string symbolT  ="Fe";
    int         targetM1 = 56;
-   
-   
-   
-   
    fENDFn=fileName(symbolT,targetZ1,targetM1);
             cout<<"file name is:\t"<<fENDFn<<endl;
            // std::stringstream stream;
@@ -305,11 +298,6 @@ int main(){
             TNudyEndfSigma();
             TNudyEndfSigma xsec;
             xsec.GetData(irENDF, isigDiff);
-   
-   
-   
-   
-   
   // ofstream fout;
    //fout.open("/home/shiba/output/Fe56n_nalpha.txt",ios::out);
    ielemId = 0 ;
@@ -324,70 +312,15 @@ int main(){
    TNudyElement *elementProp;
    elementProp = new TNudyElement(symbolT,targetZ1,targetM1);
    //cout << "in Main::Symbol:::::::::::::::::: " << elementProp->GetatomicSymbol() << endl;
-   //TNudyElastic *nProc= new TNudyElastic(ielemId,rootENDF);     //n-Elastic
-   //TNudyFission *nProcFis= new TNudyFission(ielemId,rootENDF); //n-Fission
-   //TNudyCapture *nProcCap= new TNudyCapture(ielemId,rootENDF); //n-Capture
-   TNudyInelastic *nProcIne= new TNudyInelastic(ielemId,rootENDF); //n-Capture
-   
-    for(int i = 0; i <1; i++){//energy loop
+    //n-Elastic process
+    TNudyElastic *nProcElas = new TNudyElastic(ielemId,rootENDF);     //n-Elastic
+   for(int i = 0; i <1; i++){//energy loop
         nuEn= 19.0E6;//2.5E6 + 0.02E6*i;
-        //n-Elastic process
-        
-    	//nProc->nElasticXsec(nuEn, elementProp); //provide neutron energy
+        nProcElas->nElasticXsec(nuEn, elementProp); //provide neutron energy
     	//cout<<nProc->GetElasticProcessName()<<"\t"<<nProc->GetElasticXsec()<<"\t"<<
     	//        nProc->GetParticleElastic()<<"\t"<<
-    	// fout<<nProc->GetsecParticleKiEn()<<"\t"<<nProc->GetsecParticlecosAng()<<endl;
-    	
-    	
-    	//n-Fission process
-    	//nProcFis->nFissionXsec(nuEn, elementProp); //provide neutron energy
-    	//cout<< nProcFis->GetFissionProcessName()<<"\t"<<nProcFis->GetFissionXsec()<<"\t"<<endl;
-    	     // nProcFis->GetParticleFission()<<"\t"<<nProcFis->GetKiEnFission()<<"\t"<<
-    	//for(int j=0; j<1 ; j++){
-    	//nProcFis->nFissionXsec(nuEn, elementProp);     
-    	//fout<<nProcFis->GetKiEnFission()<<"\t"<<nProcFis->GetcosAngFission()<<endl;
-    	//}
-    	
-    	
-    	//n-Capture process
-    	//nProcCap->nCaptureXsec(nuEn, elementProp); //provide neutron energy
-    	//cout<< nProcCap->GetCaptureProcessName()<<"\t"<<nProcCap->GetCaptureXsec()<<"\t"<<endl;
-    	     // nProcCap->GetParticleCapture()<<"\t"<<nProcCap->GetKiEnCapture()<<"\t"<<
-    	
-    	
-    	
-    	//n-Inelastic process
-    	for(int ie = 0 ; ie<1; ie++){
-    	//cout<<"Energy:\t"<<nuEn<<endl;
-    	nProcIne->nInelasticXsec(nuEn, elementProp); //provide neutron energy
-    	//cout<< nProcIne->GetParticleInelastic()<<"\t"<<nProcIne->GetInelasticXsec()<<"\t"<<endl;
-    	//if(nProcIne->GetParticleInelastic() == "n+alpha")
-    	cout<<"main: "<<nProcIne->GetKiEnInelastic()<<"\t"<<nProcIne->GetcosAngInelastic()<<endl;
-    	
-    	//if(nProcIne->GetParticleInelastic() == "p")fout<<nuEn<<"\t"<<nProcIne->GetInelasticXsec()<<endl;
-    	
-    	
-    	}
-//---------------------------------------------------------------------------------------    	
-    	
-    	
-    	
-    	
-    	
-    	//xsecs= neutronProc->GetXsec();
-    	//process_names = neutronProc->GetProcessNames();
-    	//num_process_names = process_names.size();
-    	//cout<<"num_process_names:\t"<<num_process_names<<endl;
-    	//for( int j = 0; j<num_process_names; j++ ){
-          //    cout<<process_names[j]<<"\t"<<xsecs[j]<<endl;
-          //}
-    	//cout<<neutronProc->GetElasticXsec()<<"\t"<<neutronProc->GetFissionXsec()<<"\t"<<neutronProc->GetCaptureXsec()<<endl;
-    	for(int j = 0; j <1; j++){ // event loop
-          //neutronProc->Neutron_Process(elementProp);
-    	  //secParticle = neutronProc->GetsecParticleName();
-          //secE	      = neutronProc->GetsecParticleKiEn();
-          //secpcosAng  = neutronProc->GetsecParticlecosAng();
-         }// event loop
+    	cout<<"In LabFrame Scattered neutron energy:"<< nProcElas->GetsecParticleKiEn()<<
+    	      "   and angle:"<<nProcElas->GetsecParticlecosAng()<<endl;
        }//energy loop*/
 return 0;
   }// for main

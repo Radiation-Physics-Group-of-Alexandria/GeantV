@@ -192,7 +192,7 @@ int main(){
    //const char* fENDF = "/home/shiba/endffile/n-026_Fe_057.endf";
    //const char* fENDF = "/home/shiba/thermal_scatt/tsl-graphite.endf";
    
-  const char* fENDF = "/home/shiba/thermal_scatt/tsl-HinZrH.endf";
+   const char* fENDF = "/home/shiba/thermal_scatt/tsl-HinZrH.endf";
    const char* rENDF = "test.root";
    const char* mLib = "mem.dat";
    //-----------checking---------------
@@ -223,13 +223,14 @@ int main(){
       //--------added on 8th-oct-2016-----------
       TNudyEndfRecoPoint *rp = new TNudyEndfRecoPoint(ieleId, irENDF);
       rp->GetData(ieleId, irENDF);
-      //TNudySampling *samp = new TNudySampling(obj3,rp);
       int nevent=10; 
       int mt;
       double sigma;
-      double En;
+      double En = 1.79177;
+      
       double costhlab;
        TNudyEndfThermal xsecth;
        xsecth.GetData(irENDF, isigDiff);
+       cout<<"Thermal neutron x-section: "<<xsecth.nThermalElasticXsecion(En)<<endl;
 return 0;
   }// for main

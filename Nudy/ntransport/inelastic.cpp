@@ -312,10 +312,10 @@ int main()
     	 nProcIne->nInelasticXsec(nuEn, elementProp); //provide neutron energy
     	 //cout<< nProcIne->GetParticleInelastic()<<"\t"<<nProcIne->GetInelasticXsec()<<"\t"<<endl;
     	 //if(nProcIne->GetParticleInelastic() == "n+alpha")
-    	 cout<<"main: Secondary particle "<< "KineticE in lab: "<< nProcIne->GetKiEnInelastic()<<"  cosine(angle) in lab: "<<nProcIne->GetcosAngInelastic()<<endl;
+    	 cout<<"main: Secondary particle "<< "KineticE (MeV) in lab: "<< nProcIne->GetKiEnInelastic()/1E6<<"  cosine(angle) in lab: "<<nProcIne->GetcosAngInelastic()<<endl;
     	 nProcIne->GetInelasticParameters(xsec1,energy1);
     	 
-    	 //cout<<xsec1<<"  "<<energy1<<endl;
+    	 //cout<<xsec1<<"  "<<energy1<<"\t"<<"  "<<nProcIne->GetParticleInelastic()<<endl;
     	
     	//if(nProcIne->GetParticleInelastic() == "p")fout<<nuEn<<"\t"<<nProcIne->GetInelasticXsec()<<endl;
     	}//event loop

@@ -48,7 +48,8 @@ void TNudyElastic::nElasticXsec(double nuEn, TNudyElement *targetElement)
      charge = targetElement->GetatomicNumber();
      mass   = targetElement->GetatomicMass();
      
-     cout<<"Target of mass---->"<<mass<<"---charge---"<<charge<<"\t"<<kineticE<<endl;
+     cout<<"Target of mass---->"<<mass<<"---charge---"<<charge<<" incident neutron"<<
+           " energy(MeV): "<<kineticE/1E6<<endl;
      
      for(unsigned int crsp = 0; crsp < mtValues; crsp++) {
         MT  = rp->MtValues[ielemId][crsp];

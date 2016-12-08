@@ -41,6 +41,9 @@ public:
   TNudyEndfThermal(const char *irENDF, double isigDiff);
   virtual ~TNudyEndfThermal();
   void GetData(const char *irENDF, double isigDiff);
+  //double nThermalElasticXsecion();
+  double nThermalElasticXsecion(double En);
+  
   
   private:
  void ReadFile7(TNudyEndfFile *file);
@@ -48,7 +51,7 @@ public:
  
   double fun(double, double, double, double);
   double simpson(double, double, int);
- 
+  
   
   const char *rENDF;             // precision for cross-section reconstruction
   double sigDiff;                // precision for cross-section reconstruction
@@ -61,12 +64,17 @@ public:
   int flagRead = -1;
   rowint MtLct,Nbeta;                // LCT numbers
   rowint MtNumbers, MtNum4, MtNum5, MtNum6; // MT numbers
+  rowint mtLTHR;
+  
+  
   rowd eintFile1, nutFile1, einFile1, nuFile1;
   rowd eindFile1, nudFile1, einphFile1, phFile1;
   rowd einfFile1, heatFile1;
   
   rowd eLinElastic;
   rowd sLinElastic;
+  
+   
   
   rowd dummy_eElastic;
   rowd dummy_sElastic;
@@ -85,12 +93,15 @@ public:
   
   matrixd2 incIneS;
   
+  matrixd2 eneUni,nThermalElasticXsec;
+  rowd tempThermalXsec;
+  rowd tempEthermal;
   double beta[200];
   
   
   double tSet[1000][1000];
   double sigb;   // bound x-section
-  double sig_ies; // coherent inelastic x-section
+  double sig_ies = 0; // coherent inelastic x-section
  // double DW;    // DebyeWaller factor
   rowd temp;      // temperature for incoherent elastic scattering
   rowd DW; // DebyeWaller factor

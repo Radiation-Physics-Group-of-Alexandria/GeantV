@@ -34,6 +34,8 @@ TNudyInelastic::TNudyInelastic(int ElemId, const char* rootfileName)
   sigmaPartial=0;
   sigmaTotal=0;
   sigmaInelastic = 0;
+  En = 0;
+  costhlab = 0;
 }
 void TNudyInelastic::nInelasticXsec(double nuEn, TNudyElement *targetElement)
 {
@@ -75,6 +77,7 @@ void TNudyInelastic::nInelasticXsec(double nuEn, TNudyElement *targetElement)
   MF6 = rp->GetMt6(ielemId, MT);
   LCT = rp->GetCos4Lct(ielemId, MT);
   cout<<"MT: "<<MT<<" MF4: "<<MF4<<" MF5: "<<MF5<<" MF6: "<<MF6<<" LCT: "<<LCT<<endl;
+  if(MT>=51 && MT<=90)std::cout<<" The residue is one of the possible excited state"<<std::endl;
   //if(MT==16)cout<<"MT:16"<<endl;
   div_t divr;
   switch (MT){
@@ -245,51 +248,295 @@ void TNudyInelastic::nInelasticXsec(double nuEn, TNudyElement *targetElement)
       costhlab=cosLab;
       //
       break;
-      case 50://production of neutron and residue at the ground state
-      name="n+residue1stexci";
-      case 51://production of neutron and residue at the 1st excited state, this will continue upto 90
-      
+      case 50:{//production of neutron and residue at the ground state
+      //Note: for this channel incident particle should be different from neutron
+      residueA = mass;
+      residueZ = charge;
+      name="n + residue at ground state"; 
+      }break;
+      case 51:{//production of neutron and residue at the 1st excited state, this will continue upto 90 
+      residueA = mass;
+      residueZ = charge;
+      GetSecParameter(targetElement, rp);
+      name="n+residue at 1st excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
       cout<<"En " <<En<<" angle_lab "<<costhlab<<endl;
-      case 52:
-      case 53:
-      case 54:
-      case 55:
-      case 56:
-      case 57:
-      case 58:
-      case 59:
-      case 60:
-      case 61:
-      case 62:
-      case 63:
-      case 64:
-      case 65:
-      case 66:
-      case 67:
-      case 68:
-      case 69:
-      case 70:
-      case 71:
-      case 72:
-      case 73:
-      case 74:
-      case 75:
-      case 76:
-      case 77:
-      case 78:
-      case 79:
-      case 80:
-      case 81:
-      case 82:
-      case 83:
-      case 84:
-      case 85:
-      case 86:
-      case 87:
-      case 88:
-      case 89:
-      case 90:
-      case 91:
+      }break;
+      case 52:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 2nd excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 53:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 3rd excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 54:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 4th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 55:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 5th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 56:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 6th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 57:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 7th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      break;}
+      case 58:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 8th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 59:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 9th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 60:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 10th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 61:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 11th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 62:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 12th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 63:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 13th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 64:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 14th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 65:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 15th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 66:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 16th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 67:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 17th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 68:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 18th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 69:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 19th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 70:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 20th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 71:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 21st excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 72:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 22nd excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 73:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 23rd excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 74:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 24th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 75:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 25th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 76:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 26th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 77:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 27th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 78:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 28th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 79:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 29th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 80:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 30th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 81:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 31st excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 82:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 32nd excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 83:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 33rd excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 84:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 34th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 85:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 35th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 86:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 36th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 87:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 37th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 88:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 38th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 89:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 39th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 90:{
+      residueA = mass;
+      residueZ = charge;
+      name="n+residue at 40th excited state";
+      En = secEnergyLab;
+      costhlab=cosLab;
+      }break;
+      case 91:{
       residueA = mass;
       residueZ = charge;
       GetSecParameter(targetElement, rp);
@@ -297,7 +544,7 @@ void TNudyInelastic::nInelasticXsec(double nuEn, TNudyElement *targetElement)
       En = secEnergyLab;
       costhlab=cosLab;
       //std::cout <<"91:::::::::::\t"<< cosLab <<"  "<<secEnergyLab << std::endl;
-      break;
+      }break;
       //case 102:{
       //}break;
       case 103: // p
@@ -914,11 +1161,13 @@ void TNudyInelastic::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoP
      double Ec3   = Ecout*fm4/(fm3+fm4);
      double Ec4   = Ecout*fm3/(fm3+fm4);
      secEnergyLab = TNudyCore::Instance()->cmToLabInelasticE(Ec3, kineticE, cosCM, massT);
-    //cout<< Q <<"  "<< Ex << " " << Ecin<< "  "<< Ecout<< " "<< Ec3<< " "<<Ec4<< " "<<
-    //                  secEnergyLab<<"\t"<<cosCM<<endl;
-    cout<< "B4 secEnergyCM:  "<<secEnergyCM<<endl;
+   
+   
+    cout<<"---->"<< Q <<"  "<< Ex << " " << Ecin<< "  "<< Ecout<< " "<< Ec3<< " "<<Ec4<< " "<<
+                      secEnergyLab<<"\t"<<cosCM<<endl;
+    //cout<< "B4 secEnergyCM:  "<<secEnergyCM<<endl;
     secEnergyCM = Ec3;
-    cout<< "After secEnergyCM:  "<<secEnergyCM<<endl;
+    //cout<< "After secEnergyCM:  "<<secEnergyCM<<endl;
     if (LCT == 2) {
       cosLab = TNudyCore::Instance()->cmToLabInelasticCosT(secEnergyLab, secEnergyCM, kineticE, cosCM,
                                                            massT);
@@ -1003,17 +1252,7 @@ void TNudyInelastic::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoP
 
 
 }
-void TNudyInelastic::FillHisto(double icosLab, double isecEnergyLab)
-{
- // h->Fill(icosLab, isecEnergyLab / 1E9);
-  //h1->Fill(icosLab);
-  //h2->Fill(isecEnergyLab / 1E9);
-  // x[ecounter] = isecEnergyLab/1E9 ;
-  // y[ecounter] = icosLab ;
-  // if(events<=1000000)ecounter ++ ;
-}
-//
-//_________________________________________________________________________________________________________________
+//______________________________________________________________________________
 TNudyInelastic::~TNudyInelastic()
 {
 delete fRnd;
