@@ -89,6 +89,7 @@
 #pragma link C++ class geantphysics::MollerBhabhaIonizationModel+;
 #pragma link C++ class geantphysics::RelativisticBremsModel+;
 #pragma link C++ class geantphysics::SeltzerBergerBremsModel+;
+#pragma link C++ class geantphysics::KleinNishinaComptonModel+;
 
 #endif
 /* @(#)root/base:$Id: LinkDef2.h 42250 2011-11-25 17:30:31Z pcanal $ */
@@ -106,6 +107,7 @@
 #pragma link C++ class geantphysics::EMPhysicsProcess+;
 #pragma link C++ class geantphysics::ElectronBremsstrahlungProcess+;
 #pragma link C++ class geantphysics::ElectronIonizationProcess+;
+#pragma link C++ class geantphysics::GammaComptonProcess+;
 
 #endif
 /* @(#)root/base:$Id: LinkDef2.h 42250 2011-11-25 17:30:31Z pcanal $ */
