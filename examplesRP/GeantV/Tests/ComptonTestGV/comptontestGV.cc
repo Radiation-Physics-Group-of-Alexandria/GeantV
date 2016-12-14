@@ -6,24 +6,15 @@
 // this is NOT the GeantV but our local GeantTaskData
 #include "PhysicsData.h"
 #include "LightTrack.h"
-//#include "GeantTaskData.h"
-
 
 #include "PhysicsListManager.h"
 
 #include "PhysicsList.h"
 #include "PhysicsList2.h"
-//#include "PhysicsList2.h"
 
 #include "Material.h"
 #include "MaterialCuts.h"
 #include "Region.h"
-
-
-// just to delete and clean everything ragarding the physics at the end of run
-//#include "ELossTableManager.h"
-//#include "ELossTableRegister.h"
-
 
 #include "PhysicsManagerPerParticle.h"
 #include "Electron.h"
@@ -37,20 +28,14 @@
 #include "RelativisticBremsModel.h"
 #include "KleinNishinaComptonModel.h"
 
-//#include "GenLogSpacedGrid.h"
-
-//#include "Random.h"
 #include "PhysicsProcess.h"
-
 #include "Hist.h"
 
-//#include "GeantTaskData.h"
 int main() {
     
     using geantphysics::PhysicsListManager;
     using geantphysics::PhysicsList;
     using geantphysics::PhysicsList2;
-    //using geant::PhysicsList2;
     
     using geantphysics::Material;
     using geantphysics::MaterialCuts;  // this is just to print the table
@@ -67,12 +52,9 @@ int main() {
     using geantphysics::SeltzerBergerBremsModel;
     using geantphysics::RelativisticBremsModel;
     using geantphysics::KleinNishinaComptonModel;
-    
-    //using geant::GenLogSpacedGrid;
-    //using geant::Random;
+
     using geantphysics::PhysicsProcess;
-    //using geant::Hist;
-    
+
     using geantphysics::LightTrack;
     using geantphysics::PhysicsData;
     
@@ -142,11 +124,7 @@ int main() {
     // the models that we are going for
     KleinNishinaComptonModel *comptonKN   = nullptr; // KleinNishinaComptonModel
     double eMinKN, eMaxKN; // min/max energy usage limits
-    
-    SeltzerBergerBremsModel *bremSB   = nullptr; // SeltzerBergerBremsModel
-    double eMinSB, eMaxSB; // min/max energy usage limits
-    RelativisticBremsModel  *bremRel  = nullptr; // RelativisticBremsModel
-    double eMinRel, eMaxRel; // min/max energy usage limits
+
     
     const std::vector<PhysicsProcess*> processVector = Gamma::Definition()->GetPhysicsManagerPerParticlePerRegion(matCut->GetRegionIndex())->GetListProcesses();
     
@@ -173,11 +151,10 @@ int main() {
         }
     }
     
-    double ekin   = 10.0*geant::MeV;  // gamma kinetic energy
-    double dirx   = 0.0;   // direction
+    double ekin   = 10.0*geant::GeV;  // gamma kinetic energy
+    double dirx   = 0.0;              // direction
     double diry   = 0.0;
     double dirz   = 1.0;
-    //int    gvcode = Electron::Definition()->GetInternalCode(); // internal code of e-
     int    gvcode = Gamma::Definition()->GetInternalCode(); // internal code of gamma
     
     
@@ -190,10 +167,8 @@ int main() {
     std::vector<LightTrack> secLt;  // dummy because we fill secondaries into GeantTaskData::PhysicsData
     
     double eProdCut = matCut->GetProductionCutsInEnergy()[0];
-    //std::cout<<"electron production cut: "<<eProdCut<<std::endl;
     Hist *h = new Hist((eProdCut/ekin), 1, 100);
     Hist *hcosTheta = new Hist(-1, 1, 100);
-    //    Hist *h = new Hist(-6., 0.01, 100);
     
     long int NUMRAND = 10000000;
     clock_t  start_time = clock();
@@ -218,12 +193,9 @@ int main() {
         //
         // clean the number of secondary tracks used (in PhysicsData)
         td->fPhysicsData->SetNumUsedSecondaries(0);
-        //std::cout<<"gamma ekin: "<<ekin<<", dirx: "<< dirx<<", diry: "<<diry <<", dirz: "<<dirz<<std::endl;
         
         //
         // invoke the interaction
-        //int numSecs = bremSB->SampleSecondaries(primaryLT,secLt,td);
-        //int numSecs = bremRel->SampleSecondaries(primaryLT,secLt,td);
         int numSecs = comptonKN->SampleSecondaries(primaryLT,secLt,td);
         
         
@@ -232,11 +204,10 @@ int main() {
             LightTrack &secondaryLT = ((td->fPhysicsData->GetListOfSecondaries())[0]);
             double eelectron = secondaryLT.GetKinE();
             double egamma = primaryLT.GetKinE();
-            //std::cout<<ekin<<" = "<<egamma<<" + "<<eelectron<<" = "<<eelectron+egamma<<std::endl;
+
             double gcostheta = primaryLT.GetDirZ();
             double ecostheta = secondaryLT.GetDirZ();
             
-            //std::cout<<"3 egamma1:"<<egamma<<std::endl;
             if (eelectron<eProdCut) {
                 std::cerr<<"  ***  electronenergy = "<<eelectron << " < eProdCut = "<<eProdCut <<std::endl;
                 exit(-1);
@@ -244,13 +215,11 @@ int main() {
             //h->Fill(std::log10(eelectron/ekin),1.0);
             
             if(std::abs(egamma)>2*1.0000e-12)
-            h->Fill((eelectron/ekin),1.0);
+            h->Fill((egamma/ekin),1.0);
             //h->Fill(std::log10(eelectron/ekin),1.0);
 
-            hcosTheta->Fill(ecostheta,1.0);
+            hcosTheta->Fill(gcostheta,1.0);
             //hcosTheta->Fill(gcostheta,1.0);
-            //std::cout<<"Filling gcosTheta: "<<gcostheta<<std::endl;
-            //std::cout<<"Filling ecosTheta: "<<ecostheta<<std::endl;
 
         }
     }
@@ -259,13 +228,13 @@ int main() {
     
     
     double norm = 1./((double)NUMRAND);
-   // for (int i=0; i< h->GetNumBins(); ++i) {
-   //     std::cout<<h->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<h->GetY()[i]*norm<<std::endl;
-   // }
-    
-    for (int i=0; i< hcosTheta->GetNumBins(); ++i) {
-        std::cout<<hcosTheta->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<hcosTheta->GetY()[i]*norm<<std::endl;
+    for (int i=0; i< h->GetNumBins(); ++i) {
+        std::cout<<h->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<h->GetY()[i]*norm<<std::endl;
     }
+    
+    //for (int i=0; i< hcosTheta->GetNumBins(); ++i) {
+    //    std::cout<<hcosTheta->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<hcosTheta->GetY()[i]*norm<<std::endl;
+    //}
     
     return 0;
 }
