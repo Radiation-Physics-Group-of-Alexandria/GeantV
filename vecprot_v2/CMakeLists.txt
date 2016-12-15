@@ -260,7 +260,8 @@ set(TEST_EXECUTABLES
   runAppRP.cc
   runAppTestEM3RP.cc
   ../examplesRP/GeantV/Tests/BremTestGV/bremtestGV.cc
-  ../examplesRP/GeantV/Tests/ComptonTestGV/comptontestGV.cc  
+  ../examplesRP/GeantV/Tests/ComptonTestGV/comptontestGV.cc 
+  ../examplesRP/GeantV/Tests/PhotoElectricTestGV/photoelectrictestGV.cc  
 )
 
 macro(build_executables EXECUTABLES)
