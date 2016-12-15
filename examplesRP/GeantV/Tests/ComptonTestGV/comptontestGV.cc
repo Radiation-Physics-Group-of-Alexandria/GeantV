@@ -31,6 +31,10 @@
 #include "PhysicsProcess.h"
 #include "Hist.h"
 
+#include "TH1F.h"
+#include "TFile.h"
+
+
 int main() {
     
     using geantphysics::PhysicsListManager;
@@ -170,8 +174,20 @@ int main() {
     Hist *h = new Hist((eProdCut/ekin), 1, 100);
     Hist *hcosTheta = new Hist(-1, 1, 100);
     
+    
+    TFile* fHistFile = new TFile("gV_new.root", "RECREATE");
+    TH1F* fEnergyOut1 = new TH1F("EnergyOut1", "EnergyOut1", 100,  (eProdCut/ekin), 1);
+    TH1F* fEnergyOut2 = new TH1F("EnergyOut2", "EnergyOut2", 100,  (eProdCut/ekin), 1);
+    TH1F* fAngleOut1 = new TH1F("AngleOut1", "AngleOut1", 100, -1., 1.0);
+    TH1F* fAngleOut2 = new TH1F("AngleOut2", "AngleOut2", 100, -1., 1.0);
+    
+    
+    
+    
     long int NUMRAND = 10000000;
     clock_t  start_time = clock();
+    
+    
     for (long int i=0;i<NUMRAND;++i) {
         // we will use members:
         //  fMaterialCutCoupleIndex <==>  // current MaterialCuts index
@@ -220,6 +236,12 @@ int main() {
 
             hcosTheta->Fill(gcostheta,1.0);
             //hcosTheta->Fill(gcostheta,1.0);
+            
+            if(std::abs(egamma)>2*1.0000e-12)
+            fEnergyOut1->Fill(egamma/ekin);
+            fEnergyOut2->Fill(eelectron/ekin);
+            fAngleOut1->Fill(gcostheta);
+            fAngleOut2->Fill(ecostheta);
 
         }
     }
@@ -232,9 +254,19 @@ int main() {
         std::cout<<h->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<h->GetY()[i]*norm<<std::endl;
     }
     
+
+    
     //for (int i=0; i< hcosTheta->GetNumBins(); ++i) {
     //    std::cout<<hcosTheta->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<hcosTheta->GetY()[i]*norm<<std::endl;
     //}
     
+    
+    fHistFile->Write();
+    fHistFile->Close();
+
+    //delete fEnergyOut1;
+    //delete fEnergyOut2;
+    //delete fAngleOut1;
+    //delete fAngleOut2;
     return 0;
 }
