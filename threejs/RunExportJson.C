@@ -1,258 +1,180 @@
-#include "TMath.h"
-#include "TControlBar.h"
-#include "TRandom3.h"
-#include "TROOT.h"
-#include "TSystem.h"
-#include "TVirtualPad.h"
-#include "TCanvas.h"
-#include "TVirtualGeoPainter.h"
 #include "TGeoManager.h"
-#include "TGeoNode.h"
-#include "TView.h"
-#include "TPaveText.h"
-#include "TGeoBBox.h"
-#include "TGeoPara.h"
-#include "TGeoTube.h"
-#include "TGeoCone.h"
-#include "TGeoEltu.h"
-#include "TGeoSphere.h"
-#include "TGeoTorus.h"
-#include "TGeoTrd1.h"
-#include "TGeoTrd2.h"
-#include "TGeoParaboloid.h"
-#include "TGeoHype.h"
-#include "TGeoPcon.h"
-#include "TGeoPgon.h"
-#include "TGeoArb8.h"
-#include "TGeoXtru.h"
-#include "TGeoCompositeShape.h"
-#include "TGeoPhysicalNode.h"
-#include <algorithm>
-#include <queue>          // std::queue
-#include <math.h>       /* sqrt */
-#include <TGDMLWrite.h>
+#include "Riostream.h"
+#include "TString.h"
+#include "TGeoVolume.h"
+
+void RunExportJson(int MaxVisiLevel=4,TString ChosenTopVolume="Top",bool OneCopy=true,TString FileName="")
+{
+   //MaxVisiLevel -> only volumes positioned in the tree level up to MaxVisiLevel will be considered
+   //ChosenTopVolume -> Only the volumes that belong to the tree branch starting by ChosenTopVolume will be considered
+   //OneCopy -> if true:  Only the first copy number of the volume and its branch will be considered
+   //FileName --\> json outpout will be stored in the file: FileName
+
+   // Load some root geometry
+   TGeoNode *current;
+   TGeoNode *TopVol;
+   TGeoVolume *vol;
+   TGeoShape *shape;
+   TString path;
+   TGeoVolume *CurrentVolume;
+   TString guid,Vguid;
+   ofstream JsonFile;
+   TString JsonFileName = "geo-box.json";
+   TGeoShape *MapVol1  [100000];
+   TGeoShape *MapVol   [100000];
+   TString   MapGuidVol[100000];
+   TString   MapGuidMat[30000];
+   
+   if (!gGeoManager ) {
+      cout << "\nERROR    NO GEOMETRY DEFINED gGeoManager=null   STOP !!!!\n";
+      return(0);
+   }
+   TGeoVolume *top = gGeoManager->GetTopVolume();
+   int nAsblVol[100];
+   Int_t kVolume = 0;
+   int nPhyVol=0;
 
 
-void RunExportJson() {
-  // Load some root geometry
-  TGeoVolume *top = gGeoManager->GetTopVolume();
-  Int_t nTotalNodes = gGeoManager->GetNNodes();
-  TGeoIterator iter(top);
-  TGeoNode *current;
-  TGeoVolume *vol;
-  TGeoShape *shape;
-  TBuffer3D *buffer_vol;
-  TString path;
-  TGeoVolume *CurrentVolume;
-  TString guid;
-  ofstream JsonFile;
-  TString JsonFileName="geo-box.json";
-  TGeoVolume *MapVol[10000];
-  TString  MapGuidVol[10000];
-  TGeoMaterial *MapMat[10000];
-  TString  MapGuidMat[10000];
-  TString guidVol,guidMat;
-  int iVol;
+   // Materials (for semplicity) are simply defined by the LineColour of the volume/node
+   // Color N has an GUID identifier stored in MapGuidMat[N]
+   for (int i=0;i<30000;i++){
+      MapGuidMat[i]="";
+   }
 
-  //current=top;
-  
+   if (FileName!="") {
+      JsonFileName=FileName;
+   }
 
-  cout << "\n\n--> Starting elaboration of existing Geometry and creation of JSON file: "<<JsonFileName<<"\n";
-  cout << "-->Top volume: " << top->GetName() <<" Nodes: "<< nTotalNodes<<std::endl;
+   //cout << "\n\n-->Geometry for: " << top->GetName() << " Nodes: " << gGeoManager->GetNNodes() << "\n";
 
-  JsonFile.open(JsonFileName);
+   if (ChosenTopVolume!="Top"){
+      top=gGeoManager->GetVolume(ChosenTopVolume);
+      //TGeoNode *TopVol=top->FindNode(ChosenTopVolume);
+      //if (!TopVol) {
+      //top=TopVol->GetVolume();
+   }
+   if (!top) {
+         cout << "\nBAD LUCK MY FRIEND, Top volume "<<ChosenTopVolume<<" does not exist !!!!\n";
+         return;
+   }
+   Int_t nTotalNodes = gGeoManager->CountNodes(top,1000,0);
 
-  JsonFile << "{" << "\n"
-       << "\"metadata\": { \n"
-       << "\"version\": 4.3,"
-       << "\"type\": \"Object\",\n"
-       << "\"generator\": \"ObjectExporter\"},\n"
-       << "\"geometries\": [\n";
-  
-  TIter next(gGeoManager->GetListOfVolumes());
-  int kVolume=0;
-  cout <<"Defining Volumes\n";
-  while ((CurrentVolume=(TGeoVolume*)next())) {
+   //ExportJsonTree();
 
-    if (kVolume>0) JsonFile << ",\n";
-    shape = CurrentVolume->GetShape();
-    TString chvol=CheckVolume(shape);
+   cout << "\n\n-->Top volume: " << top->GetName() << " Nodes: " << nTotalNodes << "Max Visi Lev:"<<MaxVisiLevel<<"\n\n";
 
-    //cout <<"\n "<<kVolume<<"*****CHECK VOLUME: "<<"Class: "<<chvol<<"-->"<<CurrentVolume->GetName();
-    //cout <<".";
+   JsonFile.open(JsonFileName);
 
-    if (chvol!=""){
-      if (strcmp(chvol, "TGeoCompositeShape") == 0) {
-        cout <<"\n ===Start: "<< chvol << "\n";
-        TGeoShape *leftS  = GetLshape((TGeoCompositeShape*)shape);
-        guid=doGuidStuff(GuidGenerator());    
-        CreateJsonVol(leftS,JsonFile,guid); 
-        MapVol[kVolume]=CurrentVolume;
-        MapGuidVol[kVolume]=guid;
-        kVolume++;
-        JsonFile << "," << "\n";
-        TGeoShape *rightS = GetRshape((TGeoCompositeShape*)shape);
-        guid=doGuidStuff(GuidGenerator());    
-        CreateJsonVol(rightS,JsonFile,guid); 
-        MapVol[kVolume]=CurrentVolume;
-        MapGuidVol[kVolume]=guid;
-        kVolume++;
-        cout <<"\n ===End: "<< chvol << "\n";
 
-      } else {
-        guid=doGuidStuff(GuidGenerator());    
-        CreateJsonVol(shape,JsonFile,guid); 
-        MapVol[kVolume]=CurrentVolume;
-        MapGuidVol[kVolume]=guid;
-        kVolume++;
+   //Initialize Json file
+   JsonFile << "{\n\"metadata\": { \n\"version\": 4.3,\"type\": \"Object\",\n\"generator\": \"ObjectExporter\"},\n\"geometries\": [\n";
+
+
+   // Check volumes in the tree structure
+   ofstream JsonTree;
+   JsonTree.open("VolumesInAlice-number3.txt");
+
+   int pl=0;
+   for (int k=0;k<100;k++){nAsblVol[k]=0;}
+   int kvol=ExportJsonTree(top,MaxVisiLevel,nAsblVol,0,pl,0,nTotalNodes, MapGuidMat,MapVol,MapGuidVol,nPhyVol,OneCopy,JsonTree);
+   JsonTree.close();
+
+
+   nPhyVol=0;
+   //   Start definition of geometries
+
+
+   cout <<"\n ******   START EXPORTING Logical Volumes   *****\n";
+   pl=0;
+   for (int k=0;k<100;k++){nAsblVol[k]=0;}
+
+   //====================================
+   //Create an box geometry to be used for Assembly Volumes
+   MapGuidVol[kVolume] = doGuidStuff(GuidGenerator());
+   JsonFile << "{\n\t\"uuid\": \""<<MapGuidVol[kVolume]<<"\",\n\t\"type\": \"BoxGeometry\",\n\t\"width\": 0.001,\n\t\"height\": 0.001,\n\t\"depth\": 0.001,\n\t\"widthSegments\": 1,\n\t\"heightSegments\": 1,\n\t\"depthSegments\": 1\n}";
+   //====================================
+   kVolume++;
+   kVolume=ExportLogicalVolumes(top,MaxVisiLevel,nAsblVol,0,pl,kVolume,nTotalNodes, MapGuidMat,MapVol,MapGuidVol,nPhyVol,OneCopy,JsonFile);
+
+   JsonFile << "]," << "\n"; 
+   cout <<"\n"<<kVolume<<" Geometries have been defined in the JSON file: "<< JsonFileName<<"\n";
+   cout <<"\n"<<nPhyVol<<" Physical volumes have been counted.\n";
+
+   //   End definition of Geometries
+
+    
+   //   Start definition of Materials
+   JsonFile << "\"materials\": [" << "\n"; 
+   cout  << "\n Start definition of Materials .... ";
+
+   //  TIter nextmat(gGeoManager->GetListOfMaterials());
+   //  TGeoMaterial *lmaterial;
+
+   int kMaterial = 0;
+
+   //=======================================
+   // We define a transparent material for vacuum and assmbly volumes
+   Vguid = doGuidStuff(GuidGenerator());
+   JsonFile << "{\n\t\"uuid\": \"" << Vguid << "\",\n";
+   JsonFile << "\t\"type\": \"MeshLambertMaterial\",\n";
+   JsonFile << "\t\"name\":\"Transparent \",\n";
+
+   JsonFile << "\t\"color\":0,\n";
+   JsonFile << "\t\"emissive\":0,\n";
+
+   JsonFile << "\t\"opacity\": 0.0,\n";
+   JsonFile << "\t\"transparent\": true,\n";
+   JsonFile << "\t\"wireframe\": true\n},\n";
+
+   //=======================================
+
+   for (int i=0;i<30000;i++){
+      //cout <<"\t\t\t\n Loop: "<<i<<" "<<MapGuidMat[i]<<"\n";
+      if (MapGuidMat[i]!=""){
+         //cout <<"\n Color: "<<i<<" "<<MapGuidMat[i]<<"\n";
+
+         if (kMaterial > 0) JsonFile << ",\n";
+         guid = doGuidStuff(GuidGenerator());
+         MapGuidMat[i] = guid;
+         ExportMaterials(i,guid,JsonFile);
+         kMaterial++;
       }
-    }
-  }
-  JsonFile << "]," << "\n"; // End definition of Geometries
-  JsonFile << "\"materials\": [" << "\n"; // Start definition of Materials
+   } 
+   cout  << kMaterial<< " Materials defined in the JSON file: "<< JsonFileName<<"\n";
 
-  //go through materials  - iterator and object declaration
-  TIter nextmat(gGeoManager->GetListOfMaterials());
-  TGeoMaterial *lmaterial;
-  int kMaterial=0;
-  while ((lmaterial = (TGeoMaterial *)nextmat())) {
-    if (kMaterial>0) JsonFile << ",\n";
-    //generate uniq name
-    TString lname = lmaterial->GetName();
-    guid=doGuidStuff(GuidGenerator()); 
-    MapMat[kMaterial]=lmaterial;
-    MapGuidMat[kMaterial]=guid;
+   JsonFile << "]," << "\n"; 
+   // End definition of Materials
 
-    cout << "\n kMaterial :"<<kMaterial<<" "<<lmaterial->GetName()<<"\n";
+   // Start definition of scene and Physical volumes/nodes
 
-    ExportMaterials(guid,lmaterial->GetName(),lmaterial->GetA(),lmaterial->GetZ(),JsonFile);
+   JsonFile << "\"object\": {" << "\n"; 
+   JsonFile << "\"uuid\": \"" << doGuidStuff(GuidGenerator()) << "\",\n";
+   JsonFile << "\"type\": \"Scene\",\n";
+   JsonFile << "\"name\": \"Scene\",\n";
+   JsonFile << "\"matrix\": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]";
 
-    kMaterial++;
+   //cout <<"\n ******   START EXPORTING Physical Volumes   *****\n"<<top->GetName();
+   //cout << "  10%  20%  30%  40%  50%  60%  70%  80%  90% 100%\n";
 
-  }
-  //TOBE DELETED BEGIN
-
-  //JsonFile << "}\n}";
-
-  //JsonFile.close(); // close the file handle
-  //std::cout << "\n\n--> JSON FILE CREATED "<< std::endl<< std::endl;
-  //return;
-  //TOBE DELETED END
-
-  JsonFile << "]," << "\n"; // End definition of Materials
-
-  JsonFile << "\"object\": {" << "\n"; // Start definition of scene
-  guid=doGuidStuff(GuidGenerator());
-  JsonFile << "\"uuid\": \"" << guid <<"\",\n"; 
-  JsonFile << "\"type\": \"Scene\",\n";
-  JsonFile << "\"name\": \"Scene\",\n";
-  JsonFile << "\"matrix\": [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]";
-
-  cout <<"\n\n ==================Nodes====================\n\n";
-
-  //  --Loop on the volumes of the tree structure
-  int kLevel=0;
-  int kNode=0;
-  while ((current=iter.Next())) {
-    iter.GetPath(path);
-    vol=current->GetVolume();
-    shape = vol->GetShape();
-
-    TString chvol=CheckVolume(shape);
-    //cout <<"\n *****CHECK Node class:--> "<< chvol<<", Vol. Name:-->"<<vol->GetName()<<"\n";
-    if (chvol!=""){
-
-      //   find the guid of the current volume
-      guidVol="";
-      for (int i=0;i<kVolume;i++){
-        if (vol==MapVol[i]) {
-          iVol=i;
-          guidVol=MapGuidVol[i];
-         //cout << "--"<<current->GetName()<<": ";
-          break;
-        }
-      }
-      if (guidVol=="") {
-        cout << "ERROR **** UNDEFINED volume" <<current->GetName()<<"  STOP\n";
-        break;
-      }
-      //   find the guid of the material of the current volume 
-      guidMat="";
-      for (int i=0;i<kMaterial;i++){
-        if (vol->GetMaterial()==MapMat[i]) {
-          //cout << vol->GetMaterial()->GetName();
-          guidMat=MapGuidMat[i];
-          break;
-        }
-      }
-      if (guidMat=="") {
-        guidMat=MapGuidMat[0];
-        cout << "ERROR **** UNDEFINED material for:" <<current->GetName()<<"  ASSIGNED index 0\n";
-      }
-
-      if (iter.GetLevel()>kLevel){
-        //   If the level is greater that current level, then we define a new child
-        JsonFile << ",\n";
-        TabLine(iter.GetLevel(),JsonFile);
-        JsonFile << "\"children\": [\n";
-        TabLine(iter.GetLevel(),JsonFile);
-        JsonFile << "{\n";
-      } else if (iter.GetLevel()<kLevel){
-        int nLev=kLevel-iter.GetLevel();
-        JsonFile << "\n";
-        for (int i=0;i<nLev;i++){
-          TabLine(kLevel-i,JsonFile);
-          JsonFile << "}]\n";
-        }
-        TabLine(iter.GetLevel(),JsonFile);
-        JsonFile << "},\n";
-        TabLine(iter.GetLevel(),JsonFile);
-        JsonFile << "{\n";
-
-      } else {
-        JsonFile << "\n";
-        TabLine(iter.GetLevel(),JsonFile);
-        JsonFile << "},\n";
-        TabLine(iter.GetLevel(),JsonFile);
-        JsonFile << "{\n";
-      }
-
-      if (strcmp(chvol, "TGeoCompositeShape") == 0) {
-        cout <<"\n ===Start Node: "<< chvol << "\n";
-        guid=doGuidStuff(GuidGenerator());  
-        ExportLeftCompVolume(guid,guidVol,guidMat,(TGeoCompositeShape *)shape,iter.GetLevel(),JsonFile);
-        TabLine(iter.GetLevel(),JsonFile);
-        JsonFile << "},\n";
-        TabLine(iter.GetLevel(),JsonFile);
-        JsonFile << "{\n";
-        guidVol=MapGuidVol[iVol+1];
-        guid=doGuidStuff(GuidGenerator());  
-        ExportRightCompVolume(guid,guidVol,guidMat,(TGeoCompositeShape *)shape,iter.GetLevel(),JsonFile);
-        
-        cout <<"\n ===End Node: "<< chvol << "\n";
-
-      } else {
-
-        guid=doGuidStuff(GuidGenerator());
-        ExportCurrentVolume(guid,guidVol,guidMat,current,iter.GetLevel(),JsonFile);
-
-        kNode++;
-      }
-    }
-    kLevel=iter.GetLevel();
-  }
-
-  JsonFile << "\n";
-  for (int i=0;i<kLevel;i++){
-    TabLine(kLevel-i,JsonFile);
+   pl=0;
+   for (int k=0;k<100;k++){nAsblVol[k]=0;}
+   int nPhysicalVol= ExportPhysicalVolumes(top,MaxVisiLevel,nAsblVol,0,pl,0,nPhyVol,MapGuidMat,MapVol,MapGuidVol,kVolume,OneCopy,Vguid,JsonFile);
+   for (int i = 0; i < pl; i++) {
+    TabLine(pl - i, JsonFile);
     JsonFile << "}]\n";
-  }
-  JsonFile << "}\n}";
+   }
 
-  JsonFile.close(); // close the file handle
+   cout <<"\n"<<nPhysicalVol<<" Physical Volumes have been defined in the JSON file: "<< JsonFileName<<"\n";
 
-  std::cout << "\n\n--> JSON FILE: "<<JsonFileName<<" CREATED "<< std::endl<< std::endl;
+   //   End definition of Scene and Physical volumes/nodes
 
+   JsonFile << "}\n}";
+
+   JsonFile.close(); // close the file handle
+
+   std::cout << "\n\n--> JSON FILE: " << JsonFileName << " CREATED " << std::endl << std::endl;
+
+   return(0);
 }
 
 //============== JSON GEOMETRY ======== End

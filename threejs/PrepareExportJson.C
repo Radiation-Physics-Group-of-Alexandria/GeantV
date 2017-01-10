@@ -1,3 +1,34 @@
+#if defined(G__WIN32) && defined(__CINT__) && !defined(__MAKECINT__)
+{
+   Info("PrepareExportJson.C", "Has to be run in compiled mode ... doing this for you.");
+   gSystem->CompileMacro("PrepareExportJson.C");
+   PrepareExportJson();
+}
+#else
+
+//#include "TUUID.h"
+#include "TGeoManager.h"
+#include "TGeoVolume.h"
+#include "TGeoNode.h"
+#include "TGeoBoolNode.h"
+#include "TGeoMatrix.h"
+#include "TGeoCompositeShape.h"
+#include "TBuffer3D.h"
+#include "TString.h"
+#include "TColor.h"
+#include "Riostream.h"
+#include <algorithm>
+#include <queue>
+#include <math.h>
+//TString doGuidStuff()
+//{
+//   TUUID uuid;
+//   TString str_uuid = uuid.AsString();
+//   str_uuid.ToUpper();
+//   return StrDup(str_uuid);
+//}
+
+
 //====================GUID SYSTEM SELECTION BEGIN ======================
 // PLEASE comment out the lines below to select your system code
 //======================================================================
@@ -14,39 +45,6 @@
 // systems that have libuuid available
 //#define GUID_LIBUUID
 //====================GUID SYSTEM SELECTION END ======================
-#include "TMath.h"
-#include "TControlBar.h"
-#include "TRandom3.h"
-#include "TROOT.h"
-#include "TSystem.h"
-#include "TVirtualPad.h"
-#include "TCanvas.h"
-#include "TVirtualGeoPainter.h"
-#include "TGeoManager.h"
-#include "TGeoNode.h"
-#include "TView.h"
-#include "TPaveText.h"
-#include "TGeoBBox.h"
-#include "TGeoPara.h"
-#include "TGeoTube.h"
-#include "TGeoCone.h"
-#include "TGeoEltu.h"
-#include "TGeoSphere.h"
-#include "TGeoTorus.h"
-#include "TGeoTrd1.h"
-#include "TGeoTrd2.h"
-#include "TGeoParaboloid.h"
-#include "TGeoHype.h"
-#include "TGeoPcon.h"
-#include "TGeoPgon.h"
-#include "TGeoArb8.h"
-#include "TGeoXtru.h"
-#include "TGeoCompositeShape.h"
-#include "TGeoPhysicalNode.h"
-#include <algorithm>
-#include <queue>          // std::queue
-#include <math.h>       /* sqrt */
-#include <TGDMLWrite.h>
 
 //============== GUID =================begin
 /*
@@ -347,8 +345,6 @@ TString doGuidStuff(GuidGenerator generator)
 //============== GUID ================= End
 
 
-
-
 //============== JSON GEOMETRY ======== Begin
 
 TString CheckVolume(TGeoShape *geoShape)
@@ -356,66 +352,69 @@ TString CheckVolume(TGeoShape *geoShape)
    // Check the type of volume and ...
 
    TString clsname = geoShape->ClassName();
-   TString VolFound=clsname;
+   TString VolFound = clsname;
 
    //process different shapes
-   if (strcmp(clsname, "TGeoBBox") == 0) {
+   if (clsname == "TGeoBBox") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoParaboloid") == 0) {
+   } else if (clsname == "TGeoParaboloid") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoSphere") == 0) {
+   } else if (clsname == "TGeoSphere") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoConeSeg") == 0) {
+   } else if (clsname == "TGeoConeSeg") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoCone") == 0) {
+   } else if (clsname == "TGeoCone") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoTubeSeg") == 0) {
+   } else if (clsname == "TGeoTubeSeg") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoTube") == 0) {
+   } else if (clsname == "TGeoTube") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoPcon") == 0) {
+   } else if (clsname == "TGeoPcon") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoTorus") == 0) {
+   } else if (clsname == "TGeoTorus") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoPgon") == 0) {
+   } else if (clsname == "TGeoPgon") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-    } else if (strcmp(clsname, "TGeoHype") == 0) {
+   } else if (clsname == "TGeoHype") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoScaledShape") == 0) {
+   } else if (clsname == "TGeoScaledShape") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoArb8") == 0) {
+   } else if (clsname == "TGeoArb8") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoPara") == 0) {
+   } else if (clsname == "TGeoPara") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoTrap") == 0) {
+   } else if (clsname == "TGeoTrap") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoGtra") == 0) {
+   } else if (clsname == "TGeoGtra") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoTrd1") == 0) {
+   } else if (clsname == "TGeoTrd1") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoTrd2") == 0) {
+   } else if (clsname == "TGeoTrd2") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoCtub") == 0) {
+   } else if (clsname == "TGeoCtub") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoEltu") == 0) {
+   } else if (clsname == "TGeoEltu") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoXtru") == 0) {
+   } else if (clsname == "TGeoXtru") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   } else if (strcmp(clsname, "TGeoCompositeShape") == 0) {
+   } else if (clsname == "TGeoShapeAssembly") {
       //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
-   //   cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
-   //} else if (strcmp(clsname, "TGeoUnion") == 0) {
-   //   VolFound="";
-   //   cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
-   //} else if (strcmp(clsname, "TGeoIntersection") == 0) {
-   //   VolFound="";
-   //   cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
-   //} else if (strcmp(clsname, "TGeoSubtraction") == 0) {
-   //   VolFound="";
-   //   cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
+      //cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
+   } else if (clsname == "TGeoUnion") {
+      //VolFound="";
+      //cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
+   //} else if (clsname == "TGeoCompositeShape") {
+      //cout << "\n---\n-> Geometry of volume: "<< clsname << " \n---\n";
+      //cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
+   //} else if (clsname == "TGeoIntersection") {
+      //VolFound="";
+      //cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
+   //} else if (clsname == "TGeoSubtraction") {
+      //   VolFound="";
+      //cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
    } else {
-      VolFound="";
-      cout << "\nERROR! Skiping Solid NOT supported: "<<clsname<<"\n";
+      VolFound = "";
+      //cout << "\nERROR! Skiping Solid NOT supported: " <<"\t" <<clsname<< "\t" <<geoShape->GetName()<< " \n";
    }
    return VolFound;
 }
@@ -424,510 +423,842 @@ TString CheckVolume(TGeoShape *geoShape)
 
 //______________________________________________________________________________
 
-void CalculateSurfaceNormal (Double_t p1[3],Double_t p2[3],Double_t p3[3], Double_t *Vnormal){
+void CalculateSurfaceNormal(Double_t p1[3], Double_t p2[3], Double_t p3[3], Double_t *Vnormal)
+{
 //
-// Here we compute two vectors coplanar to a face. The faces are triangles defined by points 
+// Here we compute two vectors coplanar to a face. The faces are triangles defined by points
 // p1,p2,p3, then two possible vectors are: U = p2 - p1 and V = p3 - p1
-// With the two vectors, U & V we compute the cross product between them to find a perpendicular 
+// With the two vectors, U & V we compute the cross product between them to find a perpendicular
 // vector to the face: Vn = U x V
-// Vn(x) = Uy * Vz - Uz * Vy 
-// Vn(y) = Uz * Vx - Ux * Vz 
+// Vn(x) = Uy * Vz - Uz * Vy
+// Vn(y) = Uz * Vx - Ux * Vz
 // Vn(z) = Ux * Vy - Uy * Vx
 //
 //The length of the vector: Vmod=SQRT(Vnx**2+Vny**2+Vnz**2)
 //
 //
-  Double_t U[3],V[3],Vn[3],Vmod;
+   Double_t U[3], V[3], Vn[3], Vmod;
 
-  U[0]=p2[0] - p1[0];
-  U[1]=p2[1] - p1[1];
-  U[2]=p2[2] - p1[2];
- 
-  V[0]=p3[0] - p1[0];
-  V[1]=p3[1] - p1[1];
-  V[2]=p3[2] - p1[2];
- 
-  Vn[0]=U[1]*V[2] - U[2]*V[1];
-  Vn[1]=U[2]*V[0] - U[0]*V[2];
-  Vn[2]=U[0]*V[1] - U[1]*V[0];
-  
-  Vmod=sqrt(pow(Vn[0],2.0)+pow(Vn[1],2.0)+pow(Vn[2],2.0));
+   U[0] = p2[0] - p1[0];
+   U[1] = p2[1] - p1[1];
+   U[2] = p2[2] - p1[2];
 
-  if (Vmod==0){
-    cout << "\n-->Error:====================================================================\n";
-    for (int i=0;i<3;i++) {
-      cout << "-->P: "<<p1[i]<<" "<<p2[i]<<" "<<p3[i] << " U: "<<U[i] <<" V: " << V[i]<< " Vn: "<<Vn[i] << "\n";
-    }
-    cout << "\n-->==========================================================================\n";
-    Vnormal[0]=0;
-    Vnormal[1]=0;
-    Vnormal[2]=0;
-  } else {
-    Vnormal[0]=Vn[0]/Vmod;
-    Vnormal[1]=Vn[1]/Vmod;
-    Vnormal[2]=Vn[2]/Vmod;
-    // cout << "Vmode:" << Vmod <<" Normal:" << Vnormal <<"\n";
-  }
+   V[0] = p3[0] - p1[0];
+   V[1] = p3[1] - p1[1];
+   V[2] = p3[2] - p1[2];
+
+   Vn[0] = U[1] * V[2] - U[2] * V[1];
+   Vn[1] = U[2] * V[0] - U[0] * V[2];
+   Vn[2] = U[0] * V[1] - U[1] * V[0];
+
+   Vmod = sqrt(pow(Vn[0], 2.0) + pow(Vn[1], 2.0) + pow(Vn[2], 2.0));
+
+   if (Vmod == 0) {
+      //cout << "\n-->Error:====================================================================\n";
+      //for (int i = 0; i < 3; i++) {
+         //cout << "-->P: " << p1[i] << " " << p2[i] << " " << p3[i] << " U: " << U[i] << " V: " << V[i] << " Vn: " << Vn[i] << "\n";
+      //}
+      //cout << "\n-->==========================================================================\n";
+      Vnormal[0] = 0;
+      Vnormal[1] = 0;
+      Vnormal[2] = 0;
+   } else {
+      Vnormal[0] = Vn[0] / Vmod;
+      Vnormal[1] = Vn[1] / Vmod;
+      Vnormal[2] = Vn[2] / Vmod;
+      //cout << "Vmode:" << Vmod <<" Normal:" << Vnormal <<"\n";
+   }
 }
 
 
-void CreateJsonVol(TGeoShape *shape,ofstream& JsonFile,TString guid) {
-  // Load some root geometry
-  TGeoNode *current;
-  TBuffer3D *buffer_vol;
-  int Nfaces=0;
-  queue <int *> Faces;
-//  int CPh[200000][3]; used to check faces definition
-  int * FaceTriangle;
-  queue <Double_t *> Fnormals;
-  Double_t V1[3],V2[3],V3[3];
-  Double_t *Vnormal;
-  bool found;
+void CreateJsonVol(TGeoShape *shape, ofstream &JsonFile, TString guid)
+{
+   // Load some root geometry
+   TBuffer3D *buffer_vol;
+   int Nfaces = 0;
+   queue <int *> Faces;
+   queue <Double_t *> Fnormals;
+   Double_t V1[3], V2[3], V3[3];
+   Double_t *Vnormal;
+   int *FaceTriangle;
+
+   //--Consider each polygon of min 3 (triangles) and max 4 (quads) vertices.
+   //--vrtx containes the index to vertexes for each segment of the polugon (max 2*4=8)
+   //--vquad contains [continous] vertexes of the polygon (max=4)
+   int vrtx[24], vquad[4];
+
+   //     --Call the triangulation routine
+   //cout << "\n-->Calling the triangulation routine---" << "\n";
+   buffer_vol = shape->MakeBuffer3D();
+
+   //cout << "\nMakeBuffer3D: No of Vert/Seg/poly: " << buffer_vol->NbPnts() << " / " << buffer_vol->NbSegs()<< " / " << buffer_vol->NbPols() <<" : "<<shape->GetName()<<"\n";
+
+   //Start GEOMETRY definition in JSON with "{".
+   JsonFile << "{\n";
+   JsonFile << "\t\"uuid\": \"";
+   //Generate a GUID for the specific volume for JSON file
+   JsonFile << guid << "\",\n";
+   JsonFile << "\t\"type\": \"Geometry\",\n";
+   JsonFile << "\t\"data\":{\n";
+   JsonFile << "\t\"vertices\": [";
+
+   //Write all vertexes in JSON file
+   int Kvertex = 0;
+   for (int i = 0; i < buffer_vol->NbPnts() * 3; i = i + 3) {
+      JsonFile << buffer_vol->fPnts[i] << ",  " << buffer_vol->fPnts[i + 1] << ",  " << buffer_vol->fPnts[i + 2] ;
+      //cout << "--> " << i << " <-- " << buffer_vol->fPnts[i] << ",  " << buffer_vol->fPnts[i + 1] << ",  " << buffer_vol->fPnts[i + 2] << "\n";
+      if (i < buffer_vol->NbPnts() * 3 - 3) {
+         JsonFile << ","; //JsonFile <<",\n";
+      } else {
+         //JsonFile <<"\n";
+      }
+      Kvertex = Kvertex + 1;
+   }
+   JsonFile << "]," << "\n";
+   //cout <<"Done vertex";
 
 
-  //--Consider each polygon of min 3 (triangles) and max 4 (quads) vertices.
-  //--vrtx containes the index to vertexes for each segment of the polugon (max 2*4=8)
-  //--vquad contains [continous] vertexes of the polygon (max=4)
-  int vrtx[8],vquad[4],indxf;
+   Int_t IndexSegPolygon = 1; //define only triangles
+   Nfaces = 0;
+   //cout << "\n-->Generating triangles and normals ...";
 
-  //     --Call the triangulation routine
-  cout <<"\n-->Calling the triangulation routine---" <<"\n";
-  buffer_vol = shape->MakeBuffer3D();
+   //      Loop through all the polygons that have been defined for this volume
+   //      Each polygon will be converted to triangles faces saved in the que <Faces>
+   //      and for each triangle we calculate the normal stored also in the queue <Fnormals>
 
-  cout <<"\n-->No of Vertices: " << buffer_vol->NbPnts() <<"\n";
-  cout << "-->No of Segments: " << buffer_vol->NbSegs()<<"\n";
-  cout << "-->No of Polygons: " << buffer_vol->NbPols()<<"\n";
-  cout <<"\n-->Writing "<<buffer_vol->NbPnts() <<" Vertices to JSON file ... ";
+   for (int Kpolygon = 0; Kpolygon < buffer_vol->NbPols(); Kpolygon++) {
+      int iv = 0;
+
+      //          Loop through all the segments of the current polygon and get the Vertex indexes
+      //          expected max 4 segments and consequently 8 vertex indexes
+      //          fSegs:  c0, p0, q0, c1, p1, q1, ..... ..... ....
+      //          fPols;  c0, n0, s0, s1, ... sn, c1, n1, s0, ... sn
+      if (buffer_vol->fPols[IndexSegPolygon]<=4){
+        for (int k = 1; k < buffer_vol->fPols[IndexSegPolygon] + 1; k++) {
+          vrtx[iv] = buffer_vol->fSegs[3 * buffer_vol->fPols[IndexSegPolygon + k] + 1];
+          //cout <<"["<< vrtx[iv] <<",";
+          iv = iv + 1;
+          vrtx[iv] = buffer_vol->fSegs[3 * buffer_vol->fPols[IndexSegPolygon + k] + 2];
+          //cout << vrtx[iv] <<"]";
+          iv = iv + 1;
+        }
+        //cout << "\n";
+        //          Segments are defined in the correct order for the definition of the normals
+        //          but for each segment the sequence of vertexes may be inverted.
+        //          check continuity of vertexes in the consequtive segments
+        //          If Seg1 made of P0-P1 and Seg2 made of P0-P2 then Seg1 should be defined as P1-P0
+
+        if (vrtx[1] != vrtx[2]) {
+          if (vrtx[0] == vrtx[2]) {
+            int itemp = vrtx[0];
+            vrtx[0] = vrtx[1];
+            vrtx[1] = itemp;
+
+          } else if (vrtx[0] == vrtx[3]) {
+            int itemp = vrtx[0];
+            vrtx[0] = vrtx[1];
+            vrtx[1] = itemp;
+
+            itemp = vrtx[2];
+            vrtx[2] = vrtx[3];
+            vrtx[3] = itemp;
+
+          } else if (vrtx[1] == vrtx[3]) {
+            int itemp = vrtx[2];
+            vrtx[2] = vrtx[3];
+            vrtx[3] = itemp;
+          }
+        }
+
+        //          ---
+        //          Out of the (max 8) vertexes definining the (max 4) segments,
+        //          get the (max 4) vertexes defining the polygon (in quad)
+        //          Check that segments and vertexes are in the correct order
+        //          Starting from the first segment (vrtx[0]-vrtx[1]),
+        //          the second segment must have the vertex vrtx[1] and this should be the first in the order
+        //          ---
+
+        vquad[0] = vrtx[0];
+        vquad[1] = vrtx[1];
+        vrtx[0] = -1;
+        vrtx[1] = -1;
+
+        int kvert = 2;
+        while (kvert < buffer_vol->fPols[IndexSegPolygon]) {
+          for (int ks = 1; ks < iv; ks++) {
+            if (vrtx[ks * 2 + 1] == vquad[kvert - 1]) {
+               vquad[kvert] = vrtx[ks * 2];
+               vrtx[ks * 2] = -1;
+               vrtx[ks * 2 + 1] = -1;
+               kvert = kvert + 1;
+               break;
+            } else if (vrtx[ks * 2] == vquad[kvert - 1]) {
+               vquad[kvert] = vrtx[ks * 2 + 1];
+               vrtx[ks * 2] = -1;
+               vrtx[ks * 2 + 1] = -1;
+               kvert = kvert + 1;
+               break;
+            }
+          }
+        }
 
 
-  //Start GEOMETRY definition in JSON with "{".
-  JsonFile << "{\n";
-  JsonFile << "\t\"uuid\": \"";
-  //Generate a GUID for the specific volume for JSON file
-  JsonFile << guid <<"\",\n";
-  JsonFile << "\t\"type\": \"Geometry\",\n";
-  JsonFile << "\t\"data\":{\n";
-  JsonFile << "\t\"vertices\": [";
+        //     Using the vertex indexes get the x,y,z coordinates of each vertex of the 1st triangle
 
-  //Write all vertexes in JSON file
-  int Kvertex=0;
-  for (int i=0;i<buffer_vol->NbPnts()*3; i=i+3) {
-    JsonFile << buffer_vol->fPnts[i] <<",  "<< buffer_vol->fPnts[i+1]<<",  "<<buffer_vol->fPnts[i+2] ;
-    cout << "--> "<<i<<" <-- "<< buffer_vol->fPnts[i] <<",  "<< buffer_vol->fPnts[i+1]<<",  "<<buffer_vol->fPnts[i+2] <<"\n";
-    if (i<buffer_vol->NbPnts()*3-3) {
-      JsonFile <<","; //JsonFile <<",\n";
-    } else {
-      //JsonFile <<"\n";
-    }
-    Kvertex=Kvertex+1;
-  }
-  JsonFile << "]," << "\n";
-  //cout <<"Done vertex";
-        
+        for (int i = 0; i < 3; i++) {
+          V1[i] = buffer_vol->fPnts[3 * vquad[2] + i];
+          V2[i] = buffer_vol->fPnts[3 * vquad[1] + i];
+          V3[i] = buffer_vol->fPnts[3 * vquad[0] + i];
+        }
 
-  IndexSegPolygon=1; //define only triangles
-  Nfaces=0;
-  //cout << "\n-->Generating triangles and normals ...";
+        if ((V1[0] == V2[0] && V1[1] == V2[1] && V1[2] == V2[2]) ||
+            (V1[0] == V3[0] && V1[1] == V3[1] && V1[2] == V3[2]) ||
+            (V2[0] == V3[0] && V2[1] == V3[1] && V2[2] == V3[2])) {
 
-  //      Loop through all the polygons that have been defined for this volume
-  //      Each polygon will be converted to triangles faces saved in the que <Faces>
-  //      and for each triangle we calculate the normal stored also in the queue <Fnormals>
+          //cout << "\nSkiping triangle face1: <" << Nfaces << "> [" << V1[0] << "," << V1[1] << " ," << V1[2] << "]";
 
-  for (int Kpolygon=0;Kpolygon<buffer_vol->NbPols();Kpolygon++) {
-    int iv=0;
+        } else {
+          //            Get the first triangle of the defined polygon
+          FaceTriangle = new int[3];
+          FaceTriangle[0] = vquad[2];
+          FaceTriangle[1] = vquad[1];
+          FaceTriangle[2] = vquad[0];
 
-    //          Loop through all the segments of the current polygon and get the Vertex indexes 
-    //          expected max 4 segments and consequently 8 vertex indexes
-    //          fSegs:  c0, p0, q0, c1, p1, q1, ..... ..... ....
-    //          fPols;  c0, n0, s0, s1, ... sn, c1, n1, s0, ... sn
+          Vnormal = new Double_t[3];
+          CalculateSurfaceNormal(V1, V2, V3, Vnormal);
 
-    for (int k=1;k<buffer_vol->fPols[IndexSegPolygon]+1;k++){
-      vrtx[iv]=buffer_vol->fSegs[3*buffer_vol->fPols[IndexSegPolygon+k]+1];
-      iv=iv+1;
-      vrtx[iv]=buffer_vol->fSegs[3*buffer_vol->fPols[IndexSegPolygon+k]+2];
-      iv=iv+1;
-    }
+          Fnormals.push(Vnormal);
 
-    //          Segments are defined in the correct order for the definition of the normals 
-    //          but for each segment the sequence of vertexes may be inverted.
-    //          check continuity of vertexes in the consequtive segments
-    //          If Seg1 made of P0-P1 and Seg2 made of P0-P2 then Seg1 should be defined as P1-P0
+          Faces.push(FaceTriangle);
+          Nfaces = Nfaces + 1;
+        }
 
-    if (vrtx[1]!=vrtx[2]) {
-      if (vrtx[0]==vrtx[2]) {
-        int itemp=vrtx[0];
-        vrtx[0]=vrtx[1];
-        vrtx[1]=itemp;
+        //          If the polygon is a quad, get also the second triangle of the defined polygon
+        //
+        //         3 _____ 2
+        //          |    /|
+        //          | B / |
+        //          |  /  |
+        //          | / A |
+        //          |/____|
+        //         0       1
+        //
+        //         First trianle A: 0,1,2 second triangle B: 2,3,0
 
-      } else if (vrtx[0]==vrtx[3]) {
-        int itemp=vrtx[0];
-        vrtx[0]=vrtx[1];
-        vrtx[1]=itemp;
-                
-        itemp=vrtx[2];
-        vrtx[2]=vrtx[3];
-        vrtx[3]=itemp;
+        if (buffer_vol->fPols[IndexSegPolygon] == 4) {
+          //            Using the vertex indexes get the x,yz coordinates of each vertex of the 2nd triangle
+          for (int i = 0; i < 3; i++) {
+            V1[i] = buffer_vol->fPnts[3 * vquad[0] + i];
+            V2[i] = buffer_vol->fPnts[3 * vquad[3] + i];
+            V3[i] = buffer_vol->fPnts[3 * vquad[2] + i];
+          }
 
-      } else if (vrtx[1]==vrtx[3]) {
-        int itemp=vrtx[2];
-        vrtx[2]=vrtx[3];
-        vrtx[3]=itemp;
-      } 
-    }
-              
-    //          ---
-    //          Out of the (max 8) vertexes definining the (max 4) segments, 
-    //          get the (max 4) vertexes defining the polygon (in quad)
-    //          Check that segments and vertexes are in the correct order
-    //          Starting from the first segment (vrtx[0]-vrtx[1]),
-    //          the second segment must have the vertex vrtx[1] and this should be the first in the order
-    //          ---
+          if ((V1[0] == V2[0] && V1[1] == V2[1] && V1[2] == V2[2]) ||
+              (V1[0] == V3[0] && V1[1] == V3[1] && V1[2] == V3[2]) ||
+              (V2[0] == V3[0] && V2[1] == V3[1] && V2[2] == V3[2])) {
+            //cout << "\nSkiping triangle face2: <" << Nfaces << "> [" << V1[0] << "," << V1[1] << " ," << V1[2] << "]";
 
-    vquad[0]=vrtx[0];
-    vquad[1]=vrtx[1];
-    vrtx[0]=-1;
-    vrtx[1]=-1;
+          } else {
 
-    int kvert=2;
-    while (kvert<buffer_vol->fPols[IndexSegPolygon]) {
-      for (int ks=1;ks<iv;ks++){
-        if (vrtx[ks*2+1]==vquad[kvert-1]){
-          vquad[kvert]=vrtx[ks*2];
-          vrtx[ks*2]=-1;
-          vrtx[ks*2+1]=-1;
-          kvert=kvert+1;
-          break;
-        } else if (vrtx[ks*2]==vquad[kvert-1]){
-          vquad[kvert]=vrtx[ks*2+1];
-          vrtx[ks*2]=-1;
-          vrtx[ks*2+1]=-1;
-          kvert=kvert+1;
-          break;
+            FaceTriangle = new int[3];
+            FaceTriangle[0] = vquad[0];
+            FaceTriangle[1] = vquad[3];
+            FaceTriangle[2] = vquad[2];
+
+            Vnormal = new Double_t[3];
+            CalculateSurfaceNormal(V1, V2, V3, Vnormal);
+
+            Fnormals.push(Vnormal);
+
+            Faces.push(FaceTriangle);
+
+            Nfaces = Nfaces + 1;
+          }
         }
       }
-    }
+      IndexSegPolygon = IndexSegPolygon + buffer_vol->fPols[IndexSegPolygon] + 2;
+   } // end loop through polygons
 
+   //      print the Normals (one normal per triangle)
 
-    //     Using the vertex indexes get the x,yz coordinates of each vertex of the 1st triangle
+   JsonFile << "\t\"normals\": [";
+   //cout << "\n-->Generated "<< Nfaces << " Normals ... Writing normals to file ... \n";
+   int Knormal = 0;
+   while (!Fnormals.empty()) {
+      Double_t *Vnorm = Fnormals.front();
+      //cout << "\nNormal coordinates" << Vnorm[0] << "," << Vnorm[1] << "," << Vnorm[2];
+      JsonFile << Vnorm[0] << "," << Vnorm[1] << "," << Vnorm[2];
+      Knormal = Knormal + 1;
 
-    for (int i=0;i<3;i++){
-      V1[i]=buffer_vol->fPnts[3*vquad[2]+i];
-      V2[i]=buffer_vol->fPnts[3*vquad[1]+i];
-      V3[i]=buffer_vol->fPnts[3*vquad[0]+i];
-    }
-
-    if ((V1[0]==V2[0] && V1[1]==V2[1] && V1[2]==V2[2]) ||
-      (V1[0]==V3[0] && V1[1]==V3[1] && V1[2]==V3[2]) ||
-      (V2[0]==V3[0] && V2[1]==V3[1] && V2[2]==V3[2])){
-
-      //cout << "\nSkiping triangle face: <" << Nfaces << "> [" << V1[0] << "," << V1[1] << " ," << V1[2] << "]";
-
-    } else {
-
-
-    //            Get the first triangle of the defined polygon
-
-      FaceTriangle=new int[3];
-      FaceTriangle[0]=vquad[2];
-      FaceTriangle[1]=vquad[1];
-      FaceTriangle[2]=vquad[0];
-
-      Vnormal=new Double_t[3];
-      CalculateSurfaceNormal (V1,V2,V3,Vnormal);
-
-      Fnormals.push(Vnormal);
-
-      Faces.push(FaceTriangle);
-      Nfaces=Nfaces+1;
-    }
-
-    //          If the polygon is a quad, get also the second triangle of the defined polygon
-    //          
-    //         3 _____ 2
-    //          |    /|
-    //          | B / |
-    //          |  /  |
-    //          | / A |
-    //          |/____|
-    //         0       1
-    //
-    //         First trianle A: 0,1,2 second triangle B: 2,3,0
-
-    if (buffer_vol->fPols[IndexSegPolygon]==4) {
-
-    //            Using the vertex indexes get the x,yz coordinates of each vertex of the 2nd triangle
-
-      for (int i=0;i<3;i++){
-        V1[i]=buffer_vol->fPnts[3*vquad[0]+i];
-        V2[i]=buffer_vol->fPnts[3*vquad[3]+i];
-        V3[i]=buffer_vol->fPnts[3*vquad[2]+i];
+      if (Nfaces != Knormal) {
+         JsonFile << ",";
       }
+      //cout << "delete Normal pointer "<<Knormal<< " / "<<Nfaces<<" \n";
 
-      if ((V1[0]==V2[0] && V1[1]==V2[1] && V1[2]==V2[2]) ||
-        (V1[0]==V3[0] && V1[1]==V3[1] && V1[2]==V3[2]) ||
-        (V2[0]==V3[0] && V2[1]==V3[1] && V2[2]==V3[2])){
+      Fnormals.pop();
+      delete [] Vnorm;
+   }
+   JsonFile << " ],\n";
 
-        //cout << "\nSkiping triangle face: <" << Nfaces << "> [" << V1[0] << "," << V1[1] << " ," << V1[2] << "]";
+   // Start writing faces definition in Json file
 
-      } else {
+   JsonFile << "\t\"faces\": [";
 
-        FaceTriangle=new int[3];
-        FaceTriangle[0]=vquad[0];
-        FaceTriangle[1]=vquad[3];
-        FaceTriangle[2]=vquad[2];
+   //cout << "Done Normals\n";
+   //cout << "-->Creating faces ... \n";
 
-        Vnormal=new Double_t[3];
-        CalculateSurfaceNormal (V1,V2,V3,Vnormal);
-              
-        Fnormals.push(Vnormal);
+   //      print the triangles / faces definition
+   int Kfaces = 0;
+   while (!Faces.empty()) {
+      int *point = Faces.front();
+      JsonFile << "16," << point[0] << "," << point[1] << "," << point[2] << "," << Kfaces << "  ";
 
-        Faces.push(FaceTriangle);
+      Kfaces = Kfaces + 1;
 
-        Nfaces=Nfaces+1;
+      if (Nfaces != Kfaces) {
+         JsonFile << ",";
       }
-    }
+      //cout << "delete face pointer "<<Kfaces<< " / "<<Nfaces<<" \n";
 
-    IndexSegPolygon=IndexSegPolygon+buffer_vol->fPols[IndexSegPolygon]+2;
-  } // end loop through polygons
-    
-  //      print the Normals (one normal per triangle) 
+      Faces.pop();
+      delete [] point;
+   }
+   //cout << "Done Faces\n";
+   JsonFile << "]";
+   //Terminate the DATA definition for this volume with "}".
+   JsonFile << "}\n";
 
-  JsonFile << "\t\"normals\": [";
-  //cout << "\n-->Generated "<< Nfaces << " Normals ... Writing normals to file ... ";
-  int Knormal=0;
-  while (!Fnormals.empty()) {
-    Double_t *Vnorm=Fnormals.front();
-    JsonFile << Vnorm[0]<<","<<Vnorm[1]<<","<<Vnorm[2];
-    Knormal=Knormal+1;
-
-    if (Nfaces!=Knormal) {
-      JsonFile <<",";
-    } 
-    //JsonFile <<" \n";
-    delete [] Vnorm;
-    Fnormals.pop();
-  }
-  JsonFile <<" ],\n";
-
-  // Start writing faces definition in Json file
-
-  JsonFile << "\t\"faces\": [";
-
-  //cout << "Done Normals\n";
-  //cout << "-->Creating triangle faces ... ";
-
-  //      print the triangles / faces definition
-  int knorm=0;
-  int Kfaces=0;
-  while (!Faces.empty()) {
-    int *point=Faces.front();
-    JsonFile << "16," << point[0] << "," <<point[1] << "," <<point[2] << "," << knorm << "  ";
-    //CPh[Kfaces][0]=point[0];
-    //CPh[Kfaces][1]=point[1];
-    //CPh[Kfaces][2]=point[2];
-    Kfaces=Kfaces+1;
-    if (Kfaces>200000) {
-      cout <<"\n ERROR Dimension\n";
-    }
-    knorm=knorm+1;
-
-    if (Nfaces!=Kfaces) {
-      JsonFile <<",";
-    } 
-    //JsonFile <<"\n";
-    delete [] point;
-    Faces.pop();
-  }
-  JsonFile << "]";
-  //Terminate the DATA definition for this volume with "}".
-  JsonFile << "}\n";
-
-  //Terminate the GEOMETRY definition for this volume with "}".
-  JsonFile << "}";
-
-  //cout << Nfaces << " triangles created\n";
-  //cout << "-->Checking vertex order for each triangle ... ";
-
-  //      Check the def. of the triangles if the order of vertixes is correct
-  //return;
-  //Kfaces=0;
-  //while (Kfaces<Nfaces) {
-  //  int Kf=0;
-  //  found=false;
-  //  while (Kf<Nfaces) {
-  //    if (Kf!=Kfaces) {
-  //      if ( ((CPh[Kfaces][0]==CPh[Kf][1]) && (CPh[Kfaces][1]==CPh[Kf][0])) ||
-  //         ((CPh[Kfaces][0]==CPh[Kf][2]) && (CPh[Kfaces][1]==CPh[Kf][1])) ||
-  //         ((CPh[Kfaces][0]==CPh[Kf][0]) && (CPh[Kfaces][1]==CPh[Kf][2])) ||
-
-  //         ((CPh[Kfaces][1]==CPh[Kf][1]) && (CPh[Kfaces][2]==CPh[Kf][0])) ||
-  //         ((CPh[Kfaces][1]==CPh[Kf][2]) && (CPh[Kfaces][2]==CPh[Kf][1])) ||
-  //         ((CPh[Kfaces][1]==CPh[Kf][0]) && (CPh[Kfaces][2]==CPh[Kf][2])) ||
-
-  //         ((CPh[Kfaces][2]==CPh[Kf][1]) && (CPh[Kfaces][0]==CPh[Kf][0])) ||
-  //         ((CPh[Kfaces][2]==CPh[Kf][2]) && (CPh[Kfaces][0]==CPh[Kf][1])) ||
-  //         ((CPh[Kfaces][2]==CPh[Kf][0]) && (CPh[Kfaces][0]==CPh[Kf][2])) ) {
-  //        found=true;
-  //        cout << ".";
-  //        break;
-  //      }
-  //    }
-  //    Kf++;
-  //  }
-  //  if (!found) {
-  //    cout << "<Error on face:"<<Kfaces<<">";
-  //  } 
-  //  Kfaces++;
-  //}
-  //cout << " Done Checking faces\n";
+   //Terminate the GEOMETRY definition for this volume with "}".
+   JsonFile << "}";
 }
 
-//============== JSON Materials definition ======== Begin
-void ExportMaterials(TString guid, TString MatName,Double_t nA,Double_t nZ, ofstream& JsonFile)
+TGeoShape *GetLshape(TGeoCompositeShape *shape)
 {
-  JsonFile << "{\n\t\"uuid\": \""<<guid<<"\",\n";
-  JsonFile << "\t\"type\": \"MeshLambertMaterial\",\n";
-  JsonFile << "\t\"name\":\""<<MatName<<"\",\n";
+   return (shape->GetBoolNode()->GetLeftShape());
+}
 
-  JsonFile << "\t\"color\":16777215,\n";
-  JsonFile << "\t\"emissive\": 16723858,\n";
+TGeoShape *GetRshape(TGeoCompositeShape *shape)
+{
+   return (shape->GetBoolNode()->GetRightShape());
+}
 
-  if (MatName=="Vacuum" || (nA==0 && nZ==0)){
-    JsonFile << "\t\"opacity\": 0.0,\n";
-    JsonFile << "\t\"transparent\": true\n }";
+
+int GetJsonVol(TGeoNode *current,TGeoShape *shape, ofstream &JsonFile,TGeoShape *MapVol[],TString  *MapGuidVol,TString *MapGuidMat,int ColourIndex,int &nPhyVol, int kVolume){
+  bool notfound;
+  if (shape->IsComposite()) {
+         kVolume=GetJsonVol(current,GetLshape((TGeoCompositeShape *)shape),JsonFile,MapVol,MapGuidVol,MapGuidMat,ColourIndex,nPhyVol,kVolume);
+         kVolume=GetJsonVol(current,GetRshape((TGeoCompositeShape *)shape),JsonFile,MapVol,MapGuidVol,MapGuidMat,ColourIndex,nPhyVol,kVolume);
+         nPhyVol++;
+  } else if (shape->IsAssembly()) {
   } else {
-    JsonFile << "\t\"opacity\": 1.0,\n";
-    JsonFile << "\t\"transparent\": false\n }";
+    notfound=true;
+    for (int i = 0; i < kVolume; i++) {
+      if (shape == MapVol[i]) {
+        notfound=false;
+        break;
+      }
+    }
+    if (notfound) {
+      MapVol[kVolume] = shape;
+      MapGuidVol[kVolume] = doGuidStuff(GuidGenerator());;
+
+      MapGuidMat[current->GetColour()]="Used color";
+      //if (kVolume > 0) 
+      JsonFile << ",\n";
+      CreateJsonVol(shape, JsonFile, MapGuidVol[kVolume]);
+      kVolume++;
+    }
   }
+  return kVolume;
+}
+
+
+
+
+//============== JSON Materials definition ======== Begin
+
+
+
+void ExportMaterials(int ColorIndex, TString guid, ofstream &JsonFile)
+{
+  Float_t r,g,b;
+  int MatColor;
+
+  TColor *color = gROOT->GetColor(ColorIndex);
+  TString MatName=color->GetName();
+  TString ColorHex=color->AsHexString();
+  ColorHex.Remove(0,1);
+  //MatColor=ColorHex.Atoi();
+
+  //cout << "\nColor:" << ColorIndex<<"\t"<<ColorHex<<"\t";
+
+  MatColor =  std::stoul((const std::string)ColorHex, nullptr, 16);
+
+  //cout << MatColor <<"\n";
+
+ 
+   JsonFile << "{\n\t\"uuid\": \"" << guid << "\",\n";
+   JsonFile << "\t\"type\": \"MeshLambertMaterial\",\n";
+   JsonFile << "\t\"name\":\"" << MatName << "\",\n";
+
+   JsonFile << "\t\"color\":"<<MatColor<<",\n";
+   JsonFile << "\t\"emissive\":"<<MatColor<<",\n";
+
+   //if (MatName == "Vacuum" || (nA == 0 && nZ == 0)) {
+   //   JsonFile << "\t\"opacity\": 0.0,\n";
+   //   JsonFile << "\t\"transparent\": true\n }";
+   //} else {
+      JsonFile << "\t\"opacity\": 0.7,\n";
+      JsonFile << "\t\"transparent\": true\n}";
+   //}
 }
 
 //============== JSON Materials definition ======== End
 
-void TabLine(int ntab, ofstream& JsonFile){
-  for (i=0;i<ntab;i++){
-    JsonFile << "\t";
-  }
+void TabLine(int ntab, ofstream &JsonFile)
+{
+   for (int i = 0; i < ntab; i++) {
+      JsonFile << "\t";
+   }
 }
 
 
 //============== JSON Nodes definition ======== Begin
 
 
+
+void SetTabInJson(int CurrentLevel,int PreviousLevel,ofstream &JsonFile){
+
+
+  if (CurrentLevel > PreviousLevel) {
+      //   If the level is greater that current level, then we define a new child
+      JsonFile << ",\n";
+      TabLine(CurrentLevel, JsonFile);
+      JsonFile << "\"children\": [\n";
+      TabLine(CurrentLevel, JsonFile);
+      JsonFile << "{\n";
+      //JsonFile<<"\n"<<"//       ("<<CurrentLevel<<","<<PreviousLevel<<")\n";
+  } else if (CurrentLevel < PreviousLevel) {
+      int nLev = PreviousLevel - CurrentLevel;
+      JsonFile << "\n";
+      for (int i = 0; i < nLev; i++) {
+         TabLine(PreviousLevel - i, JsonFile);
+         JsonFile << "}]\n";
+      }
+      TabLine(CurrentLevel, JsonFile);
+      JsonFile << "},\n";
+      TabLine(CurrentLevel, JsonFile);
+      JsonFile<< "{\n";
+      //JsonFile <<"//       ("<<CurrentLevel<<","<<PreviousLevel<<")\n";
+  } else {
+      JsonFile << "\n";
+      TabLine(CurrentLevel, JsonFile);
+      JsonFile << "},\n";
+      TabLine(CurrentLevel, JsonFile);
+      JsonFile << "{\n";
+      //JsonFile <<"//       ("<<CurrentLevel<<","<<PreviousLevel<<")\n";
+  }
+}
+
+
+
+
+
+
 TString GetHexRGB(int r, int g, int b)
-{   
-  char hexcol[16];
+{
+   char hexcol[16];
 
-  snprintf(hexcol, sizeof hexcol, "%02x%02x%02x", r, g, b);
-  return hexcol;
+   snprintf(hexcol, sizeof hexcol, "%02x%02x%02x", r, g, b);
+   return hexcol;
 }
 
-TGeoShape * GetLshape(TGeoCompositeShape *shape){
-  return (shape->GetBoolNode()->GetLeftShape());
-}
-TGeoShape * GetRshape(TGeoCompositeShape *shape){
-  return (shape->GetBoolNode()->GetRightShape());
+TGeoCompositeShape * Conv(TGeoCompositeShape *shape){
+  return shape;
 }
 
-void ExportCurrentVolume(TString guid,TString guidVol,TString guidMat,TGeoNode *current,int kLevel,ofstream& JsonFile){
-  if ( current->GetVolume()->GetShape()->IsComposite() ) {
-    cout << "\n----> COMPOSITE, Start .....\n";
-    //return;
-  }
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"uuid\": \""<<guid<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"type\": \"Mesh\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"name\": \""<<current->GetName()<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"geometry\": \""<<guidVol<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"material\": \""<<guidMat<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"matrix\": [";
+Int_t ExportCurrentVolume(TGeoNode *current,TGeoShape *shape,TString guidMat,TGeoShape *MapVol[],TString *MapGuidVol,Int_t kVolume, Int_t nVol,  const Double_t * MatrixRot,const Double_t * MatrixTrans, int CurrentLevel, int PreviousLevel,TString Visible, ofstream &JsonFile)
+{
+  TGeoCompositeShape *Cshape;
+  TString guid, guidVol;
+  Int_t Kvol=0;
+ 
+  if (shape->IsComposite()) {
+    //JsonFile << "\n//          ....composite\n";
+    Cshape=Conv((TGeoCompositeShape *)shape);
+    MatrixRot   = Cshape->GetBoolNode()->GetLeftMatrix()->GetRotationMatrix() ;
+    MatrixTrans = Cshape->GetBoolNode()->GetLeftMatrix()->GetTranslation();
+    nVol=ExportCurrentVolume(current,Cshape->GetBoolNode()->GetLeftShape(),guidMat,MapVol,MapGuidVol,kVolume,nVol, MatrixRot, MatrixTrans, CurrentLevel, PreviousLevel,Visible, JsonFile);
+    JsonFile << "\n";
+    TabLine(CurrentLevel, JsonFile);
+    JsonFile << "},\n";
+    TabLine(CurrentLevel, JsonFile);
+    JsonFile << "{\n";
+    MatrixRot   = Cshape->GetBoolNode()->GetRightMatrix()->GetRotationMatrix() ;
+    MatrixTrans = Cshape->GetBoolNode()->GetRightMatrix()->GetTranslation();
+    nVol=ExportCurrentVolume(current,Cshape->GetBoolNode()->GetRightShape(),guidMat,MapVol,MapGuidVol,kVolume,nVol, MatrixRot, MatrixTrans, CurrentLevel, PreviousLevel,Visible, JsonFile);
+  } else {
+    nVol++;
+    //   find the guid of the current volume
+    if (shape->IsAssembly()) {
+      guidVol = MapGuidVol[0];
+    } else {
+      guidVol = "";
+      //cout << nVol<<"Shape:"<<shape->ClassName()<<"\t"<<shape->GetName()<<"\t";
+      for (int i = 0; i < kVolume; i++) {
+        if (shape == MapVol[i]) {
+          guidVol = MapGuidVol[i];
 
-  const Double_t * MatrixRot = current->GetMatrix()->GetRotationMatrix();
-  const Double_t * MatrixTrans = current->GetMatrix()->GetTranslation();
-
-  for (int i=0;i<3;i++){
-    for (int l=0;l<3;l++) {
-      JsonFile << MatrixRot[3*l+i]<<",";
+          Kvol=i;
+          break;
+        }
+      }
     }
-    JsonFile <<"0,";
-  }
+    if (guidVol == "") {
+      cout << "\n****ERROR: :[ "<<kVolume<<"\t"<< nVol<<"\t"<<guidVol<<"\tShape:"<<shape<<" ["<<current->GetNumber()<<"] "<<shape->ClassName()<<"\t"<<shape->GetName()<<"\t" << "  Not found **** STOP\n";
+      return nVol;
+    } 
+    guid = doGuidStuff(GuidGenerator());
 
-  for (int i=0;i<3;i++){
-    JsonFile << MatrixTrans[i]<<",";
-  }
-  JsonFile <<"1 ]\n";
+    TabLine(CurrentLevel + 1, JsonFile);
+    JsonFile << "\"uuid\": \"" << guid << "\",\n";
+    TabLine(CurrentLevel + 1, JsonFile);
+    JsonFile << "\"type\": \"Mesh\",\n";
+    TabLine(CurrentLevel + 1, JsonFile);
+    JsonFile << "\"name\": \"" << current->GetVolume()->GetName()<<"-"<< current->GetNumber()<< "\","<<"\n";
+    TabLine(CurrentLevel + 1, JsonFile);
+    JsonFile << "\"geometry\": \"" << guidVol << "\",\n";
+    TabLine(CurrentLevel + 1, JsonFile);
+    JsonFile << "\"material\": \"" << guidMat << "\",\n";
+    TabLine(CurrentLevel + 1, JsonFile);
+//    JsonFile << "\"visible\": " << Visible << ",\n";
+    JsonFile << "\"visible\": true,\n";
+    TabLine(CurrentLevel + 1, JsonFile);
+    JsonFile << "\"matrix\": [";
 
-}
-
-void ExportLeftCompVolume(TString guid,TString guidVol,TString guidMat,TGeoCompositeShape *CompShape,int kLevel,ofstream& JsonFile){
-
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"uuid\": \""<<guid<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"type\": \"Mesh\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"name\": \""<<CompShape->GetName()<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"geometry\": \""<<guidVol<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"material\": \""<<guidMat<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"matrix\": [";
-
-  const Double_t * MatrixRot   = CompShape->GetBoolNode()->GetLeftMatrix()->GetRotationMatrix() ;
-  const Double_t * MatrixTrans = CompShape->GetBoolNode()->GetLeftMatrix()->GetTranslation();
-
-  for (int i=0;i<3;i++){
-    for (int l=0;l<3;l++) {
-      JsonFile << MatrixRot[3*l+i]<<",";
+    for (int i = 0; i < 3; i++) {
+     for (int l = 0; l < 3; l++) {
+        JsonFile << MatrixRot[3 * l + i] << ",";
+     }
+     JsonFile << "0,";
     }
-    JsonFile <<"0,";
-  }
 
-  for (int i=0;i<3;i++){
-    JsonFile << MatrixTrans[i]<<",";
-  }
-  JsonFile <<"1 ]\n";
-
-}
-void ExportRightCompVolume(TString guid,TString guidVol,TString guidMat,TGeoCompositeShape *CompShape,int kLevel,ofstream& JsonFile){
-
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"uuid\": \""<<guid<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"type\": \"Mesh\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"name\": \""<<CompShape->GetName()<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"geometry\": \""<<guidVol<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"material\": \""<<guidMat<<"\",\n";
-  TabLine(kLevel+1,JsonFile);
-  JsonFile << "\"matrix\": [";
-
-  const Double_t * MatrixRot   = CompShape->GetBoolNode()->GetRightMatrix()->GetRotationMatrix();
-  const Double_t * MatrixTrans = CompShape->GetBoolNode()->GetRightMatrix()->GetTranslation();
-
-  for (int i=0;i<3;i++){
-    for (int l=0;l<3;l++) {
-      JsonFile << MatrixRot[3*l+i]<<",";
+    for (int i = 0; i < 3; i++) {
+      JsonFile << MatrixTrans[i] << ",";
     }
-    JsonFile <<"0,";
+    JsonFile << "1 ]";
   }
-
-  for (int i=0;i<3;i++){
-    JsonFile << MatrixTrans[i]<<",";
-  }
-  JsonFile <<"1 ]\n";
-
+  return nVol;
 }
+
+
+
+//============== Export JSON Tree ======== Begin
+
+
+
+int CheckJsonVol(TGeoNode *current,TGeoShape *shape, ofstream &JsonFile,TGeoShape *MapVol[],TString  *MapGuidVol,TString *MapGuidMat,int ColourIndex, int &nPhyVol,int kVolume){
+bool notfound;
+   if (shape->IsComposite()) {
+         kVolume=CheckJsonVol(current,GetLshape((TGeoCompositeShape *)shape),JsonFile,MapVol,MapGuidVol,MapGuidMat,ColourIndex,nPhyVol,kVolume);
+         kVolume=CheckJsonVol(current,GetRshape((TGeoCompositeShape *)shape),JsonFile,MapVol,MapGuidVol,MapGuidMat,ColourIndex,nPhyVol,kVolume);
+   } else {
+    nPhyVol++;
+    notfound=true;
+    for (int i = 0; i < kVolume; i++) {
+      if (shape == MapVol[i]) {
+        notfound=false;
+        break;
+      }
+    }
+    if (notfound) {
+      MapVol[kVolume] = shape;
+      MapGuidVol[kVolume] = doGuidStuff(GuidGenerator());;
+
+      MapGuidMat[current->GetColour()]="Used color";
+
+      //JsonFile << kVolume << "\t"<<MapVol[kVolume]<< "\t"<<shape->ClassName()<<"\t"<< shape->GetName()<<"\t"<<current->GetNumber()<<"\t"<<current->GetColour()<<"\n";
+
+      kVolume++;
+    }
+  }
+  return kVolume;
+}
+
+
+
+int CheckLogicalVolumes(TGeoVolume *top, int MaxVisiLevel, int nAsblVol[], int StartingLevel,int &PreviousLevel, int kVolume,int nnd,TString *MapGuidMat,TGeoShape *MapVol[],TString *MapGuidVol,int &nPhyVol,bool OneCopy,ofstream &JsonFile){
+
+  TGeoNode *current;
+  TGeoVolume *vol;
+  TGeoShape *shape;
+  int kLevel = 0;
+  int vstep=nnd/50;
+  int nSkipTab1=0;
+  int CurrentLevel=0;
+  int RelLevel=0;
+  int nIterVol=0;
+
+  
+
+  JsonFile << "Pre\tSta\tCur\tSkp\tLev\tRLV\tCName\tname\tCopy\n";
+
+
+  TGeoIterator iter(top);
+  int ncount=0;
+  while ((current = iter.Next())) {
+    ncount++;
+    RelLevel=StartingLevel+iter.GetLevel();
+    nAsblVol[RelLevel]=0;
+
+    vol = current->GetVolume();
+    shape = vol->GetShape();
+
+    nSkipTab1=0;
+    for (int j = 0; j<RelLevel; j++) {nSkipTab1+=nAsblVol[j];}
+    CurrentLevel=RelLevel+nSkipTab1;
+
+    JsonFile <<PreviousLevel<<"\t"<<StartingLevel<<"\t"<<CurrentLevel<<"\t"<<nSkipTab1<<"\t"<<iter.GetLevel()<<"\t"<<RelLevel;
+    for (int j = 0; j<RelLevel; j++) {JsonFile << "\t-->";}
+    JsonFile <<shape->ClassName()<<"\t"<<current->GetVolume()->GetName()<<"\t"<<current->GetNumber()<<"\n";
+
+    if (vol->IsAssembly()) {
+      nAsblVol[RelLevel]=-1;
+    }
+    if (CurrentLevel<=MaxVisiLevel){
+
+      TString chvol = CheckVolume(shape);
+      if (chvol != "") {
+        bool notfound=true;
+        for (int i = 0; i < kVolume; i++) {
+          if (shape == MapVol[i]) {
+            notfound=false;
+            break;
+          }
+        }
+        if (notfound) {
+          kVolume=CheckJsonVol(current,shape,JsonFile,MapVol,MapGuidVol,MapGuidMat,current->GetColour(),nPhyVol,kVolume);
+        }
+        PreviousLevel=CurrentLevel;
+      } else {
+        iter.Skip();
+      }
+    }
+    if (OneCopy&&(current->GetNumber()>1)) {iter.Skip();}
+  }
+  return(kVolume);
+}
+
+
+int ExportLogicalVolumes(TGeoVolume *top, int MaxVisiLevel, int nAsblVol[], int StartingLevel,int PreviousLevel, int kVolume,int nnd,TString *MapGuidMat,TGeoShape *MapVol[],TString *MapGuidVol,int &nPhyVol,bool OneCopy, ofstream &JsonFile){
+
+  TGeoNode *current;
+  TGeoVolume *vol;
+  TGeoShape *shape;
+  int kLevel = 0;
+  int vstep=nnd/50;
+  int nSkipTab1=0;
+  int CurrentLevel=0;
+  int RelLevel=0;
+  int nIterVol=0;
+
+   ofstream ChildsFile;
+   ChildsFile.open("ChildsFile.txt");
+
+   
+  TGeoIterator iter(top);
+  while ((current = iter.Next())) {
+    RelLevel=StartingLevel+iter.GetLevel();
+    nAsblVol[RelLevel]=1;
+
+    vol = current->GetVolume();
+    shape = vol->GetShape();
+
+    nSkipTab1=0;
+    for (int j = 0; j<RelLevel; j++) {nSkipTab1+=nAsblVol[j];}
+    CurrentLevel=RelLevel+nSkipTab1;
+    
+    if (vol->IsAssembly()) {
+      nAsblVol[RelLevel]=-1;
+    }
+      if (CurrentLevel<=MaxVisiLevel){
+
+        TString chvol = CheckVolume(shape);
+        if (chvol != "") {
+          nPhyVol++;
+          bool notfound=true;
+          for (int i = 0; i < kVolume; i++) {
+            if (shape == MapVol[i]) {
+              notfound=false;
+              break;
+            }
+          }
+          if (notfound) {
+            kVolume=GetJsonVol(current,shape,JsonFile,MapVol,MapGuidVol,MapGuidMat,current->GetColour(),nPhyVol,kVolume);
+          }
+          PreviousLevel=CurrentLevel;
+        } else {
+          iter.Skip();
+        }
+      }
+      if (OneCopy&&(current->GetNumber()>1)) {
+        ChildsFile << "Assign chlidrens of ["<<vol->GetName()<<"-1]\tto\t["<<vol->GetName()<<"-"<<current->GetNumber()<<"\n";
+        iter.Skip();
+      }
+  }
+  ChildsFile.close();
+  return(kVolume);
+}
+
+
+
+int ExportPhysicalVolumes(TGeoVolume *top, int MaxVisiLevel, int nAsblVol[], int StartingLevel,int &PreviousLevel, int nn,int nnd,TString * MapGuidMat,TGeoShape *MapVol[],TString *MapGuidVol,int kVolume, bool OneCopy,TString Vguid,ofstream &JsonFile){
+
+  TGeoNode *current;
+  TGeoVolume *vol;
+  TGeoShape *shape;
+  int vstep=nnd/50;
+  int nSkipTab1=0;
+  int CurrentLevel=0;
+  int RelLevel=0;
+  TString guidMat;
+  TString MatName;
+  TString Visible;
+  
+  if (top->IsAssembly()) {
+  //  logfile << "ReStart: " <<"\t"<< StartingLevel<<"\t"<<PreviousLevel<<"\t"<<top->GetName()<<"\n";
+  } else {
+  //  logfile << "Start: " <<"\t Normal volume"<<"\t"<<top->GetName()<< "\t"<<top->GetNumber()<<"\n";
+  }
+
+  TGeoIterator iter(top);
+  int ncount=0;
+  while ((current = iter.Next())) {
+    ncount++;
+    RelLevel=StartingLevel+iter.GetLevel();
+    nAsblVol[RelLevel]=0;
+
+    vol = current->GetVolume();
+    shape = vol->GetShape();
+
+    nSkipTab1=0;
+    for (int j = 0; j<RelLevel; j++) {nSkipTab1+=nAsblVol[j];}
+
+    CurrentLevel=RelLevel+nSkipTab1;
+
+    if (vol->IsAssembly()) {
+      nAsblVol[RelLevel]=-1;
+    }
+    if (CurrentLevel<=MaxVisiLevel){
+
+      TString chvol = CheckVolume(shape);
+      if (chvol != "") {
+        //   Get the guid of the material of the current volume
+        guidMat = MapGuidMat[current->GetColour()];
+         
+        SetTabInJson(CurrentLevel,PreviousLevel,JsonFile);
+        //Visible="false";
+        //if (vol->IsVisible()){Visible="true";}
+        //if (vol->IsAssembly()|| !vol->IsVisible()){guidMat=Vguid;}
+        MatName=vol->GetMaterial()->GetName();
+        if (vol->IsAssembly()||MatName=="dummy"){guidMat=Vguid;}
+
+        if (current->GetMotherVolume()->IsAssembly()){
+            const Double_t *MatrixRot   = current->GetMatrix()->GetRotationMatrix();
+            const Double_t *MatrixTrans = current->GetMatrix()->GetTranslation();
+            nn=ExportCurrentVolume(current,shape,guidMat, MapVol,MapGuidVol,kVolume, nn,  MatrixRot, MatrixTrans, CurrentLevel, PreviousLevel,Visible, JsonFile);
+        } else {
+            const Double_t *MatrixRot   = current->GetMatrix()->GetRotationMatrix();
+            const Double_t *MatrixTrans = current->GetMatrix()->GetTranslation();
+            nn=ExportCurrentVolume(current,shape,guidMat, MapVol,MapGuidVol,kVolume, nn,  MatrixRot, MatrixTrans, CurrentLevel, PreviousLevel,Visible, JsonFile);
+        }
+          
+        PreviousLevel=CurrentLevel;
+      } else {
+          iter.Skip();
+      }
+    }
+    if (OneCopy&&(current->GetNumber()>1)) {iter.Skip();}
+  }
+  JsonFile << "\n";
+
+  return(nn);
+}
+
+
+int ExportJsonTree(TGeoVolume *top, int MaxVisiLevel, int nAsblVol[], int StartingLevel,int &PreviousLevel, int kVolume,int nnd,TString *MapGuidMat,TGeoShape *MapVol[],TString *MapGuidVol,int &nPhyVol,bool OneCopy,ofstream &JsonTree){
+
+  TGeoNode *current;
+  TGeoVolume *vol;
+  TGeoShape *shape;
+  int kLevel = 0;
+  int vstep=nnd/50;
+  int nSkipTab1=0;
+  int CurrentLevel=0;
+  int RelLevel=0;
+  int nIterVol=0;
+
+  TGeoIterator iter(top);
+  int ncount=0;
+  while ((current = iter.Next())) {
+    ncount++;
+    RelLevel=StartingLevel+iter.GetLevel();
+    nAsblVol[RelLevel]=0;
+
+    vol = current->GetVolume();
+    shape = vol->GetShape();
+
+    nSkipTab1=0;
+    for (int j = 0; j<RelLevel; j++) {nSkipTab1+=nAsblVol[j];}
+    CurrentLevel=RelLevel+nSkipTab1;
+
+
+    if (CurrentLevel<=MaxVisiLevel){
+      JsonTree <<iter.GetLevel()<<"\t";
+      for (int j = 0; j<RelLevel; j++) {JsonTree << "-->";}
+      JsonTree <<current->GetVolume()->GetName()<<"\t"<<current->GetNumber()<<"\t"<<shape->ClassName()<<"\t"<<vol->GetMaterial()->GetName()<<"\n";
+    }
+     if (vol->IsAssembly()) {
+      nAsblVol[RelLevel]=-1;
+    }
+      if (CurrentLevel<=MaxVisiLevel){
+
+        TString chvol = CheckVolume(shape);
+        if (chvol != "") {
+          bool notfound=true;
+          for (int i = 0; i < kVolume; i++) {
+            if (shape == MapVol[i]) {
+              notfound=false;
+              break;
+            }
+          }
+          if (notfound) {
+            //if (current->IsVisible()) {cout <<"\n NOT VISIBLE " << vol->GetName() <<"\t"<<shape->ClassName()<<"\t"<<vol->GetMaterial()->GetName()<<"\t"<< current->IsVisible() <<"\n";}
+
+            kVolume=CheckJsonVol(current,shape,JsonTree,MapVol,MapGuidVol,MapGuidMat,current->GetColour(),nPhyVol,kVolume);
+          }
+          PreviousLevel=CurrentLevel;
+
+        } else {
+          iter.Skip();
+        }
+        
+      }
+    if (OneCopy&&(current->GetNumber()>1)) {iter.Skip();}
+  }
+  return(kVolume);
+}
+
+//============== Export JSON Tree ======== End
+
+
+
 
 //============== JSON Nodes definition ======== End
 
-void PrepareExportJson() {
-  cout << "\n JSON export functions loaded ....\n";
+void PrepareExportJson()
+{
+   cout << "\n JSON export functions loaded ....\n";
 }
+
+#endif
