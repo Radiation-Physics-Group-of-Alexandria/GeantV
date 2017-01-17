@@ -39,7 +39,7 @@ TNudyEndfEnergy::TNudyEndfEnergy(TNudyEndfFile *file)
       }
       MtNumbers.push_back(MT);
       int LF = tab1->GetL2();
-      std::cout << " LF = " << LF << " MT " << MT << "  k " << k << "  " << sec->GetN1() << std::endl;
+      //std::cout << " LF = " << LF << " MT " << MT << "  k " << k << "  " << sec->GetN1() << std::endl;
       NR = tab1->GetN1();
       NP = tab1->GetN2();
       //****************************************************************************
@@ -145,12 +145,11 @@ TNudyEndfEnergy::TNudyEndfEnergy(TNudyEndfFile *file)
             eout *= 2;
           } while (eout < energy - u);
           if (sumprob > 0.0) ein.push_back(energy);
-          // int size = energyFile5.size();
-          // for(int cr=0; cr < size - 1 ; cr ++){
+           int size = energyFile5.size();
+           for(int cr = 0 ; cr < size - 1 ; cr ++){
           // std::cout << energyFile5[cr] <<"  "<< energyPdfFile5[cr] << std::endl;
-          // recursionLinearFile5GenEva(energyFile5[cr], energyFile5[cr+1], energyPdfFile5[cr],
-          // energyPdfFile5[cr+1],energy);
-          //}
+	    recursionLinearFile5GenEva(energyFile5[cr], energyFile5[cr+1], energyPdfFile5[cr], energyPdfFile5[cr+1], energy);
+          }
           fillPdf1d();
         }
         nbt1.clear();
@@ -212,11 +211,10 @@ TNudyEndfEnergy::TNudyEndfEnergy(TNudyEndfFile *file)
             eout *= 2;
           } while (eout < energy - u);
           if (sumprob > 0.0) ein.push_back(energy);
-          // int size = energyFile5.size();
-          // for(int cr=0; cr < size - 1 ; cr ++){
-          // recursionLinearFile5Maxwell(energyFile5[cr], energyFile5[cr+1], energyPdfFile5[cr],
-          // energyPdfFile5[cr+1],energy);
-          //}
+           int size = energyFile5.size();
+           for(int cr=0; cr < size - 1 ; cr ++){
+	    recursionLinearFile5Maxwell(energyFile5[cr], energyFile5[cr+1], energyPdfFile5[cr], energyPdfFile5[cr+1],energy);
+          }
           fillPdf1d();
         }
         nbt1.clear();
@@ -291,11 +289,10 @@ TNudyEndfEnergy::TNudyEndfEnergy(TNudyEndfFile *file)
             continue;
           }
           // std::cout<<energy <<"  "<<sumprob<<std::endl;
-          // int size = energyFile5.size();
-          // for(int cr=0; cr < size - 1 ; cr ++){
-          // recursionLinearFile5Maxwell(energyFile5[cr], energyFile5[cr+1], energyPdfFile5[cr],
-          // energyPdfFile5[cr+1],energy);
-          //}
+           int size = energyFile5.size();
+           for(int cr=0; cr < size - 1 ; cr ++){
+	      recursionLinearFile5Maxwell(energyFile5[cr], energyFile5[cr+1], energyPdfFile5[cr], energyPdfFile5[cr+1],energy);
+          }
           fillPdf1d();
         }
         nbt1.clear();
@@ -373,11 +370,10 @@ TNudyEndfEnergy::TNudyEndfEnergy(TNudyEndfFile *file)
             eout *= 2;
           } while (eout < energy - u);
           if (sumprob > 0.0) ein.push_back(energy);
-          // int size = energyFile5.size();
-          // for(int cr=0; cr < size - 1 ; cr ++){
-          // recursionLinearFile5Watt(energyFile5[cr], energyFile5[cr+1], energyPdfFile5[cr],
-          // energyPdfFile5[cr+1],energy);
-          //}
+           int size = energyFile5.size();
+           for(int cr=0; cr < size - 1 ; cr ++){
+	      recursionLinearFile5Watt(energyFile5[cr], energyFile5[cr+1], energyPdfFile5[cr], energyPdfFile5[cr+1], energy);
+          }
           fillPdf1d();
         }
         nbt1.clear();
@@ -643,6 +639,7 @@ void TNudyEndfEnergy::fillPdf1d()
       eneE.push_back(energyFile5[i]);
       pdf.push_back(energyPdfFile5[i]);
       cdf.push_back(energyCdfFile5[i]);
+      //std::cout << energyFile5[i] <<"  "<< energyPdfFile5[i] <<"  "<< energyCdfFile5[i] << std::endl ;
     }
   }
   ene2d.push_back(eneE);

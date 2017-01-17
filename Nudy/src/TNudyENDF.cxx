@@ -79,7 +79,7 @@ void TNudyENDF::Process()
     std::string subname = GetEndfSubName();
     EndfSub             = subname.c_str();
     fENDF.open(EndfSub);
-    std::cout << "EndfSub " << subname << std::endl;
+//    std::cout << "EndfSub " << subname << std::endl;
     if (!fENDF.is_open()) ::Fatal("ctor", "Could not open input file %s", EndfSub);
     fENDF.getline(fLine, LINLEN);
   }
@@ -92,7 +92,7 @@ void TNudyENDF::Process()
 
   while (!fENDF.eof()) {
     fENDF.getline(fLine, LINLEN);
-    std::cout << fLine << std::endl;
+//    std::cout << fLine << std::endl;
     if (fLogLev > 10) std::cout << fLine << std::endl;
 
     // See what we have
@@ -348,7 +348,6 @@ void TNudyENDF::Process(TNudyEndfSec *sec)
 
   // We are at the beginning of a section, we get the head
   GetMTF(mtf);
-
   switch (curMF) {
   case 1: // ------------------- File 1
     ProcessF1(sec);

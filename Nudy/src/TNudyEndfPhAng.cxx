@@ -5,47 +5,46 @@
 // 	date of creation: March 24, 2016
 
 #include "TList.h"
-#include "TNudyEndfAng.h"
 #include "TNudyEndfFile.h"
 #include "TNudyEndfCont.h"
 #include "TNudyEndfTab1.h"
 #include "TNudyEndfTab2.h"
 #include "TNudyEndfList.h"
 #include "TNudyCore.h"
+#include "TNudyEndfMat.h"
 #include "Math/SpecFuncMathMore.h"
+#include "TNudyEndfPhAng.h"
 
 #ifdef USE_ROOT
-ClassImp(TNudyEndfAng)
+ClassImp(TNudyEndfPhAng)
 #include "TRandom3.h"
 #endif
 
-    TNudyEndfAng::TNudyEndfAng()
+    TNudyEndfPhAng::TNudyEndfPhAng()
     : TNudyEndfRecoPoint()
 {
 }
 //______________________________________________________________________________
-TNudyEndfAng::TNudyEndfAng(TNudyEndfFile *file)
+TNudyEndfPhAng::TNudyEndfPhAng(TNudyEndfFile *file)
 {
   TIter secIter(file->GetSections());
   TNudyEndfSec *sec;
   while ((sec = (TNudyEndfSec *)secIter.Next())) {
-    // if (sec->GetMT() == (int)fReaction) {
     TIter recIter(sec->GetRecords());
-    TNudyEndfCont *header = (TNudyEndfCont *)recIter.Next();
+//    TNudyEndfCont *header = (TNudyEndfCont *)recIter.Next();
     int MT                = sec->GetMT();
     MtNumbers.push_back(MT);
-    int LTT = sec->GetL2();
-    int LI  = header->GetL1();
-    int LCT = header->GetL2();
-    MtLct.push_back(LCT);
-//     printf("LCT = %d LTT = %d LI = %d\n",LCT, LTT, LI);
+    int LTT 		 = sec->GetL2();
+    int LI  		 = sec->GetL1();
+    int NK  		 = sec->GetN1();
+   printf("NK = %d LTT = %d LI = %d\n",NK, LTT, LI);
     // Legendre polynomial coefficients
     if (LTT == 1 && LI == 0) {
       TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter.Next();
       for (int i = 0; i < tab2->GetN2(); i++) {
         TNudyEndfList *tab = (TNudyEndfList *)recIter.Next();
         ein.push_back(tab->GetC2());
-        // std::cout<<"energy "<< tab->GetC2() << std::endl;
+        std::cout<<"energy "<< tab->GetC2() << std::endl;
         for (int j = 0; j < tab->GetNPL(); j++) {
           lCoef1.push_back(tab->GetLIST(j));
         }
@@ -68,7 +67,7 @@ TNudyEndfAng::TNudyEndfAng(TNudyEndfFile *file)
             cosFile4.push_back(x);
             cosPdfFile4.push_back(fme);
           }
-//            printf("%e %e\n", x, fme);
+          // printf("%e %e\n", x, fme);
           k1++;
         } while (k1 < 101);
         for (int l = 0; l < 100; l++) {
@@ -116,7 +115,7 @@ TNudyEndfAng::TNudyEndfAng(TNudyEndfFile *file)
         lCoef1.clear();
       }
       for (unsigned long i = 0; i < ein.size(); i++) {
-         //printf("Ein = %e\n", ein[i]);
+        // printf("Ein = %e\n", ein[i]);
         int k1     = 0;
         double fme = 0.0;
         do {
@@ -125,13 +124,13 @@ TNudyEndfAng::TNudyEndfAng(TNudyEndfFile *file)
           for (unsigned long j = 0; j < lCoef[i].size(); j++) {
             double leg = ROOT::Math::legendre(j + 1, x);
             fme += 0.5 * (2. * (j + 1) + 1.) * lCoef[i][j] * leg;
-            // printf("a%d = %e leg= %e\n", j, lCoef[i][j],leg);
+            //printf("a%e = %e leg= %e\n", x, lCoef[i][j],leg);
           }
           if (fme > 0.0) {
             cosFile4.push_back(x);
             cosPdfFile4.push_back(fme);
           }
-           //printf("%e %e\n", x, fme);
+          // printf("%e %e\n", x, fme);
           k1++;
         } while (k1 < 101);
 
@@ -207,7 +206,7 @@ TNudyEndfAng::TNudyEndfAng(TNudyEndfFile *file)
   */
 } // end class
 
-TNudyEndfAng::~TNudyEndfAng()
+TNudyEndfPhAng::~TNudyEndfPhAng()
 {
   MtLct.shrink_to_fit();
   MtNumbers.shrink_to_fit();
@@ -231,12 +230,12 @@ TNudyEndfAng::~TNudyEndfAng()
   pdf3d.shrink_to_fit();
 }
 
-double TNudyEndfAng::recursionLinearLeg(int i, double x1, double x2, double pdf1, double pdf2)
+double TNudyEndfPhAng::recursionLinearLeg(int i, double x1, double x2, double pdf1, double pdf2)
 {
-  double pdf = 0.5;
+  double pdf = 1.0;
   double mid = 0.5 * (x1 + x2);
   if ((pdf1 == 0.0 && pdf2 == 0.0) || x1 == x2) return 0;
-//     std::cout <<" beg   "<< x1 <<"  "<< x2 <<"  "<< pdf1 <<"  "<< pdf2 << std::endl;
+  //  std::cout <<" beg   "<< x1 <<"  "<< x2 <<"  "<< pdf1 <<"  "<< pdf2 << std::endl;
   for (unsigned long j = 0; j < lCoef[i].size(); j++) {
     double leg = ROOT::Math::legendre(j + 1, mid);
     pdf += 0.5 * (2. * (j + 1) + 1.) * lCoef[i][j] * leg;
@@ -254,7 +253,7 @@ double TNudyEndfAng::recursionLinearLeg(int i, double x1, double x2, double pdf1
   return 0;
 }
 //--------------------------------------------------------------------------------------
-double TNudyEndfAng::recursionLinearProb(double x1, double x2, double pdf1, double pdf2)
+double TNudyEndfPhAng::recursionLinearProb(double x1, double x2, double pdf1, double pdf2)
 {
   double pdf = 1.0;
   double mid = 0.5 * (x1 + x2);
@@ -274,7 +273,7 @@ double TNudyEndfAng::recursionLinearProb(double x1, double x2, double pdf1, doub
   return 0;
 }
 //-----------------------------------------------------------------------------------------
-void TNudyEndfAng::fillPdf1d()
+void TNudyEndfPhAng::fillPdf1d()
 {
   TNudyCore::Instance()->Sort(cosFile4, cosPdfFile4);
   TNudyCore::Instance()->cdfGenerateT(cosFile4, cosPdfFile4, cosCdfFile4);
@@ -295,7 +294,7 @@ void TNudyEndfAng::fillPdf1d()
   cdf.clear();
 }
 //--------------------------------------------------------------------------------------
-void TNudyEndfAng::fillPdf2d()
+void TNudyEndfPhAng::fillPdf2d()
 {
   ein2d.push_back(ein);
   cos3d.push_back(cos2d);
@@ -307,7 +306,7 @@ void TNudyEndfAng::fillPdf2d()
   cdf2d.clear();
 }
 //------------------------------------------------------------------------------------------------------
-double TNudyEndfAng::GetCos4(int ielemId, int mt, double energyK)
+double TNudyEndfPhAng::GetCos4(int ielemId, int mt, double energyK)
 {
   fRnd  = new TRandom3(0);
   int i = -1;
@@ -377,7 +376,7 @@ double TNudyEndfAng::GetCos4(int ielemId, int mt, double energyK)
   return Ang;
 }
 //________________________________________________________________________________________________________________
-int TNudyEndfAng::GetCos4Lct(int ielemId, int mt)
+int TNudyEndfPhAng::GetCos4Lct(int ielemId, int mt)
 {
   int i = 0;
   for (unsigned int l = 0; l < Mt4Values[ielemId].size(); l++) {

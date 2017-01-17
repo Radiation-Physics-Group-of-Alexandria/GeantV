@@ -10,6 +10,10 @@ class TNudyEndfEnergyAng;
 class TNudyEndfAng;
 class TNudyEndfFile;
 class TNudyEndfList;
+class TNudyEndfPhYield;
+class TNudyEndfPhProd;
+class TNudyEndfPhAng;
+class TNudyEndfPhEnergy;
 class TList;
 
 #ifdef USE_ROOT
@@ -48,6 +52,7 @@ public:
   virtual int GetLaw6(int ielemId, int mt);
   virtual int GetZd6(int ielemId, int mt);
   virtual int GetAd6(int ielemId, int mt);
+  virtual int GetMt6Neutron(int ielemId, int mt);
   virtual double GetNuTotal(int elemid, double energyK);
   virtual double GetNuPrompt(int elemid, double energyK);
   virtual double GetNuDelayed(int elemid, double energyK);
@@ -115,6 +120,10 @@ private:
   TNudyEndfEnergyAng *recoEnergyAng;
   TNudyEndfNuPh *recoNuPh;
   TNudyEndfFissionYield *recoFissY;
+  TNudyEndfPhYield *recoPhYield;
+  TNudyEndfPhProd *recoPhProd;
+  TNudyEndfPhAng *recoPhAng;
+  TNudyEndfPhEnergy *recoPhEnergy;
 #ifdef USE_ROOT
   TRandom3 *fRnd;
 #endif

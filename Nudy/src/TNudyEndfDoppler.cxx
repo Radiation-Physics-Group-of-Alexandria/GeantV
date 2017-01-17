@@ -6,7 +6,8 @@
 #include <math.h>
 #include <iostream>
 #include "TNudyEndfDoppler.h"
-
+#include <iomanip>
+#include <algorithm>
 #ifdef USE_ROOT
 ClassImp(TNudyEndfDoppler)
 #endif
@@ -21,18 +22,17 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
 {
 #define XNEPSM(S) fabs(ONE - TW3 * sqrt(ONE / 3.0) * pow((ONE + S * (ONE + S)), THH) / (S * (ONE + S)))
 #define FTAIL(X, Y)                                                                                                \
-  OVSQPI *((1.0 + 2.0 * Y * Y) * sqrt(PI) * HALF * (erf(X - Y) - erf(X + Y)) - (X + Y) * exp(-(X - Y) * (X - Y)) + \
-           (X - Y) * exp(-(X + Y) * (X + Y)))
+  OVSQPI *((1.0 + 2.0 * Y * Y) * sqrt(PI) * HALF * (erf(X - Y) - erf(X + Y)) - (X + Y) * exp(-(X - Y) * (X - Y)) \
+            + (X - Y) * exp(-(X + Y) * (X + Y)))
   sigDiff = isigDiff ;
   awri  = aw;
   tk    = t2 - t1;
   if(t1 == t2){
     for (unsigned int j = 0; j < x1.size(); j++) {
-      energy.push_back(x1[j]);
       sigma.push_back(x2[j]);  
-    }    
+    } 
   } else {
-    ALPHA = awri / (boltz * tk);
+    ALPHA = awri / ( boltz * tk );
     ncrs  = x1.size();
     while (RATHIG - RATLOW > 1E-7) {
       RATHLF = HALF * (RATLOW + RATHIG);
@@ -46,34 +46,32 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
     RATMAX = RATLOW * RATLOW;
     EMAX   = x1[ncrs - 1];
     EMIN   = x1[0];
-    // energy.push_back(EMIN);
-
-    // int nouraw = 0;
-    // for(int k1 = 1; k1 < ncrs; k1++){
-    // while(x1[k1] > energy[nouraw] * RATMAX){
-    // nouraw += 1;
-    // energy.push_back(energy[nouraw - 1] * RATMAX);
-    //}
-    // nouraw += 1;
-    // energy.push_back(x1[k1]);
-    //}
+    if ( x1[0] == x1[1] ) {
+      x1.erase (x1.begin()+1) ;
+      x2.erase (x2.begin()+1) ;
+    }
     IPP  = 0;
     size = x1.size();
-    //  size = energy.size();
     jloop = 0 ;
+    xss = 0.5 * (2*x2[0]+(x2[1]-x2[0])*(-x1[0])/(x1[1]-x1[0])) ;
+    if (xss < 0) xss = 0 ;
     for (int k = 0 ; k < size ; k++) {
-//       std::cout << x1[jloop] << std::endl;
-       energy.push_back(x1[jloop]);
+//        std::cout <<"Loop begins "<< x1[jloop] <<"  "<< x2[jloop] << std::endl;
       Y2  = x1[jloop] * ALPHA;
       Y   = sqrt(Y2);
-      mipp = IPP ;
       ZKT = sqrt(x1[IPP + 1] * ALPHA) - Y;
       while (ZKT < -ZLIMI) {
 	IPP += 1;
 	ZKT = sqrt(x1[IPP + 1] * ALPHA) - Y;
+	if( ZKT + ZLIMI > 0.05 ){
+	  IPP -= 2 ;
+	  ZKT = sqrt(x1[IPP + 1] * ALPHA) - Y;
+	  break;
+	}
       } // end of while loop
-      
+      mipp = IPP ;
       XSUM = 0.0;
+      FTAIL1 = 0.0;
       KPP  = IPP;
       E2   = x1[KPP];
       S2   = x2[KPP];
@@ -85,7 +83,8 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
       F2K2 = HALF * F0K2 - OVSQPI * ZK2 * EXPA;
       F3K2 = OVSQPI * (ONE - (1 + ZK22) * EXPA);
       F4K2 = HALF * THH * F0K2 - OVSQPI * ZK2 * (THH + ZK22) * EXPA;
-     if (Y < ZLIMI) {
+      
+      if (Y < ZLIMI) {
 	ZK2P  = ZK2 + 2 * Y;
 	ZK22P = ZK2P * ZK2P;
 	EXPAP = exp(-ZK22P);
@@ -95,21 +94,22 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
 	F3K2P = OVSQPI * (ONE - (1 + ZK22P) * EXPAP);
 	F4K2P = HALF * THH * F0K2P - OVSQPI * ZK2P * (THH + ZK22P) * EXPAP;
       }
-      while (ZK2 < ZLIMI && KPP < ncrs - 1) {
+      
+      while (ZK2 < ZLIMI && KPP < (int) x1.size() - 1) {
 	E1  = E2;
 	S1  = S2;
 	KPP = KPP + 1;
 	E2  = x1[KPP];
 	S2  = x2[KPP];
-	while (E2 == E1) {
+	while ( E2 == E1 ) {
 	  KPP = KPP + 1;
 	  E2  = x1[KPP];
 	  S2  = x2[KPP];
 	}
-	if (E2 - E1 == 0.0 || Y2 == 0.0 || ALPHA == 0.0) {
-	  std::cout << "Doppler fails " << E1 << "  " << E2 << "  " << Y2 << "  " << ALPHA << "  " << awri << std::endl;
+	if (E2 - E1 == 0.0 || E2 == 0 || ALPHA == 0.0) {
+	  std::cout << "Doppler fails between " << E1 << "  " << E2 << "  " << Y2 << "  " << ALPHA << "  " << awri << std::endl;
+	  continue;
 	}
-	ZK1  = ZK2;
 	F0K1 = F0K2;
 	F1K1 = F1K2;
 	F2K1 = F2K2;
@@ -130,6 +130,7 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
 	CKY2 = CK * Y2;
 	XSUM = XSUM + CK * (F4K2 - F4K1) + 4 * CKY * (F3K2 - F3K1) + (AK + 6 * CKY2) * (F2K2 - F2K1) +
 	      2 * Y * (AK + 2 * CKY2) * (F1K2 - F1K1) + Y2 * (AK + CKY2) * (F0K2 - F0K1);
+	      
 	if (Y < ZLIMI) {
 	  ZK1P  = ZK2P;
 	  F0K1P = F0K2P;
@@ -150,14 +151,17 @@ TNudyEndfDoppler::TNudyEndfDoppler(double isigDiff, double aw, double t1, double
 	} // end of if
       }   // end of if
       // while loop
-      FTAIL1 = x2[0] * (FTAIL(sqrt(x1[0] * ALPHA), Y) - FTAIL(ZERO, Y));
+      if (XSUM < 0) XSUM = 0 ;
+//      std::cout << HALF * XSUM / Y2 <<" xsum1 \t"<< xss  <<" FTAIL1 \t"<< 2*x2[0] <<" FTAIL2 \t"<< x2[ jloop ] <<std::endl;
+      FTAIL1 = xss * (FTAIL(sqrt(x1[0] * ALPHA), Y) - FTAIL(ZERO, Y));
       XSUM   = XSUM + FTAIL1;
-      FTAIL2 = x2[ncrs - 1] * (FTAIL(sqrt((x1[x1.size() -1] + 0.1 * x1[x1.size() -1])* ALPHA), Y) - FTAIL(sqrt(x1[ncrs - 1] * ALPHA), Y));
+      FTAIL2 = x2[x1.size() - 1] * (FTAIL(sqrt((x1[x1.size() -1] + 0.1 * x1[x1.size() -1])* ALPHA), Y) - FTAIL(sqrt(x1[x1.size() - 1] * ALPHA), Y));
       XSUM   = XSUM + FTAIL2;
       sigma.push_back(HALF * XSUM / Y2);
+//        std::cout << HALF * XSUM / Y2 <<" xsum2 \t"<< HALF * FTAIL1 / Y2 <<" FTAIL1 \t"<< HALF * FTAIL2 / Y2 <<" FTAIL2 \t"<< x2[ jloop ] <<std::endl;
       if ( jloop > 0 && k < size - 1) {
 	mloop = 0 ;
-	recursionLinear1(x1, x2, x1[jloop - 1], x2[jloop - 1], sigma[jloop - 1], x1[jloop], x2[jloop], sigma[jloop]);
+	recursionLinear1(x1, x2, x1[ jloop - 1 ], x2[ jloop - 1 ], sigma[ jloop - 1 ], x1[ jloop ], x2[ jloop ], sigma[ jloop ]);
 	jloop += mloop ;
       }
       jloop++ ;	
@@ -177,29 +181,56 @@ double TNudyEndfDoppler::recursionLinear1(std::vector<double> &x1,
 #define FTAILX(X, Y)                                                                                                \
   OVSQPI *((1.0 + 2.0 * Y * Y) * sqrt(PI) * HALF * (erf(X - Y) - erf(X + Y)) - (X + Y) * exp(-(X - Y) * (X - Y)) + \
            (X - Y) * exp(-(X + Y) * (X + Y)))
-//      std::cout<<"first "<< x <<"  "<< y  <<"  "<< sig <<"  "<< xd <<"  "<< yd <<"  "<< sigd << std::endl;      
    if ( y <= 0.0 && yd <= 0.0) return 0;
-//   if ( fabs( yd - y ) <= 1E-11) return 0;
-//     std::cout<<"sec "<< x <<"  "<< y <<"  "<< xd <<"  "<< yd <<"  "<< sig <<"  "<< sigd << std::endl;      
   double mid 		 = 0.5 * ( x + xd );
   double sigmid1         = y + (yd - y) * (mid - x) / (xd - x);
   double sigmid2         = sig + (sigd - sig) * (mid - x) / (xd - x);
-  std::vector<double>::iterator it;
-  it = x1.begin();
-  x1.insert(it+jloop + mloop , 1 , mid);
-  it = x2.begin();
-  x2.insert(it+jloop + mloop , 1 , sigmid1);
+  std::vector<double>::iterator itx;
+  itx = std::find (x1.begin(), x1.end(), x);
+  int xindex = itx - x1.begin() ;
+  x1.insert(x1.begin() + xindex + 1, 1 , mid);
+  x2.insert(x2.begin() + xindex + 1 , 1 , sigmid1);
+  double sigmid3 = broadMore ( x1, x2, mid ) ;
+  double errmid = fabs(sigmid2 - sigmid3)/sigmid3 ;
+//  if ( errmid >= sigDiff ) {
+  if (fabs(sig/sigd -1) > 1E-2 || errmid >= sigDiff ) {
+//  if (m1 > 0 && m3 > 0 && mdiff > 1E-3  && mdiff != 1) {
+    sigma.insert (sigma.begin() + xindex + 1, 1 , sigmid3 );
+    mloop++ ;
+//      std::cout << x <<"  \t"<< xd <<"  \t"<< errmid <<"  \t"<<sigmid3<<"  \t"<<sigmid2 << std::endl;
+//      std::cout << sig <<"  \t"<< sigd <<"  \t"<< mid << std::endl;
+//      std::cout << x <<"  \t"<< y <<"  \t"<< xd <<"  \t"<< yd << std::endl;
+    recursionLinear1( x1, x2, x , y, sig, mid, sigmid1, sigmid3 ) ; 
+    recursionLinear1( x1, x2, mid, sigmid1, sigmid3, xd, yd, sigd ) ; 
+    return 0;
+  } else {
+    x1.erase(x1.begin() + xindex + 1);
+    x2.erase(x2.begin() + xindex + 1);
+    return 0;
+  }  
+  return 0;
+}
+double TNudyEndfDoppler::broadMore (std::vector<double> &x1 , 
+				    std::vector<double> &x2 ,
+				    double ixp ) {
+  
   IPP = mipp ;
   KPP = IPP ;
-  ncrs  = x1.size();
-  Y2  = mid * ALPHA;
-  Y   = sqrt(Y2);
-  ZKT = sqrt(x1[IPP + 1] * ALPHA) - Y;
-  while (ZKT < -ZLIMI) {
-    IPP += 1;
-    ZKT = sqrt(x1[IPP + 1] * ALPHA) - Y;
+  ncrs  = x1.size() ;
+  Y2  = ixp * ALPHA ;
+  Y   = sqrt(Y2) ;
+  ZKT = sqrt(x1[IPP + 1] * ALPHA) - Y ;
+  while (ZKT > -ZLIMI) {
+    IPP -= 1;
+    ZKT = sqrt( x1 [ IPP - 1 ] * ALPHA ) - Y;
+    if(IPP <= 0)
+    {
+      IPP = 0;
+      break;
+    }
   } // end of while loop
   XSUM = 0.0;
+  FTAIL1 = 0.0;
   KPP  = IPP;
   E2   = x1 [ KPP ];
   S2   = x2 [ KPP ];
@@ -221,21 +252,21 @@ double TNudyEndfDoppler::recursionLinear1(std::vector<double> &x1,
     F3K2P = OVSQPI * (ONE - (1 + ZK22P) * EXPAP);
     F4K2P = HALF * THH * F0K2P - OVSQPI * ZK2P * (THH + ZK22P) * EXPAP;
   }
-  while (ZK2 < ZLIMI && KPP < ncrs - 1) {
+  while (ZK2 < ZLIMI && KPP <  (int)x1.size() - 1) {
     E1  = E2;
     S1  = S2;
     KPP = KPP + 1;
     E2  = x1[KPP];
     S2  = x2[KPP];
-    while (E2 == E1) {
+    while ( E2 == E1 ) {
       KPP = KPP + 1;
       E2  = x1[KPP];
       S2  = x2[KPP];
     }
     if (E2 - E1 == 0.0 || Y2 == 0.0 || ALPHA == 0.0) {
       std::cout << "Doppler fails " << E1 << "  " << E2 << "  " << Y2 << "  " << ALPHA << "  " << awri << std::endl;
+      continue;
     }
-    ZK1  = ZK2;
     F0K1 = F0K2;
     F1K1 = F1K2;
     F2K1 = F2K2;
@@ -276,30 +307,10 @@ double TNudyEndfDoppler::recursionLinear1(std::vector<double> &x1,
     } // end of if
   }   // end of if
   // while loop
-  FTAIL1 = x2[0] * (FTAILX(sqrt(x1[0] * ALPHA), Y) - FTAILX(ZERO, Y));
+  if (XSUM < 0) XSUM = 0 ;
+  FTAIL1 = xss * (FTAILX(sqrt(x1[0] * ALPHA), Y) - FTAILX(ZERO, Y));
   XSUM   = XSUM + FTAIL1;
-  FTAIL2 = x2[ncrs - 1] * (FTAILX(sqrt((x1[x1.size() -1] + 0.1 * x1[x1.size() -1])* ALPHA), Y) - FTAILX(sqrt(x1[ncrs - 1] * ALPHA), Y));
+  FTAIL2 = x2[x1.size() - 1] * (FTAILX(sqrt((x1[x1.size() -1] + 0.1 * x1[x1.size() -1])* ALPHA), Y) - FTAILX(sqrt(x1[x1.size() - 1] * ALPHA), Y));
   XSUM   = XSUM + FTAIL2;
-  double sigmid3 = HALF * XSUM / Y2;
-  double errmid = fabs(sigmid2 - sigmid3)/sigmid3 ;
-//      std::cout<< sigmid2 <<"  "<< sigmid3 <<"  "<< errmid <<"  "<< fabs(sig/sigmid3 -1)<<"  "<< sig/sigmid3 << std::endl;      
-//  if ( errmid >= sigDiff) {
-  if ( errmid >= sigDiff || fabs(sig/sigd -1) > 1E-2) {
-//      std::cout<< x <<" dopp "<< y <<"  "<< xd <<"  "<< yd <<"  "<< sigmid2 <<"  "<< sigmid3 <<"  "<< errmid << "   "<< sigDiff << std::endl;      
-    it = sigma.begin();
-    sigma.insert ( it + jloop + mloop, 1 , sigmid3 );
-    it = energy.begin();
-    energy.insert ( it + jloop + mloop, 1 , mid );
-    mloop++ ;
-    recursionLinear1( x1, x2, x , y, sig, mid, sigmid1, sigmid3 ) ; 
-    recursionLinear1( x1, x2, mid, sigmid1, sigmid3, xd, yd, sigd ) ; 
-    return 0;
-  } else {
-    it = x1.begin();
-    x1.erase(it + jloop + mloop);
-    it = x2.begin();
-    x2.erase(it + jloop + mloop);
-    return 0;
-  }  
-  return 0;
+  return HALF * XSUM / Y2;
 }
