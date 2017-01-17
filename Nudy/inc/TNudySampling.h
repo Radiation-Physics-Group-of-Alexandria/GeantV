@@ -22,6 +22,9 @@ public:
 private:
   void GetSecParameter(Particle *, TNudyEndfRecoPoint *recoPoint);
   void FillHisto(double icosLab, double isecEnergyLab);
+  double kinematicNonRel(Particle *particle, TNudyEndfRecoPoint *recoPoint);
+  double kinematicRel(Particle *particle, TNudyEndfRecoPoint *recoPoint);
+  double kinematicGama(Particle *particle, TNudyEndfRecoPoint *recoPoint);
   std::vector<double> crs;
   double kineticE;
   double cosCM = 0, cosLab = 0, secEnergyCM = 0, secEnergyLab = 0;

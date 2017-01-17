@@ -41,6 +41,13 @@ void TNudyEndfCont::SetCont(double c1, double c2, int l1, int l2, int n1, int n2
   fN2 = n2;
 }
 
+//_______________________________________________________________________________
+void TNudyEndfCont::SetContMF(int mat, int mt, int mf)
+{
+  fC1 = mat;
+  fC2 = mt;
+  fL1 = mf;
+}
 //
 // Dump Data to screen in ENDF format
 //______________________________________________________________________________

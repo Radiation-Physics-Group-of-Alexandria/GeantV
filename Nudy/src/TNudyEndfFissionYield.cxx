@@ -37,15 +37,18 @@ TNudyEndfFissionYield::TNudyEndfFissionYield(TNudyEndfFile *file)
         // int NN   = list1->GetN1();
         int NFP = list1->GetN2();
         // std::cout<<"energy i " <<ein[i] << std::endl;
+	double sum = 0;
         for (int j = 0; j < NFP; j++) {
-          zafp1.push_back(list1->GetLIST(4 * j + 0));
+          zafp1.push_back(10*list1->GetLIST(4 * j + 0) + list1->GetLIST(4 * j + 1));
           fps1.push_back(list1->GetLIST(4 * j + 1));
-          yi1.push_back(list1->GetLIST(4 * j + 2));
+          yi1.push_back(list1->GetLIST(4 * j + 2)/2);
           dyi1.push_back(list1->GetLIST(4 * j + 3));
+	  sum += list1->GetLIST(4 * j + 2) ;
+	  cyi1.push_back( sum/2 );
           // divr = div(zafp1[j],1000);
-          // std::cout<< divr.rem <<"  "<<  yi1[j] << std::endl;
+//           std::cout<< list1->GetLIST(4 * j + 0) <<"  "<<  list1->GetLIST(4 * j + 2) << std::endl;
         }
-        TNudyCore::Instance()->cdfGenerateT(zafp1, yi1, cyi1);
+//         std::cout << "sum fission yield \t" << sum << std::endl;
         zafp.push_back(zafp1);
         fps.push_back(fps1);
         yi.push_back(yi1);
@@ -73,7 +76,7 @@ TNudyEndfFissionYield::TNudyEndfFissionYield(TNudyEndfFile *file)
         int NFP = list1->GetN2();
         //          std::cout<<"energy c " <<einc[i] << std::endl;
         for (int j = 0; j < NFP; j++) {
-          zafpc1.push_back(list1->GetLIST(4 * j + 0));
+          zafpc1.push_back(10*list1->GetLIST(4 * j + 0)+list1->GetLIST(4 * j + 1));
           fpsc1.push_back(list1->GetLIST(4 * j + 1));
           yc1.push_back(list1->GetLIST(4 * j + 2));
           dyc1.push_back(list1->GetLIST(4 * j + 3));

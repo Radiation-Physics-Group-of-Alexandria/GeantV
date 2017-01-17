@@ -6,6 +6,7 @@
 #include "TList.h"
 #include "TFile.h"
 #include "TKey.h"
+#include "TNudyENDF.h"
 #include "TNudyEndfFile.h"
 #include "TNudyEndfTape.h"
 #include "TNudyEndfList.h"
@@ -16,6 +17,13 @@
 #include "TNudyCore.h"
 #include "TNudyEndfSigma.h"
 #include "Math/SpecFuncMathMore.h"
+#include "TNudyEndfEnergy.h"
+#include "TNudyEndfEnergyAng.h"
+#include "TNudyEndfFissionYield.h"
+#include "TNudyEndfPhYield.h"
+#include "TNudyEndfPhProd.h"
+#include "TNudyEndfPhAng.h"
+#include "TNudyEndfPhEnergy.h"
 
 #ifdef USE_ROOT
 ClassImp(TNudyEndfSigma)
@@ -757,9 +765,11 @@ double TNudyEndfSigma::recursionLinearFile3(double x1, double x2, double sig1, d
   siga           = TNudyCore::Instance()->Interpolate(nbt1, int1, NR, ene, sig, NP, mid);
   double sigmid1 = sig1 + (sig2 - sig1) * (mid - x1) / (x2 - x1);
   if (siga == 0.0 || x1 == x2) return 0;
+  //std::cout <<"x \t"<< x1 <<"  \t"<< x2 <<"  \t"<< sig1 <<"  \t"<< sig2 <<"  \t"<< sigmid1 <<"   \t"<< siga << std::endl;
   if (std::fabs((siga - sigmid1) / siga) <= sigDiff) {
     return 0;
   } else {
+  //std::cout <<"mid \t"<< x1 <<"  \t"<< x2 <<"  \t"<< sig1 <<"  \t"<< sig2 <<"  \t"<< sigmid1 <<"   \t"<< siga <<"   \t"<< std::fabs((siga - sigmid1) / siga )<< std::endl;
     eLinearFile3.push_back(mid);
     xLinearFile3.push_back(siga);
   }
@@ -846,19 +856,20 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 
   while ((sec = (TNudyEndfSec *)secIter.Next())) {
     int MT = sec->GetMT();
-    if (MT != 1 && MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 &&
-        MT < 250) {
-      MtNumbers.push_back(MT);
+//     if (MT != 1 && MT != 3 && MT != 4 && MT != 5 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 &&
+//         MT < 250) {
+//       MtNumbers.push_back(MT);
       TIter recIter(sec->GetRecords());
       TNudyEndfCont *header = (TNudyEndfCont *)recIter.Next();
-      // double ZA   = sec->GetC1();
-      //    double AWRI  = sec->GetC2();
+      ZA    		= sec->GetC1();
+      AWR	  	= sec->GetC2();
+      MAT		= sec->GetMAT();
       // double AWR  = sec->GetC2();
       // double QM   = header->GetC1();
-      double QI            = header->GetC2();
-      QValue[sec->GetMT()] = QI;
-      qvaluetemp.push_back(QI);
-      qvaluetemp.push_back(MT);
+//       double QI            = header->GetC2();
+//       QValue[sec->GetMT()] = QI;
+//       qvaluetemp.push_back(QI);
+//       qvaluetemp.push_back(MT);
       // int LR = header->GetL2();
       NR = header->GetN1();
       NP = header->GetN2();
@@ -876,14 +887,14 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
         eneTemp.push_back(tab1->GetX(crs));
         sigTemp.push_back(tab1->GetY(crs));
 	if(prepro == 0){
-	  if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 2]){
-	    eneTemp[eneTemp.size() - 1] += 0.01; // adding small difference for boundary points
+	  if (npp > 0 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 2]){
+	    eneTemp[eneTemp.size() - 1] += 1E-9; // adding small difference for boundary points
 	  }
-	  if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 3]){
-	    eneTemp[eneTemp.size() - 1] += 0.02; // adding small difference for boundary points
+	  if (npp > 0 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 3]){
+	    eneTemp[eneTemp.size() - 1] += 2E-9; // adding small difference for boundary points
 	  }
-	  if (npp > 1 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 4]){
-	    eneTemp[eneTemp.size() - 1] += 0.03; // adding small difference for boundary points
+	  if (npp > 0 && eneTemp[eneTemp.size() - 1] == eneTemp[eneTemp.size() - 4]){
+	    eneTemp[eneTemp.size() - 1] += 3E-9; // adding small difference for boundary points
 	  }
 	}
         npp += 1;
@@ -897,6 +908,9 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
         eLinearFile3.push_back(eneTemp[crs]);
         xLinearFile3.push_back(sigTemp[crs]);
       }
+//        for (unsigned int j= 0 ; j < eLinearFile3.size() ; j++) {
+// 	std::cout << eLinearFile3 [j] <<" before linear \t"<< xLinearFile3 [j] << std::endl;
+//        }
       // Linearization of file 3 data
       if(prepro == 0){
 	for (int cr = 0; cr < NP - 1; cr++) {
@@ -920,10 +934,15 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	    xLinearFile3.push_back(sigExtra);
 	  }
 	}
+       //for (unsigned int j= 0 ; j < eLinearFile3.size() ; j++) {
+	 //std::cout << eLinearFile3 [j] <<" after linear \t"<< xLinearFile3 [j] << std::endl;
+       //}
 	TNudyCore::Instance()->Sort(eLinearFile3, xLinearFile3);
 	TNudyCore::Instance()->ThinningDuplicate(eLinearFile3, xLinearFile3);
       } 
-
+//        for (unsigned int j= 0 ; j < eLinearFile3.size() ; j++) {
+// 	std::cout << eLinearFile3 [j] <<"  \t"<< xLinearFile3 [j] << std::endl;
+//        }
 //	Filling of array to interpolate and add with file 2 data if it is given
 	nbt1.clear();
 	int1.clear();
@@ -1014,7 +1033,90 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	  } break;
 	  }
 	}
-
+	int NR                = 1;
+	if (MT == 2) {
+	  header->SetCont(header->GetC1(), header->GetC2(), header->GetL1(), header->GetL2(), NR,
+			  (int)eLinElastic.size());
+	  tab1->SetNBT((int)eLinElastic.size(), 0);
+	  tab1->SetINT(2, 0);
+	  for (unsigned int crs = 0; crs < eLinElastic.size(); crs++) {
+	    tab1->SetX(eLinElastic[crs], crs);
+	    tab1->SetY(xLinElastic[crs], crs);
+	  }	  
+	} else if (MT == 18) {
+	  header->SetCont(header->GetC1(), header->GetC2(), header->GetL1(), header->GetL2(), NR,
+			  (int)eLinFission.size());
+	  tab1->SetNBT((int)eLinFission.size(), 0);
+	  tab1->SetINT(2, 0);
+	  for (unsigned int crs = 0; crs < eLinFission.size(); crs++) {
+	    tab1->SetX(eLinFission[crs], crs);
+	    tab1->SetY(xLinFission[crs], crs);
+	  }	  
+	} else if (MT == 102) {
+	  header->SetCont(header->GetC1(), header->GetC2(), header->GetL1(), header->GetL2(), NR,
+			  (int)eLinCapture.size());
+	  tab1->SetNBT((int)eLinCapture.size(), 0);
+	  tab1->SetINT(2, 0);
+	  for (unsigned int crs = 0; crs < eLinCapture.size(); crs++) {
+	    tab1->SetX(eLinCapture[crs], crs);
+	    tab1->SetY(xLinCapture[crs], crs);
+	  }	  
+	} else if (MT != 2 && MT != 18 && MT != 102) {
+	  header->SetCont(header->GetC1(), header->GetC2(), header->GetL1(), header->GetL2(), NR,
+			  (int)eLinearFile3.size());
+	  tab1->SetNBT((int)eLinearFile3.size(), 0);
+	  tab1->SetINT(2, 0);
+	  for (unsigned int crs = 0; crs < eLinearFile3.size(); crs++) {
+	    tab1->SetX(eLinearFile3[crs], crs);
+	    tab1->SetY(xLinearFile3[crs], crs);
+//	    std::cout <<" MT "<< sec->GetMT()<<" energy "<< eLinearFile3 [crs] <<" sigma "<< xLinearFile3 [crs] << std::endl;
+	  }
+	}
+	
+// 	std::cout <<" proton flag \t" <<  MTChargeFlag [0] <<" proton flag \t" <<  MTChargeFlag [5] <<" MT \t" <<  MT << std::endl;
+	// if data are given only in MT = 600-850
+	if(MTChargeFlag [0] != -1 && (MT >= 600 && MT < 650)){
+       //  summing for n,p reaction
+// 	  std::cout<<" first case0 != -1 MT= 600-649 "<< std::endl; 
+	  eneUniP.insert (std::end(eneUniP), std::begin(eLinearFile3), std::end(eLinearFile3));
+	  eneUniPAll.insert (std::end(eneUniPAll), std::begin(eLinearFile3), std::end(eLinearFile3));	 
+	} else if (MTChargeFlag [1] != -1 && MT >= 650 && MT < 700){
+       //  summing for n,d reaction
+// 	  std::cout<<" first case0 != -1 MT= 650-700 "<< std::endl; 
+	  eneUniD.insert (std::end(eneUniD), std::begin(eLinearFile3), std::end(eLinearFile3)); 
+	  eneUniDAll.insert (std::end(eneUniDAll), std::begin(eLinearFile3), std::end(eLinearFile3)); 
+	} else if (MTChargeFlag [2] != -1 && MT >= 700 && MT < 750){
+       //  summing for n,t reaction
+// 	  std::cout<<" first case0 != -1 MT= 700-749 "<< std::endl; 
+	  eneUniT.insert (std::end(eneUniT), std::begin(eLinearFile3), std::end(eLinearFile3)); 
+	  eneUniTAll.insert (std::end(eneUniTAll), std::begin(eLinearFile3), std::end(eLinearFile3)); 
+	} else if (MTChargeFlag [3] != -1 && MT >= 750 && MT < 800){
+       //  summing for n,He3 reaction
+// 	  std::cout<<" first case0 != -1 MT= 749-800 "<< std::endl; 
+	  eneUniHe3.insert (std::end(eneUniHe3), std::begin(eLinearFile3), std::end(eLinearFile3)); 
+	  eneUniHe3All.insert (std::end(eneUniHe3All), std::begin(eLinearFile3), std::end(eLinearFile3)); 
+	} else if (MTChargeFlag [4] != -1 && MT >= 800 && MT < 850){
+       //  summing for n,He4 reaction
+// 	  std::cout<<" first case0 != -1 MT= 800-849 "<< std::endl; 
+	  eneUniHe4.insert (std::end(eneUniHe4), std::begin(eLinearFile3), std::end(eLinearFile3)); 
+	  eneUniHe4All.insert (std::end(eneUniHe4All), std::begin(eLinearFile3), std::end(eLinearFile3)); 
+	} else if(MT == 28 || (MT >= 41 && MT < 46) || MT == 111 || MT == 112 || MT == 115 || MT == 116 ){
+       //  summing for n,px reaction
+	  eneUniPAll.insert (std::end(eneUniPAll), std::begin(eLinearFile3), std::end(eLinearFile3));	 
+	} else if(MT == 11 ||MT == 32 || MT == 35 || MT == 114 || MT == 115 || MT == 117 ){
+       //  summing for n,dx reaction
+	  eneUniDAll.insert (std::end(eneUniDAll), std::begin(eLinearFile3), std::end(eLinearFile3));	 
+	} else if(MT == 33 || MT == 113 || MT == 116 ){
+       //  summing for n,tx reaction
+	  eneUniTAll.insert (std::end(eneUniTAll), std::begin(eLinearFile3), std::end(eLinearFile3));	 
+	} else if(MT == 34 || MT == 113 || MT == 116 ){
+       //  summing for n,He3x reaction
+	  eneUniHe3All.insert (std::end(eneUniHe3All), std::begin(eLinearFile3), std::end(eLinearFile3));	 
+	} else if((MT >= 22 && MT < 26 ) || MT == 29 || MT == 30 || MT == 36 || MT == 36 || MT == 45 
+	           || MT == 108 || MT == 109 || (MT >= 112 && MT < 115 ) || MT == 117 ){
+       //  summing for n,He4x reaction
+	  eneUniHe4All.insert (std::end(eneUniHe4All), std::begin(eLinearFile3), std::end(eLinearFile3));	 
+	}
 //	check the sum of cross sections with total cross-section given in the MT=1 + resonance
 //	    int size = eLinearFile3.size();
 	if (MT == 2) {
@@ -1058,10 +1160,540 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
       int1.clear();
       sigmaOfMts.push_back(sigmaMts);
       sigmaMts.clear();
+//     }
+  }
+  // sorting and removing duplicate points
+  std::sort(eneUniP.begin(), eneUniP.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniP);
+  
+  std::sort(eneUniD.begin(), eneUniD.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniD);
+  
+  std::sort(eneUniT.begin(), eneUniT.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniT);
+  
+  std::sort(eneUniHe3.begin(), eneUniHe3.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniHe3);
+  
+  std::sort(eneUniHe4.begin(), eneUniHe4.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniHe4);
+  
+  std::sort(eneUniPAll.begin(), eneUniPAll.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniPAll);
+  
+  std::sort(eneUniDAll.begin(), eneUniDAll.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniDAll);
+  
+  std::sort(eneUniTAll.begin(), eneUniTAll.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniTAll);
+  
+  std::sort(eneUniHe3All.begin(), eneUniHe3All.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniHe3All);
+  
+  std::sort(eneUniHe4All.begin(), eneUniHe4All.end());
+  TNudyCore::Instance()->ThinningDuplicate(eneUniHe4All);
+  
+  // summing cross-section for making total from ground and excited states for n,p
+  TIter secIter1(file->GetSections());
+  TNudyEndfSec *sec1;
+  while ((sec1 = (TNudyEndfSec *)secIter1.Next())) {
+    int MT = sec1->GetMT();
+//     std::cout<<" MT "<< MT << std::endl;
+    TIter recIter1(sec1->GetRecords());
+    TNudyEndfCont *header = (TNudyEndfCont *)recIter1.Next();
+    NR = header->GetN1();
+    NP = header->GetN2();
+    TNudyEndfTab1 *tab1 = (TNudyEndfTab1 *)(sec1->GetRecords()->At(0));
+    if((MTChargeFlag [0] != -1 && MT >= 600 && MT < 650)/* || (MTChargeFlag [5] != -1 && MT == 103)
+        || (MTChargeFlag [0] == -1 && MTChargeFlag [5] == -1 && MT == 103)*/ ) {
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab1->GetX(crs));
+        xLinearFile3.push_back(tab1->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniP.size(); k++) {
+	int min = BinarySearch(eneUniP[k], eLinearFile3);
+	if (eneUniP[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniP[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniP[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	  if (sigmaAdd > 1E-20) {
+	    eneTemp.push_back(eneUniP[k]);
+	    sigTemp.push_back(sigmaAdd);
+	  }
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocP.push_back(k);
+	}
+      }
+      sigUniOfP.push_back(sigTemp);
+    } else if((MTChargeFlag [1] != -1 && MT >= 650 && MT < 700)/* || (MTChargeFlag [6] != -1 && MT == 104)
+        || (MTChargeFlag [1] == -1 && MTChargeFlag [6] == -1 && MT == 104)*/) {
+     for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab1->GetX(crs));
+        xLinearFile3.push_back(tab1->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniD.size(); k++) {
+	int min = BinarySearch(eneUniD[k], eLinearFile3);
+	if (eneUniD[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniD[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+ 	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniD[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniD[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocD.push_back(k);
+	}
+      }
+      sigUniOfD.push_back(sigTemp);
+    } else if((MTChargeFlag [2] != -1 && MT >= 700 && MT < 750)/* || (MTChargeFlag [7] != -1 && MT == 105)
+        || (MTChargeFlag [2] == -1 && MTChargeFlag [7] == -1 && MT == 105)*/ ) {
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab1->GetX(crs));
+        xLinearFile3.push_back(tab1->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniT.size(); k++) {
+	
+	int min = BinarySearch(eneUniT[k], eLinearFile3);
+	if (eneUniT[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniT[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniT[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniT[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocT.push_back(k);
+	}
+      }
+      sigUniOfT.push_back(sigTemp);
+     } else if((MTChargeFlag [3] != -1 && MT >= 750 && MT < 800)/* || (MTChargeFlag [8] != -1 && MT == 106)
+        || (MTChargeFlag [3] == -1 && MTChargeFlag [8] == -1 && MT == 106)*/ ) {
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab1->GetX(crs));
+        xLinearFile3.push_back(tab1->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniHe3.size(); k++) {
+	
+	int min = BinarySearch(eneUniHe3[k], eLinearFile3);
+	if (eneUniHe3[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniHe3[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniHe3[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniHe3[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocHe3.push_back(k);
+	}
+      }
+      sigUniOfHe3.push_back(sigTemp);
+    } else if((MTChargeFlag [4] != -1 && MT >= 800 && MT < 850)/* || (MTChargeFlag [9] != -1 && MT == 107)
+        || (MTChargeFlag [4] == -1 && MTChargeFlag [9] == -1 && MT == 107)*/ ) {
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab1->GetX(crs));
+        xLinearFile3.push_back(tab1->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniHe4.size(); k++) {
+	
+	int min = BinarySearch(eneUniHe4[k], eLinearFile3);
+	if (eneUniHe4[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniHe4[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniHe4[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniHe4[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocHe4.push_back(k);
+	}
+      }
+      sigUniOfHe4.push_back(sigTemp);
+    }
+    eneTemp.clear();
+    sigTemp.clear();
+    eLinearFile3.clear();
+    xLinearFile3.clear();    
+  }
+//	Adding charge particle reaction cross-sections  
+  sigUniP.resize(eneUniP.size());
+  for (unsigned long i = 0; i < sigUniOfP.size(); i++) {
+    int size = sigUniOfP[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniP[eneLocP[i] + j] += sigUniOfP[i][j];
     }
   }
+  sigUniD.resize(eneUniD.size());
+  for (unsigned long i = 0; i < sigUniOfD.size(); i++) {
+    int size = sigUniOfD[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniD[eneLocD[i] + j] += sigUniOfD[i][j];
+    }
+  }
+  sigUniT.resize(eneUniT.size());
+  for (unsigned long i = 0; i < sigUniOfT.size(); i++) {
+    int size = sigUniOfT[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniT[eneLocT[i] + j] += sigUniOfT[i][j];
+    }
+  }
+  sigUniHe3.resize(eneUniHe3.size());
+  for (unsigned long i = 0; i < sigUniOfHe3.size(); i++) {
+    int size = sigUniOfHe3[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniHe3[eneLocHe3[i] + j] += sigUniOfHe3[i][j];
+    }
+  }
+  sigUniHe4.resize(eneUniHe4.size());
+  for (unsigned long i = 0; i < sigUniOfHe4.size(); i++) {
+    int size = sigUniOfHe4[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniHe4[eneLocHe4[i] + j] += sigUniOfHe4[i][j];
+    }
+  }
+  TIter secIter2(file->GetSections());
+  TNudyEndfSec *sec2;
+  double QM[5] = {0,0,0,0,0};
+  double QI[5] = {0,0,0,0,0};
+  while ((sec2 = (TNudyEndfSec *)secIter2.Next())) {
+    TIter recIter2(sec2->GetRecords());
+    TNudyEndfCont *header2 = (TNudyEndfCont *)recIter2.Next();
+    int MT 		= sec2->GetMT();
+    if (MT == 600) {QM[0]  = header2->GetC1(); QI[0]   = header2->GetC2();}
+    if (MT == 650) {QM[1]  = header2->GetC1(); QI[1]   = header2->GetC2();}
+    if (MT == 700) {QM[2]  = header2->GetC1(); QI[2]   = header2->GetC2();}
+    if (MT == 750) {QM[3]  = header2->GetC1(); QI[3]   = header2->GetC2();}
+    if (MT == 800) {QM[4]  = header2->GetC1(); QI[4]   = header2->GetC2();}
+  }
+  if (MTChargeFlag[0] !=-1 && MTChargeFlag[5] ==-1) {
+    AddSecFile3 (file, QM[0], QI[0], 103, eneUniP, sigUniP);  
+  }
+  if (MTChargeFlag[1] !=-1 && MTChargeFlag[6] ==-1) {
+    AddSecFile3 (file, QM[1], QI[1], 104, eneUniD, sigUniD);  
+  }
+  if (MTChargeFlag[2] !=-1 && MTChargeFlag[7] ==-1) {
+    AddSecFile3 (file, QM[2], QI[2], 105, eneUniT, sigUniT);  
+  }
+  if (MTChargeFlag[3] !=-1 && MTChargeFlag[8] ==-1) {
+    AddSecFile3 (file, QM[3], QI[3], 106, eneUniHe3, sigUniHe3);  
+  }
+  if (MTChargeFlag[4] !=-1 && MTChargeFlag[9] ==-1) {
+    AddSecFile3 (file, QM[4], QI[4], 107, eneUniHe4, sigUniHe4);  
+  }
+
+// Total charge production for the gas production cross-section
+  TIter secIter0(file->GetSections());
+  TNudyEndfSec *sec0;
+  while ((sec0 = (TNudyEndfSec *)secIter0.Next())) {
+    int MT = sec0->GetMT();
+    TIter recIter0(sec0->GetRecords());
+    TNudyEndfCont *header0 = (TNudyEndfCont *)recIter0.Next();
+    NR = header0->GetN1();
+    NP = header0->GetN2();
+    TNudyEndfTab1 *tab0 = (TNudyEndfTab1 *)(sec0->GetRecords()->At(0));
+//        for (int crs = 0; crs < NP; crs++) {
+//         std::cout<<"MT "<< MT <<"  "<< tab0->GetX(crs) <<"  "<< tab0->GetY(crs) << std::endl;
+//       }      
+   if(MT == 103 || MT == 28 || (MT >= 41 && MT < 46) || MT == 111 || MT == 112 || MT == 115 || MT == 116  ) {
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab0->GetX(crs));
+        xLinearFile3.push_back(tab0->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniPAll.size(); k++) {
+	int min = BinarySearch(eneUniPAll[k], eLinearFile3);
+	if (eneUniPAll[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniPAll[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniPAll[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniPAll[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocPAll.push_back(k);
+	}
+      }
+      sigUniOfPAll.push_back(sigTemp);
+    } else if(MT == 11 || MT == 32 || MT == 35 || MT == 114 || MT == 115 || MT == 117 || MT == 104) {
+      
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab0->GetX(crs));
+        xLinearFile3.push_back(tab0->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniDAll.size(); k++) {
+	
+	int min = BinarySearch(eneUniDAll[k], eLinearFile3);
+	if (eneUniDAll[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniDAll[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniDAll[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniDAll[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocDAll.push_back(k);
+	}
+      }
+      sigUniOfDAll.push_back(sigTemp);
+    } else if(MT == 33 || MT == 113 || MT == 116 || MT == 105) {
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab0->GetX(crs));
+        xLinearFile3.push_back(tab0->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniTAll.size(); k++) {
+	
+	int min = BinarySearch(eneUniTAll[k], eLinearFile3);
+	if (eneUniTAll[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniTAll[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniTAll[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniTAll[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocTAll.push_back(k);
+	}
+      }
+      sigUniOfTAll.push_back(sigTemp);
+     } else if(MT == 34 || MT == 113 || MT == 116 || MT == 106) {
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab0->GetX(crs));
+        xLinearFile3.push_back(tab0->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniHe3All.size(); k++) {
+	
+	int min = BinarySearch(eneUniHe3All[k], eLinearFile3);
+	if (eneUniHe3All[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniHe3All[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniHe3All[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniHe3All[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocHe3All.push_back(k);
+	}
+      }
+      sigUniOfHe3All.push_back(sigTemp);
+    } else if((MT >= 22 && MT < 26 ) || MT == 29 || MT == 30 || MT == 36 || MT == 36 || MT == 45 
+	           || MT == 108 || MT == 109 || (MT >= 112 && MT < 115 ) || MT == 117  || MT == 107) {
+      for (int crs = 0; crs < NP; crs++) {
+        eLinearFile3.push_back(tab0->GetX(crs));
+        xLinearFile3.push_back(tab0->GetY(crs));
+      }      
+      for (unsigned long k = 0; k < eneUniHe4All.size(); k++) {
+	
+	int min = BinarySearch(eneUniHe4All[k], eLinearFile3);
+	if (eneUniHe4All[k] == eLinearFile3[min]) {
+	  eneTemp.push_back(eneUniHe4All[k]);
+	  sigTemp.push_back(xLinearFile3[min]);
+	} else {
+	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniHe4All[k] - eLinearFile3[min]) /
+			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    eneTemp.push_back(eneUniHe4All[k]);
+	    sigTemp.push_back(sigmaAdd);
+	}
+	if (eneTemp.size() == 1) {
+	  eneLocHe4All.push_back(k);
+	}
+      }
+      sigUniOfHe4All.push_back(sigTemp);
+    }
+    eneTemp.clear();
+    sigTemp.clear();
+    eLinearFile3.clear();
+    xLinearFile3.clear();
+  }
+//	Adding all charge particle reaction cross-sections  
+  sigUniPAll.resize(eneUniPAll.size());
+  for (unsigned long i = 0; i < sigUniOfPAll.size(); i++) {
+    int size = sigUniOfPAll[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniPAll[eneLocPAll[i] + j] += sigUniOfPAll[i][j];
+    }
+  }
+  sigUniDAll.resize(eneUniDAll.size());
+  for (unsigned long i = 0; i < sigUniOfDAll.size(); i++) {
+    int size = sigUniOfDAll[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniDAll[eneLocDAll[i] + j] += sigUniOfDAll[i][j];
+    }
+  }
+  sigUniTAll.resize(eneUniTAll.size());
+  for (unsigned long i = 0; i < sigUniOfTAll.size(); i++) {
+    int size = sigUniOfTAll[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniTAll[eneLocTAll[i] + j] += sigUniOfTAll[i][j];
+    }
+  }
+  sigUniHe3All.resize(eneUniHe3All.size());
+  for (unsigned long i = 0; i < sigUniOfHe3All.size(); i++) {
+    int size = sigUniOfHe3All[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniHe3All[eneLocHe3All[i] + j] += sigUniOfHe3All[i][j];
+    }
+  }
+  sigUniHe4All.resize(eneUniHe4All.size());
+  for (unsigned long i = 0; i < sigUniOfHe4All.size(); i++) {
+    int size = sigUniOfHe4All[i].size();
+    for (int j = 0; j < size; j++) {
+      sigUniHe4All[eneLocHe4All[i] + j] += sigUniOfHe4All[i][j];
+    }
+  }
+// Adding new MF for charge particles (p, d, t, He3, He4)
+  
+  if ((MTChargeFlag[0] ==-1 || MTChargeFlag[5] ==-1)) {
+    AddSecFile3 (file, 0, 0, 203, eneUniPAll, sigUniPAll);  
+  }
+  if ((MTChargeFlag[1] ==-1 || MTChargeFlag[6] ==-1)) {
+    AddSecFile3 (file, 0, 0, 204, eneUniDAll, sigUniDAll);  
+  }
+  if ((MTChargeFlag[2] ==-1 || MTChargeFlag[7] ==-1)) {
+    AddSecFile3 (file, 0, 0, 205, eneUniTAll, sigUniTAll);  
+  }
+  if ((MTChargeFlag[3] ==-1 || MTChargeFlag[8] ==-1)) {
+    AddSecFile3 (file, 0, 0, 206, eneUniHe3All, sigUniHe3All);  
+  }
+  if ((MTChargeFlag[4] ==-1 || MTChargeFlag[9] ==-1)) {
+    AddSecFile3 (file, 0, 0, 207, eneUniHe4All, sigUniHe4All);  
+  }
+
+  TIter secIter20(file->GetSections());
+  TNudyEndfSec *sec20;
+  while ((sec20 = (TNudyEndfSec *)secIter20.Next())) {
+    MtNumbers.push_back(sec20->GetMT());
+    TIter recIter21(sec20->GetRecords());
+    TNudyEndfCont *header21 = (TNudyEndfCont *)recIter21.Next();
+    qvaluetemp.push_back(header21->GetC2());
+    qvaluetemp.push_back(sec20->GetMT());
+  }
+
+  /*  
+  TIter secIterx(file->GetSections());
+  TNudyEndfSec *secx;
+  while ((secx = (TNudyEndfSec *)secIterx.Next())) {
+    int MT = secx->GetMT();
+    TIter recItery(secx->GetRecords());
+    TNudyEndfCont *headerx = (TNudyEndfCont *)recItery.Next();
+    NR = headerx->GetN1();
+    NP = headerx->GetN2();
+    std::cout<<"MT "<< MT <<" NP "<< NP <<"  "<< headerx->GetC1()<<"  "<< headerx->GetC2()<<"  "<< headerx->GetL1()<<"  "<< headerx->GetL2()
+    <<"  "<< headerx->GetN1()<<"  "<< headerx->GetN2()<< std::endl;
+    TNudyEndfTab1 *tabx = (TNudyEndfTab1 *)(secx->GetRecords()->At(0));
+       for (int crs = 0; crs < NP; crs++) {
+        std::cout<<"MTX "<< MT<<" NP "<< NP <<"  "<< tabx->GetX(crs) <<"  "<< tabx->GetY(crs) << std::endl;
+      }      
+  }  */
+// fill sigmaMts
+  TIter secIter22(file->GetSections());
+  TNudyEndfSec *sec22;
+  while ((sec22 = (TNudyEndfSec *)secIter22.Next())) {
+      TIter recIter23(sec22->GetRecords());
+      TNudyEndfCont *header23 = (TNudyEndfCont *)recIter23.Next();
+      if((sec22->GetMT() >= 103 && sec22->GetMT() < 108) || (sec22->GetMT() >= 203 && sec22->GetMT() < 208)){
+	NP = header23->GetN2();
+	TNudyEndfTab1 *tab23 = (TNudyEndfTab1 *)(sec22->GetRecords()->At(0));
+	for (int crs = 0; crs < NP; crs++) {
+	  eLinearFile3.push_back(tab23->GetX(crs));
+	  xLinearFile3.push_back(tab23->GetY(crs));
+// 	  std::cout <<" MT "<< sec22->GetMT()<<" energy "<< eLinearFile3 [crs] <<" sigma "<< xLinearFile3 [crs] << std::endl;
+	}
+	sigmaMts.insert(std::end(sigmaMts), std::begin(eLinearFile3), std::end(eLinearFile3));
+	sigmaMts.insert(std::end(sigmaMts), std::begin(xLinearFile3), std::end(xLinearFile3));
+	eLinearFile3.clear();
+	xLinearFile3.clear();
+	sigmaOfMts.push_back(sigmaMts);
+	sigmaMts.clear();
+      }
+  } 
   qvalue.push_back(qvaluetemp);
   qvaluetemp.clear();
+// empty vectors
+  sigUniOfP.clear();
+  eneLocP.clear();
+  sigUniOfD.clear();
+  eneLocD.clear();
+  sigUniOfT.clear();
+  eneLocT.clear();
+  sigUniOfHe3.clear();
+  eneLocHe3.clear();
+  sigUniOfHe4.clear();
+  eneLocHe4.clear();
+  sigUniOfPAll.clear();
+  eneLocPAll.clear();
+  sigUniOfDAll.clear();
+  eneLocDAll.clear();
+  sigUniOfTAll.clear();
+  eneLocTAll.clear();
+  sigUniOfHe3All.clear();
+  eneLocHe3All.clear();
+  sigUniOfHe4All.clear();
+  eneLocHe4All.clear();
+}
+int TNudyEndfSigma::BinarySearch(double x1, rowd &x2){
+    int min = 0;
+    int size = x2.size();
+    min = 0;
+    int max = size - 1;
+    int mid = 0;
+    if (x1 <= x2[min])
+      min = 0;
+    else if (x1 >= x2[max])
+      min = max - 1;
+    else {
+      while (max - min > 1) {
+	mid = (min + max) / 2;
+	if (x1 < x2[mid])
+	  max = mid;
+	else
+	  min = mid;
+      }
+    }
+    return min;
+}
+// Adding new MF for charge particles
+//------------------------------------------------------------------------------------------------------
+void TNudyEndfSigma::AddSecFile3(TNudyEndfFile *file1,
+				 double a, 
+				 double b, 
+				 int MF2Add, 
+				 rowd &x1, 
+				 rowd &x2){
+  
+  TNudyEndfSec *sec3 = new TNudyEndfSec(MAT, 3, MF2Add, ZA, AWRI,0,0,0,0);
+//  TNudyEndfCont *secCont = new TNudyEndfCont (a,b,0,0,1,(int)x1.size());
+//  sec3->Add(secCont);
+  TNudyEndfTab1 *sec3Tab1 = new TNudyEndfTab1();
+  sec3Tab1->SetCont(a,b,0,0,1,(int)x1.size());
+  sec3Tab1->SetNBT((int)x1.size(), 0);
+  sec3Tab1->SetINT(2, 0);
+  for (unsigned int j = 0; j < x1.size(); ++j) {
+    sec3Tab1->SetX(x1[j], j);
+    sec3Tab1->SetY(x2[j], j);
+//     std::cout << "x2 " << x2[j] << std::endl;
+  }
+  sec3->Add(sec3Tab1);
+//   TNudyEndfCont *secCont1 = new TNudyEndfCont (0,0,0,0,0,0);
+//   secCont1->SetContMF(MAT,MF2Add,0);
+//   sec3->Add(secCont1);
+  file1->Add(sec3);
 }
 //------------------------------------------------------------------------------------------------------
 double TNudyEndfSigma::K_wnum(double x)
@@ -1833,9 +2465,9 @@ double TNudyEndfSigma::recursionLinear(double x1, double x2, double sig1, double
     slope = 1 ;
   }
 //  if (elRatio <= sigDiff && capRatio <= sigDiff && fisRatio <= sigDiff ) {
-//  if (elRatio <= sigDiff && capRatio <= sigDiff && fisRatio <= sigDiff && slope == -1) {
-  if (elRatio <= sigDiff && capRatio <= sigDiff && fisRatio <= sigDiff && fabs (sig2/siga -1) < 0.01 
-      && fabs (sig4/sigb -1) < 0.01 && slope == -1) {
+//   if (elRatio <= sigDiff && capRatio <= sigDiff && fisRatio <= sigDiff && slope == -1) {
+    if (elRatio <= sigDiff && capRatio <= sigDiff && fisRatio <= sigDiff && fabs (sig2/siga -1) < 0.01 
+        && fabs (sig4/sigb -1) < 0.01 && slope == -1) {
     return 0;
   } else {
     eLinElastic.push_back(mid);
@@ -1900,12 +2532,21 @@ void TNudyEndfSigma::recoPlusBroad(int flagNer)
       }
       nrs += nrsl;
     }
-    additionalSigma(LRF, eHi1);
+    additionalSigma(LRF, eHi1);    
     if (flagNer == 0) {
       double eneLow = 1.0E-5;
       do {
         if (eneLow >= eLo) additionalSigma(LRF, eneLow);
         eneLow *= 1.03;
+      } while (eneLow < 1.0E3 && eneLow < eHi1);
+          eneLow = 1.0E3 ;
+      do {
+	for (int incrE = 0 ; incrE < 10 ; incrE++){
+	  if (eneLow >= 1.0E3 && eneLow + (incrE * eneLow) < eHi1) {
+	    additionalSigma(LRF, eneLow + (incrE * eneLow));
+	  }
+	}
+	eneLow *= 10;
       } while (eneLow < 1.0E3 && eneLow < eHi1);
     }
     TNudyCore::Instance()->Sort(eLinElastic, xLinElastic);
@@ -1973,6 +2614,7 @@ void TNudyEndfSigma::Linearize(int flagNer)
 void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
 {
   sigDiff = isigDiff;
+  for (int i = 0; i < 10; i++){ MTChargeFlag[i] = 0;}
   TFile *rEND = TFile::Open(rENDF, "UPDATE");
   if (!rEND || rEND->IsZombie()) printf("Error: TFile :: Cannot open file %s\n", rENDF);
   TKey *rkey              = (TKey *)rEND->GetListOfKeys()->First();
@@ -1983,14 +2625,60 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
   for (int iMat = 0; iMat < nmats; iMat++) {
     tMat = (TNudyEndfMat *)mats->At(iMat);
     TIter iter(tMat->GetFiles());
-    TNudyEndfFile *file;
+    TNudyEndfFile *file, *file2;
+    std::vector<int>().swap(MtNumAng4Photon);
     while ((file = (TNudyEndfFile *)iter.Next())) {
+      if (file->GetMF() > 13 && (file->GetMF() <= 15 || file->GetMF() <= 33)){
+	std::cout<< "add file 2 called "<< file->GetMF() << std::endl;
+	tMat->Add(file2);
+      }
       switch (file->GetMF()) {
       case 1:
         if (flagRead != 1) {
+	  for (int nxc = 0; nxc < tMat->GetNXC(); nxc++){
+	    int mfn 	= tMat->GetMFn(nxc) ;
+	    int mtn	= tMat->GetMTn(nxc) ;
+	    if(mfn == 3 ){
+	      if(mtn == 103){
+		MTChargeFlag[0] = -1;
+	      } else if (mtn == 104){
+		MTChargeFlag[1] = -1;
+	      } else if (mtn == 105){
+		MTChargeFlag[2] = -1;
+	      } else if (mtn == 106){
+		MTChargeFlag[3] = -1;
+	      } else if (mtn == 107){
+		MTChargeFlag[4] = -1;
+	      } else if (mtn >= 600 && mtn < 650) {
+		MTChargeFlag[5] = -1;
+	      } else if (mtn >= 650 && mtn < 700) {
+		MTChargeFlag[6] = -1;
+	      } else if (mtn >= 700 && mtn < 750) {
+		MTChargeFlag[7] = -1;
+	      } else if (mtn >= 750 && mtn < 800) {
+		MTChargeFlag[8] = -1;
+	      } else if (mtn >= 800 && mtn < 850) {
+		MTChargeFlag[9] = -1;
+	      }
+	    } else if (mfn == 12 || mfn == 13) {
+	      MtNumSig4Photon.push_back (mtn) ;
+	      std::cout <<" MF = \t"<< mfn <<" MT = \t"<< mtn << std::endl;
+	    } else if (mfn == 14) {
+	      MtNumAng4Photon.push_back (mtn) ;
+	      std::cout <<" MF = \t"<< mfn <<" MT = \t"<< mtn << std::endl;
+	    } else if (mfn == 15) {
+	      MtNumEng4Photon.push_back (mtn) ;
+	      std::cout <<" MF = \t"<< mfn <<" MT = \t"<< mtn << std::endl;
+	    }
+	  }
+	  if (MtNumAng4Photon.size() == 0 ) {
+	    file2 = new TNudyEndfFile(tMat->GetMAT(), 14);
+	  } else {
+	    file2 = file;
+	  }
           ReadFile1(file);
           flagRead = 1;
-          std::cout << "file 1 OK: Should be printed only one time " << std::endl;
+//          std::cout << "file 1 OK: Should be printed only one time " << std::endl;
           // ReWriteFile1(file);
         }
         break;
@@ -2004,44 +2692,54 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
 	    TNudyCore::Instance()->ThinningDuplicate(eLinElastic, xLinElastic);
 	    TNudyCore::Instance()->ThinningDuplicate(eLinCapture, xLinCapture);
 	    TNudyCore::Instance()->ThinningDuplicate(eLinFission, xLinFission);
+	    Thinning(eLinElastic, xLinElastic);
+	    Thinning(eLinCapture, xLinCapture);
+	    Thinning(eLinFission, xLinFission);
 	  }
 	}
 //         double siga, sigb, sigc; 
-// 	for (unsigned int i = 0; i < eLinCapture.size() ; i++) {
+//	for (unsigned int i = 0; i < eLinCapture.size() ; i++) {
 // 	    GetSigma(3, eLinCapture[i], siga, sigb, sigc);
 // 	    std::cout <<std::setprecision(12)<< eLinCapture[i] <<"   "<< xLinCapture[i] <<"   "<< sigb <<"  "<< xLinCapture[i] - sigb <<  std::endl;
 // 	}
         	std::cout<<"file 2 OK "<< std::endl;
         break;
       case 3: {
+//           for (unsigned long j = 0 ; j < eLinCapture.size() ; j++)
+//             std::cout << std::setprecision(12) << eLinCapture [ j ] << "  \t" << xLinCapture [ j ] << std::endl;
         ReadFile3(file);
         sigma.clear();
-        std::cout << "file 3 OK " << std::endl;
-        dopplerAll();
-        fixupTotal(energyUni, sigmaUniTotal);
 	
-           std::cout << "before elstic Doppler begins " << eLinElastic.size() <<"  "<< xLinElastic.size() << std::endl;
-//          for (unsigned long j = 0 ; j < eLinElastic.size() ; j++)
-//            std::cout << std::setprecision(12) << eLinElastic [ j ] << "  " << xLinElastic [ j ] << std::endl;
+        std::cout << "file 3 OK \t" << sigmaOfMts.size() << std::endl;
+	    TNudyCore::Instance()->ThinningDuplicate(eLinElastic, xLinElastic);
+	    TNudyCore::Instance()->ThinningDuplicate(eLinCapture, xLinCapture);
+	    TNudyCore::Instance()->ThinningDuplicate(eLinFission, xLinFission);
+	
+//           std::cout << "before elstic Doppler begins " << eLinElastic.size() <<"  \t"<< xLinElastic.size() << std::endl;
+//           for (unsigned long j = 0 ; j < eLinElastic.size() ; j++)
+//             std::cout << std::setprecision(12) << eLinElastic [ j ] << "  \t" << xLinElastic [ j ] << std::endl;
         broadSigma(eLinElastic, xLinElastic, xBroadElastic);
 	TNudyCore::Instance()->Sort(eLinElastic, xBroadElastic);
-           std::cout << "after elstic Doppler " << eLinElastic.size() <<"  "<< xBroadElastic.size() << std::endl;
-//           for (unsigned long j = 0 ; j < eLinCapture.size() ; j++)
-//             std::cout << std::setprecision(12) << eLinCapture [ j ] << "  " << xLinCapture [ j ] << std::endl;
-	Thinning(eLinElastic, xBroadElastic);
+//           std::cout << "after elstic Doppler " << eLinElastic.size() <<"  \t"<< xBroadElastic.size() << std::endl;
+//           for (unsigned long j = 0 ; j < eLinFission.size() ; j++)
+//             std::cout << std::setprecision(12) << eLinFission [ j ] << "  " << xLinFission [ j ] << std::endl;
+	if(prepro==0)Thinning(eLinElastic, xBroadElastic);
         // std::cout << eLinElastic.size() << std::endl;
-          std::cout << "before capture Doppler begins " << eLinCapture.size() <<"  "<< xLinCapture.size() << std::endl;
+//          std::cout << "before capture Doppler begins " << eLinCapture.size() <<"  "<< xLinCapture.size() << std::endl;
+//            for (unsigned long j = 0 ; j < eLinCapture.size() ; j++)
+//              std::cout << std::setprecision(12) << eLinCapture [ j ] << "  " << xLinCapture [ j ] << std::endl;
         broadSigma(eLinCapture, xLinCapture, xBroadCapture);
 	TNudyCore::Instance()->Sort(eLinCapture, xBroadCapture);
-           std::cout << "after capture Doppler begins " << eLinCapture.size() <<"  "<< xBroadCapture.size() << std::endl;
-	Thinning(eLinCapture, xBroadCapture);
+//           std::cout << "after capture Doppler begins " << eLinCapture.size() <<"  "<< xBroadCapture.size() << std::endl;
+	if(prepro==0)Thinning(eLinCapture, xBroadCapture);
         // std::cout << eLinCapture.size() << std::endl;
-          std::cout << "before fission Doppler begins " << std::endl;
+//          std::cout << "before fission Doppler begins "<< eLinFission.size() <<"  "<< xLinFission.size() << std::endl;
         broadSigma(eLinFission, xLinFission, xBroadFission);
 	TNudyCore::Instance()->Sort(eLinFission, xBroadFission);
-	Thinning(eLinFission, xBroadFission);
-        // std::cout << eLinFission.size() << std::endl;
-        	std::cout<<"Doppler done "<<outstring << std::endl;
+	if(prepro==0)Thinning(eLinFission, xBroadFission);
+//            std::cout << "after Fission Doppler begins " << eLinFission.size() <<"  "<< xBroadFission.size() << std::endl;
+       // std::cout << eLinFission.size() << std::endl;
+//        	std::cout<<"Doppler done "<<outstring << std::endl;
         dopplerBroad = 0;
 
         out << eLinElastic.size() << std::endl;
@@ -2062,31 +2760,218 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
         eLinFission.clear();
         xLinFission.clear();
         xBroadFission.clear();
+	
+        dopplerAll();
+        std::cout << "dopplerall OK \t" << std::endl;
+        fixupTotal(file, energyUni, sigmaUniTotal);
+        std::cout << "fixup total OK \t" <<energyUni.size() << std::endl;
 
         ReWriteFile3(file);
         MtNumbers.clear();
       } break;
 
-      case 4:
-        //ReadFile4(file);
-        std::cout << "file 4 OK " << std::endl;
-        //ReWriteFile4(file);
-        MtNumbers.clear();
-        break;
-        //       case 5:
-        // 	recoEnergy = new TNudyEndfEnergy(file);
-        // 	std::cout<<"file 5 OK "<<std::endl;
-        // 	break;
-        //       case 6:
-        // 	recoEnergyAng = new TNudyEndfEnergyAng(file,QValue);
-        // 	std::cout<<"file 6 OK "<<std::endl;
-        // 	break;
-        //       case 8:
-        // 	recoFissY = new TNudyEndfFissionYield(file);
-        // 	std::cout<<"file 8 OK "<<std::endl;
-        // 	break;
+// //       case 4:
+// // //        ReadFile4(file);
+// //         std::cout << "file 4 OK " << std::endl;
+// //         //ReWriteFile4(file);
+// //         MtNumbers.clear();
+// //         break;
+// // 	case 5:
+// // //	recoEnergy = new TNudyEndfEnergy(file);
+// // 	std::cout<<"file 5 OK "<<std::endl;
+// // 	break;
+	case 6:
+	{
+// 	  TIter secIter(file->GetSections());
+// 	  TNudyEndfSec *sec;
+// 	  while ((sec = (TNudyEndfSec *)secIter.Next())) {
+// 	    int NK = sec->GetN1();
+// 	    int MAT = sec->GetMAT();
+// 	    TIter recIter(sec->GetRecords());
+// 	    for (int k = 0; k < NK; k++) {
+// 	      TNudyEndfTab1 *tab1 = (TNudyEndfTab1 *)recIter.Next();
+// 	      div_t divr;
+// 	      int MT 	 	= sec->GetMT();
+// 	      int ZAP    	= tab1->GetC1();
+// 	      int LAW 	 	= tab1->GetL2();
+// // 	      int LCT 		= sec->GetL2();
+// 	      divr       	= div(sec->GetC1(), 1000);
+// 	      double ZAI	= sec->GetC1();
+// 	      double AWR 	= sec->GetC2();
+// 	      double ZA  	= divr.quot;
+// 	      double AA  	= divr.rem;
+// // 	      double NA1 = AA - ZA;
+// // 	      double AWP = tab1->GetC2();
+// 	      //std::cout<<" ZAP " << ZAP <<" AWP "<< AWP <<" MT "<< MT <<" ZA "<< ZA <<" AA "<< AA <<" awr "<< sec->GetC2() <<"  LAW "<< LAW << std::endl;
+// 	      if (ZAP == 0){
+// 		MtNumSig4Photon.push_back (MT);
+// 	        if (LAW == 2) MtNumAng4Photon.push_back (MT) ;
+// 	      }
+// 	      if (LAW == 1 || LAW == 2 || LAW == 5) {
+// 		TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter.Next();
+// 		for (unsigned int lis = 0; lis < tab2->GetN2(); lis++) {
+// 		  TNudyEndfList *header = (TNudyEndfList *)recIter.Next();
+// 		}
+// 	      } else if (LAW == 6){
+// 		TNudyEndfCont *header = (TNudyEndfCont *)recIter.Next();
+// 	      } else if (LAW == 7){
+// 		TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter.Next();
+// 		for (unsigned int cr1 = 0; cr1 < tab2->GetN2(); cr1++) {
+// 		  TNudyEndfTab2 *tab3 = (TNudyEndfTab2 *)recIter.Next();
+// 		  for (unsigned int cr2 = 0; cr2 < tab3->GetN2(); cr2++) {
+// 		    TNudyEndfTab1 *tab12 = (TNudyEndfTab1 *)recIter.Next();
+// 		  }
+// 		}
+// 	      }
+// 	    }
+// 	  }
+// 	  // adding mandatory photon angular distribution from file 6 if data exist only in the file 6
+// 	  // and not in the file 12
+// 	  if ( MtNumAng4Photon.size() > 0) {
+// 	    std::cout <<"photon data exist in file 6 "<< std::endl;
+// 	    TNudyEndfSec *sec3 = new TNudyEndfSec(MAT, 14, 100, ZAI, AWR,0,0,0,0);
+// 	    TNudyEndfFile *file1 = new TNudyEndfFile(MAT,14);
+// 	    file1->Add(sec3);
+// 	    tMat->Add(file1);
+// 	  }
+	  TIter iter1(tMat->GetFiles());
+	  TNudyEndfFile *file1;
+	  while ((file1 = (TNudyEndfFile *)iter1.Next())) {
+	    if (file1->GetMF() == 6) {
+	      std::cout << "file 6 found " << std::endl ; 
+	    TIter secIter1(file1->GetSections());
+	    TNudyEndfSec *sec1;
+	    while ((sec1 = (TNudyEndfSec *)secIter1.Next())) {
+	      int NK = sec1->GetN1();
+	      TIter recIter1(sec1->GetRecords());
+	      for (int k = 0; k < NK; k++) {
+		// std::cout<<k<<" NK "<<NK<< std::endl;
+		TNudyEndfTab1 *tab1 = (TNudyEndfTab1 *)recIter1.Next();
+		div_t divr;
+		AWRI   = sec1->GetC2();
+		int MT = sec1->GetMT();
+		//      int LCT = sec->GetL2();
+		divr       = div(sec1->GetC1(), 1000);
+		double ZA  = divr.quot;
+		double AA  = divr.rem;
+		double NA1 = AA - ZA;
+		int ZAP    = tab1->GetC1();
+		double AWP = tab1->GetC2();
+		std::cout<<" ZAP = \t"<< ZAP <<" MT "<< MT <<  std::endl;
+		// int LIP =tab1->GetL1();
+		int LAW = tab1->GetL2();
+		if (LAW == 3 || LAW == 4 || LAW == 0) continue;
+		divr          = div(ZAP, 1000);
+		int particleA = divr.rem;
+		int particleZ = divr.quot;
+		std::cout<<"LAW = "<< LAW <<" MT "<<MT <<" ZAP = "<< ZAP <<" AWP "<<AWP <<" parZ "<< particleZ
+		<<" parA "<< particleA << std::endl;
+		if (LAW == 2 && particleZ == 0 && particleA == 0) {
+		  int LANG, NL;
+		  TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter1.Next();
+		  int ne2               = tab2->GetN2();
+		  TNudyEndfList *header = (TNudyEndfList *)recIter1.Next();
+		  LANG = header->GetL1();
+		  TNudyEndfSec *sec3;
+		  if (LANG == 0) {
+		    sec3 = new TNudyEndfSec(sec1->GetMAT(), 14, MT, sec1->GetC1(), AWRI,0,1,1,0);
+		  } else {
+		    sec3 = new TNudyEndfSec(sec1->GetMAT(), 14, MT, sec1->GetC1(), AWRI,0,2,1,0);
+		  }
+		  TNudyEndfTab2 *sec3Tab2 = new TNudyEndfTab2();
+		  sec3Tab2->SetCont(tab2->GetC1(),tab2->GetC2(),0,0,tab2->GetN1(),ne2);
+		  sec3Tab2->SetNBT(ne2, 0);
+		  sec3Tab2->SetINT(tab2->GetINT(0), 0);
+		  sec3->Add(sec3Tab2);
+		  std::cout<<"tab2->GetINT(0) "<< sec3Tab2->GetINT(0) <<" NR "<< sec3Tab2->GetN1() <<" NE "<< sec3Tab2->GetN2() << std::endl;
+		  
+		  TNudyEndfList *sec3List = new TNudyEndfList();
+		  sec3List->SetCont(header->GetC1(),header->GetC2(),0,0,header->GetN2(),0);
+		  std::cout<<"C1 "<< header->GetC1() <<" C2 "<< header->GetC2() <<" N2 "<< header->GetN2() << std::endl;
+		  for (int j = 0; j < header->GetN2(); ++j) {
+		    sec3List->SetLIST(header->GetLIST(j), j);
+		  }
+		  sec3->Add(sec3List);
+		  std::cout<<"sec3List C1 "<< sec3List->GetC1()<<" sec3List C2 "<< sec3List->GetC2() <<" nl "<< sec3List->GetN1() << std::endl;
+		  for (int j = 0; j < sec3List->GetN1(); ++j) {
+		    std::cout <<"list "<< sec3List->GetLIST(j) << std::endl;
+		  }
+		  for (int lis = 1; lis < ne2; lis++) {
+		    TNudyEndfList *header = (TNudyEndfList *)recIter1.Next();
+		    TNudyEndfList *sec3List = new TNudyEndfList();
+		    sec3List->SetCont(header->GetC1(),header->GetC2(),0,0,header->GetN2(),0);
+		    NL = header->GetN2();
+		    if (LANG == 0) {
+		      for (int j = 0; j < NL; j++) {
+			sec3List->SetLIST(header->GetLIST(j),j);
+		      }
+		      std::cout<<"sec3List C1 "<< sec3List->GetC1()<<" sec3List C2 "<< sec3List->GetC2() <<" nl "<< sec3List->GetN1() << std::endl;
+		      for (int j = 0; j < sec3List->GetN1(); ++j) {
+			std::cout <<"list "<< sec3List->GetLIST(j) << std::endl;
+		      }
+		    } else if (LANG > 0) {
+		      for (int i = 0; i < NL; i++) {
+			sec3List->SetLIST(header->GetLIST(2 * i + 0),2 * i + 0);
+			sec3List->SetLIST(header->GetLIST(2 * i + 1),2 * i + 1);
+		      }
+		    }
+		    sec3->Add(sec3List);
+		  }
+		  file2->Add(sec3);
+		} else if (LAW == 1 || LAW == 5) {
+		    TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter1.Next();
+		    for (unsigned int lis = 0; lis < tab2->GetN2(); lis++) {
+		      TNudyEndfList *header = (TNudyEndfList *)recIter1.Next();
+		    }
+		  } else if (LAW == 6){
+		    TNudyEndfCont *header = (TNudyEndfCont *)recIter1.Next();
+		  } else if (LAW == 7){
+		    TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter1.Next();
+		    for (unsigned int cr1 = 0; cr1 < tab2->GetN2(); cr1++) {
+		      TNudyEndfTab2 *tab3 = (TNudyEndfTab2 *)recIter1.Next();
+		      for (unsigned int cr2 = 0; cr2 < tab3->GetN2(); cr2++) {
+			TNudyEndfTab1 *tab12 = (TNudyEndfTab1 *)recIter1.Next();
+		      }
+		    }
+		  }
+		}
+	      }
+	    }
+	  }
+//	recoEnergyAng = new TNudyEndfEnergyAng(file,QValue);
+// 	std::cout<<"file 6 OK "<<std::endl;
+	}break;
+// // 	case 8:
+// // //	recoFissY = new TNudyEndfFissionYield(file);
+// // 	std::cout<<"file 8 OK "<<std::endl;
+// // 	break;
+	case 12:
+	recoPhYield = new TNudyEndfPhYield(file);
+// 	std::cout<<"file 12 OK "<<std::endl;
+	break;
+	case 13:
+	recoPhProd = new TNudyEndfPhProd(file);
+// 	std::cout<<"file 13 OK "<<std::endl;
+	break;
+	case 14:
+	recoPhAng = new TNudyEndfPhAng(file);
+ 	std::cout<<"file 14 OK "<<std::endl;
+	break;
+	case 15:
+	recoPhEnergy = new TNudyEndfPhEnergy(file);
+// 	std::cout<<"file 15 OK "<<std::endl;
+	break;
       }
     }
+  }
+  for (unsigned int i = 0; i < MtNumSig4Photon.size () ; i++){
+    std::cout <<"Photon Sig MT = \t"<< MtNumSig4Photon[i] << std::endl;
+  }
+  for (unsigned int i = 0; i < MtNumAng4Photon.size () ; i++){
+    std::cout <<"Photon Ang MT = \t"<< MtNumAng4Photon[i] << std::endl;
+  }
+  for (unsigned int i = 0; i < MtNumEng4Photon.size () ; i++){
+    std::cout <<"Photon Ene MT = \t"<< MtNumEng4Photon[i] << std::endl;
   }
   rENDFVol->Write();
   rEND->Close();
@@ -2094,9 +2979,14 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
 //------------------------------------------------------------------------------------------------------
 void TNudyEndfSigma::broadSigma(std::vector<double> &x1, std::vector<double> &x2, std::vector<double> &x3)
 {
+//     std::cout<<"before sort \t"<< x1.size() << std::endl;
   TNudyCore::Instance()->Sort(x1, x2);
+//   for (unsigned long j = 0 ; j < x1.size() ; j++)
+//     std::cout << std::setprecision(12) << j << "  \t"<< x1 [ j ] << "  \t" << x2 [ j ] << std::endl;
+//     std::cout<<"after sort \t"<< x1.size() << std::endl;
   if (x1.size() > 0) {
     doppler      = new TNudyEndfDoppler(sigDiff, AWRI, doppTemp1, doppTemp2, x1, x2);
+//      std::cout<<"after doppler \t"<< x1.size() << std::endl;
     dopplerBroad = 1;
     for (unsigned long j = 0; j < x1.size(); j++) {
 //     std::cout<<"size2 "<< x1[j] <<"  "<< x2[j] <<"  "<< doppler->sigma[j]<< std::endl;
@@ -2106,56 +2996,69 @@ void TNudyEndfSigma::broadSigma(std::vector<double> &x1, std::vector<double> &x2
   doppler->sigma.clear();
 }
 //------------------------------------------------------------------------------------------------------
-void TNudyEndfSigma::fixupTotal(std::vector<double> &x1, std::vector<double> &x2)
+void TNudyEndfSigma::fixupTotal(TNudyEndfFile *file1, std::vector<double> &x1, std::vector<double> &x2)
 {
   std::sort(x1.begin(), x1.end()); // Unionization of energy grid for cross-section
   TNudyCore::Instance()->ThinningDuplicate(x1);
+  TIter secIter(file1->GetSections());
+  TNudyEndfSec *sec;
   for (unsigned long i = 0; i < sigmaOfMtsDop.size(); i++) {
-    int size = sigmaOfMtsDop[i].size() / 2;
-    for (unsigned long k = 0; k < x1.size(); k++) {
-      int min = 0;
-      int max = size - 1;
-      int mid = 0;
-      if (x1[k] <= sigmaOfMtsDop[i][min])
-        min = 0;
-      else if (x1[k] >= sigmaOfMtsDop[i][max])
-        min = max - 1;
-      else {
-        while (max - min > 1) {
-          mid = (min + max) / 2;
-          if (x1[k] < sigmaOfMtsDop[i][mid])
-            max = mid;
-          else
-            min = mid;
-        }
-      }
-      if (x1[k] == sigmaOfMtsDop[i][min] && sigmaOfMtsDop[i][size + min] > 1E-20) {
-        eneTemp.push_back(x1[k]);
-        sigTemp.push_back(sigmaOfMtsDop[i][size + min]);
-      } else {
-        double sigmaAdd = sigmaOfMtsDop[i][size + min] +
-                          (sigmaOfMtsDop[i][size + min + 1] - sigmaOfMtsDop[i][size + min]) * (x1[k] - sigmaOfMtsDop[i][min]) /
-                              (sigmaOfMtsDop[i][min + 1] - sigmaOfMtsDop[i][min]); // linear interpolation
-        if (sigmaAdd > 1E-20) {
-          eneTemp.push_back(x1[k]);
-          sigTemp.push_back(sigmaAdd);
-        }
-      }
-      if (eneTemp.size() == 1) {
-        energyLocationMts.push_back(k);
-      }
+    while ((sec = (TNudyEndfSec *)secIter.Next())) {
+//       std::cout << sec->GetMT() <<" fixuptotal \t"<< MtNumbers[i] << std::endl;
+      int MT = sec->GetMT();
+      if (MT == MtNumbers[i]) {
+// 	if (MT != 1 && MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 && MT < 120) {
+	int size = sigmaOfMtsDop[i].size() / 2;
+	for (unsigned long k = 0; k < x1.size(); k++) {
+	  int min = 0;
+	  int max = size - 1;
+	  int mid = 0;
+	  if (x1[k] <= sigmaOfMtsDop[i][min])
+	    min = 0;
+	  else if (x1[k] >= sigmaOfMtsDop[i][max])
+	    min = max - 1;
+	  else {
+	    while (max - min > 1) {
+	      mid = (min + max) / 2;
+	      if (x1[k] < sigmaOfMtsDop[i][mid])
+		max = mid;
+	      else
+		min = mid;
+	    }
+	  }
+	  if (x1[k] == sigmaOfMtsDop[i][min] && sigmaOfMtsDop[i][min] >0) {
+	    eneTemp.push_back(x1[k]);
+	    sigTemp.push_back(sigmaOfMtsDop[i][size + min]);
+	  } else {
+	    double sigmaAdd = sigmaOfMtsDop[i][size + min] +
+			      (sigmaOfMtsDop[i][size + min + 1] - sigmaOfMtsDop[i][size + min]) * (x1[k] - sigmaOfMtsDop[i][min]) /
+				  (sigmaOfMtsDop[i][min + 1] - sigmaOfMtsDop[i][min]); // linear interpolation
+            if (sigmaAdd > 0) {				  
+	      eneTemp.push_back(x1[k]);
+	      sigTemp.push_back(sigmaAdd);
+	    }
+	  }
+	  if (eneTemp.size() == 1) {
+	    energyLocationMts.push_back(k);
+	  }
+	}
+	sigmaUniOfMts.push_back(sigTemp);
+	eneTemp.clear();
+	sigTemp.clear();
+// 	}
+      }break;
     }
-    sigmaUniOfMts.push_back(sigTemp);
-    eneTemp.clear();
-    sigTemp.clear();
   }
   x2.resize(x1.size());
   sigmaOfMtsDop.clear();
   for (unsigned long i = 0; i < sigmaUniOfMts.size(); i++) {
     int size = sigmaUniOfMts[i].size();
+    int MT = MtNumbers[i] ;
+    if (MT != 1 && MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 && MT < 120) {
     // std::cout<<"size "<<  energyLocationMts.size  << std::endl;
-    for (int j = 0; j < size; j++) {
-      x2[energyLocationMts[i] + j] += sigmaUniOfMts[i][j];
+      for (int j = 0; j < size; j++) {
+	x2[energyLocationMts[i] + j] += sigmaUniOfMts[i][j];
+      }
     }
   }
   outtotal << x1.size() << std::endl;
@@ -2167,18 +3070,28 @@ void TNudyEndfSigma::fixupTotal(std::vector<double> &x1, std::vector<double> &x2
 void TNudyEndfSigma::dopplerAll()
 {
   for (unsigned long i = 0; i < sigmaOfMts.size(); i++) {
+//      std::cout<<"MT number \t"<< MtNumbers[i] <<"  \t"<< sigmaOfMts.size() << std::endl;
     int size = sigmaOfMts[i].size() / 2;
     for (int k = 0; k < size ; k++) {
       if (sigmaOfMts[i][size + k] > 1E-20) {
         eneTemp.push_back ( sigmaOfMts [ i ][ k ] );
         sigTemp.push_back ( sigmaOfMts [ i ][ size + k ] );
+//	std::cout<<std::setprecision(12)<<  sigmaOfMts [ i ][ k ]<<"  \t"<< sigmaOfMts [ i ][ size + k ] <<std::endl;
       } 
     }
+//     std::cout<<"before broad \t"<< std::endl;
     broadSigma(eneTemp, sigTemp, sigma);
+//     std::cout<<"after broad \t"<< sigma.size() << std::endl;
+    if(prepro==0){
+      TNudyCore::Instance()->Sort(eneTemp, sigma);
+      Thinning(eneTemp, sigma);
+    }
+//    std::cout<<"after thinning \t"<< sigma.size() << std::endl;
     sigmaMts.insert(std::end(sigmaMts), std::begin(eneTemp), std::end(eneTemp));
     sigmaMts.insert(std::end(sigmaMts), std::begin(sigma), std::end(sigma));
     sigmaOfMtsDop.push_back(sigmaMts);
     energyUni.insert(std::end(energyUni), std::begin(eneTemp), std::end(eneTemp));
+//    std::cout<<"after energyuni \t"<< energyUni.size() << std::endl;
     eneTemp.clear();
     sigTemp.clear();
     sigma.clear();
@@ -2610,13 +3523,22 @@ void TNudyEndfSigma::ReWriteFile1(TNudyEndfFile *file)
 //------------------------------------------------------------------------------------------------------
 void TNudyEndfSigma::ReWriteFile3(TNudyEndfFile *file)
 {
-  TIter secIter(file->GetSections());
-  TNudyEndfSec *sec;
+  TIter secIter0(file->GetSections());
+  TNudyEndfSec *sec0;
   int mtcount = 0;
+  while ((sec0 = (TNudyEndfSec *)secIter0.Next())) {
+    int MT = sec0->GetMT();
+    if (MT !=1 && mtcount == 0){
+      AddSecFile3 (file, 0, 0, 1, energyUni, sigmaUniTotal);
+      break;
+    }
+  }
+  TIter secIter(file->GetSections());
+  TNudyEndfSec *sec;  
   while ((sec = (TNudyEndfSec *)secIter.Next())) {
-    //    std::cout <<"MT  "<<sec->GetMT() <<std::endl;
+    //std::cout <<"MT  "<<sec->GetMT() <<"  \t"<< MtNumbers[mtcount] << std::endl;
     int MT = sec->GetMT();
-    if (MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 && MT < 250) {
+//     if (MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 && MT < 250) {
       TIter recIter(sec->GetRecords());
       TNudyEndfCont *header = (TNudyEndfCont *)recIter.Next();
       int NR                = 1;
@@ -2631,7 +3553,9 @@ void TNudyEndfSigma::ReWriteFile3(TNudyEndfFile *file)
         for (unsigned int crs = 0; crs < energyUni.size(); crs++) {
           tab1->SetX(energyUni[crs], crs);
           tab1->SetY(sigmaUniTotal[crs], crs);
+//  	  std::cout<<energyUni[crs] <<"  \t"<< sigmaUniTotal[crs] << std::endl;
         }
+	mtcount++;
         continue;
       }
       if (MT == MtNumbers[mtcount]) {
@@ -2642,10 +3566,11 @@ void TNudyEndfSigma::ReWriteFile3(TNudyEndfFile *file)
         for (unsigned int crs = 0; crs < sigmaUniOfMts[mtcount].size(); crs++) {
           tab1->SetX(energyUni[energyLocationMts[mtcount] + crs], crs);
           tab1->SetY(sigmaUniOfMts[mtcount][crs], crs);
+//  	  std::cout << energyUni[energyLocationMts[mtcount] + crs] <<"  \t"<< sigmaUniOfMts[mtcount][crs] << std::endl;
         }
       }
       mtcount++;
-    }
+//     }
   }
 }
 //------------------------------------------------------------------------------------------------------
