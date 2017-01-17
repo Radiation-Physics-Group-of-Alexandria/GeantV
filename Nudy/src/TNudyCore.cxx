@@ -354,16 +354,21 @@ void TNudyCore::Sort(std::vector<double> &x1, std::vector<double> &x2)
 
 void TNudyCore::cdfGenerateT(std::vector<double> &x1, std::vector<double> &x2, std::vector<double> &x3)
 {
-  double fsum = 0.0;
+  double mcr, mb1, mb2, ccr, df = 0;
   for (unsigned long cr = 0; cr < x1.size(); cr++) {
-    if (cr > 0) fsum += 0.5 * (x2[cr] + x2[cr - 1]) * (x1[cr] - x1[cr - 1]);
-  }
-  double df = 0.0;
-  for (unsigned long cr = 0; cr < x1.size(); cr++) {
-    if (fsum > 0.0) x2[cr] /= fsum;
-    // printf("%e   %e\n", x2[cr], fsum);
-    if (cr > 0) df += 0.5 * (x2[cr] + x2[cr - 1]) * (x1[cr] - x1[cr - 1]);
+    if (cr > 0){
+      mcr = (x2[cr] - x2[cr-1]) / (x1[cr] - x1[cr-1]) ; 
+      mb1 = (mcr * (x1[cr] - x1[cr-1]) + x2[cr-1]) ;
+      mb2 = mb1 * mb1 ;
+      if (mcr != 0){
+	ccr = (0.5/mcr) * (mb2 - x2[cr-1] * x2[cr-1]) ;
+      } else {
+	ccr = x2[cr] * (x1[cr] - x1[cr-1]) ;
+      }
+      df += ccr ;
+    }
     x3.push_back(df);
+//      printf("cdf = %e  %e  %e  %e\n", x1[cr], x2[cr], mcr, df);
   }
 }
 //_______________________________________________________________________________
@@ -411,7 +416,9 @@ double TNudyCore::ThinningDuplicate(std::vector<double> &x1, std::vector<double>
   int size1 = x1.size();
   if (size > 2) {
     for (int i = 0; i < size1 - 1; i++) {
+      //printf("core  %e  %e  %d  \n", x1[i],  x1[i + 1], size1) ;
       if (x1[i + 1] == x1[i]) {
+      //printf("same  %e  %e  %d  \n", x1[i],  x1[i + 1], size1) ;
         x1.erase(x1.begin() + i);
         x2.erase(x2.begin() + i);
       }
