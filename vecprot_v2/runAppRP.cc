@@ -184,7 +184,9 @@ int main(int argc, char *argv[]) {
 
   //
   // Parameters for the primary generator
-  int     gvParticleCode =  22;    // internal code of the primary particle:  22 ==> e-
+  int     gvParticleCode =  42;    // internal code of the primary particle:  22 ==> e- ;  42 ==> gamma
+  
+  //int     gvParticleCode = Gamma::Definition()->GetInternalCode();
   double  primaryEnergy  = primary_energy;          // kinetic energy of the primary particles in [GeV]
   double  avNPrimPerEvt  = n_avrg_tracks_per_evt;   // Average number of tracks per event
   double  xPos           =  -8.;   // x-position of the particle gun

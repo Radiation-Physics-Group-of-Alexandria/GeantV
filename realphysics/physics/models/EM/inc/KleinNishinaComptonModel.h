@@ -60,7 +60,44 @@ public:
    */
   void Initialise();
     
-   
+    
+    /**
+     * @brief Public method to calculate ...
+     *
+     * @param[in]
+     * @param[in]
+     * @param[in]
+     * @return
+     *
+     */
+    double ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, const Particle * );
+    
+    
+    /**
+     * @brief Public method to calculate ...
+     *
+     * @param[in]
+     * @param[in]
+     * @param[in]
+     * @return
+     *
+     */
+    double ComputeXSectionPerVolume(const Material *mat, double prodcutenergy, double particleekin);
+    
+    
+    /**
+     * @brief Public method to calculate ...
+     *
+     * @param[in]
+     * @param[in]
+     * @param[in]
+     * @return
+     *
+     */
+    double ComputeXSectionPerAtom(const Element *elem, double kinenergy);
+    
+    
+    
     /**
      * @brief Public method to calculate the KleinNishinaCompton differential cross section
      *

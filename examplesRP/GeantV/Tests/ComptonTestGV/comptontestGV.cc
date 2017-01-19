@@ -160,7 +160,7 @@ int main() {
     double diry   = 0.0;
     double dirz   = 1.0;
     int    gvcode = Gamma::Definition()->GetInternalCode(); // internal code of gamma
-    
+    std::cout<<"***********CODE: "<<gvcode<<std::endl;
     
     Geant::GeantTaskData *td = new Geant::GeantTaskData(1,1,1);
     PhysicsData *phd = new PhysicsData();
@@ -254,6 +254,11 @@ int main() {
         std::cout<<h->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<h->GetY()[i]*norm<<std::endl;
     }
     
+    FILE * fp = fopen("gv.ascii", "w");
+    for (int index = 0; index< h->GetNumBins(); index++)
+        fprintf(fp, "%.8f %.8f\n", h->GetX()[index]+0.5*h->GetDelta(), h->GetY()[index]*norm);
+        fclose(fp);
+    
 
     
     //for (int i=0; i< hcosTheta->GetNumBins(); ++i) {
@@ -263,7 +268,7 @@ int main() {
     
     fHistFile->Write();
     fHistFile->Close();
-
+    
     //delete fEnergyOut1;
     //delete fEnergyOut2;
     //delete fAngleOut1;

@@ -16,6 +16,9 @@
 #include "SeltzerBergerBremsModel.h"
 #include "RelativisticBremsModel.h"
 
+#include "GammaComptonProcess.h"
+#include "KleinNishinaComptonModel.h"
+
 
 
 namespace geantphysics {
@@ -73,6 +76,31 @@ public:
         // add the process to the e- particle
         AddProcessToPartcile(particle, eBremProc);
       }
+        
+        
+        if (particle==Gamma::Definition()) {
+            std::cout<<"  GAMMA" <<std::endl;
+            
+            //
+            // create compton process for gamma with 1 model:
+            //
+            EMPhysicsProcess *gComptonProc = new GammaComptonProcess("gCompton");
+            // create a KleinNishinaComptonModel for gamma
+            EMModel          *gKNModel  = new KleinNishinaComptonModel(true);
+            // set min/max energies of the model
+            gKNModel->SetLowEnergyUsageLimit (1.0*geant::keV);
+            gKNModel->SetHighEnergyUsageLimit(100.0*geant::GeV);
+            // how to inactivate this model in a given region i.e. region with index 1
+            // active regions for a model are set based on their process active regions + user requested inactive regions
+            //gKNModel->AddToUserRequestedInActiveRegions(1);
+            //
+            // add this model to the process
+            gComptonProc->AddModel(gKNModel);
+            //
+            // add the process to the e- particle
+            AddProcessToPartcile(particle, gComptonProc);
+        }
+        
       if (particle==Positron::Definition()) {
         //std::cout<<"  Positron" <<std::endl;
         //

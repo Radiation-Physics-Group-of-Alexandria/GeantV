@@ -36,51 +36,110 @@ namespace geantphysics {
         //  InitialiseElementSelectors(this, nullptr, false);
     }
     
-    
-    
-    /*
-     double KleinNishinaComptonModel::ComputeDEDX(const MaterialCuts *matcut, double kinenergy, const Particle * ,
-     bool istotal){
-     const Material *mat =  matcut->GetMaterial();
-     const double *cuts  =  matcut->GetProductionCutsInEnergy();
-     double gammacut     =  cuts[0];
-     if (istotal) {
-     // for the total stopping power we just need a gamma production cut >=kinenergy
-     gammacut = 1.01*kinenergy;
-     }
-     return ComputeDEDXPerVolume(mat, gammacut, kinenergy);
-     }
-     */
-    
-    
-    /*
-     double KleinNishinaComptonModel::ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy,
-     const Particle * ) {
-                                    
-                                    double xsec = 0.0;
-                                    if (kinenergy<GetLowEnergyUsageLimit() || kinenergy>GetHighEnergyUsageLimit()) {
-                                    return xsec;
-                                    }
-                                    const Material *mat =  matcut->GetMaterial();
-                                    const double *cuts  =  matcut->GetProductionCutsInEnergy();
-                                    double gammacut     =  cuts[0];
-                                    xsec = ComputeXSectionPerVolume(mat, gammacut, kinenergy);
-                                    return xsec;
-                                    }*/
+    //
+    double KleinNishinaComptonModel::ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy,
+                                                                const Particle * ) {
+        
+        double xsec = 0.0;
+        if (kinenergy<GetLowEnergyUsageLimit() || kinenergy>GetHighEnergyUsageLimit()) {
+            return xsec;
+        }
+        const Material *mat =  matcut->GetMaterial();
+        const double *cuts  =  matcut->GetProductionCutsInEnergy();
+        double gammacut     =  cuts[0];
+        xsec = ComputeXSectionPerVolume(mat, gammacut, kinenergy);
+        return xsec;
+    }
     
     //
-    /*double KleinNishinaComptonModel::ComputeXSectionPerAtom(const Element *elem, const MaterialCuts *matcut, double kinenergy, const Particle*) {
-     
-     double xsec = 0.0;
-     if (kinenergy<GetLowEnergyUsageLimit() || kinenergy>GetHighEnergyUsageLimit()) {
-     return xsec;
-     }
-     const Material *mat =  matcut->GetMaterial();
-     const double *cuts  =  matcut->GetProductionCutsInEnergy();
-     double electroncut     =  cuts[0];
-     xsec = ComputeXSectionPerAtom(elem, mat, electroncut, kinenergy);
-     return xsec;
-     }*/
+    double KleinNishinaComptonModel::ComputeXSectionPerVolume(const Material *mat, double prodcutenergy, double particleekin) {
+        
+        double xsec = 0.0;
+        if (particleekin<=prodcutenergy) {
+            return xsec;
+        }
+        
+        // we will need the element composition of this material
+        const std::vector<Element*> theElements = mat->GetElementVector();
+        const double* theAtomicNumDensityVector = mat->GetMaterialProperties()->GetNumOfAtomsPerVolumeVect();
+        int   numElems = theElements.size();
+        double sum    = 0.0;
+
+        for (int ielem=0; ielem<numElems; ++ielem) {
+            
+            double zet  = theElements[ielem]->GetZ();
+            ComputeXSectionPerAtom(theElements[ielem], particleekin);
+            
+        }
+
+        
+        
+        return xsec;
+
+    }
+    
+    static const double
+    d1= 2.7965e-1*geant::barn, d2=-1.8300e-1*geant::barn,
+    d3= 6.7527   *geant::barn, d4=-1.9798e+1*geant::barn,
+    e1= 1.9756e-5*geant::barn, e2=-1.0205e-2*geant::barn,
+    e3=-7.3913e-2*geant::barn, e4= 2.7079e-2*geant::barn,
+    f1=-3.9178e-7*geant::barn, f2= 6.8241e-5*geant::barn,
+    f3= 6.0480e-5*geant::barn, f4= 3.0274e-4*geant::barn;
+
+    
+    //
+    double KleinNishinaComptonModel::ComputeXSectionPerAtom(const Element *elem, double gammaenergy){
+        
+        /*double xsec = 0.0;
+        if (kinenergy<GetLowEnergyUsageLimit() || kinenergy>GetHighEnergyUsageLimit()) {
+            return xsec;
+        }
+        const Material *mat =  matcut->GetMaterial();
+        const double *cuts  =  matcut->GetProductionCutsInEnergy();
+        double electroncut     =  cuts[0];
+        xsec = ComputeXSectionPerAtom(elem, mat, electroncut, kinenergy);
+        return xsec; */
+        
+        double xsec = 0.0;
+        if (gammaenergy<GetLowEnergyUsageLimit() || gammaenergy>GetHighEnergyUsageLimit()) {
+            return xsec;
+        }
+        
+        //const Material *mat =  matcut->GetMaterial();
+        //const double *cuts  =  matcut->GetProductionCutsInEnergy();
+        //double electroncut     =  cuts[0];
+        double z=elem->GetZ();
+
+        static const double a = 20.0 , b = 230.0 , c = 440.0;
+        
+        double p1Z = z*(d1 + e1*z + f1*z*z);
+        double p2Z = z*(d2 + e2*z + f2*z*z);
+        double p3Z = z*(d3 + e3*z + f3*z*z);
+        double p4Z = z*(d4 + e4*z + f4*z*z);
+        
+        double T0  = 15.0 * geant::keV;
+        if (z < 1.5) { T0 = 40.0 * geant::keV; }
+        
+        double X   = std::max(gammaenergy, T0) * geant::kInvElectronMassC2;
+        xsec = p1Z*std::log(1.+2.*X)/X + (p2Z + p3Z*X + p4Z*X*X)/(1. + a*X + b*X*X + c*X*X*X);
+        
+        //  modification for low energy. (special case for Hydrogen)
+        if (gammaenergy < T0) {
+            static const double dT0 = geant::keV;
+            X = (T0+dT0) / geant::kElectronMassC2 ;
+            double sigma = p1Z*std::log(1.+2*X)/X
+            + (p2Z + p3Z*X + p4Z*X*X)/(1. + a*X + b*X*X + c*X*X*X);
+            double   c1 = -T0*(sigma-xsec)/(xsec*dT0);
+            double   c2 = 0.150;
+            if (z > 1.5) { c2 = 0.375-0.0556*std::log(z); }
+            double    y = std::log(gammaenergy/T0);
+            xsec *= std::exp(-y*(c1+c2*y));
+        }
+        // G4cout<<"e= "<< gammaenergy<<" Z= "<<Z<<" cross= " << xSection << G4endl;
+        return xsec;
+        
+    }
+    
     
     
     int KleinNishinaComptonModel::SampleSecondaries(LightTrack &track, std::vector<LightTrack> & /*sectracks*/,
@@ -158,7 +217,7 @@ namespace geantphysics {
         
         //if the energy of the e- is greater than the cut, the secondary particle is effectively created
         if(eekin > electroncut) {
-
+            
             eDirX = gammaekin0*gamDirX0 - gammaekin1*gamDirX1;
             eDirY = gammaekin0*gamDirY0 - gammaekin1*gamDirY1;
             eDirZ = gammaekin0*gamDirZ0 - gammaekin1*gamDirZ1;
@@ -178,20 +237,26 @@ namespace geantphysics {
             int secIndx = curNumUsedSecs;
             curNumUsedSecs +=numSecondaries;
             td->fPhysicsData->SetNumUsedSecondaries(curNumUsedSecs);
-        
+            
             std::vector<LightTrack>& sectracks = td->fPhysicsData->GetListOfSecondaries();
+            
+            
+            
+        
+            
             
             // this is known since it is a secondary track
             //  sectracks[secIndx].SetTrackStatus(LTrackStatus::kNew); // to kew
-            
             sectracks[secIndx].SetDirX(eDirX*norm); //mb: controllare questa operazione
             sectracks[secIndx].SetDirY(eDirY*norm);
             sectracks[secIndx].SetDirZ(eDirZ*norm);
+            
+            
             sectracks[secIndx].SetKinE(eekin);
             sectracks[secIndx].SetGVcode(fSecondaryInternalCode);  // electron GV code
             sectracks[secIndx].SetMass(geant::kElectronMassC2);
             sectracks[secIndx].SetTrackIndex(track.GetTrackIndex()); // parent GeantTrack index
-
+            
             // these are known from the parent GeantTrack
             //  sectracks[secIndx].SetMaterialCutCoupleIndex(track.GetMaterialCutCoupleIndex());
             //  sectracks[secIndx].SetNumOfInteractionLegthLeft(-1.); // i.e. need to sample in the step limit
@@ -308,7 +373,7 @@ namespace geantphysics {
     
     /**
      
-     *  
+     *
      *
      *
      */
@@ -387,7 +452,7 @@ namespace geantphysics {
             if(nloop > nlooplim) {
                 return -1; }
             td->fRndm->uniform_array(3, rndArray);
-        
+            
             if ( alpha1 > alpha2*rndArray[0] ) {
                 epsilon   = std::exp(-alpha1*rndArray[1]);
                 epsilonsq = epsilon*epsilon;
@@ -400,7 +465,7 @@ namespace geantphysics {
             onecost = (1.- epsilon)/(epsilon*E0_m);
             sint2   = onecost*(2.-onecost);
             greject = 1. - epsilon*sint2/(1.+ epsilonsq);
-           
+            
         } while (greject < rndArray[2]);
         
         // scattered gamma angles. ( Z - axis along the parent gamma)
@@ -430,15 +495,15 @@ namespace geantphysics {
         fLSamplingGammaEnergies[fNumSamplingGammaEnergies-1] = std::log(fMaxGammaEnergy);
         
         /*
-        std::cout<<"\n\n*****\nfSamplingGammaEnergies[0]=fMinGammaEnergy= "<< fMinGammaEnergy<<std::endl;
-        std::cout<<"fMaxGammaEnergy: "<< fMaxGammaEnergy<<std::endl;
-        std::cout<<"fNumSamplingGammaEnergies: "<< fNumSamplingGammaEnergies<<std::endl;
-        std::cout<<"delta energy: "<< delta<<std::endl;
-        std::cout<<"fGammaEnILDelta: "<< 1.0/delta<<std::endl;
-        std::cout<<"fGammaEnLMin: "<< std::log(fMinGammaEnergy)<<std::endl;
-        std::cout<<"fLSamplingGammaEnergies[0] = fGammaEnLMin= "<< fGammaEnLMin<<std::endl;
-        std::cout<<"fSamplingGammaEnergies["<<fNumSamplingGammaEnergies-1<<"]: "<< std::log(fMaxGammaEnergy)<<std::endl;
-        */
+         std::cout<<"\n\n*****\nfSamplingGammaEnergies[0]=fMinGammaEnergy= "<< fMinGammaEnergy<<std::endl;
+         std::cout<<"fMaxGammaEnergy: "<< fMaxGammaEnergy<<std::endl;
+         std::cout<<"fNumSamplingGammaEnergies: "<< fNumSamplingGammaEnergies<<std::endl;
+         std::cout<<"delta energy: "<< delta<<std::endl;
+         std::cout<<"fGammaEnILDelta: "<< 1.0/delta<<std::endl;
+         std::cout<<"fGammaEnLMin: "<< std::log(fMinGammaEnergy)<<std::endl;
+         std::cout<<"fLSamplingGammaEnergies[0] = fGammaEnLMin= "<< fGammaEnLMin<<std::endl;
+         std::cout<<"fSamplingGammaEnergies["<<fNumSamplingGammaEnergies-1<<"]: "<< std::log(fMaxGammaEnergy)<<std::endl;
+         */
         for (int i=1; i<fNumSamplingGammaEnergies-1; ++i) {
             fLSamplingGammaEnergies[i] = fGammaEnLMin+i*delta;
             fSamplingGammaEnergies[i]  = std::exp(fGammaEnLMin+i*delta);
@@ -582,7 +647,7 @@ namespace geantphysics {
                 
                 double gEnergyOutMin=gEnergyFractionMin*gEnergy;
                 double gEnergyOutMax=gEnergy;
-
+                
                 double middlepoint=0.5*(gEnergyOutMax+gEnergyOutMin);
                 
                 // fill the first, last and middle value (NB: we should convert to 0-1)
