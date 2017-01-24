@@ -24,9 +24,6 @@
 #include "EMModelManager.h"
 #include "EMModel.h"
 
-//#include "SeltzerBergerBremsModel.h"
-//#include "RelativisticBremsModel.h"
-//#include "KleinNishinaComptonModel.h"
 #include "SauterGavrilaPhotoElectricModel.h"
 
 #include "PhysicsProcess.h"
@@ -36,7 +33,7 @@
 #include "TFile.h"
 
 
-int main() {
+int main(int argc,  char *argv[]) {
     
     using geantphysics::PhysicsListManager;
     using geantphysics::PhysicsList;
@@ -54,16 +51,10 @@ int main() {
     using geantphysics::EMModelManager;
     using geantphysics::EMModel;
     
-  //  using geantphysics::SeltzerBergerBremsModel;
-  //  using geantphysics::RelativisticBremsModel;
-  //  using geantphysics::KleinNishinaComptonModel;
     using geantphysics::SauterGavrilaPhotoElectricModel;
-
     using geantphysics::PhysicsProcess;
-
     using geantphysics::LightTrack;
     using geantphysics::PhysicsData;
-    
     using geant::Hist;
     
     //
@@ -86,9 +77,9 @@ int main() {
      double epcut         = 1.0*geant::mm;
      */
     bool   iscutinlength = false;
-    double gcut          = 100.0 * geant::eV;//2.0*geant::keV;
-    double emcut         = 100.0 * geant::eV;//2.0*geant::keV;
-    double epcut         = 100.0 * geant::eV;//2.0*geant::keV;
+    double gcut          = 1.0 * geant::eV;//2.0*geant::keV;
+    double emcut         = 1.0 * geant::eV;//100.0 * geant::eV;//2.0*geant::keV;
+    double epcut         = 1.0 * geant::eV;//100.0 * geant::eV;//2.0*geant::keV;
     
     Region *reg0    = new Region("REGION_0",iscutinlength, gcut, emcut, epcut);
     reg0->AddMaterial(matAl);
@@ -127,9 +118,6 @@ int main() {
     const MaterialCuts *matCut = MaterialCuts::GetMaterialCut(0);
     //    double aaGet  = Electron::Definition()->GetPhysicsManagerPerParticlePerRegion(matCut->GetRegionIndex())->GetInvTotalLambda(matCut,1.0*geant::GeV);
     
-    // the models that we are going for
-    //KleinNishinaComptonModel *comptonKN   = nullptr; // KleinNishinaComptonModel
-    //double eMinKN, eMaxKN; // min/max energy usage limits
     
     SauterGavrilaPhotoElectricModel *photoelectricSG   = nullptr; // SauterGavrilaPhotoElectricModel
     double eMinSG, eMaxSG; // min/max energy usage limits
@@ -137,13 +125,14 @@ int main() {
     
     const std::vector<PhysicsProcess*> processVector = Gamma::Definition()->GetPhysicsManagerPerParticlePerRegion(matCut->GetRegionIndex())->GetListProcesses();
     
-    for (int i=0; i<processVector.size(); ++i) {
+    for (int i=0; i<(int)processVector.size(); ++i) {
         std::cout <<" Process name = " << processVector[i]->GetName() << std::endl;
         if (processVector[i]->GetName()=="gPhotoElectric") {
             EMPhysicsProcess *emProcess          = static_cast<EMPhysicsProcess*>(processVector[i]);
             const EMModelManager *emModelMgr     = emProcess->GetModelManager();
             const std::vector<EMModel*> emModels = emModelMgr->GetModelListInRegion(matCut->GetRegionIndex());
-            for (int j=0; j<emModels.size(); ++j) {
+            for (int j=0; j<(int)emModels.size(); ++j)
+            {
                 std::cout<< " gamma models in EMProcess = "<<emProcess->GetName()<<"  "<< j <<" ==> "<<emModels[j]->GetName()<<std::endl;
                 std::cout<< "   ==> used between E_min = "<<emModels[j]->GetLowEnergyUsageLimit()/geant::keV
                 << " [keV] and E_max = " << emModels[j]->GetHighEnergyUsageLimit()/geant::GeV << " [GeV]"
@@ -153,15 +142,19 @@ int main() {
                     photoelectricSG = static_cast<SauterGavrilaPhotoElectricModel*>(emModels[j]);
                     eMinSG = emModels[j]->GetLowEnergyUsageLimit();
                     eMaxSG = emModels[j]->GetHighEnergyUsageLimit();
-                    std::cout<<"**********\n\neminSG: "<<eMinSG<<"\nemaxSG: "<<eMaxSG<<std::endl;
+                    std::cout<<"**********\n\neminSG [keV]: "<<eMinSG/geant::keV<<"\nemaxSG [GeV]: "<<eMaxSG/geant::GeV<<std::endl;
                     std::cout<<photoelectricSG->GetName()<<std::endl;
                 }
             }
         }
     }
+    double ekin;
     
-    double ekin   = 10.0*geant::GeV;  // gamma kinetic energy
-    double dirx   = 0.0;              // direction
+    if(argc>1)
+           ekin=atof(argv[1])*geant::MeV;
+    else
+           ekin   = 1*geant::MeV;   // gamma kinetic energy
+    double dirx   = 0.0;            // gamma direction
     double diry   = 0.0;
     double dirz   = 1.0;
     int    gvcode = Gamma::Definition()->GetInternalCode(); // internal code of gamma
@@ -170,25 +163,23 @@ int main() {
     Geant::GeantTaskData *td = new Geant::GeantTaskData(1,1,1);
     PhysicsData *phd = new PhysicsData();
     td->fPhysicsData = phd;
-    // set up a the primary light track for brem.
+    // set up a the primary light track for photoelectric.
     LightTrack primaryLT;
     //LightTrack secondaryLT;
     std::vector<LightTrack> secLt;  // dummy because we fill secondaries into GeantTaskData::PhysicsData
     
     double eProdCut = matCut->GetProductionCutsInEnergy()[0];
-    Hist *h = new Hist((eProdCut/ekin), 1, 100);
-    Hist *hcosTheta = new Hist(-1, 1, 100);
     
+    TString filename= Form("geantV-%f_MeV.root", ekin*1000);
+    TFile* fHistFile = new TFile(filename, "RECREATE");
     
-    TFile* fHistFile = new TFile("gV_new.root", "RECREATE");
-    TH1F* fEnergyOut1 = new TH1F("EnergyOut1", "EnergyOut1", 100,  (eProdCut/ekin), 1);
-    TH1F* fEnergyOut2 = new TH1F("EnergyOut2", "EnergyOut2", 100,  (eProdCut/ekin), 1);
-    TH1F* fAngleOut1 = new TH1F("AngleOut1", "AngleOut1", 100, -1., 1.0);
-    TH1F* fAngleOut2 = new TH1F("AngleOut2", "AngleOut2", 100, -1., 1.0);
+    //TH1F* fEnergyOut1 = new TH1F("EnergyOut1", "EnergyOut1", 100,  (eProdCut/ekin), 1);
+    //TH1F* fEnergyOut2 = new TH1F("EnergyOut2", "EnergyOut2", 100,  (eProdCut/ekin), 1);
+    //TH1F* fAngleOut1 = new TH1F("AngleOut1", "AngleOut1", 100, -1., 1.0);
+    TH1F* fAngleOut2 = new TH1F("AngleOut2", "AngleOut2", 100, -1.05, 1.05);
     
-    long int NUMRAND = 10000000;
+    long int NUMRAND = 1000000;
     clock_t  start_time = clock();
-    
     
     for (long int i=0;i<NUMRAND;++i) {
         // we will use members:
@@ -216,59 +207,43 @@ int main() {
         // invoke the interaction
         int numSecs = photoelectricSG->SampleSecondaries(primaryLT,secLt,td);
         
-        
-        
+
         if (numSecs>0) {
+            
             LightTrack &secondaryLT = ((td->fPhysicsData->GetListOfSecondaries())[0]);
             double eelectron = secondaryLT.GetKinE();
-            double egamma = primaryLT.GetKinE();
+            //double egamma = primaryLT.GetKinE();
 
-            double gcostheta = primaryLT.GetDirZ();
+            //double gcostheta = primaryLT.GetDirZ();
             double ecostheta = secondaryLT.GetDirZ();
             
             if (eelectron<eProdCut) {
                 std::cerr<<"  ***  electronenergy = "<<eelectron << " < eProdCut = "<<eProdCut <<std::endl;
                 exit(-1);
             }
-            //h->Fill(std::log10(eelectron/ekin),1.0);
-            
-            if(std::abs(egamma)>2*1.0000e-12)
-            h->Fill((egamma/ekin),1.0);
-            //h->Fill(std::log10(eelectron/ekin),1.0);
-
-            hcosTheta->Fill(gcostheta,1.0);
-            //hcosTheta->Fill(gcostheta,1.0);
-            
-            if(std::abs(egamma)>2*1.0000e-12)
-            fEnergyOut1->Fill(egamma/ekin);
-            fEnergyOut2->Fill(eelectron/ekin);
-            fAngleOut1->Fill(gcostheta);
-            fAngleOut2->Fill(ecostheta);
-
+           
+            else fAngleOut2->Fill(ecostheta);
         }
     }
     clock_t end_time = clock();
     std::cerr<<" --- Time = "<<(end_time-start_time)/(double(CLOCKS_PER_SEC))<<std::endl;
     
-    
-    double norm = 1./((double)NUMRAND);
-    for (int i=0; i< h->GetNumBins(); ++i) {
-        std::cout<<h->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<h->GetY()[i]*norm<<std::endl;
-    }
+    //NORMALIZATION
+    //double norm = 1./((double)NUMRAND);
+    //for (int i=0; i< h->GetNumBins(); ++i) {
+    //    std::cout<<h->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<h->GetY()[i]*norm<<std::endl;
+    //}
     
 
-    
     //for (int i=0; i< hcosTheta->GetNumBins(); ++i) {
     //    std::cout<<hcosTheta->GetX()[i]+0.5*h->GetDelta()<<"  "<<std::setprecision(8)<<hcosTheta->GetY()[i]*norm<<std::endl;
     //}
-    
-    
     fHistFile->Write();
     fHistFile->Close();
 
     //delete fEnergyOut1;
     //delete fEnergyOut2;
     //delete fAngleOut1;
-    //delete fAngleOut2;
+    delete fAngleOut2;
     return 0;
 }
