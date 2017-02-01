@@ -296,8 +296,7 @@ double TNudyEndfRecoPoint::GetSigmaPartial(int ielemId, int i, double energyK)
   }
   int minp = min - energyLocMtId[ielemId][i];
 //    for (unsigned int j1 = 0; j1 < eneUni[ielemId].size(); j1++)
-//    std::cout << eneUni[ielemId][j1] <<"  "<<  sigUniOfMt[ielemId][i][j1] << std::endl;
-  if (minp < 0) return 0;
+  if (minp <= 0) return 0;
   if (minp >= (int)sigUniOfMt[ielemId][i].size()) return 0;
   return sigUniOfMt[ielemId][i][minp] +
          (sigUniOfMt[ielemId][i][minp + 1] - sigUniOfMt[ielemId][i][minp]) * (energyK - eneUni[ielemId][min]) /

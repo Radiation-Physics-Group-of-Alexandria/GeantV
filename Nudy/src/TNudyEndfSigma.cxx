@@ -873,7 +873,7 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
       // int LR = header->GetL2();
       NR = header->GetN1();
       NP = header->GetN2();
-      //std::cout<<sec->GetMT() <<" MT "<< NR <<"  "<< NP << std::endl;
+//       std::cout<<sec->GetMT() <<" MT "<< NR <<"  "<< NP << std::endl;
       TNudyEndfTab1 *tab1 = (TNudyEndfTab1 *)(sec->GetRecords()->At(0));
       for (int cr = 0; cr < NR; cr++) {
         nbt1.push_back(tab1->GetNBT(cr));
@@ -908,9 +908,9 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
         eLinearFile3.push_back(eneTemp[crs]);
         xLinearFile3.push_back(sigTemp[crs]);
       }
-//        for (unsigned int j= 0 ; j < eLinearFile3.size() ; j++) {
-// 	std::cout << eLinearFile3 [j] <<" before linear \t"<< xLinearFile3 [j] << std::endl;
-//        }
+//         for (unsigned int j= 0 ; j < eLinearFile3.size() ; j++) {
+//  	std::cout << eLinearFile3 [j] <<" before linear \t"<< xLinearFile3 [j] << std::endl;
+//         }
       // Linearization of file 3 data
       if(prepro == 0){
 	for (int cr = 0; cr < NP - 1; cr++) {
@@ -934,9 +934,9 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	    xLinearFile3.push_back(sigExtra);
 	  }
 	}
-       //for (unsigned int j= 0 ; j < eLinearFile3.size() ; j++) {
-	 //std::cout << eLinearFile3 [j] <<" after linear \t"<< xLinearFile3 [j] << std::endl;
-       //}
+//        for (unsigned int j= 0 ; j < eLinearFile3.size() ; j++) {
+// 	 std::cout << eLinearFile3 [j] <<" after linear \t"<< xLinearFile3 [j] << std::endl;
+//        }
 	TNudyCore::Instance()->Sort(eLinearFile3, xLinearFile3);
 	TNudyCore::Instance()->ThinningDuplicate(eLinearFile3, xLinearFile3);
       } 
@@ -1100,20 +1100,20 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 // 	  std::cout<<" first case0 != -1 MT= 800-849 "<< std::endl; 
 	  eneUniHe4.insert (std::end(eneUniHe4), std::begin(eLinearFile3), std::end(eLinearFile3)); 
 	  eneUniHe4All.insert (std::end(eneUniHe4All), std::begin(eLinearFile3), std::end(eLinearFile3)); 
-	} else if(MT == 28 || (MT >= 41 && MT < 46) || MT == 111 || MT == 112 || MT == 115 || MT == 116 ){
+	} else if(MT == 28 || (MT >= 41 && MT < 46) || MT == 111 || MT == 112 || MT == 115 || MT == 116 || MT == 103){
        //  summing for n,px reaction
 	  eneUniPAll.insert (std::end(eneUniPAll), std::begin(eLinearFile3), std::end(eLinearFile3));	 
-	} else if(MT == 11 ||MT == 32 || MT == 35 || MT == 114 || MT == 115 || MT == 117 ){
+	} else if(MT == 11 ||MT == 32 || MT == 35 || MT == 114 || MT == 115 || MT == 117 || MT == 104){
        //  summing for n,dx reaction
 	  eneUniDAll.insert (std::end(eneUniDAll), std::begin(eLinearFile3), std::end(eLinearFile3));	 
-	} else if(MT == 33 || MT == 113 || MT == 116 ){
+	} else if(MT == 33 || MT == 113 || MT == 116 || MT == 105){
        //  summing for n,tx reaction
 	  eneUniTAll.insert (std::end(eneUniTAll), std::begin(eLinearFile3), std::end(eLinearFile3));	 
-	} else if(MT == 34 || MT == 113 || MT == 116 ){
+	} else if(MT == 34 || MT == 113 || MT == 116 || MT == 106){
        //  summing for n,He3x reaction
 	  eneUniHe3All.insert (std::end(eneUniHe3All), std::begin(eLinearFile3), std::end(eLinearFile3));	 
 	} else if((MT >= 22 && MT < 26 ) || MT == 29 || MT == 30 || MT == 36 || MT == 36 || MT == 45 
-	           || MT == 108 || MT == 109 || (MT >= 112 && MT < 115 ) || MT == 117 ){
+	           || MT == 108 || MT == 109 || (MT >= 112 && MT < 115 ) || MT == 117 || MT == 107){
        //  summing for n,He4x reaction
 	  eneUniHe4All.insert (std::end(eneUniHe4All), std::begin(eLinearFile3), std::end(eLinearFile3));	 
 	}
@@ -1401,9 +1401,9 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
     NR = header0->GetN1();
     NP = header0->GetN2();
     TNudyEndfTab1 *tab0 = (TNudyEndfTab1 *)(sec0->GetRecords()->At(0));
-//        for (int crs = 0; crs < NP; crs++) {
-//         std::cout<<"MT "<< MT <<"  "<< tab0->GetX(crs) <<"  "<< tab0->GetY(crs) << std::endl;
-//       }      
+//         for (int crs = 0; crs < NP; crs++) {
+//          std::cout<<"MT "<< MT <<"  "<< tab0->GetX(crs) <<"  "<< tab0->GetY(crs) << std::endl;
+//        }      
    if(MT == 103 || MT == 28 || (MT >= 41 && MT < 46) || MT == 111 || MT == 112 || MT == 115 || MT == 116  ) {
       for (int crs = 0; crs < NP; crs++) {
         eLinearFile3.push_back(tab0->GetX(crs));
@@ -1415,8 +1415,11 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	  eneTemp.push_back(eneUniPAll[k]);
 	  sigTemp.push_back(xLinearFile3[min]);
 	} else {
-	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniPAll[k] - eLinearFile3[min]) /
-			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	  double sigmaAdd = 0;
+	    if(eneUniPAll[k] > eLinearFile3[min]){
+	      sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniPAll[k] - eLinearFile3[min]) /
+			      (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    }
 	    eneTemp.push_back(eneUniPAll[k]);
 	    sigTemp.push_back(sigmaAdd);
 	}
@@ -1425,8 +1428,7 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	}
       }
       sigUniOfPAll.push_back(sigTemp);
-    } else if(MT == 11 || MT == 32 || MT == 35 || MT == 114 || MT == 115 || MT == 117 || MT == 104) {
-      
+    } else if(MT == 11 || MT == 32 || MT == 35 || MT == 114 || MT == 115 || MT == 117 || MT == 104) {      
       for (int crs = 0; crs < NP; crs++) {
         eLinearFile3.push_back(tab0->GetX(crs));
         xLinearFile3.push_back(tab0->GetY(crs));
@@ -1438,8 +1440,11 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	  eneTemp.push_back(eneUniDAll[k]);
 	  sigTemp.push_back(xLinearFile3[min]);
 	} else {
-	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniDAll[k] - eLinearFile3[min]) /
-			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	  double sigmaAdd = 0;
+	    if(eneUniDAll[k] > eLinearFile3[min]){
+	      sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniDAll[k] - eLinearFile3[min]) /
+			      (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    }
 	    eneTemp.push_back(eneUniDAll[k]);
 	    sigTemp.push_back(sigmaAdd);
 	}
@@ -1460,8 +1465,11 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	  eneTemp.push_back(eneUniTAll[k]);
 	  sigTemp.push_back(xLinearFile3[min]);
 	} else {
-	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniTAll[k] - eLinearFile3[min]) /
-			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	  double sigmaAdd = 0;
+	    if(eneUniTAll[k] > eLinearFile3[min]){
+	    sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniTAll[k] - eLinearFile3[min]) /
+			      (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    }
 	    eneTemp.push_back(eneUniTAll[k]);
 	    sigTemp.push_back(sigmaAdd);
 	}
@@ -1482,8 +1490,11 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	  eneTemp.push_back(eneUniHe3All[k]);
 	  sigTemp.push_back(xLinearFile3[min]);
 	} else {
-	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniHe3All[k] - eLinearFile3[min]) /
-			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	  double sigmaAdd = 0;
+	    if(eneUniHe3All[k] > eLinearFile3[min]){
+	    sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniHe3All[k] - eLinearFile3[min]) /
+			      (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    }
 	    eneTemp.push_back(eneUniHe3All[k]);
 	    sigTemp.push_back(sigmaAdd);
 	}
@@ -1505,8 +1516,11 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
 	  eneTemp.push_back(eneUniHe4All[k]);
 	  sigTemp.push_back(xLinearFile3[min]);
 	} else {
-	  double sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniHe4All[k] - eLinearFile3[min]) /
-			    (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	  double sigmaAdd = 0;
+	    if(eneUniHe4All[k] > eLinearFile3[min]){
+	    sigmaAdd = xLinearFile3[min] + (xLinearFile3[min + 1] - xLinearFile3[min]) * (eneUniHe4All[k] - eLinearFile3[min]) /
+			      (eLinearFile3[min + 1] - eLinearFile3[min]); // linear interpolation
+	    }
 	    eneTemp.push_back(eneUniHe4All[k]);
 	    sigTemp.push_back(sigmaAdd);
 	}
@@ -1579,6 +1593,7 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
   TNudyEndfSec *sec20;
   while ((sec20 = (TNudyEndfSec *)secIter20.Next())) {
     MtNumbers.push_back(sec20->GetMT());
+//       std::cout<<"MT push "<< sec20->GetMT() << std::endl;
     TIter recIter21(sec20->GetRecords());
     TNudyEndfCont *header21 = (TNudyEndfCont *)recIter21.Next();
     qvaluetemp.push_back(header21->GetC2());
@@ -1608,12 +1623,17 @@ void TNudyEndfSigma::ReadFile3(TNudyEndfFile *file)
       TIter recIter23(sec22->GetRecords());
       TNudyEndfCont *header23 = (TNudyEndfCont *)recIter23.Next();
       if((sec22->GetMT() >= 103 && sec22->GetMT() < 108) || (sec22->GetMT() >= 203 && sec22->GetMT() < 208)){
+	if(MTChargeFlag[0] == -1 && sec22->GetMT() == 103)continue;  
+	if(MTChargeFlag[1] == -1 && sec22->GetMT() == 104)continue;  
+	if(MTChargeFlag[2] == -1 && sec22->GetMT() == 105)continue;  
+	if(MTChargeFlag[3] == -1 && sec22->GetMT() == 106)continue;  
+	if(MTChargeFlag[4] == -1 && sec22->GetMT() == 107)continue;  
 	NP = header23->GetN2();
 	TNudyEndfTab1 *tab23 = (TNudyEndfTab1 *)(sec22->GetRecords()->At(0));
 	for (int crs = 0; crs < NP; crs++) {
 	  eLinearFile3.push_back(tab23->GetX(crs));
 	  xLinearFile3.push_back(tab23->GetY(crs));
-// 	  std::cout <<" MT "<< sec22->GetMT()<<" energy "<< eLinearFile3 [crs] <<" sigma "<< xLinearFile3 [crs] << std::endl;
+//  	  std::cout <<" MT "<< sec22->GetMT()<<" energy "<< eLinearFile3 [crs] <<" sigma "<< xLinearFile3 [crs] << std::endl;
 	}
 	sigmaMts.insert(std::end(sigmaMts), std::begin(eLinearFile3), std::end(eLinearFile3));
 	sigmaMts.insert(std::end(sigmaMts), std::begin(xLinearFile3), std::end(xLinearFile3));
@@ -2710,7 +2730,7 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
         ReadFile3(file);
         sigma.clear();
 	
-        std::cout << "file 3 OK \t" << sigmaOfMts.size() << std::endl;
+            std::cout << "file 3 OK \t" << sigmaOfMts.size() << std::endl;
 	    TNudyCore::Instance()->ThinningDuplicate(eLinElastic, xLinElastic);
 	    TNudyCore::Instance()->ThinningDuplicate(eLinCapture, xLinCapture);
 	    TNudyCore::Instance()->ThinningDuplicate(eLinFission, xLinFission);
@@ -2761,6 +2781,7 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
         xLinFission.clear();
         xBroadFission.clear();
 	
+        std::cout << "dopplerall started \t" << std::endl;
         dopplerAll();
         std::cout << "dopplerall OK \t" << std::endl;
         fixupTotal(file, energyUni, sigmaUniTotal);
@@ -2782,58 +2803,6 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
 // // 	break;
 	case 6:
 	{
-// 	  TIter secIter(file->GetSections());
-// 	  TNudyEndfSec *sec;
-// 	  while ((sec = (TNudyEndfSec *)secIter.Next())) {
-// 	    int NK = sec->GetN1();
-// 	    int MAT = sec->GetMAT();
-// 	    TIter recIter(sec->GetRecords());
-// 	    for (int k = 0; k < NK; k++) {
-// 	      TNudyEndfTab1 *tab1 = (TNudyEndfTab1 *)recIter.Next();
-// 	      div_t divr;
-// 	      int MT 	 	= sec->GetMT();
-// 	      int ZAP    	= tab1->GetC1();
-// 	      int LAW 	 	= tab1->GetL2();
-// // 	      int LCT 		= sec->GetL2();
-// 	      divr       	= div(sec->GetC1(), 1000);
-// 	      double ZAI	= sec->GetC1();
-// 	      double AWR 	= sec->GetC2();
-// 	      double ZA  	= divr.quot;
-// 	      double AA  	= divr.rem;
-// // 	      double NA1 = AA - ZA;
-// // 	      double AWP = tab1->GetC2();
-// 	      //std::cout<<" ZAP " << ZAP <<" AWP "<< AWP <<" MT "<< MT <<" ZA "<< ZA <<" AA "<< AA <<" awr "<< sec->GetC2() <<"  LAW "<< LAW << std::endl;
-// 	      if (ZAP == 0){
-// 		MtNumSig4Photon.push_back (MT);
-// 	        if (LAW == 2) MtNumAng4Photon.push_back (MT) ;
-// 	      }
-// 	      if (LAW == 1 || LAW == 2 || LAW == 5) {
-// 		TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter.Next();
-// 		for (unsigned int lis = 0; lis < tab2->GetN2(); lis++) {
-// 		  TNudyEndfList *header = (TNudyEndfList *)recIter.Next();
-// 		}
-// 	      } else if (LAW == 6){
-// 		TNudyEndfCont *header = (TNudyEndfCont *)recIter.Next();
-// 	      } else if (LAW == 7){
-// 		TNudyEndfTab2 *tab2 = (TNudyEndfTab2 *)recIter.Next();
-// 		for (unsigned int cr1 = 0; cr1 < tab2->GetN2(); cr1++) {
-// 		  TNudyEndfTab2 *tab3 = (TNudyEndfTab2 *)recIter.Next();
-// 		  for (unsigned int cr2 = 0; cr2 < tab3->GetN2(); cr2++) {
-// 		    TNudyEndfTab1 *tab12 = (TNudyEndfTab1 *)recIter.Next();
-// 		  }
-// 		}
-// 	      }
-// 	    }
-// 	  }
-// 	  // adding mandatory photon angular distribution from file 6 if data exist only in the file 6
-// 	  // and not in the file 12
-// 	  if ( MtNumAng4Photon.size() > 0) {
-// 	    std::cout <<"photon data exist in file 6 "<< std::endl;
-// 	    TNudyEndfSec *sec3 = new TNudyEndfSec(MAT, 14, 100, ZAI, AWR,0,0,0,0);
-// 	    TNudyEndfFile *file1 = new TNudyEndfFile(MAT,14);
-// 	    file1->Add(sec3);
-// 	    tMat->Add(file1);
-// 	  }
 	  TIter iter1(tMat->GetFiles());
 	  TNudyEndfFile *file1;
 	  while ((file1 = (TNudyEndfFile *)iter1.Next())) {
@@ -2989,7 +2958,7 @@ void TNudyEndfSigma::broadSigma(std::vector<double> &x1, std::vector<double> &x2
 //      std::cout<<"after doppler \t"<< x1.size() << std::endl;
     dopplerBroad = 1;
     for (unsigned long j = 0; j < x1.size(); j++) {
-//     std::cout<<"size2 "<< x1[j] <<"  "<< x2[j] <<"  "<< doppler->sigma[j]<< std::endl;
+//      std::cout<<"size2 "<< x1[j] <<"  "<< x2[j] <<"  "<< doppler->sigma[j]<< std::endl;
       x3.push_back(doppler->sigma[j]);
     }
   }
@@ -3030,9 +2999,12 @@ void TNudyEndfSigma::fixupTotal(TNudyEndfFile *file1, std::vector<double> &x1, s
 	    eneTemp.push_back(x1[k]);
 	    sigTemp.push_back(sigmaOfMtsDop[i][size + min]);
 	  } else {
-	    double sigmaAdd = sigmaOfMtsDop[i][size + min] +
+	    double sigmaAdd = 0;
+	      if(x1[k] > sigmaOfMtsDop[i][min]){
+		sigmaAdd = sigmaOfMtsDop[i][size + min] +
 			      (sigmaOfMtsDop[i][size + min + 1] - sigmaOfMtsDop[i][size + min]) * (x1[k] - sigmaOfMtsDop[i][min]) /
 				  (sigmaOfMtsDop[i][min + 1] - sigmaOfMtsDop[i][min]); // linear interpolation
+	      }
             if (sigmaAdd > 0) {				  
 	      eneTemp.push_back(x1[k]);
 	      sigTemp.push_back(sigmaAdd);
@@ -3070,7 +3042,7 @@ void TNudyEndfSigma::fixupTotal(TNudyEndfFile *file1, std::vector<double> &x1, s
 void TNudyEndfSigma::dopplerAll()
 {
   for (unsigned long i = 0; i < sigmaOfMts.size(); i++) {
-//      std::cout<<"MT number \t"<< MtNumbers[i] <<"  \t"<< sigmaOfMts.size() << std::endl;
+//       std::cout<<"MT number \t"<< MtNumbers[i] <<"  \t"<< sigmaOfMts.size() << std::endl;
     int size = sigmaOfMts[i].size() / 2;
     for (int k = 0; k < size ; k++) {
       if (sigmaOfMts[i][size + k] > 1E-20) {
@@ -3079,7 +3051,7 @@ void TNudyEndfSigma::dopplerAll()
 //	std::cout<<std::setprecision(12)<<  sigmaOfMts [ i ][ k ]<<"  \t"<< sigmaOfMts [ i ][ size + k ] <<std::endl;
       } 
     }
-//     std::cout<<"before broad \t"<< std::endl;
+//      std::cout<<"before broad \t"<< std::endl;
     broadSigma(eneTemp, sigTemp, sigma);
 //     std::cout<<"after broad \t"<< sigma.size() << std::endl;
     if(prepro==0){
@@ -3536,7 +3508,7 @@ void TNudyEndfSigma::ReWriteFile3(TNudyEndfFile *file)
   TIter secIter(file->GetSections());
   TNudyEndfSec *sec;  
   while ((sec = (TNudyEndfSec *)secIter.Next())) {
-    //std::cout <<"MT  "<<sec->GetMT() <<"  \t"<< MtNumbers[mtcount] << std::endl;
+//     std::cout <<"MT  "<<sec->GetMT() <<"  \t"<< MtNumbers[mtcount] << std::endl;
     int MT = sec->GetMT();
 //     if (MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 && MT < 250) {
       TIter recIter(sec->GetRecords());
@@ -3566,7 +3538,7 @@ void TNudyEndfSigma::ReWriteFile3(TNudyEndfFile *file)
         for (unsigned int crs = 0; crs < sigmaUniOfMts[mtcount].size(); crs++) {
           tab1->SetX(energyUni[energyLocationMts[mtcount] + crs], crs);
           tab1->SetY(sigmaUniOfMts[mtcount][crs], crs);
-//  	  std::cout << energyUni[energyLocationMts[mtcount] + crs] <<"  \t"<< sigmaUniOfMts[mtcount][crs] << std::endl;
+//   	  std::cout << energyUni[energyLocationMts[mtcount] + crs] <<"  \t"<< sigmaUniOfMts[mtcount][crs] << std::endl;
         }
       }
       mtcount++;
