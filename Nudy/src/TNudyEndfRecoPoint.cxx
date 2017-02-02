@@ -46,6 +46,7 @@ void TNudyEndfRecoPoint::ReadFile3(TNudyEndfFile *file)
 {
   TIter secIter(file->GetSections());
   TNudyEndfSec *sec;
+  int mt1multi = -1;
   while ((sec = (TNudyEndfSec *)secIter.Next())) {
     int MT = sec->GetMT();
     if (MT != 1 && MT != 3 && MT != 4 && MT != 27 && MT != 19 && MT != 20 && MT != 21 && MT != 38 && MT != 101 &&
@@ -70,7 +71,8 @@ void TNudyEndfRecoPoint::ReadFile3(TNudyEndfFile *file)
       xLinearFile3.clear();
       sigmaOfMts.push_back (eneTemp);
       eneTemp.clear();
-    } if (MT==1){
+    } if (MT==1 && mt1multi==-1){
+      mt1multi = 0;
       TIter recIter(sec->GetRecords());
       TNudyEndfCont *header = (TNudyEndfCont *)recIter.Next();
       NR = header->GetN1();
@@ -222,7 +224,7 @@ void TNudyEndfRecoPoint::fixupTotal(std::vector<double> &x1)
       if (x1[k] <= sigmaOfMts[i][min])
         min = 0;
       else if (x1[k] >= sigmaOfMts[i][max])
-        min = max - 1;
+        min = max;
       else {
         while (max - min > 1) {
           mid = (min + max) / 2;
@@ -295,7 +297,8 @@ double TNudyEndfRecoPoint::GetSigmaPartial(int ielemId, int i, double energyK)
     }
   }
   int minp = min - energyLocMtId[ielemId][i];
-//    for (unsigned int j1 = 0; j1 < eneUni[ielemId].size(); j1++)
+//     for (unsigned int j1 = 0; j1 < eneUni[ielemId].size(); j1++)
+//       std::cout << eneUni[ielemId][j1] <<"  "<< sigUniOfMt[ielemId][i][j1] <<"  "<< sigUniOfMt[ielemId][i].size() << std::endl;
   if (minp <= 0) return 0;
   if (minp >= (int)sigUniOfMt[ielemId][i].size()) return 0;
   return sigUniOfMt[ielemId][i][minp] +
