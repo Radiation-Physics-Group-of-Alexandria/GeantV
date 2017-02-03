@@ -278,14 +278,14 @@ double TNudyEndfRecoPoint::GetSigmaTotal(int ielemId, double energyK)
   int min = 0;
   int max = eneUni[ielemId].size() - 1;
   int mid = 0;
-  if (energyK <= eneUni[ielemId][min])
+  if (energyK <= eneUni[ielemId][min]){
     min = 0;
   }else if (energyK >= eneUni[ielemId][max]){
     min = max - 1;
   }else {
     while (max - min > 1) {
       mid = (min + max) / 2;
-      if (energyK < eneUni[ielemId][mid])
+      if (energyK < eneUni[ielemId][mid]){
         max = mid;
       }else{
         min = mid;
