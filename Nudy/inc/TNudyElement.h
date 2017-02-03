@@ -18,6 +18,8 @@ std::string GetatomicSymbol(void){ return symbol ;}
 int GetatomicNumber( void ){return charge;}
 int GetatomicMass( void ){return mass;}
 double GetatomicDensity( void );
+std::string replaceName(std::string &, std::string &, std::string &);
+const char* endfFileName();
 
 virtual ~TNudyElement();
 private:

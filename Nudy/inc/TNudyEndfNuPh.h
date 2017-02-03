@@ -20,6 +20,14 @@ public:
   virtual double GetNuDelayed(int elemid, double energyK);
   virtual double GetFissHeat(int elemid, double energyK);
   virtual double GetLambdaD(int elemid, int time);
+  //SPB
+  virtual double  GetkineticEnergyFF(int ielemid, double energyK);
+  virtual double  GetPromptGammaEnergyFission(int ielemid, double energyK);
+  virtual double  GetDelayedGammaEnergyFission(int ielemid, double energyK);
+  virtual double  GetDelayedBetaEnergyFission(int ielemid, double energyK);
+  virtual double  GetNeutrinoEnergyFission(int ielemid, double energyK);
+  virtual double  GetTotalEnergyFission(int ielemid, double energyK);
+  
   virtual ~TNudyEndfNuPh();
 
 private:
@@ -33,6 +41,14 @@ private:
   rowd cnc, nui;
   rowint nbt1, int1;
   double sigDiff;
+  double kineticenergyFF = 0.0;
+  double totalEnergyFission = 0.0;
+  double totalPromptGammaEnergy = 0.0;
+  double totalDelayedGammaEnergy = 0.0;
+  double totalDelayedBetaEnergy = 0.0;
+  double totalNeutrinosEnergy = 0.0;
+  
+  
   ClassDef(TNudyEndfNuPh, 1) // class for an ENDF reconstruction
 };
 #endif

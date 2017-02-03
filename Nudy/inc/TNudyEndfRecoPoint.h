@@ -15,7 +15,6 @@ class TNudyEndfPhProd;
 class TNudyEndfPhAng;
 class TNudyEndfPhEnergy;
 class TList;
-
 #ifdef USE_ROOT
 #include "Rtypes.h"
 class TRandom3;
@@ -60,6 +59,23 @@ public:
   virtual double GetFisYield(int elemid, double energyK);
   virtual double GetLambdaD(int elemid, int time);
   virtual double GetDelayedFraction(int ielemId, int mt, double energyK);
+  //SPB
+  std::vector<int> GetLawProducts(int ielemId, int mt);
+  std::vector<int> GetProductsZ(int ielemId, int mt);
+  std::vector<int> GetProductsA(int ielemId, int mt);
+  std::vector<double> GetProductsEnergy(int ielemId, int mt, double energyK);
+  std::vector<double>GetProductscosAng6(int ielemId, int mt, double energyK);
+  std::vector<double>GetProductscosAng64(int ielemId, int mt, double energyK);
+  void ResetRecoEnergyAng();
+  //
+  virtual double  GetkineticEnergyFF(int ielemid, double energyK);
+  virtual double  GetPromptGammaEnergyFission(int ielemid, double energyK);
+  virtual double  GetDelayedGammaEnergyFission(int ielemid, double energyK);
+  virtual double  GetDelayedBetaEnergyFission(int ielemid, double energyK);
+  virtual double  GetNeutrinoEnergyFission(int ielemid, double energyK);
+  virtual double  GetTotalEnergyFission(int ielemid, double energyK);
+  
+  
   std::fstream out, outtotal;
   std::string outstring, outstringTotal;
   matrixint MtValues; // MT values for which cross-section/ heating values are given  all elements
@@ -104,9 +120,8 @@ private:
   int flagRead = -1;
   double QValue[999];
   double A, AWR, ABN, QX;         // standard ENDF parameters
-  int NR, NP, NE; // standard ENDF parameters for range and interpolation
-  matrixint Mt4, Mt5,
-      Mt6; // MT values for which angular, energy/ angular-energy distributions are given in file 4, 5, 6
+  int NR, NP, NE;                 // standard ENDF parameters for range and interpolation
+  matrixint Mt4, Mt5,Mt6;         // MT values for which angular, energy/ angular-energy distributions are given in file 4, 5, 6
   matrixd2 sigmaOfMts;                      // sigma for each reaction
   matrixd2 sigmaUniOfMts;                   // sigma for each reaction afte unionization of energy
   rowint energyLocationMts;                 // MT wise starting energy for cross-section

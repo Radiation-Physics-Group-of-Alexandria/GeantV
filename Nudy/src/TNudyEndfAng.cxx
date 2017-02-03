@@ -311,12 +311,18 @@ void TNudyEndfAng::fillPdf2d()
 //------------------------------------------------------------------------------------------------------
 double TNudyEndfAng::GetCos4(int ielemId, int mt, double energyK)
 {
+   //std::cout<<mt << " MT: "<<Mt4Values[ielemId].size()<<std::endl;
+
   fRnd  = new TRandom3(0);
   int i = -1;
   for (unsigned int l = 0; l < Mt4Values[ielemId].size(); l++) {
     if (Mt4Values[ielemId][l] == mt) {
       i = l;
-      break;
+      
+      //std::cout<<mt << " MT: "<<Mt4Values[ielemId][l]<<std::endl;
+      
+      
+      //break;
     }
   }
   // std::cout<<"i "<< i<< "  " << energy4OfMts[ielemId][i].size() << std::endl;

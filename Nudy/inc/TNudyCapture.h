@@ -24,12 +24,14 @@ public:
   TNudyCapture(ElementProp *, TNudyEndfRecoPoint *recoPoint);
   virtual ~TNudyCapture();
    void nCaptureXsec(double, TNudyElement *);
+   void GetSecParameters(TNudyElement *targetElement, TNudyEndfRecoPoint *recoPoint);
    double GetCaptureXsec();
-   double GetKiEnCapture();
-   double GetcosAngCapture();
+   std::vector<double> nCaptureGetEnergy();
+   std::vector<double> nCaptureGetcosAng();
    std::string GetCaptureProcessName();
-   std::string GetParticleCapture();
-   
+   std::vector<std::string> nCaptureGetsecParticles();
+   std::string residueName(int , int );
+   void nCaptureProcessReset();
 private:
   void GetSecParameter(TNudyElement *, TNudyEndfRecoPoint *recoPoint);
   void FillHisto(double icosLab, double isecEnergyLab);
@@ -37,13 +39,16 @@ private:
   double kineticE;
   double cosCM = 0, cosLab = 0, secEnergyCM = 0, secEnergyLab = 0;
   double cosCMC = 0, cosLabC = 0, secEnergyCMC = 0, secEnergyLabC = 0;
-  
+  double residueKineticEnergy = 0.0;
+  double residuecosAng = 0.0;
+  std::vector<double> nCaptureProductsEnergy;
+  std::vector<double> nCaptureProductscosAng;
   static const int n1=1000000;
   double sigmaPartial;
   double sigmaTotal;
   double ratio;
   double sum1;
-  double residueACa, residueZCa;
+  int residueACa = 0, residueZCa = 0;
   
   int mtValues;
   int elemId;
@@ -59,33 +64,18 @@ private:
  double sigmainElastic=0.0;
   rowd Eout;
   rowd costheta;
-  std::string  secParticleElas;
-  std::string  secParticleFiss;
   std::string  secParticleCapt;
-  std::string  secParticleInel;
   std::string  name;
-  
-  std::string  procNameEla;
-  std::string  procNameFis;
   std::string  procNameCap;
-  std::string  procNameIne;
-  std::string  nameE;
-  std::string  nameF;
   std::string  nameC;
-  std::string  nameI;
+  std::string residueType;
   std::vector<std::string>ProcName;
+  std::vector<std::string>productsName;
+  static const char fkElNam[119][4];
   double mass;
   double charge;
-  double sigmaElastic,sigmaFission,sigmaCapture,sigmaInelastic;
- 
-  
-   int mt1;
-   std::vector<int> mtTemp;
-   std::vector<double> crssIel;
-   std::vector<double> crss;
-  
-  
- 
+  double sigmaCapture;
+  int mt1;
   //TNudyElement *elementProp;
   TNudyEndfRecoPoint *rp;
  // ofstream fout;

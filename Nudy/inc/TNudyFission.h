@@ -16,127 +16,58 @@
 class TRandom3;
 #endif
 
-
-typedef std::vector<double> rowd;
-typedef std::vector<int> rowint;
-typedef std::vector<rowint> matrixint;
-typedef std::vector<rowd> matrixd2;
-typedef std::vector<std::vector<rowd>> matrixd3;
-typedef std::vector<std::vector<std::vector<rowd>>> matrixd4;
-typedef std::vector<std::vector<std::vector<std::vector<rowd>>>> matrixd5;
-
-
 class TNudyFission {
-
 public:
-  TNudyFission();
-  TNudyFission(int ElemId, const char*);
-  
-  TNudyFission(ElementProp *, TNudyEndfRecoPoint *recoPoint);
-  virtual ~TNudyFission();
-   
-   
-   void Neutron_Process(TNudyElement *);
+   TNudyFission();
+   TNudyFission(int ElemId, const char*);
+   TNudyFission(ElementProp *, TNudyEndfRecoPoint *recoPoint);
+   virtual ~TNudyFission();
    void nFissionXsec(double, TNudyElement * );
-   void materialType(TNudyEndfMat *mat);
-   double GetElasticXsec();
    double GetFissionXsec();
-   double GetCaptureXsec();
-   double GetInElasticXsec();
-   double GetKiEnFission();
-   double GetcosAngFission();
+   std::vector<double> GetKineticEnergyNeutron();
+   std::vector<double> GetcosAngNeutron();
    double GetPromptneutron();
-   double GetFissionFragmentmass();
-   
-   
-   std::vector<double> GetXsec();
-   
+   std::vector<int> GetFissionFragmentsmass();
+   std::vector<int> GetFissionFragmentscharge();
    std::string GetsecParticleName( );
-   std::string GetElasticProcessName();
    std::string GetFissionProcessName();
-   std::string GetCaptureProcessName();
-   std::string GetInelasticProcessName();
-   std::vector<std::string>GetProcessNames();
-   
    std::string GetParticleFission();
-   std::string GetParticleElastic();
-   std::string GetParticleCapture();
-   std::string  GetParticleInelastic();
-   
-   
-   
-   
+   void processReset();
 private:
-  void GetSecParameter(TNudyElement *, TNudyEndfRecoPoint *recoPoint);
-  void FillHisto(double icosLab, double isecEnergyLab);
-  std::vector<double> crs;
   double kineticE;
-  double cosCM = 0, cosLab = 0, secEnergyCM = 0, secEnergyLab = 0;
-  double cosCME = 0, cosLabE = 0, secEnergyCME = 0, secEnergyLabE = 0;
-  double cosCMF = 0, cosLabF = 0, secEnergyCMF = 0, secEnergyLabF = 0;
-  double cosCMC = 0, cosLabC = 0, secEnergyCMC = 0, secEnergyLabC = 0;
-  double cosCMI = 0, cosLabI = 0, secEnergyCMI = 0, secEnergyLabI = 0;
-  
-  static const int n1=1000000;
+  double cosCMF = 0, cosLab = 0, secEnergyCMF = 0, secEnergyLab = 0;
   double sigmaPartial;
   double sigmaTotal;
-  double ratio;
-  double sum1;
-  double residueAEl, residueZEl;
-  double residueAFs, residueZFs;
-  double residueACa, residueZCa;
-  double residueAIn, residueZIn;
+  double fissionfragmentsCharge = 0;
+  
+  std::vector<int> massFissionFragments;
+  std::vector<int> chargeFissionFragments;
+  
+  std::vector<double> secEnergyLabF;
+  std::vector<double> cosLabF;
+  
+  double fissionFragmentmass1 = 0.0, fissionFragmentmass2 = 0.0;
+  
+  double totalkineticEnergyFF = 0.0;
+  double kineticEnergyFragment1 = 0.0, kineticEnergyFragment2=0;
   
   int mtValues;
   int elemId;
-  int pId;
   int ielemId;
-  int isel     = 0;
-  int counter  = 0;
-  int ecounter = 0;
   int LCT, MF, MT, MF4, MF5, MF6;
-  int events;
-  int mZA;
-  std::string elementsymb;
-  
   int mt;
-  //std::string secParticle;
   double sigmainElastic=0.0;
-  double En;
-  double costhlab;
-  double secE; 
-  double secpcosAng; 
-  double sigma; 
-  double Ein;
-  std::vector<double> xec;
-  rowd Eout;
-  rowd costheta;
-  std::string  secParticleElas;
   std::string  secParticleFiss;
-  std::string  secParticleCapt;
-  std::string  secParticleInel;
-  std::string  name;
-  std::string  procNameEla;
   std::string  procNameFis;
-  std::string  procNameCap;
-  std::string  procNameIne;
-  std::string  nameE;
   std::string  nameF;
-  std::string  nameC;
-  std::string  nameI;
-  std::vector<std::string>ProcName;
   double mass;
   double charge;
-  double sigmaElastic,sigmaFission,sigmaCapture,sigmaInelastic;
+  double sigmaFission;
   int mt1;
-  std::vector<int> mtTemp;
-  std::vector<double> crssIel;
-  std::vector<double> crss;
   double nup;
+  double nud;
+  double fissHeat;
   
-  
-  
- 
   //TNudyElement *elementProp;
   TNudyEndfRecoPoint *rp;
  // ofstream fout;

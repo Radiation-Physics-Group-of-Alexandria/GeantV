@@ -27,6 +27,7 @@ ClassImp(TNudyEndfTape)
 TNudyEndfTape::TNudyEndfTape(const char *name, unsigned char loglev) : TNamed("", name), fLogLev(loglev)
 {
   // Key names cannot contain blanks
+  std::cout << "B4Creating ENDF Tape:" << std::endl << name << std::endl;
   TString sname(name);
   sname = sname.Strip(TString::kLeading);
   sname = sname(0, 10);
@@ -35,6 +36,8 @@ TNudyEndfTape::TNudyEndfTape(const char *name, unsigned char loglev) : TNamed(""
   sname.ReplaceAll("/", "_");
   SetName(sname.Data());
   // std::cout << "Creating ENDF Tape:" << std::endl << name << std::endl;
+  //std::cout << "Creating ENDF Tape:" << std::endl << name << std::endl;
+ // std::cout<<"sname-------------->"<<sname.Strip()<<"  "<< sname(0, 10) <<"  "<<sname.Data()<<std::endl;
   fMats = new TList();
 };
 

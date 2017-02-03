@@ -15,119 +15,46 @@
 class TRandom3;
 #endif
 
-
-typedef std::vector<double> rowd;
-typedef std::vector<int> rowint;
-typedef std::vector<rowint> matrixint;
-typedef std::vector<rowd> matrixd2;
-typedef std::vector<std::vector<rowd>> matrixd3;
-typedef std::vector<std::vector<std::vector<rowd>>> matrixd4;
-typedef std::vector<std::vector<std::vector<std::vector<rowd>>>> matrixd5;
-
-
 class TNudyElastic {
-
 public:
-  TNudyElastic();
-  TNudyElastic(int ElemId, const char*);
-  
-  TNudyElastic(ElementProp *, TNudyEndfRecoPoint *recoPoint);
-  virtual ~TNudyElastic();
-   
-   
-   void Neutron_Process(TNudyElement *);
+   TNudyElastic();
+   TNudyElastic(int ElemId, const char*);
+   TNudyElastic(ElementProp *, TNudyEndfRecoPoint *recoPoint);
+   virtual ~TNudyElastic();
    void nElasticXsec(double, TNudyElement *);
-  
    double GetElasticXsec();
-   double GetFissionXsec();
-   double GetCaptureXsec();
-   double GetInElasticXsec();
-   double GetsecParticleKiEn();
-   double GetsecParticlecosAng();
-   
-   std::vector<double> GetXsec();
-   
-   std::string GetsecParticleName( );
+   std::vector<double> GetsecParticleKiEn();
+   std::vector<double> GetsecParticlecosAng();
    std::string GetElasticProcessName();
-   std::string GetFissionProcessName();
-   std::string GetCaptureProcessName();
-   std::string GetInelasticProcessName();
-   std::vector<std::string>GetProcessNames();
-   
-   std::string GetParticleFission();
-   std::string GetParticleElastic();
-   std::string GetParticleCapture();
-   std::string  GetParticleInelastic();
-   
-   
-   
-   
+   std::vector<std::string> GetParticleElastic();
+   void nElasticProcessReset();
 private:
   void GetSecParameter(TNudyElement *, TNudyEndfRecoPoint *recoPoint);
-  void FillHisto(double icosLab, double isecEnergyLab);
-  std::vector<double> crs;
+  std::string residueNameElastic(int , int );
+  static const char fkElNam[119][4];
   double kineticE;
-  double cosCM = 0, cosLab = 0, secEnergyCM = 0, secEnergyLab = 0;
   double cosCME = 0, cosLabE = 0, secEnergyCME = 0, secEnergyLabE = 0;
-  
-  static const int n1=1000000;
+  double secondarycosAng = 0;
+  double secondarycosAng2 = 0;
   double sigmaPartial;
   double sigmaTotal;
-  double ratio;
-  double sum1;
-  double residueAEl, residueZEl;
-  
+  int residueAEl, residueZEl;
   int mtValues;
   int elemId;
-  int pId;
   int ielemId;
-  int isel     = 0;
-  int counter  = 0;
-  int ecounter = 0;
   int LCT, MF, MT, MF4, MF5, MF6;
-  int events;
-  int mZA;
-  std::string elementsymb;
-  
- int mt;
- //std::string secParticle;
- double sigmainElastic=0.0;
- double En;
- double costhlab;
- double secE; 
- double secpcosAng; 
- double sigma; 
-  double Ein;
-  std::vector<double> xec;
-  rowd Eout;
-  rowd costheta;
+  int mt;
   std::string  secParticleElas;
-  std::string  secParticleFiss;
-  std::string  secParticleCapt;
-  std::string  secParticleInel;
-  std::string  name;
-  
-  std::string  procNameEla;
-  std::string  procNameFis;
-  std::string  procNameCap;
-  std::string  procNameIne;
-  std::string  nameE;
-  std::string  nameF;
-  std::string  nameC;
-  std::string  nameI;
-  std::vector<std::string>ProcName;
+  std::string  processName;
+  std::string  secParticleName;
+  std::vector<std::string>  productsName;
+  std::vector<double> energyProductsLab;
+  std::vector<double> cosAngProductsLab;
+  std::string residueType;
   double mass;
   double charge;
-  double sigmaElastic,sigmaFission,sigmaCapture,sigmaInelastic;
- 
+  double sigmaElastic;
   
-   int mt1;
-   std::vector<int> mtTemp;
-   std::vector<double> crssIel;
-   std::vector<double> crss;
-  
-  
- 
   //TNudyElement *elementProp;
   TNudyEndfRecoPoint *rp;
  // ofstream fout;

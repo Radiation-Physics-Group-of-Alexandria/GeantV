@@ -21,8 +21,8 @@ ClassImp(TNudyEndfEnergyAng)
 
     TNudyEndfEnergyAng::TNudyEndfEnergyAng()
 {
+ 
 }
-
 //______________________________________________________________________________
 TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
 {
@@ -48,14 +48,15 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
       std::cout<<"ZAP = \t"<< ZAP <<" MT "<< MT <<  std::endl;
       // int LIP =tab1->GetL1();
       int LAW = tab1->GetL2();
-      //std::cout<<"B4Law: "<<LAW<<std::endl;
+      //std::cout<<MT<<"  B4Law: "<<LAW<<std::endl;
       if (LAW == 3 || LAW == 4 || LAW == 0) continue;
+      //std::cout<<MT<<"  After Law: "<<LAW<<std::endl;
       law.push_back(LAW);
       NR            = tab1->GetN1();
       NP            = tab1->GetN2();
       divr          = div(ZAP, 1000);
-      int particleA = divr.rem;
-      int particleZ = divr.quot;
+       particleA = divr.rem;
+       particleZ = divr.quot;
       zd.push_back(particleZ);
       ad.push_back(particleA);
       MtNumbers6.push_back(MT);
@@ -81,11 +82,7 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
         for (int lis = 0; lis < np2; lis++) {
           TNudyEndfList *header = (TNudyEndfList *)recIter.Next();
           ein.push_back(header->GetC2());
-          
-          
          // std::cout<<"get energy from header: "<<header->GetC2()<<std::endl;
-          
-          
           LANG = header->GetL1();
           // NW   = header->GetN1();
           NL = header->GetN2();
@@ -97,7 +94,6 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
               lCoef1.push_back(header->GetLIST(j));
             }
             lCoef.push_back(lCoef1);
-
             int k1     = 0;
             double fme = 0.0;
             do {
@@ -114,7 +110,6 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
 	      //std::cout << x << "   "<< fme << std::endl;
               k1++;
             } while (k1 < 101);
-
             // for(int l = 0; l < 100; l++){
             // recursionLinearFile4(lis, cosFile4[l], cosFile4[l+1], cosPdfFile4[l], cosPdfFile4[l+1]);
             //}
@@ -179,9 +174,8 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
         continue;
       }
       MtNumbers.push_back(MT);
-      //std::cout<<"Law-------->"<<LAW<<std::endl;
+      //std::cout<<MT<<"   Law-------->"<<LAW<<std::endl;
       //std::cout<<"ZAP = "<< ZAP <<" AWP "<<AWP <<" parZ "<< particleZ <<" parA "<< particleA << std::endl;
-      //---------------------------------------------
       switch (LAW) {
       case 1: {
         int NA, NEP, LANG;
@@ -205,9 +199,7 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
         for (int lis = 0; lis < np2; lis++) {
           TNudyEndfList *header = (TNudyEndfList *)recIter.Next();
           ein.push_back(header->GetC2());
-          
          // std::cout<<"get energy from header:law1  "<<header->GetC2()<<"  "<<MT<<std::endl;
-          
           double sumein = 0;
           // ND   = header->GetL1();
           NA  = header->GetL2();
@@ -238,11 +230,28 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
                         0.717 * (ZC * ZC / pow(AC, 1. / 3.) - ZB * ZB / pow(AB, 1. / 3.)) +
                         1.211 * (ZC * ZC / AC - ZB * ZB / AB) - Ib;
             double C1 = 0.04, C2 = 1.8E-6, C3 = 6.7E-7, Et1 = 130.0, Et3 = 41.0;
-            double Mn1 = 1;   //, Mp = 1, Md = 1,Mt = 1, Mhe3 = 1, Malpha = 0;
-            double mn  = 0.5; //, mp = 1, md = 1, mt = 1, mhe3 = 1, malpha = 2;
-
-            int k1 = 0;
-            do {
+            
+            double Mn1 = 0;
+            double mn = 0.0;
+            if( particleZ == 0 && particleA == 1 ){
+              Mn1 = 1;   
+              mn  = 0.5; 
+	     }else if(particleZ == 1 && particleA == 1){
+	      Mn1 = 1;   
+              mn  = 1;
+	     }else if(particleZ == 1 && particleA == 2){
+	      Mn1 = 1;   
+              mn  = 1;
+	     }else if(particleZ == 2 && particleA == 4){
+	      Mn1 = 0;   
+              mn  = 2;
+	     }else{
+	      Mn1 = 0.0;
+	      mn = 0.0;
+	     //std::cout<<"About other particles, values are not avaialable, see endf manual"<<std::endl;
+	     }
+             int k1 = 0;
+             do {
               double x = -1. + k1 * 0.02;
               // std::cout<<" k1 "<< k1 <<" cos "<< y << std::endl;
               double sumprob = 0;
@@ -563,11 +572,8 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
         fP1.clear();
         ein2d.push_back(ein);
         ein.clear();
-        //---------------------------------------------
       } break;
       case 5: {
-
-        //---------------------------------------------
       } break;
       case 6: {
         MtLct.push_back(2);
@@ -835,7 +841,7 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
   cos3dc.clear();
   pdf3dc.clear();
   cdf3dc.clear();
-
+  
   //  std::cout << Mt4Values[0].size() << std::endl;
   //  std::cout << Mt5Values[0].size() << std::endl;
   //  std::cout << Mt6Values[0].size() << std::endl;
@@ -854,7 +860,10 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
   //}
 }
 //------------------------------------------------------------------------------------------------------
-
+TNudyEndfEnergyAng::InfoProductsFile6 TNudyEndfEnergyAng::GetInformation(){
+return infoParticles;
+}
+//______________________________________________________________________________
 TNudyEndfEnergyAng::~TNudyEndfEnergyAng()
 {
   cosFile4.shrink_to_fit();
@@ -920,6 +929,7 @@ TNudyEndfEnergyAng::~TNudyEndfEnergyAng()
   pdf4de.shrink_to_fit();
   cdf4de.shrink_to_fit();
   Mt4Values.shrink_to_fit();
+  //infoParticles.pZ.clear();
 }
 //------------------------------------------------------------------------------------------------------
 double TNudyEndfEnergyAng::recursionLinearFile4(int i, double x1, double x2, double pdf1, double pdf2)
@@ -954,7 +964,6 @@ double TNudyEndfEnergyAng::recursionLinearProb(double x1, double x2, double pdf1
   pdf            = TNudyCore::Instance()->Interpolate(nbt1, int1, NR, cosFile4, cosPdfFile4, NP, mid);
   double pdfmid1 = pdf1 + (pdf2 - pdf1) * (mid - x1) / (x2 - x1);
   //  std::cout << mid <<" linear "<< pdf <<"  "<< pdfmid1 << std::endl;
-
   if (fabs((pdf - pdfmid1) / pdfmid1) <= 1E-3) {
     return 0;
   }
@@ -1018,12 +1027,17 @@ int TNudyEndfEnergyAng::GetZd6(int ielemId, int mt)
   }
   return 0;
 }
+//______________________________________________________________________________
 //------------------------------------------------------------------------------------------------------
 int TNudyEndfEnergyAng::GetLaw6(int ielemId, int mt)
 {
   int size = Law6[ielemId].size();
+  //std::cout << "GetLaw6(" << ielemId << ", " << mt << ") -- size: " << size << std::endl; 
+  //if(mt==60)std::cout<<"TNudyEndfEnergyAng::GetLaw6: law size -> "<<size<<std::endl;
   for (int i = 0; i < size; i++) {
+   // std::cout << "Mt6Values[ielemId][" << i << "] :" <<  Mt6Values[ielemId][i] << std::endl;
     if (Mt6Values[ielemId][i] == mt) {
+     //std::cout<<mt<<"     TNudyEndfEnergyAng::GetLaw6: law -> "<<Law6[ielemId][i]<<std::endl;
       return Law6[ielemId][i];
     }
   }
@@ -1032,10 +1046,7 @@ int TNudyEndfEnergyAng::GetLaw6(int ielemId, int mt)
 //------------------------------------------------------------------------------------------------------
 double TNudyEndfEnergyAng::GetCos64(int ielemId, int mt, double energyK)
 {
-
 //std::cout<<"TNudyEndfEnergyAng::GetCos64"<<std::endl;
-
-
   fRnd  = new TRandom3(0);
   int i = -1;
 //   std::cout <<"mt4 values in file 6  "<< Mt4Values[ielemId].size() << std::endl;
@@ -1106,9 +1117,6 @@ double TNudyEndfEnergyAng::GetCos64(int ielemId, int mt, double energyK)
 //------------------------------------------------------------------------------------------------------
 double TNudyEndfEnergyAng::GetCos6(int ielemId, int mt, double energyK)
 {
-
-  std::cout<<"TNudyEndfEnergyAng::GetCos6"<<std::endl;
-
   fRnd  = new TRandom3(0);
   int i = -1;
   for (unsigned int l = 0; l < Mt5Values[ielemId].size(); l++) {
@@ -1154,7 +1162,7 @@ double TNudyEndfEnergyAng::GetCos6(int ielemId, int mt, double energyK)
       break;
     }
   }
-   std::cout<<"cosine bin "<< k <<"  "<< cos6OfMts[ielemId][i][min][k] << std::endl;
+   //std::cout<<"cosine bin "<< k <<"  "<< cos6OfMts[ielemId][i][min][k] << std::endl;
   double plk = (cosin6Pdf[ielemId][i][min][k + 1] - cosin6Pdf[ielemId][i][min][k]) /
                (cos6OfMts[ielemId][i][min][k + 1] - cos6OfMts[ielemId][i][min][k]);
   double plk2 = cosin6Pdf[ielemId][i][min][k] * cosin6Pdf[ielemId][i][min][k];
@@ -1162,12 +1170,12 @@ double TNudyEndfEnergyAng::GetCos6(int ielemId, int mt, double energyK)
   // std::cout <<"plk "<< plk <<" plk2 "<< plk2 <<"  "<< k << std::endl;
   if (plk != 0 && plsq > 0) {
     Ang = cos6OfMts[ielemId][i][min][k] + (sqrt(std::fabs(plsq)) - cosin6Pdf[ielemId][i][min][k]) / plk;
-     std::cout<< Ang <<" first "<< rnd1 << std::endl;
+     //std::cout<< Ang <<" first "<< rnd1 << std::endl;
   } else {
     Ang = 2 * rnd1 - 1;
-    std::cout<< Ang <<" sec  "<< rnd1 << std::endl;
+    //std::cout<< Ang <<" sec  "<< rnd1 << std::endl;
   }
-   std::cout<<"B4 return "<< Ang << std::endl;
+  // std::cout<<"B4 return "<< Ang << std::endl;
   return Ang;
 }
 //------------------------------------------------------------------------------------------------------
@@ -1237,7 +1245,261 @@ double TNudyEndfEnergyAng::GetEnergy6(int ielemId, int mt, double energyK)
             energyPdf6OfMts[ielemId][i][min][k][m]) /
                plk;
                
-       std::cout<<"edes: "<<edes<<std::endl;        
+       //std::cout<<"edes: "<<edes<<std::endl;        
                
   return edes;
 }
+//______________________________________________________________________________
+void TNudyEndfEnergyAng::GetAd6V(int ielemId, int mt)
+{
+  int size = AD6[ielemId].size();
+  for (int i = 0; i < size; i++) {
+    if (Mt6Values[ielemId][i] == mt) {
+       infoParticles.pA.push_back(AD6[ielemId][i]);
+    }
+  }
+}
+//______________________________________________________________________________
+void TNudyEndfEnergyAng::GetZd6V(int ielemId, int mt)
+{
+  int size = ZD6[ielemId].size();
+  int count=0;
+  for (int i = 0; i < size; i++) {
+    if (Mt6Values[ielemId][i] == mt) {
+    count=count+1;
+    // std::cout<<"No. of particles: TNudyEndfEnergyAng::GetZd6V "<<count<<std::endl;
+      //std::cout<<"zd6: "<<ZD6[ielemId][i]<<std::endl;
+      infoParticles.pZ.push_back(ZD6[ielemId][i]);
+    }
+  }
+}
+//SPB
+//______________________________________________________________________________
+//______________________________________________________________________________
+//------------------------------------------------------------------------------------------------------
+void TNudyEndfEnergyAng::GetLaw6V(int ielemId, int mt)
+{
+   int size = Law6[ielemId].size();
+  //std::cout<<" TNudyEndfEnergyAng::GetLaw6V -> size-> "<< size<<std::endl;
+  for (int i = 0; i < size; i++) {
+    if (Mt6Values[ielemId][i] == mt) {
+    //std::cout<<"Law6[ielemId][i]: "<<Law6[ielemId][i]<<std::endl;
+       infoParticles.lawZA.push_back(Law6[ielemId][i]);
+    }
+  }
+}
+//------------------------------------------------------------------------------------------------------
+void TNudyEndfEnergyAng::GetCos64V(int ielemId, int mt, double energyK)
+{
+  fRnd  = new TRandom3(0);
+  int i = -1;
+  for (unsigned int l = 0; l < Mt4Values[ielemId].size(); l++) {
+    if (Mt4Values[ielemId][l] == mt) {
+      i = l;
+  int min = 0;
+  int max = energy4OfMts[ielemId][i].size() - 1;
+  int mid = 0;
+  if (energyK <= energy4OfMts[ielemId][i][min])
+    min = 0;
+  else if (energyK >= energy4OfMts[ielemId][i][max])
+    min = max - 1;
+  else {
+    while (max - min > 1) {
+      mid = (min + max) / 2;
+      if (energyK < energy4OfMts[ielemId][i][mid])
+        max = mid;
+      else
+        min = mid;
+    }
+  }
+  double fraction =
+      (energyK - energy4OfMts[ielemId][i][min]) / (energy4OfMts[ielemId][i][min + 1] - energy4OfMts[ielemId][i][min]);
+  // std::cout <<" fraction "<< fraction <<"  "<< energyK <<"  "<< energy4OfMts[ielemId][i][min] << std::endl;
+  double rnd1              = fRnd->Uniform(1);
+  double rnd2              = fRnd->Uniform(1);
+  if (rnd2 < fraction) min = min + 1;
+  int k                    = 0;
+  // std::cout<<" pdf size "<< cosPdf4OfMts[ielemId][i][min].size()/2 << std::endl;
+  int size = cosCdf4OfMts[ielemId][i][min].size();
+  for (int j = 1; j < size; j++) {
+    // std::cout<<"cdf "<< cosCdf4OfMts[ielemId][i][min][2 * j ] <<"  "<< cosCdf4OfMts[ielemId][i][min][2 * j + 1] <<
+    // std::endl;
+    if (rnd1 <= cosCdf4OfMts[ielemId][i][min][j]) {
+      k                    = j - 1;
+      if (k >= size - 2) k = size - 2;
+      break;
+    }
+  }
+  // for(int j = 0; j < size; j++){
+  //  std::cout <<cos4OfMts[ielemId][i][min][j] <<"  "<<cosPdf4OfMts[ielemId][i][min][j] << std::endl;
+  //}
+
+  // std::cout<< k <<"  "<<cos4OfMts[ielemId][i][min][k]<<"  "<<cosPdf4OfMts[ielemId][i][min][k] <<"
+  // "<<cosCdf4OfMts[ielemId][i][min][ k] << std::endl;
+  // std::cout<<" pdf "<<k<<"  "<< cosPdf4OfMts[ielemId][i][min][2 * k + 3]<<"  "<< cosPdf4OfMts[ielemId][i][min][2 * k
+  // + 1] << std::endl;
+  // std::cout<<" cos "<< cosPdf4OfMts[ielemId][i][min][2 * k + 2]<<"  "<< cosPdf4OfMts[ielemId][i][min][2 * k ] <<
+  // std::endl;
+  double plk = (cosPdf4OfMts[ielemId][i][min][k + 1] - cosPdf4OfMts[ielemId][i][min][k]) /
+               (cos4OfMts[ielemId][i][min][k + 1] - cos4OfMts[ielemId][i][min][k]);
+  double plk2 = cosPdf4OfMts[ielemId][i][min][k] * cosPdf4OfMts[ielemId][i][min][k];
+  double plsq = plk2 + 2 * plk * (rnd1 - cosCdf4OfMts[ielemId][i][min][k]);
+  double Ang  = 0;
+  if (plk != 0 && plsq > 0) {
+    Ang = cos4OfMts[ielemId][i][min][k] + (sqrt(std::fabs(plsq)) - cosPdf4OfMts[ielemId][i][min][k]) / plk;
+  } else {
+    // std::cout <<"uniform angle "<< mt << std::endl;
+    Ang = 2 * rnd1 - 1;
+  }
+  //std::cout <<Ang<<"  uniform angle "<< Ang << std::endl;
+  infoParticles.cosang64.push_back(Ang);
+  
+    }
+  }
+ // return cosang64;
+}
+//------------------------------------------------------------------------------------------------------
+void TNudyEndfEnergyAng::GetCos6V(int ielemId, int mt, double energyK)
+{
+  fRnd  = new TRandom3(0);
+  int i = -1;
+  for (unsigned int l = 0; l < Mt5Values[ielemId].size(); l++) {
+    // std::cout<< Mt5Values[ielemId][l] << std::endl;
+    if (Mt5Values[ielemId][l] == mt) {
+      i = l;
+     // break;
+    //}
+ // }
+  // std::cout<<" i "<<i <<std::endl;
+  int min = 0;
+  int max = energy5OfMts[ielemId][i].size() - 1;
+  //std::cout<<"mt "<< mt <<" "<< i << "  "<< energy5OfMts[ielemId][i].size()<<"  "<<energy5OfMts[ielemId][i][max] << std::endl;
+  int mid = 0;
+  if (energyK <= energy5OfMts[ielemId][i][min])
+    min = 0;
+  else if (energyK >= energy5OfMts[ielemId][i][max])
+    min = max - 1;
+  else {
+    while (max - min > 1) {
+      mid = (min + max) / 2;
+      if (energyK < energy5OfMts[ielemId][i][mid])
+        max = mid;
+      else
+        min = mid;
+    }
+  }
+  double fraction =
+      (energyK - energy5OfMts[ielemId][i][min]) / (energy5OfMts[ielemId][i][min + 1] - energy5OfMts[ielemId][i][min]);
+  // std::cout <<" fraction "<< fraction <<"  "<< energyK <<"  "<< energy4OfMts[ielemId][i][min] << std::endl;
+  double rnd1              = fRnd->Uniform(1);
+  double rnd2              = fRnd->Uniform(1);
+  if (rnd2 < fraction) min = min + 1;
+  double Ang               = 0;
+  // std::cout<<"energy bin "<< min <<"   "<< energy5OfMts[ielemId][i][min] << std::endl;
+  int k    = 0;
+  int size = cos6OfMts[ielemId][i][min].size();
+  // std::cout<<"cosine size "<<  size << std::endl;
+  for (unsigned int j = 0; j < cos6OfMts[ielemId][i][min].size(); j++) {
+    if (rnd1 < cosin6Cdf[ielemId][i][min][j]) {
+      k                    = j - 1;
+      if (k >= size - 2) k = size - 2;
+      break;
+    }
+  }
+   //std::cout<<"cosine bin "<< k <<"  "<< cos6OfMts[ielemId][i][min][k] << std::endl;
+  double plk = (cosin6Pdf[ielemId][i][min][k + 1] - cosin6Pdf[ielemId][i][min][k]) /
+               (cos6OfMts[ielemId][i][min][k + 1] - cos6OfMts[ielemId][i][min][k]);
+  double plk2 = cosin6Pdf[ielemId][i][min][k] * cosin6Pdf[ielemId][i][min][k];
+  double plsq = plk2 + 2 * plk * (rnd1 - cosin6Cdf[ielemId][i][min][k]);
+  // std::cout <<"plk "<< plk <<" plk2 "<< plk2 <<"  "<< k << std::endl;
+  if (plk != 0 && plsq > 0) {
+    Ang = cos6OfMts[ielemId][i][min][k] + (sqrt(std::fabs(plsq)) - cosin6Pdf[ielemId][i][min][k]) / plk;
+     //std::cout<< Ang <<" first "<< rnd1 << std::endl;
+  } else {
+    Ang = 2 * rnd1 - 1;
+    //std::cout<< Ang <<" sec  "<< rnd1 << std::endl;
+  }
+  infoParticles.cosang6.push_back(Ang);
+  
+    }
+  }
+}
+//------------------------------------------------------------------------------------------------------
+void TNudyEndfEnergyAng::GetEnergy6V(int ielemId, int mt, double energyK)
+{
+  fRnd  = new TRandom3(0);
+  int i = -1;
+  for (unsigned int l = 0; l < Mt5Values[ielemId].size(); l++) {
+    if (Mt5Values[ielemId][l] == mt) {
+      i = l;
+     // break;
+   // }
+  //}
+  int min = 0;
+  int max = energy5OfMts[ielemId][i].size() - 1;
+  int mid = 0;
+  if (energyK <= energy5OfMts[ielemId][i][min])
+    min = 0;
+  else if (energyK >= energy5OfMts[ielemId][i][max])
+    min = max - 1;
+  else {
+    while (max - min > 1) {
+      mid = (min + max) / 2;
+      if (energyK < energy5OfMts[ielemId][i][mid])
+        max = mid;
+      else
+        min = mid;
+    }
+  }
+  double fraction =
+      (energyK - energy5OfMts[ielemId][i][min]) / (energy5OfMts[ielemId][i][min + 1] - energy5OfMts[ielemId][i][min]);
+  double rnd1              = fRnd->Uniform(1);
+  double rnd2              = fRnd->Uniform(1);
+  double rnd3              = fRnd->Uniform(1);
+  if (rnd2 < fraction) min = min + 1;
+  // std::cout<<"energy bin "<< min <<"   "<< energy5OfMts[ielemId][i][min] << std::endl;
+  int k    = 0;
+  int size = cos6OfMts[ielemId][i][min].size();
+  for (int j = 0; j < size; j++) {
+    if (rnd3 < cosin6Cdf[ielemId][i][min][j]) {
+      k                    = j - 1;
+      if (k >= size - 2) k = size - 2;
+      break;
+    }
+  }
+  // std::cout<<"cosine bin "<< k <<"  "<< cos6OfMts[ielemId][i][min][k] << std::endl;
+  int m = 0;
+  size  = energyCdf6OfMts[ielemId][i][min][k].size();
+  for (unsigned int j = 1; j < energyPdf6OfMts[ielemId][i][min][k].size(); j++) {
+    if (rnd1 <= energyCdf6OfMts[ielemId][i][min][k][j]) {
+      m                    = j - 1;
+      if (m >= size - 2) m = size - 2;
+      break;
+    }
+  }
+  // std::cout<<"energy bin "<< m <<"  "<< energyOut6OfMts[ielemId][i][min][k][m] << std::endl;
+  double plk = (energyPdf6OfMts[ielemId][i][min][k][m + 1] - energyPdf6OfMts[ielemId][i][min][k][m]) /
+               (energyOut6OfMts[ielemId][i][min][k][m + 1] - energyOut6OfMts[ielemId][i][min][k][m]);
+  double plk2 = energyPdf6OfMts[ielemId][i][min][k][m] * energyPdf6OfMts[ielemId][i][min][k][m];
+  // std::cout <<"plk "<< plk <<" plk2 "<< plk2  << std::endl;
+  double edes = 0;
+  if (plk != 0)
+    edes = energyOut6OfMts[ielemId][i][min][k][m] +
+           (sqrt(plk2 + 2 * plk * (rnd1 - energyCdf6OfMts[ielemId][i][min][k][m])) -
+            energyPdf6OfMts[ielemId][i][min][k][m]) /
+               plk;
+    infoParticles.Energy6.push_back(edes);       
+    }
+  }         
+}
+
+//------------------------------------------------------------------------------------------------------
+void TNudyEndfEnergyAng::Reset() {
+  infoParticles.pZ.clear();
+  infoParticles.pA.clear();
+  infoParticles.lawZA.clear();
+  infoParticles.cosang6.clear();
+  infoParticles.cosang64.clear();
+  infoParticles.Energy6.clear();
+ }
+

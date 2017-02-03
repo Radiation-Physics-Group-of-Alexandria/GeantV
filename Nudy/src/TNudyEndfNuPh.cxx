@@ -165,6 +165,14 @@ TNudyEndfNuPh::TNudyEndfNuPh(TNudyEndfFile *file)
         double ENU = list->GetLIST(12);
         //	double ER  = list->GetLIST(14);
         // double ET  = list->GetLIST(16);
+        std::cout<<"total energy release in fission:"<<list->GetLIST(16)<<std::endl;
+        kineticenergyFF = EFR;
+        totalPromptGammaEnergy = EGP;
+        totalDelayedGammaEnergy = EGD;
+        totalDelayedBetaEnergy = EB;
+        totalNeutrinosEnergy = ENU;
+        totalEnergyFission = list->GetLIST(16);
+  
         double ein = 1E-5;
         do {
           double EFis = 0;
@@ -418,3 +426,34 @@ double TNudyEndfNuPh::GetLambdaD(int ielemid, int time)
   if (time > (int)lambdaD[ielemid].size() - 1) return -99.0;
   return lambdaD[ielemid][time];
 }
+//______________________________________________________________________________
+double TNudyEndfNuPh::GetkineticEnergyFF(int ielemid, double energyK)
+{
+return kineticenergyFF; //Total energy Fission Fragments(FFs)
+}
+//______________________________________________________________________________
+double TNudyEndfNuPh::GetPromptGammaEnergyFission(int ielemid, double energyK)
+{
+return totalPromptGammaEnergy; //total prompt gamma energy
+}
+//______________________________________________________________________________
+double TNudyEndfNuPh::GetDelayedGammaEnergyFission(int ielemid, double energyK)
+{
+return totalDelayedGammaEnergy; //total delayed gamma energy
+}
+//______________________________________________________________________________
+double TNudyEndfNuPh::GetDelayedBetaEnergyFission(int ielemid, double energyK)
+{
+return totalDelayedBetaEnergy; //total delayed beta energy
+}
+//______________________________________________________________________________
+double TNudyEndfNuPh::GetNeutrinoEnergyFission(int ielemid, double energyK)
+{
+return totalNeutrinosEnergy; //total delayed beta energy
+}
+//______________________________________________________________________________
+double TNudyEndfNuPh::GetTotalEnergyFission(int ielemid, double energyK)
+{
+return totalEnergyFission; //total delayed beta energy
+}
+//______________________________________________________________________________

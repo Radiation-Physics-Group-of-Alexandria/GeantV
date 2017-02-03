@@ -665,8 +665,9 @@ double TNudyEndfEnergy::GetEnergy5(int ielemId, int mt, double energyK)
   for (unsigned int l = 0; l < Mt5Values[ielemId].size(); l++) {
     if (Mt5Values[ielemId][l] == mt) {
       i = l;
+      //std::cout<< mt << " TNudyEndfEnergy::GetEnergy5: "<<Mt5Values[ielemId][l]<<std::endl;
       break;
-    }
+     }
   }
   // std::cout<<"i "<< i <<"  "<< Mt5Values[ielemId][i] <<"  "<<energy5OfMts[ielemId][i].size() << std::endl;
   if (i < 0) return 99;

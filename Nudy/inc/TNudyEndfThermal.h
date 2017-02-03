@@ -42,12 +42,12 @@ public:
   virtual ~TNudyEndfThermal();
   void GetData(const char *irENDF, double isigDiff);
   //double nThermalElasticXsecion();
-  double nThermalElasticXsecion(double En);
-  
+  double nThermalElasticXsecion(double inputEnergy, double inputTemprature);
+  void   storeElasticXsecion();
   
   private:
  void ReadFile7(TNudyEndfFile *file);
- double recursionLinearFile7(double x1, double x2, double sig1, double sig2, rowd x3, rowd x4);
+ double LinearInterpolFile7(double x1, double x2, double sig1, double sig2, rowd x3, rowd x4);
  
   double fun(double, double, double, double);
   double simpson(double, double, int);
@@ -78,6 +78,8 @@ public:
   
   rowd dummy_eElastic;
   rowd dummy_sElastic;
+  rowd dummy2_eElastic;
+  rowd dummy2_sElastic;
   
   rowd eIncInelastic;
   rowd sIncInelastic;
@@ -97,10 +99,12 @@ public:
   rowd tempThermalXsec;
   rowd tempEthermal;
   double beta[200];
-  
+  //static const int n1=5000;
+  int nEnergygrid =0 ;
   
   double tSet[1000][1000];
   double sigb;   // bound x-section
+  double nXsec=0; // coherent elastic x-section
   double sig_ies = 0; // coherent inelastic x-section
  // double DW;    // DebyeWaller factor
   rowd temp;      // temperature for incoherent elastic scattering
@@ -111,7 +115,7 @@ public:
   rowd temp_T;
   matrixd3 tempalpS;// temperature,alpha,S
   rowd cnc, Set;
-  matrixd2 eint, nut,tSalp;                     // total incident energy and nu,  all elements
+  matrixd2 tempIncoElastic, DWIncoElastic;                     // total incident energy and nu,  all elements
   matrixd2 einp, nup;                     // prompt incident energy and nu,  all elements
   matrixd2 eind, nud, lambdaD;            // delayed incident energy and nu,  all elements
   matrixd2 einFissHeat, fissHeat;         // fission incident energy and heat,  all elements
@@ -120,6 +124,16 @@ public:
   rowd ein;
   TRandom3 *r1;
   TRandom3 *r2;
+     // dimensions
+  int N = 10000;
+  int M = 10000;
+   
+  // dynamic allocation
+  double** E; 
+  double** X;  
+  double* tempE; 
+  double* tempX; 
+  double* Temprature;
   
 #ifdef USE_ROOT
   TRandom3 *fRnd;

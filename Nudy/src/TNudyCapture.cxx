@@ -1,19 +1,16 @@
-// Various interaction process of neutron: Selection of secondary particle type, its energy and angle
-//The final state product residues mass and charges are assigned considering the incident particle
-//as a neutron. The charge and mass of the residue will change depending upon incident particle as
-//a charge particle or photon.
-#include <iostream>
-//#include "TNudyEndfDoppler.h"
-//#include "TNudyEndfAng.h"
-//#include "TNudyEndfEnergy.h"
-//#include "TNudyEndfEnergyAng.h"
-//#include "TNudyEndfFissionYield.h"
-#include "ElementProp.h"
+//SPB
+//Neutron Capture process
+//The energy and angle of out going gamma is not yet set. The default values are set zero
+//From this class, we are getting the neutron capture cross-section at temprature of 293.606087K.
 #include "TNudyCore.h"
 #include "TNudyEndfRecoPoint.h"
 #include "TNudyCapture.h"
 #include "TNudyEndfMat.h"
 #include "TNudyElement.h"
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
 #ifdef USE_ROOT
 #include "TRandom3.h"
 #endif
@@ -24,15 +21,23 @@ using namespace std;
 ClassImp(TNudyCapture)
 #endif
 
-TNudyCapture::TNudyCapture(){
-   
-}
+const char TNudyCapture::fkElNam[119][4] = {
+        "n",  "H",  "He", "Li", "Be", "B",  "C",  "N",  "O",  "F",  "Ne", "Na",  "Mg",  "Al",  "Si",  "P",   "S",
+        "Cl", "Ar", "K",  "Ca", "Sc", "Ti", "V",  "Cr", "Mn", "Fe", "Co", "Ni",  "Cu",  "Zn",  "Ga",  "Ge",  "As",
+        "Se", "Br", "Kr", "Rb", "Sr", "Y",  "Zr", "Nb", "Mo", "Tc", "Ru", "Rh",  "Pd",  "Ag",  "Cd",  "In",  "Sn",
+        "Sb", "Te", "I",  "Xe", "Cs", "Ba", "La", "Ce", "Pr", "Nd", "Pm", "Sm",  "Eu",  "Gd",  "Tb",  "Dy",  "Ho",
+        "Er", "Tm", "Yb", "Lu", "Hf", "Ta", "W",  "Re", "Os", "Ir", "Pt", "Au",  "Hg",  "Tl",  "Pb",  "Bi",  "Po",
+        "At", "Rn", "Fr", "Ra", "Ac", "Th", "Pa", "U",  "Np", "Pu", "Am", "Cm",  "Bk",  "Cf",  "Es",  "Fm",  "Md",
+        "No", "Lr", "Rf", "Db", "Sg", "Bh", "Hs", "Mt", "Ds", "Rg", "Cn", "Uut", "Uuq", "Uup", "Uuh", "Uus", "Uuo"};
+
+
+TNudyCapture::TNudyCapture(){}
 
 TNudyCapture::TNudyCapture(int ElemId, const char* rootfileName)
 {
-    ielemId =  ElemId;// for element number like say for H=1, U=2, the way we number the elements for material having composite elements
+    ielemId =  ElemId;// for element number like say for H=1, U=2, the way we number the elements for materials having composite elements
     
-    elemId=ElemId;
+    //elemId=ElemId;
     fRnd     = new TRandom3(0);
     const char* irENDF=rootfileName;//"/home/shiba/geant/rootendf/O16.root";
     rp = new TNudyEndfRecoPoint(ielemId, irENDF);
@@ -54,192 +59,129 @@ void TNudyCapture::nCaptureXsec(double nuEn, TNudyElement *targetElement)
         MF5 = rp->GetMt5(ielemId, MT);
         MF6 = rp->GetMt6(ielemId, MT);
         LCT = rp->GetCos4Lct(ielemId, MT);
-        if(MT == 102){
+        switch (MT) {
+               case 102:{
           residueACa = mass + 1;
           residueZCa = charge;
           sigmaCapture = rp->GetSigmaPartial(ielemId, crsp, kineticE);
           sigmaTotal   = rp->GetSigmaTotal(ielemId, kineticE);
           procNameCap  = "nCapture"; 
-          nameC        =  "gamma";
-          cosLabC = 0;
-          secEnergyCMC = 0;
-          secEnergyLabC = 0;
-          cout<<"In nCapture process the energy and angle of out going gamma is not yet set:"<<
-                "default values are set zero"<<endl;
+          name        =  "gamma";
+          cosLab = 0;
+          secEnergyCM = 0;
+          secEnergyLab = 0;
+          
+          std::cout<<"***********************************************************"<<std::endl;
+          std::cout<<"*"<<"                     IMPORTANT NOTE                      *"<<std::endl;
+          std::cout<<"*"<<" In nCapture process the angle of out going gamma is not *"<<std::endl;
+          std::cout<<"*"<<" yet set: assumed fixed value is considered              *"<<std::endl;
+          std::cout<<"***********************************************************"<<std::endl;
+          productsName.push_back("gamma");
+          residueType = residueName(residueZCa, residueACa);
+          productsName.push_back(residueType);
+          residueKineticEnergy = 0.0;
+          residuecosAng = 0.0;
+          GetSecParameters(targetElement, rp);
+          nCaptureProductsEnergy.push_back(secEnergyLab);
+          nCaptureProductsEnergy.push_back(residueKineticEnergy);
+          nCaptureProductscosAng.push_back(cosLab);
+          nCaptureProductscosAng.push_back(residuecosAng);
+          }break;
         }
       }
  }       
+//______________________________________________________________________________
+void TNudyCapture::GetSecParameters(TNudyElement *targetElement, TNudyEndfRecoPoint *recoPoint)
+{
+// Here fe3  : photon energy, 
+// Incident particle energy and Q-value are given in eV
 
-//________________________________________________________________________________________     
+    double vc = 3*pow(10.0,8.0);
+    double vc2 = vc*vc;
+     double u = 931.494;//MeV/C^2;
+    double fm1 = 1.0 * u; // mass of projectile as neutron
+    double fm2 = mass*u; // mass of target
+    double fm4 = (mass + 1.0)*u; // mass of residue
+    double fm3 =0.0;// (fm1 + fm2 - fm4); // mass of secondary particle
+    double fqval =  1.0E-6*recoPoint->GetQValue(ielemId, MT) ;
+    double cosAng = 0.1 ; // cos(theta) of emitted gamma in Lab 
+    //std::cout<<"fm1: "<<fm1<< "   fm2 "<<fm2<<" fm3 : "<<fm3<< " fm4: "<<fm4<<std::endl;
+    double phiResidue; // Angle of residue
+    double gammaEnergy;
+    double recoilEnergy;
+    double sinAng = sqrt(1- cosAng*cosAng);        
+    double fact1,fact2;      
+        
+        kineticE = kineticE*1.0E-6;  
+        gammaEnergy = (fqval*(fm1+fm2+fm4)*0.5 + fm2*kineticE)/(fm1+fm2 + kineticE - cosAng*sqrt(kineticE*(2*fm1+kineticE)));
+        //cout<<"Energy of gamma : "<<gammaEnergy<<endl;
+        //thermal neutron capture kinematics
+        //Egamma = (fm4)*(sqrt(1+(2*fqval/fm4)) -1);
+        recoilEnergy = gammaEnergy*gammaEnergy/(2*fm4);
+        //cout<<"Energy of gamma in MeV : "<<gammaEnergy<<" Recoil energy in MeV: "<<recoilEnergy<< " " << gammaEnergy + recoilEnergy<<endl;
+        fact1 = 1.0/gammaEnergy;
+        fact2 = fact1* sqrt(2*fm1*kineticE);
+        phiResidue = atan(sinAng/(fact2 - cosAng));
+        cosLab = cosAng;
+        secEnergyLab = gammaEnergy*1.0E6; // converting MeV to eV
+        residueKineticEnergy = recoilEnergy*1.0E6; // converting MeV to eV
+        residuecosAng = cos(phiResidue);
+   
+}
+//______________________________________________________________________________     
 std::string TNudyCapture::GetCaptureProcessName()
 { 
      return procNameCap;
 }
-
+//______________________________________________________________________________
 double TNudyCapture::GetCaptureXsec()
 { 
        return sigmaCapture;
 } 
-
-
-std::string TNudyCapture::GetParticleCapture()
+//______________________________________________________________________________
+std::vector<std::string> TNudyCapture::nCaptureGetsecParticles()
 { 
-     return nameC;
+     return productsName;
 }
-
-//________________________________________________________________________________________
-double TNudyCapture::GetKiEnCapture(){ 
-       return secEnergyLabC;
+//______________________________________________________________________________
+std::vector<double> TNudyCapture::nCaptureGetEnergy(){ 
+       return nCaptureProductsEnergy;
   }
-//________________________________________________________________________________________
-double TNudyCapture::GetcosAngCapture()
+//______________________________________________________________________________
+std::vector<double> TNudyCapture::nCaptureGetcosAng()
 { 
-      return cosLabC;
+      return nCaptureProductscosAng;
 }
-//_________________________________________________________________________________________
-//LCT Flag to specify the frame of reference used
-//LCT=1, the data are given in the LAB system
-//LCT=2, the data are given in the CM system
-//MF=File number
-//MT=Reaction number due to various reaction type
-void TNudyCapture::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoPoint *recoPoint)
+//_____________________________________________________________________________
+std::string TNudyCapture::residueName(int Z, int A)
 {
-
-   double massT= targetElement->GetatomicMass();
-  // cout<<"Mass of Target:::::::::::::::\t"<<massT<<endl;
-   if (MF4 == 4 && MF5 == 5) {
-        //cout<<"angle in CM:\t"<<recoPoint->GetCos4(ielemId, MT, kineticE)<<endl;
-        cosCM        = recoPoint->GetCos4(ielemId, MT, kineticE);
-        secEnergyCM  = recoPoint->GetEnergy5(ielemId, MT, kineticE);
-       //cout<< "CM cos(angle) and energy:\t"<<cosCM<<"\t"<<secEnergyCM<<endl;
-        secEnergyLab = TNudyCore::Instance()->cmToLabInelasticE(secEnergyCM, kineticE, cosCM, massT);
-       if (LCT == 2) {
-          cosLab = TNudyCore::Instance()->cmToLabInelasticCosT(secEnergyLab, secEnergyCM, kineticE, cosCM,
-                                                           massT);
-          }else if (LCT == 1) {
-           cosLab       = cosCM;
-           secEnergyLab = secEnergyCM;
-          }
-    }else if (MF4 == 4 && MF5 == -1) {
-    cosCM      = recoPoint->GetCos4(ielemId, MT, kineticE);
-    double fm1 = 1;
-    double fm2 = massT;
-    double fm4 = residueACa;
-    double fm3 = massT - residueACa;
-  //cout<<"Mass of particles:"<<fm1<<"\t"<<fm2<<"\t"<<fm3<<"\t"<<fm4<<"\t"<<MT<<endl;
-  // double fqval =  recoPoint->GetQValue(ielemId, MT) ;
-    double fsi  = fm1 + fm2;
-    double fdi  = fm1 - fm2;
-    double fsf  = fm3 + fm4;
-    double fdf  = fm3 - fm4;
-    double fs   = fsi * fsi + 2 * fm2 * kineticE;
-    double fki2 = (fs - fsi * fsi) * (fs - fdi * fdi) / (4 * fs);
-    double fkf2 = (fs - fsf * fsf) * (fs - fdf * fdf) / (4 * fs);
-    double fz2  = sqrt(fki2 + fm2 * fm2);
-    double fz3  = sqrt(fkf2 + fm3 * fm3);
-    // double fz4 = sqrt(fkf2 + fm4 * fm4);
-    double fe3 = (fz2 * fz3 - sqrt(fki2 * fkf2) / fm2) - fm3;
-    // double fe4 = (fz2 * fz4 - sqrt(fki2 * fkf2)/fm2) - fm4;
-    // double fp12 = kineticE * kineticE + 2 * fm1 * kineticE;
-    // double fp32 = fe3 * fe3 + 2 * fm3 * fe3;
-    // double fp42 = fe4 * fe4 + 2 * fm4 * fe4;
-    // double fcos3 = ((kineticE + fsi)*(fe3 + fm3)- fz3 * sqrt(fs))/sqrt(fp12*fp32);
-    // double fcos4 = ((kineticE + fsi)*(fe4 + fm4)- fz4 * sqrt(fs))/sqrt(fp12*fp42);
-   //if(cosCM>1)std::cout<<"cos CM = "<< cosCM << std::endl;
-    // secEnergyCM = recoPoint->GetEnergy5(ielemId, MT, kineticE);
-    secEnergyLab = fe3;
-    if (LCT == 2) {
-      cosLab = TNudyCore::Instance()->cmToLabInelasticCosT(secEnergyLab, secEnergyCM, kineticE, cosCM,
-                                                           massT);
-     } else if (LCT == 1) {
-       cosLab = cosCM;
-     }
-   }else if (MF4 == 99 && MF5 == 5) {
-    double fm1 = 1;
-    double fm2 = massT;
-    double fm4 = residueACa;
-    double fm3 = massT - residueACa;
-    // double fqval =  recoPoint->GetQValue(ielemId, MT) ;
-    double fsi  = fm1 + fm2;
-    double fdi  = fm1 - fm2;
-    double fsf  = fm3 + fm4;
-    double fdf  = fm3 - fm4;
-    double fs   = fsi * fsi + 2 * fm2 * kineticE;
-    double fki2 = (fs - fsi * fsi) * (fs - fdi * fdi) / (4 * fs);
-    double fkf2 = (fs - fsf * fsf) * (fs - fdf * fdf) / (4 * fs);
-    double fz2  = sqrt(fki2 + fm2 * fm2);
-    double fz3  = sqrt(fkf2 + fm3 * fm3);
-    // double fz4 = sqrt(fkf2 + fm4 * fm4);
-    double fe3 = (fz2 * fz3 - sqrt(fki2 * fkf2) / fm2) - fm3;
-    // double fe4 = (fz2 * fz4 - sqrt(fki2 * fkf2)/fm2) - fm4;
-    double fp12 = kineticE * kineticE + 2 * fm1 * kineticE;
-    double fp32 = fe3 * fe3 + 2 * fm3 * fe3;
-    // double fp42 = fe4 * fe4 + 2 * fm4 * fe4;
-    cosLab = ((kineticE + fsi) * (fe3 + fm3) - fz3 * sqrt(fs)) / sqrt(fp12 * fp32);
-    // double fcos4 = ((kineticE + fsi)*(fe4 + fm4)- fz4 * sqrt(fs))/sqrt(fp12*fp42);
-    secEnergyLab = fe3;
-  } else if (MF4 == 99 && MF5 == -1 && MF6 == 6) {
-    int law = recoPoint->GetLaw6(ielemId, MT);
-    // std::cout<<"law "<< law << std::endl;
-    switch (law) {
-    case 2: {
-      cosCM         = recoPoint->GetCos64(ielemId, MT, kineticE);
-      double fm1    = 1;
-      double fm2    = massT;
-      double fm3    = massT - residueACa;
-      double fm4    = residueACa;
-      double fqval  = recoPoint->GetQValue(ielemId, MT);
-      double fEt    = kineticE + fqval;
-      double fm1m2  = fm1 + fm2;
-      double fm3m4  = fm3 + fm4;
-      double fA1    = fm1 * fm4 * (kineticE / fEt) / (fm1m2 * fm3m4);
-      double fB1    = fm1 * fm3 * (kineticE / fEt) / (fm1m2 * fm3m4);
-      double fC1    = fm2 * fm3 * (1 + fm1 * fqval * fm4 / (fEt * fm1)) / (fm1m2 * fm3m4);
-      double fD1    = fm2 * fm4 * (1 + fm1 * fqval * fm4 / (fEt * fm1)) / (fm1m2 * fm3m4);
-      secEnergyLab  = fEt * (fB1 + fD1 + 2 * sqrt(fA1 * fC1) * cosCM);
-      double sinLab = fD1 * cosCM * fEt / secEnergyLab;
-      cosLab        = sqrt(1 - sinLab * sinLab);
-      // std::cout<< cosLab <<"  "<<secEnergyLab << std::endl;
-    } break;
-    case 3:
-      break;
-    case 1:
-    case 6:
-      cosCM = recoPoint->GetCos6(ielemId, MT, kineticE);
-      // std::cout<<MT<<"\tcos:\t "<< cosCM << std::endl;
-      secEnergyCM = recoPoint->GetEnergy6(ielemId, MT, kineticE);
-      // std::cout<<"E "<< secEnergyCM<< std::endl;
-      secEnergyLab = TNudyCore::Instance()->cmToLabInelasticE(secEnergyCM, kineticE, cosCM, massT);
-      cosLab       = TNudyCore::Instance()->cmToLabInelasticCosT(secEnergyLab, secEnergyCM, kineticE, cosCM,
-                                                           massT);
-      break;
-    case 7:
-      cosLab = recoPoint->GetCos6(ielemId, MT, kineticE);
-      // std::cout<< cosLab << std::endl;
-      secEnergyLab = recoPoint->GetEnergy6(ielemId, MT, kineticE);
-      // std::cout<< secEnergyLab << std::endl;
-      break;
-    }
-  }
-// } 
   
+  stringstream ssZ;
+  ssZ << Z;
+  string strZ = ssZ.str();
   
+  stringstream ssA;
+  ssA << A;
+  string strA = ssA.str();
+  
+  std::string nameRes;
+  std::string finalName;
+  nameRes = fkElNam[Z];
+  finalName = strZ + nameRes + strA;
+  return finalName;
 }
-void TNudyCapture::FillHisto(double icosLab, double isecEnergyLab)
+//______________________________________________________________________________
+void TNudyCapture::nCaptureProcessReset()
 {
- // h->Fill(icosLab, isecEnergyLab / 1E9);
-  //h1->Fill(icosLab);
-  //h2->Fill(isecEnergyLab / 1E9);
-  // x[ecounter] = isecEnergyLab/1E9 ;
-  // y[ecounter] = icosLab ;
-  // if(events<=1000000)ecounter ++ ;
+  nCaptureProductsEnergy.clear();
+  nCaptureProductscosAng.clear();
+  productsName.clear();
 }
-//
-//_________________________________________________________________________________________________________________
+//______________________________________________________________________________
 TNudyCapture::~TNudyCapture()
 {
 delete fRnd;
 delete rp;
-
- }
+}
+//______________________________________________________________________________
 

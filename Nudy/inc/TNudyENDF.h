@@ -23,11 +23,12 @@ class TNudyEndfINTG;
 #ifdef USE_ROOT
 #include "Rtypes.h"
 #endif
-
+#include<iostream>
 #include <sstream>
 #include <fstream>
+#include <string>
 using std::ifstream;
-
+using namespace std;
 #define LINLEN 256
 
 class TNudyENDF {
@@ -101,6 +102,7 @@ public:
   {
     std::string s0(fLine);
     std::string s2 = s0.substr(66, 4);
+    //cout<<"GetMTF:::::::::::::::::::: "<<s2<<endl;
     std::istringstream ss;
     ss.str(s2);
     mtf[0] = 0;

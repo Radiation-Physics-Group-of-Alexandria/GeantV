@@ -1,4 +1,4 @@
-// This class is reconstructing ENDF thermal scattering cross-section data and rewrite to ROOT file
+// This class is reconstructing ENDF thermal neutron scattering cross-section data and rewrite to ROOT file
 #include "TList.h"
 #include "TFile.h"
 #include "TKey.h"
@@ -23,7 +23,21 @@ ClassImp(TNudyEndfThermal)
 #endif
 
 TNudyEndfThermal::TNudyEndfThermal():rENDF(), sigDiff(0)
-{}
+{
+     
+  // dynamic allocation
+   E     = new double*[N];
+   X     = new double*[N];
+   tempE = new double[N];
+   tempX = new double[N];
+   Temprature = new double[N];
+   
+  for(int i = 0; i < N; ++i){
+      E[i] = new double[M];
+      X[i] = new double[M];
+  } 
+  
+}
 
 TNudyEndfThermal::TNudyEndfThermal(const char *irENDF, double isigDiff) : rENDF(irENDF), sigDiff(isigDiff)
 {
@@ -61,7 +75,7 @@ void TNudyEndfThermal::GetData(const char *rENDF, double isigDiff)
  }
 //______________________________________________________________________________
 
-double TNudyEndfThermal::recursionLinearFile7(double x1, double x2, double sig1, double sig2,
+double TNudyEndfThermal::LinearInterpolFile7(double x1, double x2, double sig1, double sig2,
                                               std::vector<double> ene, std::vector<double> sig)
 {
   //x:alpha, siga:S(alpha,T)
@@ -81,11 +95,12 @@ double TNudyEndfThermal::recursionLinearFile7(double x1, double x2, double sig1,
   if (fabs((siga - sigmid1) / sigmid1) <= sigDiff) {
     return 0;
   }else{
-    eLinElastic.push_back(mid);
-    sLinElastic.push_back(siga);
+    //eLinElastic.push_back(mid);
+    //sLinElastic.push_back(siga);
+    
    }
-   //recursionLinearFile7(x1, mid, sig1, siga, ene, sig);
-   //recursionLinearFile7(mid, x2, siga, sig2, ene, sig);
+   //LinearInterpolFile7(x1, mid, sig1, siga, ene, sig);
+   //LinearInterpolFile7(mid, x2, siga, sig2, ene, sig);
    return 0;
 }
 //______________________________________________________________________________
@@ -112,13 +127,14 @@ void TNudyEndfThermal::ReadFile7(TNudyEndfFile *file)
     MtNumbers.push_back(sec->GetMT());
     mtLTHR.push_back(LTHR);
     //cout<<header->GetC1()<<"\t"<<header->GetC2()<<"\t"<<header->GetL1()<<"\t"<<header->GetL2()<<"\t"<<header->GetN1()<<"\t"<<header->GetN2()<<endl;
-    cout<<sec->GetC1()<<"\t"<<sec->GetC2()<<"\t"<<sec->GetL1()<<"\t"<<sec->GetL2()<<"\t"<<sec->GetN1()<<"\t"<<sec->GetN2()<<"\t"<<sec->GetMAT()<<"\t"<<sec->GetMF()<<"\t"<<sec->GetMT()<<endl;
+    //cout<<sec->GetC1()<<"\t"<<sec->GetC2()<<"\t"<<sec->GetL1()<<"\t"<<sec->GetL2()<<"\t"<<sec->GetN1()<<"\t"<<sec->GetN2()<<"\t"<<sec->GetMAT()<<"\t"<<sec->GetMF()<<"\t"<<sec->GetMT()<<endl;
     TNudyEndfTab1 *tab1 = (TNudyEndfTab1 *)(sec->GetRecords()->At(0));
     if(MT==2){//Elastic scattering process
       //std::cout<<"energy "<< tab1->GetC2() <<"\t"<<tab1->GetNR()<<"\t"<<tab1->GetNP()<<std::endl;
       //ein.push_back(tab->GetC2());
       NR = tab1->GetNR();
       NP = tab1->GetNP();
+      nEnergygrid = tab1->GetNP();
       //if(sec->GetL1()==1){ //GetL1()==LTHR, 1->for coherent elastic scattering
       switch(LTHR) {
         case 1 :{ //GetL1()==LTHR, 1->for coherent elastic scattering
@@ -127,36 +143,32 @@ void TNudyEndfThermal::ReadFile7(TNudyEndfFile *file)
             int1.push_back(tab1->GetINT(i));
             //cout<<tab1->GetNBT(i)<<"\t"<<tab1->GetINT(i)<<endl;
           }
-          //cout<<"temp:\t"<<tab1->GetC1()<<"\t"<<endl;
-          temp_T.push_back(tab1->GetC1());//filling temp value from tab1
+         // cout<<"temp:\t"<<tab1->GetC1()<<"\t"<<endl;
+           temp_T.push_back(tab1->GetC1());//filling temperature values from tab1
           for (int j = 0; j < NP; j++) {
             eLinElastic.push_back(tab1->GetX(j));//energy of tab1
             sLinElastic.push_back(tab1->GetY(j));//S(E,T) in tab1
             dummy_eElastic.push_back(tab1->GetX(j));
-            dummy_sElastic.push_back(tab1->GetX(j));
-            //cout<<"E:\t"<<eLinElastic[j]<<"\t"<<sLinElastic[j]<<endl;
           }
           //cout<<tab1->GetL1()<<"\t"<<endl;
           Nbeta.push_back(tab1->GetL1());// No. of temperature
           for(int k=0; k<tab1->GetL1(); k++){
             TNudyEndfList *tab = (TNudyEndfList *)recIter.Next();
-            cout<<tab->GetC1()<<"\t"<<endl;
-            temp_T.push_back(tab->GetC1()); //filling temp value from list
+            //cout<<tab->GetC1()<<"\t"<<endl;
+            temp_T.push_back(tab->GetC1()); //filling temperature values from list
+            
+            //cout<<"temp_T: "<<tab->GetC1()<<endl;
+           // cout<<"no of points: "<<tab->GetNPL()<<endl;
             for(int l=0; l<tab->GetNPL(); l++){
               tSet[k][l]= tab->GetLIST(l);
+              eLinElastic.push_back(dummy_eElastic[l]);//energy of tab1
+              sLinElastic.push_back(tab->GetLIST(l));//S(E,T) in tab1
               //sLinElastic.push_back(tab->GetLIST(l));//S(E,T) in tab1
               //cout<<"List:\t"<<tab->GetLIST(l)<<endl;
-            }
+             }
           }
-          for (int is = 0; is<NP-1; is++) {// NP - 1
-            //std::cout<<"is = "<<is<<"  "<<eLinElastic[is] <<"  "<< sLinElastic[is] << std::endl;
-            recursionLinearFile7(eLinElastic[is], eLinElastic[is + 1], sLinElastic[is], sLinElastic[is + 1],
-                         eLinElastic, sLinElastic);
-            //
-           //cout<<"interpolated x-section:\t"<<  recursionLinearFile7(eLinElastic[is], eLinElastic[is + 1], sLinElastic[is], sLinElastic[is + 1],eLinElastic, sLinElastic)<<endl;
-          }
-          TNudyCore::Instance()->Sort(eLinElastic, sLinElastic);
-          TNudyCore::Instance()->ThinningDuplicate(eLinElastic, eLinElastic);
+          //TNudyCore::Instance()->Sort(eLinElastic, sLinElastic);
+          //TNudyCore::Instance()->ThinningDuplicate(eLinElastic, eLinElastic);
           nbt1.clear();
           int1.clear();
         }break;
@@ -170,8 +182,12 @@ void TNudyEndfThermal::ReadFile7(TNudyEndfFile *file)
             sigb=tab1->GetC1(); //bound x-section in barns
             temp.push_back(tab1->GetX(j));
             DW.push_back(tab1->GetY(j));
-            //cout<<"LTHR:2\t"<<tab1->GetX(j)<<"\t"<<tab1->GetY(j)<<endl;
+            cout<<sigb<<"  LTHR:2\t"<<tab1->GetX(j)<<"\t"<<tab1->GetY(j)<<endl;
           }
+          tempIncoElastic.push_back(temp);
+          DWIncoElastic.push_back(DW);
+          temp.clear();
+          DW.clear();
         }//LTHR, 2
       }//switch for LTHR
     }//MT=2
@@ -356,56 +372,174 @@ void TNudyEndfThermal::ReadFile7(TNudyEndfFile *file)
    }
 }//readfile7 loop
 //______________________________________________________________________________
-double TNudyEndfThermal::nThermalElasticXsecion(double En)
+void TNudyEndfThermal::storeElasticXsecion(){
+ // initialize zero
+  for(int i = 0; i < N; ++i){
+      tempE[i] = 0.0;
+      tempX[i] = 0.0;
+      Temprature[i] = 0.0; 
+    for(int j = 0; j < M; ++j){
+      E[i][j] = 0.0;
+      X[i][j] = 0.0;
+    }
+  }
+ for(int mlthr=0; mlthr<mtLTHR.size(); mlthr++){
+    // cout<<mtLTHR[mlthr]<<"  "<< MtNumbers.size()<< " "<<MtNumbers[mlthr]<<endl;
+    if(MtNumbers[mlthr] == 2 && mtLTHR[mlthr] == 1){
+           int mts =0 ;
+      for(int j=0; j<temp_T.size();j++){ 
+        Temprature[j] = temp_T[j];
+        for(int k=0; k<nEnergygrid;k++){
+            //tempEthermal.push_back(eLinElastic[k]);
+            //tempThermalXsec.push_back(sLinElastic[k]/eLinElastic[k]);
+         if(j == 0) tempE[k] = eLinElastic[mts];
+            E[j][k] = eLinElastic[mts];
+            X[j][k] = sLinElastic[mts]/eLinElastic[mts];
+            mts =mts+1;
+        }
+      }
+     }
+   }
+   
+   
+   
+}
+double TNudyEndfThermal::nThermalElasticXsecion(double inputEnergy, double inputTemprature)
 {
+ 
+ 
+ 
+//______________________________________________________________________________
   double nXsec=0;
-  double energyK = En;
+  double finalxsecdiffTemp =0.0;
+  double energyK = inputEnergy;
   int ielemId=0;
   int min = 0;
   int mid = 0;
   int max;
+  int minT = 0;
+  int midT = 0;
+  int maxT;
+  double initialT = inputTemprature; // in kelvin
+//______________________________________________________________________________
+  cout<<"Input energy:  "<<energyK<<endl;   
+ 
+//______________________________________________________________________________
   for(int mlthr=0; mlthr<mtLTHR.size(); mlthr++){
     // cout<<mtLTHR[mlthr]<<"  "<< MtNumbers.size()<< " "<<MtNumbers[mlthr]<<endl;
     if(MtNumbers[mlthr] == 2 && mtLTHR[mlthr] == 1){
-    cout<<"*****Thermal neutron coherent elastic scattering cross-section available****"<<endl;
-      for(int j=0; j<1;j++){ //temp_T.size()-1
-        for(int k=0; k<eLinElastic.size();k++){
-          if(j==0){
-            tempEthermal.push_back(eLinElastic[k]);
-            tempThermalXsec.push_back(sLinElastic[k]/eLinElastic[k]);
-          }
+      
+      //std::cout<<"*****Thermal neutron coherent elastic scattering cross-section available****"<<std::endl;
+      
+      
+      for(int j=0; j<temp_T.size();j++){ 
+       
+        for(int k=0; k<nEnergygrid;k++){
+         //if(j == 0) cout<< E[j][k]<<"  "<< X[j][k]<<endl;
+            
         }
       }
-      eneUni.push_back(tempEthermal);
-      nThermalElasticXsec.push_back(tempThermalXsec);
-      //tempThermalXsec.clear();
-      //cout<<"values of NP:\t"<<NP<<endl;
-      max = eneUni[ielemId].size() - 1;
-      mid = 0;
-      if (energyK <= eneUni[ielemId][min]){
-        min = 0;
-      }else if (energyK >= eneUni[ielemId][max]){
-        min = max - 1;
+      
+//______________________________________________________________________________      
+//this will be used to generate minimum and maximum temprature index
+//int maxT, minT = 0 ,midT = 0;
+//double initialT = 300.0; //temprature
+     maxT = temp_T.size()-1;
+     midT = 0;
+     if (initialT < Temprature[minT]){
+        //cout<< initialT<< "  "<< Temprature[minT]<<endl;
+       minT = 0;
+      }else if (initialT > Temprature[maxT]){
+        minT = maxT  ;
+       // cout<<"max X:  "<< initialT<< "  "<< x[maxT]<<endl;
        }else {
-         while (max - min > 1) {
-           mid = (min + max) / 2;
-           //cout<<min<<"\t"<<max<<"\tmid:\t"<<mid<<endl;
-           //cout<<"energy: "<<eneUni[ielemId][mid]<<endl;
-           //cout<<energyK <<"  "<<eneUni[ielemId][mid]<<endl;
-           if (energyK < eneUni[ielemId][mid]){
-             max = mid;
-             //cout<<"max: "<<max<<endl;
+         while (maxT - minT > 1) {
+           midT = (minT + maxT) / 2;
+           //cout<< initialT<< "  "<< x[maxT]<<endl;
+           if (initialT < Temprature[midT]){
+             maxT = midT;
+            // cout<<"max: "<<maxT<<endl;
            }else{
-             min = mid;
-             //cout<<"min: "<<min<<endl;
+             minT = midT;
+             //cout<<"minT: "<<minT<<endl;
             }
          }
        }
-       nXsec= nThermalElasticXsec[ielemId][min] +
-       (nThermalElasticXsec[ielemId][min + 1] - nThermalElasticXsec[ielemId][min])*(energyK - eneUni    [ielemId][min]) /(eneUni[ielemId][min + 1] - eneUni[ielemId][min]);
-    }//if loop MT and LTHR
-    if(MtNumbers[mlthr] == 2 && mtLTHR[mlthr] == 2){
-      cout<<"*****Thermal neutron incoherent elastic scattering cross-section available****"<<endl;  
+//cout<<"minT: "<<minT<<" "<<Temprature[minT]<<endl;
+//this will be used to generate minimum and maximum energy index
+int    maxE, minE = 0 ,midE = 0;
+double initialE = energyK;// energy
+       maxE = nEnergygrid-1;
+       midE = 0;
+     //cout<<" tempE[maxE]: "<<tempE[maxE]<<endl;
+     if (initialE <= tempE[minE]){
+        //cout<< initialE<< "  "<< tempE[minE]<<endl;
+       minE = 0;
+      }else if (initialE >= tempE[maxE]){
+        minE = maxE  ;
+        //cout<< initialE<< "  "<< tempE[maxE]<<endl;
+       }else {
+         while (maxE - minE > 1) {
+           midE = (minE + maxE) / 2;
+           //cout<< initialE<< "  "<< tempE[maxE]<<endl;
+           if (initialE < tempE[midE]){
+             maxE = midE;
+            // cout<<"maxE: "<<maxE<<endl;
+           }else{
+             minE = midE;
+             //cout<<"minE: "<<minE<<endl;
+            }
+         }
+      }
+
+cout<<minT<<"  "<<Temprature[minT]<<"  "<<E[minT][minE]<< "  "<<X[minT][minE]<<endl;
+cout<<minE<<"  "<<Temprature[minT]<<"  "<<E[minT][minE+1]<< "  "<<X[minT][minE+1]<<endl;
+//cout<<"<------------------------------------------------------------------------>"<<endl;
+
+double sigmalowT;
+double sigmahighT;
+//LinearInterpolation(double x1, double y1, double x2, double y2, double x)
+// x1 = E1, x2 = E2,  energy
+// y1 = X1, y2 = X2,  x-section
+sigmalowT = TNudyCore::Instance()->LinearInterpolation(E[minT][minE], X[minT][minE], E[minT][minE+1],X[minT][minE+1],initialE);
+//cout<<"index_T: "<<minT<<" T "<<Temprature[minT]<<"  E  "<<E[minT][minE]<< " Sigma  "<<X[minT][minE]<<endl;
+//cout<<"index_E: "<<minE<<" T "<<Temprature[minT]<<"  E "<<E[minT][minE+1]<< " Sigma "<<X[minT][minE+1]<<endl;
+sigmahighT = TNudyCore::Instance()->LinearInterpolation(E[minT+1][minE], X[minT+1][minE], E[minT+1][minE+1],X[minT+1][minE+1],initialE);
+
+//slopeEXhighT*(initialE - E[minT+1][minE]) + X[minT+1][minE];
+//cout<<minT+1<<"  "<<Temprature[minT+1]<<"   "<<E[minT+1][minE]<< "  "<<X[minT+1][minE]<<endl;
+//cout<<minE<<"  "<<Temprature[minT+1]<<"   "<<E[minT+1][minE+1]<< "  "<<X[minT+1][minE+1]<<endl;
+//LinearInterpolation(double x1, double y1, double x2, double y2, double x)
+finalxsecdiffTemp = TNudyCore::Instance()->LinearInterpolation(Temprature[minT], sigmalowT, Temprature[minT+1],sigmahighT,initialT);
+//cout<<"low_T: "<< Temprature[minT]<<" sigma@LowT:   "<<sigmalowT<<"  highT: "<<Temprature[minT+1]<< "  sigma@highT  "<<sigmahighT<<endl;
+//cout<<"finalxsecdiffTemp: "<<finalxsecdiffTemp<<endl;
+
+for( int ity = 0; ity<nEnergygrid ; ity++){  
+     if( initialE == E[minT][ity]){
+      sigmalowT = X[minT][ity];
+      cout<<"the required x-section:::::: "<<sigmalowT<<endl;
+      finalxsecdiffTemp = sigmalowT; 
+     } 
+ } 
+/*
+double Xlow;
+double Xhigh;
+double slopeX;
+double intpX;
+if( initialT == Temprature[minT+1] && initialE == E[minT][minE+1]){
+slopeX=0;
+Xlow = X[minT+1][minE];
+minT = minT+1;
+}
+if( initialT == Temprature[minT] && initialE == E[minT][minE+1]){
+slopeX=0;
+Xlow = X[minT][minE];
+minT = minT+1;
+}
+*/
+//______________________________________________________________________________      
+    }else if(MtNumbers[mlthr] == 2 && mtLTHR[mlthr] == 2){
+      std::cout<<"*****Thermal neutron incoherent elastic scattering cross-section available****"<<std::endl;  
       double En_temp = energyK ; // temporary energy of neutron
       double fact;
       double mu0;
@@ -414,31 +548,59 @@ double TNudyEndfThermal::nThermalElasticXsecion(double En)
       double muav;
       double termc,term2,term3,term4;
       r1=new TRandom3();
-      for(int j=0; j<temp.size();j++){ // temperature loop
-         for(int k=0; k<DW.size();k++){ //DW loop
-            if(j==0 && k==0){
-              mu0=-1.0;
-              fact= En_temp*DW[k];
-              //cout<<"Debye Waller factor:\t"<<DW[k]<<endl;
-              sig_ies=(sigb/2)*(1-exp(-4*fact))/(2*fact);
-              //cout<<En_temp<<"\t"<<(1-exp(-4*fact))/(2*fact)<<"\t"<<sig_ies<<endl;
-              fact1=(1-exp(-4*fact))/nb;
-              fact2=exp(-2*fact*(1-mu0));
-              fact3=1+(1/(2*fact))*log(fact1+fact2);//gives mui
-              termc=nb/(2*fact);
-              term2=exp(-2*fact*(1-fact3))*(2*fact*fact3-1);
-              term3=exp(-2*fact*(1-mu0))*(2*fact*mu0-1);
-              term4=1-exp(-4*fact);
-              muav=termc*(term2-term3)/term4;//provides avg mui
-              mu0=fact3;
-              // cout<<En_temp<<"\t"<<fact3<<"\t"<<muav<<"\t"<<sig_ies<<endl;
+      double finalDW = 0;
+     //cout<<"the size of tempIncoElastic[incE]:  "<<tempIncoElastic.size()<<endl;
+     for(int incE=0; incE<tempIncoElastic.size();incE++){
+        for(int j=0; j<tempIncoElastic[incE].size(); j++){
+       // cout<<"the size of tempIncoElastic[incE]:  "<<tempIncoElastic.size()<<"  "<<tempIncoElastic[incE].size()<<endl;
+       // cout<<incE<<"   "<< j<<"  "<<tempIncoElastic[incE][j]<<endl; 
+        
+        }
+     } 
+     maxT = tempIncoElastic[ielemId].size() - 1;
+     midT = 0;
+     if (initialT < tempIncoElastic[ielemId][minT]){
+       minT = 0;
+      }else if (initialT > tempIncoElastic[ielemId][maxT]){
+        minT = maxT - 1;
+       }else {
+         while (maxT - minT > 1) {
+           midT = (minT + maxT) / 2;
+           //cout<<min<<"\t"<<max<<"\tmid:\t"<<mid<<endl;
+           //cout<<"energy: "<<eneUni[ielemId][mid]<<endl;
+           //cout<<energyK <<"  "<<eneUni[ielemId][mid]<<endl;
+           if (initialT < tempIncoElastic[ielemId][midT]){
+             maxT = midT;
+             //cout<<"max: "<<max<<endl;
+           }else{
+             minT = midT;
+             //cout<<"min: "<<min<<endl;
             }
          }
-      }
+       }
+       finalDW= DWIncoElastic[ielemId][min] +
+       (DWIncoElastic[ielemId][minT + 1] - DWIncoElastic[ielemId][minT])*(initialT - tempIncoElastic[ielemId][minT]) /(tempIncoElastic[ielemId][minT + 1] - tempIncoElastic[ielemId][minT]);
+       
+       if(initialT == tempIncoElastic[ielemId][minT])finalDW= DWIncoElastic[ielemId][min]; 
+       
+       fact= En_temp*finalDW;
+       sig_ies=(sigb/2)*(1-exp(-4*fact))/(2*fact);
+       //estimating the scattering angle
+       fact1=(1-exp(-4*fact))/nb;
+       fact2=exp(-2*fact*(1-mu0));
+       fact3=1+(1/(2*fact))*log(fact1+fact2);//gives mui
+       termc=nb/(2*fact);
+       term2=exp(-2*fact*(1-fact3))*(2*fact*fact3-1);
+       term3=exp(-2*fact*(1-mu0))*(2*fact*mu0-1);
+       term4=1-exp(-4*fact);
+       muav=termc*(term2-term3)/term4;//provides avg mui
+       mu0=fact3;
+       // cout<<En_temp<<"\t"<<fact3<<"\t"<<muav<<"\t"<<sig_ies<<endl;
     }
   } // for loop MT and LTHR
-//cout<<"the cross section: "<<nXsec<<endl;
-return nXsec + sig_ies;
+//Selecting the temperature range
+std::cout<<finalxsecdiffTemp<<"   "<<sig_ies<<std::endl;
+return finalxsecdiffTemp + sig_ies;
 }
 //______________________________________________________________________________
 
@@ -455,4 +617,17 @@ TNudyEndfThermal::~TNudyEndfThermal()
 {
 //delete r1;
 //delete r2;
+for(int i = 0; i < N; ++i)
+    delete [] E[i];
+    delete [] E;
+ for(int i = 0; i < N; ++i)
+    delete [] X[i];
+    delete [] X;
+  
+  delete [] tempE;
+  delete [] tempX;
+  delete [] Temprature;
+//
+DWIncoElastic.clear();
+tempIncoElastic.clear();
 }

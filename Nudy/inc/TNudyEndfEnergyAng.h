@@ -18,7 +18,7 @@ class TNudyEndfEnergyAng : public TNudyEndfRecoPoint {
 
 public:
   TNudyEndfEnergyAng();
-  TNudyEndfEnergyAng(TNudyEndfFile *file, double[]);
+  TNudyEndfEnergyAng(TNudyEndfFile *file, double []);
   virtual double GetCos64(int elemid, int mt, double energyK);
   virtual double GetCos6(int elemid, int mt, double energyK);
   virtual double GetEnergy6(int elemid, int mt, double energyK);
@@ -26,8 +26,28 @@ public:
   virtual int GetZd6(int ielemId, int mt);
   virtual int GetAd6(int ielemId, int mt);
   virtual int GetMt6Neutron(int ielemId, int mt);
-  virtual ~TNudyEndfEnergyAng();
 
+  //SPB
+  void GetCos64V(int elemid, int mt, double energyK);
+  void GetCos6V(int elemid, int mt, double energyK);
+  void GetEnergy6V(int elemid, int mt, double energyK);
+  void GetLaw6V(int ielemId, int mt);
+  void GetZd6V(int ielemId, int mt);
+  void GetAd6V(int ielemId, int mt);
+  std::vector<int> GetZd6V1(int ielemId, int mt);
+  struct InfoProductsFile6{
+        std::vector<int>pZ;
+        std::vector<int>pA;
+        std::vector<int>lawZA;
+        std::vector<double>cosang6;
+        std::vector<double>Energy6;
+        std::vector<double>cosang64;
+    };
+  InfoProductsFile6 infoParticles;
+  InfoProductsFile6 GetInformation();
+  virtual ~TNudyEndfEnergyAng();
+  void Reset();
+  
 private:
   double recursionLinearFile5Prob(double x1, double x2, double pdf1, double pdf2);
   double recursionLinearFile4(int i, double x1, double x2, double pdf1, double pdf2);
@@ -38,7 +58,21 @@ private:
   int NR, NP;   // standard ENDF parameters for range and interpolation
   int NR2, NE;  // standard ENDF parameters for range and interpolation
   int NR3, NE2; // standard ENDF parameters for range and interpolation
-                //  double *INorm, QValue[999];				// ENDF parameter and Q values from file 3
+                //  double *INorm, QValue[999];	// ENDF parameter and Q values from file 3
+  double iQValue[1000];
+  std::vector<int>pZ1;
+  //SPB
+ /* std::vector<int>pZ;
+  std::vector<int>pA;
+  std::vector<int>lawZA;
+  std::vector<double>cosang6;
+  std::vector<double>Energy6;
+  std::vector<double>cosang64;//*/
+  
+  int particleA = 0;
+  int particleZ = 0;
+  
+  
   rowd cosFile4, energyFile5;
   rowd cosPdfFile4, energyPdfFile5;
   rowd cosCdfFile4, energyCdfFile5;
