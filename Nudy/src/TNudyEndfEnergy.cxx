@@ -718,9 +718,11 @@ double TNudyEndfEnergy::GetEnergy5(int ielemId, int mt, double energyK)
     edes = energyOut5OfMts[ielemId][i][min][k-1] +
            (sqrt(plk2 + 2 * plk * (rnd1 - energyCdf5OfMts[ielemId][i][min][k-1])) - energyPdf5OfMts[ielemId][i][min][k-1]) /
                plk;
-//   double emin = energyOut5OfMts[ielemId][i][min][1] + fraction * (energyOut5OfMts[ielemId][i][min+1][1] - energy5OfMts[ielemId][i][min]) ;
-//   double emax = energyOut5OfMts[ielemId][i][min][size - 1] + fraction * (energyOut5OfMts[ielemId][i][min+1][size - 1] - energy5OfMts[ielemId][i][energy5OfMts[ielemId][i].size() - 1]) ;
-//   edes = emin + (emax - emin) * (edes - energyOut5OfMts[ielemId][i][min][1])/(energyOut5OfMts[ielemId][i][min][size - 1] - energyOut5OfMts[ielemId][i][min][1]);
+   double emin = energyOut5OfMts[ielemId][i][min][1] + fraction * (energyOut5OfMts[ielemId][i][min+1][1] - energyOut5OfMts[ielemId][i][min][1]) ;
+   double emax = energyOut5OfMts[ielemId][i][min][size - 1] + fraction * \
+                 (energyOut5OfMts[ielemId][i][min+1][energyCdf5OfMts[ielemId][i][min+1].size() - 1] - energyOut5OfMts[ielemId][i][min][size - 1]) ;
+   edes = energyOut5OfMts[ielemId][i][min][1] + (edes - emin) * (energyOut5OfMts[ielemId][i][min][size - 1] - \
+          energyOut5OfMts[ielemId][i][min][1])/(emax - emin);
 //	       std::cout<<plk <<"  "<< edes << std::endl;
   return edes;
 }
