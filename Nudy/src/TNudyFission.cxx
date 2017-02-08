@@ -56,9 +56,10 @@ void TNudyFission::nFissionXsec(double nuEn, TNudyElement *targetElement)
             procNameFis  = "nFission";
             nameF        =  "Fission fragements and others";
             double zaf   = rp->GetFisYield(ielemId, kineticE);
-      	    divr         = div(zaf, 1000);
-            fissionfragmentsCharge     = divr.quot;//fission fragment charge
-            fissionFragmentmass1 = divr.rem; 
+      	          divr         = div(zaf, 10000);
+                  fissionfragmentsCharge = divr.quot;//fission fragment charge
+                  divr         = div(divr.rem, 10);
+            fissionFragmentmass1 = divr.quot;
             massFissionFragments.push_back(fissionFragmentmass1);
             chargeFissionFragments.push_back(fissionfragmentsCharge);
             chargeFissionFragments.push_back(charge - fissionfragmentsCharge);
@@ -70,7 +71,7 @@ void TNudyFission::nFissionXsec(double nuEn, TNudyElement *targetElement)
                            nup = rp->GetNuPrompt(ielemId, kineticRand);
                            nud = rp->GetNuDelayed(ielemId, kineticRand);
             //cout<<"sigmaFission: "<<sigmaFission<<endl;
-            cout<<" B4 MC process  "<< nup <<"  "<< nud <<"  "<< nut <<endl;
+            //cout<<" B4 MC process  "<< nup <<"  "<< nud <<"  "<< nut <<endl;
             int nu                              = (int)nut;
             if(fRnd->Uniform(1) < nut - nu) nu = nu + 1;
               //cout<<"After MC process:\t"<<nup<<"  "<<nud<<"  "<<nut<<" "<<nu<<endl;
@@ -81,16 +82,18 @@ void TNudyFission::nFissionXsec(double nuEn, TNudyElement *targetElement)
                     secEnergyLabF.push_back(secEnergyLab);
                     cosLabF.push_back(cosLab);
                  }
-                 fissionFragmentmass2 = mass - divr.rem - nu;
-            massFissionFragments.push_back(fissionFragmentmass2);     
+                 fissionFragmentmass2 = mass - fissionFragmentmass1 - nu;
+                 massFissionFragments.push_back(fissionFragmentmass2);
+                //if(fissionFragmentmass1 == 0.0 || fissionFragmentmass2 == 0.0)cout<<mass<<"    "<<fissionFragmentmass1<<"    "<<fissionFragmentmass1<<endl; 
            }break;
         }
      }
     totalkineticEnergyFF = rp->GetkineticEnergyFF(ielemId,kineticE);  
     kineticEnergyFragment1 = totalkineticEnergyFF*fissionFragmentmass2/(fissionFragmentmass1 + fissionFragmentmass2);  
     kineticEnergyFragment2 = totalkineticEnergyFF - kineticEnergyFragment1;
-    cout<<"total KE FFs: "<<totalkineticEnergyFF<< " KE fragm1:"<< kineticEnergyFragment1<< " KE fragm2: "<<kineticEnergyFragment2<<endl;
-     
+    //cout<<"total KE FFs: "<<totalkineticEnergyFF<< " KE fragm1:"<< kineticEnergyFragment1<< " KE fragm2: "<<kineticEnergyFragment2<<endl;
+     kineticEnergyFissionFragments.push_back(kineticEnergyFragment1);
+     kineticEnergyFissionFragments.push_back(kineticEnergyFragment2);
 }
 //______________________________________________________________________________     
 std::string TNudyFission::GetFissionProcessName()
@@ -128,6 +131,11 @@ std::vector<int> TNudyFission::GetFissionFragmentscharge()
      return chargeFissionFragments;
 }
 //______________________________________________________________________________
+std::vector<double> TNudyFission::GetKineticEnergyFissionFragments()
+{
+     return kineticEnergyFissionFragments;
+}
+//______________________________________________________________________________
 double TNudyFission::GetPromptneutron()
 { 
      return nup;
@@ -137,6 +145,7 @@ void TNudyFission::processReset()
 {
 massFissionFragments.clear();
 chargeFissionFragments.clear();
+kineticEnergyFissionFragments.clear();
 secEnergyLabF.clear();
 cosLabF.clear();
 }
