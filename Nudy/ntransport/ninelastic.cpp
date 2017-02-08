@@ -147,9 +147,9 @@ int main(){
    //std::string symbolT  ="Mn";
    //int         targetM1 = 55;
    
-   int         targetZ1 = 26;
-   std::string symbolT  ="Fe";
-   int         targetM1 = 56;
+   //int         targetZ1 = 26;
+   //std::string symbolT  ="Fe";
+   //int         targetM1 = 56;
    
    //int         targetZ1 = 26;
    //std::string symbolT  ="Fe";
@@ -208,6 +208,11 @@ int main(){
     //std::string symbolT  ="Ca";
     //int         targetM1 = 48;
     
+     int         targetZ1 = 48;
+     std::string symbolT  ="Cd";
+     int         targetM1 = 114;
+    
+    
    
    TNudyElement *elementProp;
    elementProp = new TNudyElement(symbolT,targetZ1,targetM1);
@@ -217,7 +222,7 @@ int main(){
             fileName2= stream.str();
             rENDF = fileName2.c_str();
             irENDF = fileName2.c_str();
-            TNudyENDF *proc = new TNudyENDF(elementProp->endfFileName(), rENDF, "recreate");
+            TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
             //proc->SetPreProcess (0) ;
             proc->Process();
             std::string fENDFSUB = "/home/shiba/fission/nfy-094_Pu_241.endf";
@@ -226,8 +231,13 @@ int main(){
             TNudyEndfSigma();
             TNudyEndfSigma xsec;
             xsec.GetData(irENDF, isigDiff);
-   //ofstream fout;
-   //fout.open("/home/shiba/output/Fe54_EnAng_20MeV.txt",ios::out);
+   
+   ofstream fout1,fout2,fout3;
+   fout1.open("/home/shiba/output/Cd114_EnAng_15MeV_singleneutronHK.txt",ios::out);
+   fout2.open("/home/shiba/output/Cd114_EnAng_15MeV2ndneutronsHK.txt",ios::out);
+   fout3.open("/home/shiba/output/Cd114_EnAng_15MeVbothneutronsHK.txt",ios::out);
+   
+   
    ielemId = 0 ;
    std::stringstream str;
    std::string rootData;
@@ -243,9 +253,9 @@ int main(){
    TNudyInelastic *nProcIne= new TNudyInelastic(ielemId,rootENDF); //n-Capture
    int reactionMT;
    for(int i = 0; i <1; i++){//energy loop
-       nuEn=19.0E6;// + 0.25E6*i;// 0.002E6*i + 0.1E6;
+       nuEn=15.0E6;// + 0.25E6*i;// 0.002E6*i + 0.1E6;
        //n-Inelastic process
-       for(int ie = 0 ; ie<1; ie++){ // event loop
+       for(int ie = 0 ; ie<100000; ie++){ // event loop
     	  nProcIne->nInelasticXsec(nuEn, elementProp); //provide neutron energy
     	  nProcIne->GetInelasticParameters(xsec1,energy1);
     	  sigmaIne = nProcIne->GetInelasticXsec();
@@ -255,11 +265,13 @@ int main(){
     	  reactionMT = nProcIne->reactionChannelNumber();
     	  sigmaIne = nProcIne->GetInelasticXsec();
      	  for(int j=0; j<productsName.size(); j++){
-           /*if (reactionMT ==17){
+          /* if (reactionMT ==16){
            std::cout<<"event No. "<<ie <<"Reaction Channel No. MT: "<<reactionMT<<"  Products Name: "<<productsName[j]
      	            <<""<<" Kinetic energy_Lab: "<<secKineticEnergyLab[j]<<""
-     	           <<" cosine angle_lab: "<<seccosAngLab[j]<<std::endl;//}*/
-     	          // if(reactionMT ==16 && productsName[j] == "n")fout<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	           <<" cosine angle_lab: "<<seccosAngLab[j]<<std::endl;}//*/
+     	     if(reactionMT ==16 && productsName[j] == "n" && j==0)fout1<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	      if(reactionMT ==16 && productsName[j] == "n" && j==1)fout2<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	           if(reactionMT ==16 && productsName[j] == "n")fout3<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
      	 }
      	 nProcIne->Reset();
        }//event loop

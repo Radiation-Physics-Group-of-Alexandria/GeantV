@@ -156,7 +156,7 @@ int main(){
             fileName2= stream.str();
             rENDF = fileName2.c_str();
             irENDF = fileName2.c_str();
-           TNudyENDF *proc = new TNudyENDF(elementProp->endfFileName(), rENDF, "recreate");
+           TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
             //proc->SetPreProcess (0) ;
             proc->Process();
             std::string fENDFSUB = "/home/shiba/fission/nfy-094_Pu_241.endf";

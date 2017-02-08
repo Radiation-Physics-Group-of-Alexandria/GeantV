@@ -134,6 +134,7 @@ int main(){
    double isigDiff=0.001;
    std::vector<int> fissionfragmentsMass;
    std::vector<int> fissionfragmentsCharge;
+   std::vector<double> ffsKineticEnergy;
    std::vector<double> neutronEnergy;
    std::vector<double> neutronAngle;  
    const char* fENDFn; 
@@ -162,7 +163,7 @@ int main(){
             fileName2= stream.str();
             rENDF = fileName2.c_str();
             irENDF = fileName2.c_str();
-           TNudyENDF *proc = new TNudyENDF(elementProp->endfFileName(), rENDF, "recreate");
+           TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
             //proc->SetPreProcess (0) ;
             proc->Process();
             std::string fENDFSUB = "/home/shiba/fission/nfy-094_Pu_241.endf";
@@ -172,12 +173,9 @@ int main(){
             TNudyEndfSigma xsec;
             xsec.GetData(irENDF, isigDiff);
             
-   ofstream fout1;
+   ofstream fout1,fout2;
    //fout1.open("/home/shiba/FissionFragments/Pu241_nsEnergyAngle.txt",ios::out);
-   
-   ofstream fout2;
    //fout2.open("/home/shiba/FissionFragments/Pu241_FFsmasscharge.txt",ios::out);
-   
    ielemId = 0 ;
    std::stringstream str;
    std::string rootData;
@@ -185,14 +183,11 @@ int main(){
    rootData= str.str();
    const char* rootENDF = rootData.c_str();
    cout<<"Reading x-section file:\t"<<rootENDF<<endl;
-   
-   
-   
    TNudyFission *nProcFis= new TNudyFission(ielemId,rootENDF); //n-Fission
    for(int i = 0; i <1; i++){//energy loop
         nuEn= 2.0E6 + 1.0E6*i;
     	//n-Fission process
-    	for(int j=0; j<1 ; j++){//event loop
+    	for(int j=0; j<5 ; j++){//event loop
         nProcFis->nFissionXsec(nuEn, elementProp); //provide neutron energy
      	//cout<< nuEn<<"\t"<<nProcFis->GetFissionXsec()<<"\t"<<endl;
      	//cout<<"prompt neutron: "<<nProcFis->GetPromptneutron()<<" fission fragment mass "<< nProcFis->GetFissionFragmentmass()<<endl;//nProcFis->GetFissionProcessName()
@@ -200,18 +195,17 @@ int main(){
     	//nProcFis->nFissionXsec(nuEn, elementProp); 
     	neutronEnergy = nProcFis->GetKineticEnergyNeutron();
     	neutronAngle  = nProcFis->GetcosAngNeutron();
-    	for(int ie=0; ie<neutronEnergy.size(); ie++){     
+    	for(int ie=0; ie<neutronEnergy.size(); ie++){ //secondary products energy-angle loop    
     	//cout<<ie<<"  neutron energy and angle produced in fission process: "<<neutronEnergy[ie]<<"  "<<neutronAngle[ie]<<endl;
-    	
     	//fout1<<neutronEnergy[ie]<<"\t"<<neutronAngle[ie]<<endl;
-    	
-    	}   
+    	}////secondary products energy-angle loop   
     	fissionfragmentsMass   = nProcFis->GetFissionFragmentsmass();
     	fissionfragmentsCharge = nProcFis->GetFissionFragmentscharge();
+    	ffsKineticEnergy       = nProcFis->GetKineticEnergyFissionFragments();
     	for(int im=0; im<fissionfragmentsMass.size(); im++){
-    	//cout<<"event no. " <<j<<"   fission fragments mass : "<<fissionfragmentsMass[im]<<" charge:  "<<fissionfragmentsCharge[im]<<endl;
+    	   cout<<"event no. " <<j<<"   fission fragments mass : "<<fissionfragmentsMass[im]<<" charge:  "
+    	       <<fissionfragmentsCharge[im]<< "   Kinetic Energy: "<<ffsKineticEnergy[im]<<endl;
     	//fout2<<fissionfragmentsMass[im]<<"\t"<<fissionfragmentsCharge[im]<<endl;
-    	
     	}
     	nProcFis->processReset();
     	}//event loop

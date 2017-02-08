@@ -151,8 +151,8 @@ int main(){
       int nevent=10; 
       int mt;
       double sigma;
-      double neutronEnergy =0.015;// 1.79177;// 0.015; //Energy in eV
-      double materialTemprature = 296.0;// 0.015; // Temprature in K
+      double neutronEnergy =0.015;// Energy in eV
+      double materialTemprature = 296.0;//  // Temprature in K
       double costhlab;
       double thermalneutronXsec;
        TNudyEndfThermal *xsecth = new TNudyEndfThermal() ;

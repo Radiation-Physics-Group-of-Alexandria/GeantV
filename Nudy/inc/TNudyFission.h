@@ -29,6 +29,7 @@ public:
    double GetPromptneutron();
    std::vector<int> GetFissionFragmentsmass();
    std::vector<int> GetFissionFragmentscharge();
+   std::vector<double> GetKineticEnergyFissionFragments();
    std::string GetsecParticleName( );
    std::string GetFissionProcessName();
    std::string GetParticleFission();
@@ -42,6 +43,7 @@ private:
   
   std::vector<int> massFissionFragments;
   std::vector<int> chargeFissionFragments;
+  std::vector<double> kineticEnergyFissionFragments;
   
   std::vector<double> secEnergyLabF;
   std::vector<double> cosLabF;

@@ -157,7 +157,7 @@ int main(){
             fileName2= stream.str();
             rENDF = fileName2.c_str();
             irENDF = fileName2.c_str();
-           TNudyENDF *proc = new TNudyENDF(elementProp->endfFileName(), rENDF, "recreate");
+           TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
             //proc->SetPreProcess (0) ;
             proc->Process();
             std::string fENDFSUB = "/home/shiba/fission/nfy-094_Pu_241.endf";
@@ -178,7 +178,7 @@ int main(){
    cout<<"Reading x-section file:\t"<<rootENDF<<endl;
    TNudyElastic *nProc= new TNudyElastic(ielemId,rootENDF);     //n-Elastic
     //n-Elastic process
-   for(int i = 0; i <1; i++){//event loop
+   for(int i = 0; i <10000; i++){//event loop
         nuEn= 20.0E6;//2.5E6 + 0.02E6*i;
         for(int j = 0; j <1; j++){ // energy loop
            nProc->nElasticXsec(nuEn, elementProp); //provide neutron energy

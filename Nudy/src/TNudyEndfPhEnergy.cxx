@@ -254,7 +254,7 @@ double TNudyEndfPhEnergy::GetEnergy5(int ielemId, int mt, double energyK)
 {
   fRnd  = new TRandom3(0);
   int i = -1;
-  // std::cout<<"mt "<< mt <<"  "<< Mt5Values[ielemId].size() <<"  "<<energyK << std::endl;
+   std::cout<<"mt "<< mt <<"  "<< Mt5Values[ielemId].size() <<"  "<<energyK << std::endl;
   for (unsigned int l = 0; l < Mt5Values[ielemId].size(); l++) {
     if (Mt5Values[ielemId][l] == mt) {
       i = l;

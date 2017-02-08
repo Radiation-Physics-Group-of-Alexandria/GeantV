@@ -78,7 +78,7 @@ void TNudyInelastic::nInelasticXsec(double nuEn, TNudyElement *targetElement)
     //cout<<reactionMT<<"   n-inelastic partial cross-section: "<<rp->GetSigmaPartial(ielemId, crsp, kineticE)<<endl;
     if(reactionMT != 2 && reactionMT !=18 && reactionMT !=102 ){
       
-      cout<<reactionMT<<"   n-inelastic partial cross-section: "<<rp->GetSigmaPartial(ielemId, crsp, kineticE)<<endl;
+      //cout<<reactionMT<<"   n-inelastic partial cross-section: "<<rp->GetSigmaPartial(ielemId, crsp, kineticE)<<endl;
       
       procNameInelastic   = "nInelastic";
       name        =  "2n";
@@ -109,8 +109,7 @@ void TNudyInelastic::nInelasticXsec(double nuEn, TNudyElement *targetElement)
   MF5 = rp->GetMt5(ielemId, MT);
   MF6 = rp->GetMt6(ielemId, MT);
   LCT = rp->GetCos4Lct(ielemId, MT);
-  //if(MT==16)
-  //std::cout<<" nInelasticXsec:    "<<MT<<"  "<<MF4<<" "<<MF5<<" "<<MF6<<" "<<LCT<<std::endl;
+  //if(MT==16)std::cout<<" nInelasticXsec:    "<<MT<<"  "<<MF4<<" "<<MF5<<" "<<MF6<<" "<<LCT<<std::endl;
   int productZ;
   int productA;
   double cosangle1=0;
@@ -1840,6 +1839,8 @@ void TNudyInelastic::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoP
          }
          if((kineticE + tempQValue - sumEnergy)<0.0) goto check1; 
          netEnergy = kineticE + tempQValue - sumEnergy;
+         if(MT==16 && netEnergy <0.0)std::cout<<"secondary energy-condition1: "<<netEnergy<<std::endl;
+         
          for(int jmt = 0; jmt < productMass.size(); jmt++){
            product1Mass = productMass[jmt];
            product2Mass = residueA;
@@ -1847,6 +1848,7 @@ void TNudyInelastic::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoP
           }
          lightParticleEnergy  = (product2Mass/netMass)*netEnergy; 
          heavyParticleEnergy = (product1Mass/netMass)*netEnergy;
+//This condition is based on whether residue is heavier or lighter         
          if( product1Mass < product2Mass){
             tempproductEnergy    = lightParticleEnergy;
             tempresidueEnergy = heavyParticleEnergy;
@@ -1866,7 +1868,8 @@ void TNudyInelastic::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoP
         //if(MT == 25 && tempresidueEnergy < 0.0 )cout<<kineticE + tempQValue<< "  sum energy:  "<<sumEnergy<<"    Remaining energy -neutron energy: "
           //             <<netEnergy<< " "<< "  Eh:  "<<tempproductEnergy<<" EHe: "<<tempresidueEnergy<<endl;
         }else if(productMass[0] == 0.0){
-          neutronsN = neutronsN -1;
+          //neutronsN = neutronsN -1;
+          check2:
          for(int imt = 0; imt < neutronsN; imt++){
           cosCM        = recoPoint->GetCos4(ielemId, MT, kineticE);
           secEnergyCM  = recoPoint->GetEnergy5(ielemId, MT, kineticE);
@@ -1886,8 +1889,12 @@ void TNudyInelastic::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoP
          for(int jmt = 0; jmt < neutronsN; jmt++){
           sumEnergy = sumEnergy + nE[jmt];
          }
+         if((kineticE + tempQValue - sumEnergy)<0.0) goto check2; 
          netEnergy = kineticE + tempQValue - sumEnergy;
-         for(int jmt = 0; jmt < productMass.size(); jmt++){
+         
+         tempresidueEnergy = netEnergy;
+        //08/02/2017 
+        /* for(int jmt = 0; jmt < productMass.size(); jmt++){
            product1Mass = 1;
            product2Mass = residueA;
            netMass = product1Mass + product2Mass;
@@ -1903,20 +1910,22 @@ void TNudyInelastic::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoP
            }else{
               tempproductEnergy = lightParticleEnergy;
               tempresidueEnergy = lightParticleEnergy;
-            }
-          secEnergyinLab.push_back(tempproductEnergy);
-          secEnergyinLab.push_back(tempresidueEnergy);
-        //cout<<kineticE + tempQValue<<"    Remaining energy -neutron energy: "
+            }*/
+          //08/02/2017  
+         //cout<<kineticE + tempQValue<<"    Remaining energy -neutron energy: "
          //               <<netEnergy<<"  Eh:  "<<lightParticleEnergy<<" EHe: "<<tempresidueEnergy
          //               <<"  "<<lightParticleEnergy+heavyParticleEnergy<<"   "<<
          //               sumEnergy+lightParticleEnergy+heavyParticleEnergy<<endl;
           //residueEnergy.push_back(tempresidueEnergy); 
           //residueAngle.push_back(residueCosang); 
+          if(MT==16 && netEnergy <0.0)std::cout<<"secondary energy-condition2: "<<netEnergy<<std::endl;
+          //secEnergyinLab.push_back(tempproductEnergy);
+          //secEnergyinLab.push_back(tempresidueEnergy);
           tempcosAng1 = 1 - 2*fRnd->Uniform(1);
           tempcosAng2 = cos(pi - acos(tempcosAng1));
           seccosAnginLab.push_back(tempcosAng1);
           seccosAnginLab.push_back(tempcosAng2);
-          secEnergyinLab.push_back(tempproductEnergy);
+          //secEnergyinLab.push_back(tempproductEnergy);
           secEnergyinLab.push_back(tempresidueEnergy);
         }  
     }else if (MF4 == 4 && MF5 == -1) {
@@ -2117,7 +2126,7 @@ void TNudyInelastic::GetSecParameter(TNudyElement *targetElement, TNudyEndfRecoP
          std::cout<<"*"<<" energy and angle information are not available in the ENDF  *"<<std::endl;
          std::cout<<"*"<<" data File-6 ---> which leads to segmentation violation      *"<<std::endl;
          std::cout<<"***************************************************************"<<std::endl;
-         //Sometimes it is given in other reaction channel ( e.g. Reaction No. MT = 600-649). See the ENDF manual
+         //Sometimes it is given in other reaction channel ( e.g. Reaction No. MT = 600-649). See the ENDF manual*/
     }
 }
 //______________________________________________________________________________

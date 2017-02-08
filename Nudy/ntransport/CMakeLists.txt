@@ -28,3 +28,7 @@ target_link_libraries(ninelastic Nudy)
 
 #add_executable(nthermal nthermal.cpp)
 #target_link_libraries(nthermal Nudy)
+
+
+#add_executable(macro2 macro2.cpp)
+#target_link_libraries(macro2 Nudy)
