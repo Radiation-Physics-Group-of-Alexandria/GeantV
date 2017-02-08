@@ -125,14 +125,11 @@ TNudyEndfFissionYield::~TNudyEndfFissionYield()
 double TNudyEndfFissionYield::GetFisYield(int ielemId, double energyK)
 {
   fRnd = new TRandom3(0);
-  
-  //std::cout<<"energies "<< ielemId<<"\t"<<energyK<<"\t"<<einfId[ielemId].size() << std::endl;
+  // std::cout<<"element "<< einfId.size() << std::endl;
+  // std::cout<<"energies "<< einfId[ielemId].size() << std::endl;
   int min = 0;
   int max = einfId[ielemId].size() - 1;
   int mid = 0;
-  
-  //std::cout<<"TNudyEndfFissionYield:::::::::::::\t"<<max<<std::endl;
-  
   if (energyK <= einfId[ielemId][min])
     min = 0;
   else if (energyK >= einfId[ielemId][max])
