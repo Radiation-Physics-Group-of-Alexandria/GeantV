@@ -233,9 +233,9 @@ int main(){
             xsec.GetData(irENDF, isigDiff);
    
    ofstream fout1,fout2,fout3;
-   fout1.open("/home/shiba/output/Cd114_EnAng_15MeV_singleneutronHK.txt",ios::out);
-   fout2.open("/home/shiba/output/Cd114_EnAng_15MeV2ndneutronsHK.txt",ios::out);
-   fout3.open("/home/shiba/output/Cd114_EnAng_15MeVbothneutronsHK.txt",ios::out);
+   fout1.open("../../output/Cd114_EnAng_15MeV_singleneutronHK.txt",ios::out);
+   fout2.open("../../output/Cd114_EnAng_15MeV2ndneutronsHK.txt",ios::out);
+   fout3.open("../../output/Cd114_EnAng_15MeVbothneutronsHK.txt",ios::out);
    
    
    ielemId = 0 ;
