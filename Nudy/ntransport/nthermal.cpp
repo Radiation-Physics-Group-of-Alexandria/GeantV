@@ -124,10 +124,10 @@ int main(){
    Int_t op = 4;           // Option for Root file creation verbosity
    std::vector<std::vector<double> > CSTable;
 // *************** Declare filenames ************************
-   //const char* fENDF = "/home/shiba/endffile/n-026_Fe_057.endf";
-   //const char* fENDF = "/home/shiba/thermal_scatt/tsl-graphite.endf";
+   //const char* fENDF = "../../endffile/n-026_Fe_057.endf";
+   //const char* fENDF = "../../thermal_scatt/tsl-graphite.endf";
    
-   const char* fENDF = "/home/shiba/thermal_scatt/tsl-HinZrH.endf";
+   const char* fENDF = "../../thermal_scatt/tsl-HinZrH.endf";
    const char* rENDF = "test.root";
    const char* mLib = "mem.dat";
    //-----------checking---------------
@@ -138,7 +138,7 @@ int main(){
      TNudyENDF *proc = new TNudyENDF(fENDF, rENDF, "recreate");
      // proc->SetPreProcess (0) ;
       proc->Process();
-      std::string fENDFSUB = "/home/shiba/fission/nfy-094_Pu_241.endf";
+      std::string fENDFSUB = "../../fission/nfy-094_Pu_241.endf";
       proc->SetEndfSub(fENDFSUB);
       proc->Process();
       

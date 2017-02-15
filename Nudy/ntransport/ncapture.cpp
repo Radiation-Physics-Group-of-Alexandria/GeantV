@@ -152,14 +152,14 @@ int main(){
    neutronENDFFilename = elementProp->endfFileName();
    
    cout<<"file name: "<<neutronENDFFilename<<endl;
-   stream << "/home/shiba/geantOct16/endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
+   stream << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
             fileName2= stream.str();
             rENDF = fileName2.c_str();
             irENDF = fileName2.c_str();
            TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
             //proc->SetPreProcess (0) ;
             proc->Process();
-            std::string fENDFSUB = "/home/shiba/fission/nfy-094_Pu_241.endf";
+            std::string fENDFSUB = "../../fission/nfy-094_Pu_241.endf";
             proc->SetEndfSub(fENDFSUB);
             proc->Process();
              TNudyEndfSigma();
@@ -168,11 +168,11 @@ int main(){
    
    
        ofstream fout;
-       fout.open("/home/shiba/output/junk.txt",ios::out);
+       fout.open("../../output/junk.txt",ios::out);
        ielemId = 0 ;
        std::stringstream str;
        std::string rootData;
-       str << "/home/shiba/geantOct16/endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
+       str << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
        rootData= str.str();
        const char* rootENDF = rootData.c_str();
        cout<<"Reading x-section file:\t"<<rootENDF<<endl;

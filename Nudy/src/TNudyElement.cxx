@@ -46,7 +46,7 @@ const char* TNudyElement::endfFileName()
        finalA=strA;
       }
   if(targetA == 12)finalA = "000"; // for 12C, in the endf data, the file was named as n-006_C_000.endf
-  std::string directoryName="/home/shiba/endffile/n-ddd_XX_fff.endf";
+  std::string directoryName="../../endffile/n-ddd_XX_fff.endf";
   std::string str1;
   std::string str2;
   std::string str3;

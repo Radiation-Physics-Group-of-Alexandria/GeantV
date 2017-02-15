@@ -218,30 +218,38 @@ int main(){
    elementProp = new TNudyElement(symbolT,targetZ1,targetM1);
    neutronENDFFilename = elementProp->endfFileName();
    cout<<"file name: "<<neutronENDFFilename<<endl;
-   stream << "/home/shiba/geantOct16/endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
+   stream << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
             fileName2= stream.str();
             rENDF = fileName2.c_str();
             irENDF = fileName2.c_str();
             TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
             //proc->SetPreProcess (0) ;
             proc->Process();
-            std::string fENDFSUB = "/home/shiba/fission/nfy-094_Pu_241.endf";
+            std::string fENDFSUB = "../../fission/nfy-094_Pu_241.endf";
             proc->SetEndfSub(fENDFSUB);
             proc->Process();
             TNudyEndfSigma();
             TNudyEndfSigma xsec;
             xsec.GetData(irENDF, isigDiff);
+  
+   ofstream fout1,fout2,fout3,fout4,fout5;
+    
+    //fout1.open("../../output/Li7_EnAng_14MeV_singleneutron.txt",ios::out);
+    //fout2.open("../../output/Li7_EnAng_14MeV_2ndneutrons.txt",ios::out);
+    //fout3.open("../../output/Li7_EnAng_14MeV_bothneutrons.txt",ios::out);
+    //fout4.open("../../output/Li7_EnAng_14MeV_1H2.txt",ios::out);
+    //fout5.open("../../output/Li7_EnAng_14MeV_2He4.txt",ios::out);
    
-   ofstream fout1,fout2,fout3;
-   fout1.open("../../output/Cd114_EnAng_15MeV_singleneutronHK.txt",ios::out);
-   fout2.open("../../output/Cd114_EnAng_15MeV2ndneutronsHK.txt",ios::out);
-   fout3.open("../../output/Cd114_EnAng_15MeVbothneutronsHK.txt",ios::out);
+     //fout1.open("../../output/Li7_EnAng_18MeV_MT25_singleneutron.txt",ios::out);
+     //fout2.open("../../output/Li7_EnAng_14MeV_MT25_2ndneutrons.txt",ios::out);
+     //fout3.open("../../output/Li7_EnAng_14MeV_MT25_3rdneutrons.txt",ios::out);
    
-   
+   //fout1.open("../../output/Cd114_EnAng_10MeV_MT91.txt",ios::out);
+   fout1.open("../../output/junk.txt",ios::out);
    ielemId = 0 ;
    std::stringstream str;
    std::string rootData;
-   str << "/home/shiba/geantOct16/endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
+   str << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
    rootData= str.str();
    const char* rootENDF = rootData.c_str();
    cout<<"Reading x-section file:\t"<<rootENDF<<endl;
@@ -253,7 +261,7 @@ int main(){
    TNudyInelastic *nProcIne= new TNudyInelastic(ielemId,rootENDF); //n-Capture
    int reactionMT;
    for(int i = 0; i <1; i++){//energy loop
-       nuEn=15.0E6;// + 0.25E6*i;// 0.002E6*i + 0.1E6;
+       nuEn=10.0E6;// + 0.25E6*i;// 0.002E6*i + 0.1E6;
        //n-Inelastic process
        for(int ie = 0 ; ie<100000; ie++){ // event loop
     	  nProcIne->nInelasticXsec(nuEn, elementProp); //provide neutron energy
@@ -265,16 +273,23 @@ int main(){
     	  reactionMT = nProcIne->reactionChannelNumber();
     	  sigmaIne = nProcIne->GetInelasticXsec();
      	  for(int j=0; j<productsName.size(); j++){
-          /* if (reactionMT ==16){
-           std::cout<<"event No. "<<ie <<"Reaction Channel No. MT: "<<reactionMT<<"  Products Name: "<<productsName[j]
+     	    //std::cout<<"no. of secondaries: "<<productsName.size()<<"   "<<secKineticEnergyLab.size()<<std::endl;
+     	    //if (reactionMT ==16){
+            /*if (reactionMT == 91){std::cout<<"event No.: "<<ie <<"  Reaction Channel No. MT: "<<reactionMT<<"  Products Name: "<<productsName[j]
      	            <<""<<" Kinetic energy_Lab: "<<secKineticEnergyLab[j]<<""
-     	           <<" cosine angle_lab: "<<seccosAngLab[j]<<std::endl;}//*/
-     	     if(reactionMT ==16 && productsName[j] == "n" && j==0)fout1<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	      if(reactionMT ==16 && productsName[j] == "n" && j==1)fout2<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	           if(reactionMT ==16 && productsName[j] == "n")fout3<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	 }
+     	           <<" cosine angle_lab: "<<seccosAngLab[j]<<std::endl;
+     	   }//*/
+     	    // if(reactionMT == 25 && productsName[j] == "n" && j==0)fout1<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	     //if(reactionMT == 25 && productsName[j] == "n" && j==1)fout2<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	     //if(reactionMT == 25 && productsName[j] == "n" && j==2)fout3<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	     //if(reactionMT == 24 && productsName[j] == "1H2")fout4<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	     //if(reactionMT == 24 && productsName[j] == "2He4")fout5<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	     if(reactionMT == 91 && productsName[j] == "n_continum" && j==0)fout1<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
+     	  }
      	 nProcIne->Reset();
        }//event loop
+       productsName.clear();
+       secKineticEnergyLab.clear();
     }//energy loop*/
 return 0;
   }// for main
