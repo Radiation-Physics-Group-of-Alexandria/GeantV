@@ -39,9 +39,8 @@ void TNudyFission::nFissionXsec(double nuEn, TNudyElement *targetElement)
      div_t divr;
      charge = targetElement->GetatomicNumber();
      mass   = targetElement->GetatomicMass();
-     double sumXsec=0;
      //fout.open("/home/shiba/output/fissioneutron.txt",ios::out);
-     for(unsigned int crsp = 0; crsp < mtValues; crsp++) {
+     for(int crsp = 0; crsp < mtValues; crsp++) {
         MT  = rp->MtValues[ielemId][crsp];
         MF4 = rp->GetMt4(ielemId, MT);
         MF5 = rp->GetMt5(ielemId, MT);

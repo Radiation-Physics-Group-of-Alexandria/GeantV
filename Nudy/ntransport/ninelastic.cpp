@@ -111,185 +111,80 @@ using namespace std;
 
 //-------------------Main-------------------//
 int main(){
-   
-   std::cout<<"Entered Main : "<< std::endl;
-   setEnv();   
-   
-   int ielemId;
-   int targetZ; 
-   int targetM;  
-   double nuEn=1.0E6;
-   double sigmaIne;
-   double costhlab;
-   double secE;
-   double isigDiff=0.001;
-   const char* fENDFn; 
-   const char* irENDF;
-   const char* rENDF;
-   const char* neutronENDFFilename; 
-   
-   std::string symbolE;
-   std::vector<std::string> nameX;
-   std::string secParticle;
-   std::string nameProc;
-   std::stringstream stream;
-   std::string fileName2;
-   std::vector<std::string> process_names;
-   //int         targetZ1 = 30;
-   //std::string symbolT  ="Zn";
-   //int         targetM1 = 64;
-   
-   //int         targetZ1 = 57;
-   //std::string symbolT  ="La";
-   //int         targetM1 = 138;
-   
-   //int         targetZ1 = 25;
-   //std::string symbolT  ="Mn";
-   //int         targetM1 = 55;
-   
-   //int         targetZ1 = 26;
-   //std::string symbolT  ="Fe";
-   //int         targetM1 = 56;
-   
-   //int         targetZ1 = 26;
-   //std::string symbolT  ="Fe";
-   //int         targetM1 = 54;
-   
-   //int         targetZ1 = 34;
-   //std::string symbolT  ="Se";
-   //int         targetM1 = 74;
-   
-   //int         targetZ1 = 3;
-   //std::string symbolT  ="Li";
-   //int         targetM1 = 6;
-      
-   //For MT = 25, file-4 and file-5
-   //int         targetZ1 = 3;
-   //std::string symbolT  ="Li";
-   //int         targetM1 = 7;
-   
-   //int         targetZ1 = 27;
-   //std::string symbolT  ="Co";
-   //int         targetM1 = 58;
-  
-   //int         targetZ1 = 64;
-   //std::string symbolT  ="Gd";
-   //int         targetM1 = 154;
-   
-    //int         targetZ1 = 14;
-    //std::string symbolT  ="Si";
-    //int         targetM1 = 29;
-   
-   //int         targetZ1 = 6;
-   //std::string symbolT  ="C";
-   //int         targetM1 = 12;
-   
-   //int         targetZ1 = 20;
-   //std::string symbolT  ="Ca";
-   //int         targetM1 = 40;
-   
-   //int         targetZ1 = 24;
-   //std::string symbolT  ="Cr";
-   //int         targetM1 = 52;
-   
-    //int         targetZ1 = 35;
-    //std::string symbolT  ="Br";
-    //int         targetM1 = 81;
-    
-    //int         targetZ1 = 47;
-    //std::string symbolT  ="Ag";
-    //int         targetM1 = 107;
-   
-    //int         targetZ1 = 79;
-    //std::string symbolT  ="Au";
-    //int         targetM1 = 197;
-    
-    //int         targetZ1 = 20;
-    //std::string symbolT  ="Ca";
-    //int         targetM1 = 48;
-    
-     int         targetZ1 = 48;
-     std::string symbolT  ="Cd";
-     int         targetM1 = 114;
-    
-    
-   
-   TNudyElement *elementProp;
-   elementProp = new TNudyElement(symbolT,targetZ1,targetM1);
-   neutronENDFFilename = elementProp->endfFileName();
-   cout<<"file name: "<<neutronENDFFilename<<endl;
-   stream << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
-            fileName2= stream.str();
-            rENDF = fileName2.c_str();
-            irENDF = fileName2.c_str();
-            TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
-            //proc->SetPreProcess (0) ;
-            proc->Process();
-            std::string fENDFSUB = "../../fission/nfy-094_Pu_241.endf";
-            proc->SetEndfSub(fENDFSUB);
-            proc->Process();
-            TNudyEndfSigma();
-            TNudyEndfSigma xsec;
-            xsec.GetData(irENDF, isigDiff);
-  
-   ofstream fout1,fout2,fout3,fout4,fout5;
-    
-    //fout1.open("../../output/Li7_EnAng_14MeV_singleneutron.txt",ios::out);
-    //fout2.open("../../output/Li7_EnAng_14MeV_2ndneutrons.txt",ios::out);
-    //fout3.open("../../output/Li7_EnAng_14MeV_bothneutrons.txt",ios::out);
-    //fout4.open("../../output/Li7_EnAng_14MeV_1H2.txt",ios::out);
-    //fout5.open("../../output/Li7_EnAng_14MeV_2He4.txt",ios::out);
-   
-     //fout1.open("../../output/Li7_EnAng_18MeV_MT25_singleneutron.txt",ios::out);
-     //fout2.open("../../output/Li7_EnAng_14MeV_MT25_2ndneutrons.txt",ios::out);
-     //fout3.open("../../output/Li7_EnAng_14MeV_MT25_3rdneutrons.txt",ios::out);
-   
-   //fout1.open("../../output/Cd114_EnAng_10MeV_MT91.txt",ios::out);
-   fout1.open("../../output/junk.txt",ios::out);
-   ielemId = 0 ;
-   std::stringstream str;
-   std::string rootData;
-   str << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
-   rootData= str.str();
-   const char* rootENDF = rootData.c_str();
-   cout<<"Reading x-section file:\t"<<rootENDF<<endl;
-   double xsec1;
-   double energy1;
-   std::vector<std::string> productsName;
-   std::vector<double> secKineticEnergyLab;
-   std::vector<double> seccosAngLab;
-   TNudyInelastic *nProcIne= new TNudyInelastic(ielemId,rootENDF); //n-Capture
-   int reactionMT;
-   for(int i = 0; i <1; i++){//energy loop
-       nuEn=10.0E6;// + 0.25E6*i;// 0.002E6*i + 0.1E6;
-       //n-Inelastic process
-       for(int ie = 0 ; ie<100000; ie++){ // event loop
-    	  nProcIne->nInelasticXsec(nuEn, elementProp); //provide neutron energy
-    	  nProcIne->GetInelasticParameters(xsec1,energy1);
-    	  sigmaIne = nProcIne->GetInelasticXsec();
-    	  productsName = nProcIne->GetParticleInelastic();
-    	  secKineticEnergyLab = nProcIne->GetKiEnInelastic();
-    	  seccosAngLab        = nProcIne->GetcosAngInelastic();
-    	  reactionMT = nProcIne->reactionChannelNumber();
-    	  sigmaIne = nProcIne->GetInelasticXsec();
-     	  for(int j=0; j<productsName.size(); j++){
-     	    //std::cout<<"no. of secondaries: "<<productsName.size()<<"   "<<secKineticEnergyLab.size()<<std::endl;
-     	    //if (reactionMT ==16){
-            /*if (reactionMT == 91){std::cout<<"event No.: "<<ie <<"  Reaction Channel No. MT: "<<reactionMT<<"  Products Name: "<<productsName[j]
+
+  std::cout<<"Entered Main : "<< std::endl;
+  setEnv();
+  int ielemId;
+  double nuEn=1.0E6;
+  double sigmaIne;
+  double isigDiff=0.001;
+  const char* irENDF;
+  const char* rENDF;
+  const char* neutronENDFFilename;
+  std::string symbolE;
+  std::vector<std::string> nameX;
+  std::string secParticle;
+  std::string nameProc;
+  std::stringstream stream;
+  std::string fileName2;
+  std::vector<std::string> process_names;
+  int         targetZ1 = 48;
+  std::string symbolT  ="Cd";
+  int         targetM1 = 114;
+  TNudyElement *elementProp;
+  elementProp = new TNudyElement(symbolT,targetZ1,targetM1);
+  neutronENDFFilename = elementProp->endfFileName();
+  cout<<"file name: "<<neutronENDFFilename<<endl;
+  stream << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
+  fileName2= stream.str();
+  rENDF = fileName2.c_str();
+  irENDF = fileName2.c_str();
+  TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
+//proc->SetPreProcess (0) ;
+  proc->Process();
+  std::string fENDFSUB = "../../fission/nfy-094_Pu_241.endf";
+  proc->SetEndfSub(fENDFSUB);
+  proc->Process();
+  TNudyEndfSigma();
+  TNudyEndfSigma xsec;
+  xsec.GetData(irENDF, isigDiff);
+  ielemId = 0 ;
+  std::stringstream str;
+  std::string rootData;
+  str << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
+  rootData= str.str();
+  const char* rootENDF = rootData.c_str();
+  cout<<"Reading x-section file:\t"<<rootENDF<<endl;
+  double xsec1;
+  double energy1;
+  std::vector<std::string> productsName;
+  std::vector<double> secKineticEnergyLab;
+  std::vector<double> seccosAngLab;
+  TNudyInelastic *nProcIne= new TNudyInelastic(ielemId,rootENDF);
+  int reactionMT;
+  for(int i = 0; i <1; i++){//energy loop
+    nuEn = 10.0E6;// + 0.25E6*i;// 0.002E6*i + 0.1E6;
+//  n-Inelastic process
+    for(int ie = 0 ; ie<100; ie++){ // event loop
+      nProcIne->nInelasticXsec(nuEn, elementProp); //provide neutron energy
+    	nProcIne->GetInelasticParameters(xsec1,energy1);
+    	sigmaIne = nProcIne->GetInelasticXsec();
+    	productsName = nProcIne->GetParticleInelastic();
+    	secKineticEnergyLab = nProcIne->GetKiEnInelastic();
+    	seccosAngLab        = nProcIne->GetcosAngInelastic();
+    	reactionMT = nProcIne->reactionChannelNumber();
+      std::cout<<"Incident neutron kinetic energy: "<< nuEn<<"  total n-Inelastic cross-section: "<<sigmaIne<<std::endl;
+      std::cout << "<----------------------------------------------------->" << std::endl;
+    	for(unsigned int j=0; j<productsName.size(); j++){
+//      std::cout<<"no. of secondaries: "<<productsName.size()<<"   "<<secKineticEnergyLab.size()<<std::endl;
+     	  std::cout<<"event No.: "<<ie <<"  Reaction Channel No. MT: "<<reactionMT<<"  Products Name: "<<productsName[j]
      	            <<""<<" Kinetic energy_Lab: "<<secKineticEnergyLab[j]<<""
      	           <<" cosine angle_lab: "<<seccosAngLab[j]<<std::endl;
-     	   }//*/
-     	    // if(reactionMT == 25 && productsName[j] == "n" && j==0)fout1<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	     //if(reactionMT == 25 && productsName[j] == "n" && j==1)fout2<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	     //if(reactionMT == 25 && productsName[j] == "n" && j==2)fout3<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	     //if(reactionMT == 24 && productsName[j] == "1H2")fout4<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	     //if(reactionMT == 24 && productsName[j] == "2He4")fout5<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	     if(reactionMT == 91 && productsName[j] == "n_continum" && j==0)fout1<<secKineticEnergyLab[j]<<"\t"<<seccosAngLab[j]<<endl;
-     	  }
-     	 nProcIne->Reset();
-       }//event loop
-       productsName.clear();
-       secKineticEnergyLab.clear();
-    }//energy loop*/
+     	}
+     	nProcIne->Reset();
+    }//event loop
+    productsName.clear();
+    secKineticEnergyLab.clear();
+  }//energy loop*/
 return 0;
-  }// for main
+}// for main

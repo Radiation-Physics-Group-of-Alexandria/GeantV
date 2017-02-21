@@ -110,26 +110,15 @@ using namespace std;
 }
 //-------------------Main-------------------//
 int main(){
-    // G4ParticleDefinition* particle1
-    //      = G4ParticleTable::GetParticleTable()->FindParticle("neutron");
+   
    std::cout<<"Entered Main : "<< std::endl;
    TNudyENDF();
    TNudyENDF obj1;
-   TNudyEndfRecoPoint *obj2;
-   bool menu = true;
-   int choice;
-   Int_t matNum;
-   const char* particle = "neutron";
-   Int_t zVal, aVal, za;   // zVal = Z, aVal = A, za = 100 * Z + A
-   Int_t op = 4;           // Option for Root file creation verbosity
    std::vector<std::vector<double> > CSTable;
 // *************** Declare filenames ************************
-   //const char* fENDF = "../../endffile/n-026_Fe_057.endf";
-   //const char* fENDF = "../../thermal_scatt/tsl-graphite.endf";
-   
-   const char* fENDF = "../../thermal_scatt/tsl-HinZrH.endf";
+   const char* fENDF = "../../thermal_scatt/tsl-graphite.endf";
+  // const char* fENDF = "../../thermal_scatt/tsl-HinZrH.endf";
    const char* rENDF = "test.root";
-   const char* mLib = "mem.dat";
    //-----------checking---------------
    const char* irENDF="test.root";
    setEnv();
@@ -148,12 +137,8 @@ int main(){
       xsec.GetData(irENDF, isigDiff);
       TNudyEndfRecoPoint *rp = new TNudyEndfRecoPoint(ieleId, irENDF);
       rp->GetData(ieleId, irENDF);
-      int nevent=10; 
-      int mt;
-      double sigma;
       double neutronEnergy =0.015;// Energy in eV
       double materialTemprature = 296.0;//  // Temprature in K
-      double costhlab;
       double thermalneutronXsec;
        TNudyEndfThermal *xsecth = new TNudyEndfThermal() ;
        xsecth->GetData(irENDF, isigDiff);
@@ -163,7 +148,6 @@ int main(){
          thermalneutronXsec = xsecth->nThermalElasticXsecion(neutronEnergy, materialTemprature);
          //cout<<"Energy: "<< neutronEnergy<<"  x-section: "<<xsecth->nThermalElasticXsecion(neutronEnergy, materialTemprature )<<endl;
          cout<<"Main: neutron energy  "<<neutronEnergy<< " Xsec: "<< thermalneutronXsec<<endl;
-         
        }
        delete xsecth;
 return 0;

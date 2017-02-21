@@ -113,26 +113,16 @@ using namespace std;
 
 //-------------------Main-----------------------------------------------------//
 int main(){
-   
+
    std::cout<<"Entered Main : "<< std::endl;
-   setEnv();   
-   
+   setEnv();
    int ielemId;
-   int targetZ; 
-   int targetM;  
-   int eventcount=0;
-   int num_process_names=0;
    double nuEn=1.0E6;
-   double sigmaEla;
-   double En;
-   double costhlab;
    std::vector<double> secE;
    std::vector<double> secpcosAng;
-   double fissFragmass;
-   double fissFragEn;
-   double isigDiff=0.001;
-   std::vector<double> xsecs ={0};
-   const char* neutronENDFFilename; 
+   double isigDiff = 0.001;
+   double ncaptureXsection = 0.0;
+   const char* neutronENDFFilename;
    const char* irENDF;
    const char* rENDF;
    std::string symbolE;
@@ -142,54 +132,53 @@ int main(){
    std::stringstream stream;
    std::string fileName2;
    std::vector<std::string> process_names;
-  
    int         targetZ1 = 26;
    std::string symbolT  ="Fe";
    int         targetM1 = 56;
 
    TNudyElement *elementProp;
-   elementProp = new TNudyElement(symbolT,targetZ1,targetM1);
-   neutronENDFFilename = elementProp->endfFileName();
-   
-   cout<<"file name: "<<neutronENDFFilename<<endl;
-   stream << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
-            fileName2= stream.str();
-            rENDF = fileName2.c_str();
-            irENDF = fileName2.c_str();
-           TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
-            //proc->SetPreProcess (0) ;
-            proc->Process();
-            std::string fENDFSUB = "../../fission/nfy-094_Pu_241.endf";
-            proc->SetEndfSub(fENDFSUB);
-            proc->Process();
-             TNudyEndfSigma();
-            TNudyEndfSigma xsec;
-            xsec.GetData(irENDF, isigDiff);
-   
-   
-       ofstream fout;
-       fout.open("../../output/junk.txt",ios::out);
-       ielemId = 0 ;
-       std::stringstream str;
-       std::string rootData;
-       str << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
-       rootData= str.str();
-       const char* rootENDF = rootData.c_str();
-       cout<<"Reading x-section file:\t"<<rootENDF<<endl;
-       TNudyCapture *nProc= new TNudyCapture(ielemId,rootENDF);     //n-Elastic
-    //n-Elastic process
-   for(int i = 0; i <1; i++){//event loop
-        nuEn= 1.0E-5;//2.5E6 + 0.02E6*i;
-        for(int j = 0; j <1; j++){ // energy loop
-           nProc->nCaptureXsec(nuEn, elementProp); //provide neutron energy
-           secParticle = nProc->nCaptureGetsecParticles();
-           secE	      = nProc->nCaptureGetEnergy();
-           secpcosAng  = nProc->nCaptureGetcosAng();
-           for(int k = 0; k<secParticle.size(); k++){
-             cout<<"Event No. : "<<i <<"   Products name:  "<< secParticle[k]<<"  cosAng_Lab:   "<<secpcosAng[k]<<"  Energy_Lab(eV) "<<secE[k]<<endl;
-           }
-         nProc->nCaptureProcessReset();      
-        }// energy loop
-    }//event loop
+        elementProp = new TNudyElement(symbolT,targetZ1,targetM1);
+        neutronENDFFilename = elementProp->endfFileName();
+        cout<<"file name: "<<neutronENDFFilename<<endl;
+        stream << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
+        fileName2= stream.str();
+        rENDF = fileName2.c_str();
+        irENDF = fileName2.c_str();
+   TNudyENDF *proc = new TNudyENDF(neutronENDFFilename, rENDF, "recreate");
+//      proc->SetPreProcess (0) ;
+        proc->Process();
+        std::string fENDFSUB = "../../fission/nfy-094_Pu_241.endf";
+        proc->SetEndfSub(fENDFSUB);
+        proc->Process();
+   TNudyEndfSigma();
+   TNudyEndfSigma xsec;
+        xsec.GetData(irENDF, isigDiff);
+   ofstream fout;
+   fout.open("../../output/junk.txt",ios::out);
+   ielemId = 0 ;
+   std::stringstream str;
+   std::string rootData;
+   str << "../../endfrootfile/n" << targetZ1 << symbolT <<targetM1<<".root";
+   rootData= str.str();
+   const char* rootENDF = rootData.c_str();
+   cout<<"Reading x-section file:\t"<<rootENDF<<endl;
+   TNudyCapture *nProc= new TNudyCapture(ielemId,rootENDF);     //n-Elastic
+// n-Capture process
+   for(int i = 0; i <1; i++){//energy loop
+     nuEn= 10.0E5;
+     for(int j = 0; j <1; j++){ // event loop
+       nProc->nCaptureXsec(nuEn, elementProp); //provide neutron energy
+       ncaptureXsection = nProc->GetCaptureXsec();
+       std::cout<<"Incident neutron kinetic energy: "<< nuEn<<"  n-Capture cross-section: "<<ncaptureXsection<<std::endl;
+       std::cout << "<----------------------------------------------------->" << std::endl;
+       secParticle = nProc->nCaptureGetsecParticles();
+       secE	      = nProc->nCaptureGetEnergy();
+       secpcosAng  = nProc->nCaptureGetcosAng();
+       for(unsigned int k = 0; k<secParticle.size(); k++){
+         cout<<"Event No. : "<<i <<"   Products name:  "<< secParticle[k]<<"  cosAng_Lab:   "<<secpcosAng[k]<<"  Energy_Lab(eV) "<<secE[k]<<endl;
+       }
+       nProc->nCaptureProcessReset();
+     }//event loop
+   }//energy loop
 return 0;
-  }// for main
+}// for main

@@ -53,14 +53,17 @@ void TNudyCapture::nCaptureXsec(double nuEn, TNudyElement *targetElement)
      charge = targetElement->GetatomicNumber();
      mass   = targetElement->GetatomicMass();
      for(unsigned int crsp = 0; crsp < mtValues; crsp++) {
-        MT=rp->MtValues[ielemId][crsp];
         MT  = rp->MtValues[ielemId][crsp];
-        MF4 = rp->GetMt4(ielemId, MT);
-        MF5 = rp->GetMt5(ielemId, MT);
-        MF6 = rp->GetMt6(ielemId, MT);
-        LCT = rp->GetCos4Lct(ielemId, MT);
         switch (MT) {
                case 102:{
+        
+           MF4 = rp->GetMt4(ielemId, MT);
+           MF5 = rp->GetMt5(ielemId, MT);
+           MF6 = rp->GetMt6(ielemId, MT);
+           LCT = rp->GetCos4Lct(ielemId, MT);
+           
+           std::cout<<"MF4: "<<MF4<<" MF5: "<<MF5<<"  MF6:"<<MF6<<"  LCT: "<<LCT<<std::endl;
+           
           residueACa = mass + 1;
           residueZCa = charge;
           sigmaCapture = rp->GetSigmaPartial(ielemId, crsp, kineticE);
@@ -70,7 +73,7 @@ void TNudyCapture::nCaptureXsec(double nuEn, TNudyElement *targetElement)
           cosLab = 0;
           secEnergyCM = 0;
           secEnergyLab = 0;
-          
+          std::cout<<"capture x-section: "<<sigmaCapture<<std::endl;
           std::cout<<"***********************************************************"<<std::endl;
           std::cout<<"*"<<"                     IMPORTANT NOTE                      *"<<std::endl;
           std::cout<<"*"<<" In nCapture process the angle of out going gamma is not *"<<std::endl;
