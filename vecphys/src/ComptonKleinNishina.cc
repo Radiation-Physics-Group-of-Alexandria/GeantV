@@ -12,7 +12,7 @@ inline namespace VECPHYS_IMPL_NAMESPACE {
 VECCORE_ATT_HOST
 ComptonKleinNishina::ComptonKleinNishina(Random_t *states, int tid) : EmModelBase<ComptonKleinNishina>(states, tid)
 {
-  //SetLowEnergyLimit(10.*keV); commented out for the moment
+  SetLowEnergyLimit(10.*keV);
   Initialization();
 }
 
@@ -20,7 +20,7 @@ VECCORE_ATT_HOST_DEVICE
 ComptonKleinNishina::ComptonKleinNishina(Random_t *states, int tid, GUAliasSampler *sampler)
     : EmModelBase<ComptonKleinNishina>(states, tid, sampler)
 {
-  //SetLowEnergyLimit(10.*keV); commented out for the moment
+  SetLowEnergyLimit(10.*keV);
 }
 
 VECCORE_ATT_HOST
