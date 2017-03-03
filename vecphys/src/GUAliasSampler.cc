@@ -86,7 +86,6 @@ void GUAliasSampler::BuildAliasTable(int Zelement, const double *pdf)
 
   GUAliasTable *table = new GUAliasTable((fInNumEntries + 1) * fSampledNumEntries);
 
-  int counter   = 0;
   int recipCopy = 0;
   for (int ir = 0; ir <= fInNumEntries; ++ir) {
     // copy and initialize
@@ -131,11 +130,6 @@ void GUAliasSampler::BuildAliasTable(int Zelement, const double *pdf)
       // If one entry is never considered a recip, then fAlias and aProbQ entries must be correctly initialized
       table->fAlias[ir * fSampledNumEntries + recip] = donor;
       table->fProbQ[ir * fSampledNumEntries + recip] = fSampledNumEntries * ap[recip];
-
-      if(table->fAlias[ir*fSampledNumEntries+recipCopy] < 0 || table->fProbQ[ir*fSampledNumEntries+recipCopy] < 0) {
-        // std::cout<<"GUAliasSampler::BuildAliasTable:table->fAlias["<<ir*fSampledNumEntries+recipCopy<<"]: "<<table->fAlias[ir*fSampledNumEntries+recipCopy]<<", table->fProbQ["<<ir*fSampledNumEntries+recipCopy<<"]: "<<table->fProbQ[ir*fSampledNumEntries+recipCopy]<<" and Zelement: "<<Zelement<<"\n";
-        counter++;
-      }
 
       // update pdf
       ap[donor] = ap[donor] - (cp - ap[recip]);
