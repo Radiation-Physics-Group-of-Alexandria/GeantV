@@ -25,8 +25,10 @@
 #include "TaskMgrTBB.h"
 #endif
 
+#if USE_VECPHYS==1
 #include "base/Stopwatch.h"
 using vecgeom::Stopwatch;
+#endif
 
 static int n_events = 50;
 static int n_buffered = 10;
@@ -53,7 +55,7 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {0, 0, 0, 0}};
 
 void help() {
-  printf("\nUsage: runapp [OPTIONS] INPUT_FILE\n\n");
+  printf("\nUsage: runApp [OPTIONS] INPUT_FILE\n\n");
 
   for (int i = 0; options[i].name != NULL; i++) {
     printf("\t-%c  --%s\t%s\n", options[i].val, options[i].name, options[i].has_arg ? options[i].name : "");
@@ -63,9 +65,11 @@ void help() {
 
 int main(int argc, char *argv[]) {
     
+#if USE_VECPHYS==1
   static Stopwatch timer;
   Real_t elapsedTime = 0.0;
   timer.Start();
+#endif
   
   std::cout << "Avoid ctest truncation of output: CTEST_FULL_OUTPUT" << std::endl;
   //std::string events_filename("minbias_14TeV.root");
@@ -249,11 +253,12 @@ int main(int argc, char *argv[]) {
   propagator->fUseAppMonitoring = false;
 
   propagator->PropagatorGeom(exn03_geometry_filename.c_str(), n_threads, monitor);
+
 #if USE_VECPHYS==1
   std::cout<<"\nEnd of runApp, "<<propagator->fVecPhysOrchestrator->fComptonTotTracks<<" tracks with Compton\n";
-#endif
   elapsedTime = timer.Stop();
   std::cout<<"Elapsed Time: "<<elapsedTime<<"\n";
-  return 0;
+#endif
+    return 0;
 }
 #endif

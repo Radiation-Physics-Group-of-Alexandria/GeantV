@@ -42,7 +42,7 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {0, 0, 0, 0}};
 
 void help() {
-  printf("\nUsage: cmsapp [OPTIONS] INPUT_FILE\n\n");
+  printf("\nUsage: cmsApp [OPTIONS] INPUT_FILE\n\n");
 
   for (int i = 0; options[i].name != NULL; i++) {
     printf("\t-%c  --%s\t%s\n", options[i].val, options[i].name, options[i].has_arg ? options[i].name : "");
