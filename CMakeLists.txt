@@ -105,7 +105,7 @@ if(USE_REAL_PHYSICS)
   option(USE_VECPHYS "Enable activation of vector physics - Mandatory with REAL_PHYSICS." ON)  
 else()
   message(STATUS "USE_REAL_PHYSICS OFF : Simulation with the old physics interface")
-  option(USE_VECPHYS "Enable activation of vector physics." OFF)  
+  option(USE_VECPHYS "Enable activation of vector physics - Mandatory with REAL_PHYSICS." OFF)  
 endif()
 
 if(USE_VECPHYS)

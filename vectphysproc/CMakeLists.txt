@@ -1,14 +1,8 @@
 #----------------------------------------------------------------------------------------------
 # Add source files & include directories
 #
-set(sources 
-  src/GVectorPhysicsProcess.cc
-  src/GVComptonProcess.cc
-  )
-set(headers
-  inc/GVectorPhysicsProcess.h
-  inc/GVComptonProcess.h
-  )
+set(sources src/GVectorPhysicsProcess.cc src/GVComptonProcess.cc )
+set(headers inc/GVectorPhysicsProcess.h  inc/GVComptonProcess.h  )
 
 #----------------------------------------------------------------------------
 # Set include directories
