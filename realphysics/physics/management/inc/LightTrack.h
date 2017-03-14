@@ -70,11 +70,11 @@ public:
   LightTrack();
 
   /** @brief LightTrack complete constructor */
-  LightTrack( const LTrackStatus aTrackStatus, const int aGVcode, const int aGTrackIndex, const int aMaterialCutCoupleIndex,
-              const int aProcessIndex, const int aTargetZ,
-              const int aTargetN, const double aXdir, const double aYdir, const double aZdir,
-              const double aKinE, const double aMass, const double aTime, const double aWeight,
-              const double aStepLength, const double aEdep, const double aNintLen, const double aIntLen,
+  LightTrack( const LTrackStatus aTrackStatus, int aGVcode, int aGTrackIndex, int aMaterialCutCoupleIndex,
+              int aProcessIndex, int aTargetZ,
+              int aTargetN,  double aXdir,  double aYdir,  double aZdir,
+              double aKinE,  double aMass,  double aTime,  double aWeight,
+              double aStepLength,  double aEdep,  double aNintLen,  double aIntLen,
               ExtraInfo* aExtraInfo = 0 );
 
   /** @brief LightTrack copy constructor */
@@ -195,18 +195,25 @@ public:
    * @brief Method that sets the X direction value
    * @param aXdir X direction (normalized, adimensional)
    */
-  void SetDirX( const double aXdir ) { fXdir = aXdir; }
+  void SetDirX( double aXdir ) { fXdir = aXdir; }
 
   /** @brief Method that sets the Y direction value
    * @param aYdir Y direction (normalized, adimensional)
    */
-  void SetDirY( const double aYdir ) { fYdir = aYdir; }
+  void SetDirY( double aYdir ) { fYdir = aYdir; }
 
   /** @brief Method that sets the Z direction value
    * @param aZdir Z direction (normalized, adimensional)
    */
-  void SetDirZ( const double aZdir ) { fZdir = aZdir; }
+  void SetDirZ( double aZdir ) { fZdir = aZdir; }
 
+  /** @brief Method that sets all the direction components
+   * @param aXdir X direction (normalized, adimensional)
+   * @param aYdir Y direction (normalized, adimensional)
+   * @param aZdir Z direction (normalized, adimensional)
+   */  
+  void SetDirection( double aXdir, double aYdir, double aZdir ) { fXdir = aXdir; fYdir = aYdir; fZdir = aZdir; }
+  
   /**
    * @brief Method that sets the kinetic energy
    * @param aKinE kinetic energy (unit: energy)
