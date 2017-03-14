@@ -57,7 +57,7 @@ public:
    *            kinetic energy if the corresponding stopping power table was built in internal [energy/length] units.
    *            Zero otherwise.
    */
-  double GetRestrictedDEDX(int matcutindx, int partindx, double kinenergy);
+  double GetRestrictedDEDX(int matcutindx, size_t partindx, double kinenergy);
 
   /** @brief  Run time method to obtain restricted range for the given MaterialCuts index, particle and kinetic energy.
    *
@@ -74,7 +74,7 @@ public:
    * @return    Restricted range in the specified MaterialCuts for the specified particle at the given kinetic energy
    *            if the corresponding range table was built in internal [length] units. A big (1.0e+20) otherwise.
    */
-  double GetRestrictedRange(int matcutindx, int partindx, double kinenergy);
+  double GetRestrictedRange(int matcutindx, size_t partindx, double kinenergy);
 
 
   /** @brief  Run time method to obtain the kinetic energy that corresponds to a given restricted range in the
@@ -101,7 +101,7 @@ public:
   //       - at the moment we try to avoid to use this such that we provide methods like GetMeanEnergyAfterAStep...
   //        that should be used instead of more fragmented computations
   // returns with the kinetic energy that corresponds to a given restricted range
-  double GetEnergyForRestrictedRange(int matcutindx, int partindx, double range);
+  double GetEnergyForRestrictedRange(int matcutindx, size_t partindx, double range);
 
   /**
    * @brief  Method to obtain full(CSDA) range for the given Material index, particle and kinetic energy. Available only
@@ -122,7 +122,7 @@ public:
    * @return    Full CSDA range in the specified Material for the specified particle at the given kinetic energy
    *            if the corresponding range table was built in internal [length] units. A high value (1.0e+20) otherwise.
    */
-  double GetRange(int matindx, int partindx, double kinenergy);
+  double GetRange(int matindx, size_t partindx, double kinenergy);
 
 /*
 //
