@@ -278,7 +278,7 @@ private:
    *
    * The method is expected to be called from the BuildOneELossData helper method to handle the dEdx computation part.
    * Computes dE/dx by summing up contributions from all kEnergyLoss EMPhysicsProcess(es) assigned to the given Particle.
-   * The ComputeDEDX method of the registred kEnergyLoss EMPhysicsProcess-es are invoked and a spline interpollatior is
+   * The ComputeDEDX method of the registered kEnergyLoss EMPhysicsProcess-es are invoked and a spline interpollatior is
    * set up on the computed dEdx table for run-time interpolation.
    *
    * @param[in] lossdata  Pointer to the ELossData structure with energy grid, MaterialCuts, Particle and kEnergyLoss
@@ -311,7 +311,7 @@ private:
    * object. The full CSDA range is NOT used during the simulation (restricted range is used). The method is expected to
    * be called from the BuildOneELossData helper method to handle the full range computation part:
    *  The total dedx i.e. that corresponds to production cut equal to the particle kinetic energy is computed by summing
-   *  up contributions from all registered EnergyLoss EMPhysicsProcess; the ComputeDEDX method of the registred
+   *  up contributions from all registered EnergyLoss EMPhysicsProcess; the ComputeDEDX method of the registered
    *  EnergyLoss EMPhysicsProcess-es are invoked with indicating that total dedx i.e. production cut equal to the
    *  partcile energy is requested.
    *  The inverse total dedx is integrated to obtain the corresponding total range.

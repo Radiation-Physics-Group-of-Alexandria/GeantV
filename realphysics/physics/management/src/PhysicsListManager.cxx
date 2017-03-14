@@ -190,7 +190,7 @@ void PhysicsListManager::ClearAll() {
     (particle->GetPhysicsManagerPerParticleVector()).clear(); // obejcts are deleted above
   }
 
-  // delete all registred physics lists and clear the local container
+  // delete all registered physics lists and clear the local container
   for (unsigned long i=0; i<fPhysicsListVector.size(); ++i) {
     delete fPhysicsListVector[i];
   }

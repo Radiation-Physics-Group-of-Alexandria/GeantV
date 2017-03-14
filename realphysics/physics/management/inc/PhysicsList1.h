@@ -1,4 +1,3 @@
-
 #include "SystemOfUnits.h"
 
 #include "PhysicsList.h"
@@ -45,7 +44,7 @@ public:
         eIoniProc->AddModel(eMBModel);
         //
         // add the process to the e- particle
-        AddProcessToPartcile(particle, eIoniProc);
+        AddProcessToParticle(particle, eIoniProc);
         //
         // create bremsstrahlung process for e- with 2 models:
         //
@@ -71,7 +70,7 @@ public:
         eBremProc->AddModel(eRelBModel);
         //
         // add the process to the e- particle
-        AddProcessToPartcile(particle, eBremProc);
+        AddProcessToParticle(particle, eBremProc);
       }
       if (particle==Positron::Definition()) {
         //std::cout<<"  Positron" <<std::endl;
@@ -87,7 +86,7 @@ public:
         // add the model to the process
         eIoniProc->AddModel(eMBModel);
         // add the process to the e+ particle
-        AddProcessToPartcile(particle, eIoniProc);
+        AddProcessToParticle(particle, eIoniProc);
         //
         // create bremsstrahlung process for e+ with 2 models:
         //
@@ -113,7 +112,7 @@ public:
         eBremProc->AddModel(eRelBModel);
         //
         // add the process to the e+ particle
-        AddProcessToPartcile(particle, eBremProc);
+        AddProcessToParticle(particle, eBremProc);
       }
     }
   }
