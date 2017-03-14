@@ -280,7 +280,7 @@ void DetectorConstruction::DefineMaterials()
                          kStateGas,temperature,pressure);
   beam->AddMaterial(Air, fractionmass=1.);
 
-  //  G4cout << *(G4Material::GetMaterialTable()) << G4endl;
+  //  std::cout << *(G4Material::GetMaterialTable()) << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -409,20 +409,20 @@ G4VPhysicalVolume* DetectorConstruction::ConstructCalorimeter()
 
 void DetectorConstruction::PrintCalorParameters()
 {
-  G4cout << "\n-------------------------------------------------------------"
+  std::cout << "\n-------------------------------------------------------------"
          << "\n ---> The calorimeter is " << fNbOfLayers << " layers of:";
   for (G4int i=1; i<=fNbOfAbsor; i++)
      {
-      G4cout << "\n \t" << std::setw(12) << fAbsorMaterial[i]->GetName() <<": "
+      std::cout << "\n \t" << std::setw(12) << fAbsorMaterial[i]->GetName() <<": "
               << std::setw(6) << G4BestUnit(fAbsorThickness[i],"Length");
      }
-  G4cout << "\n-------------------------------------------------------------\n";
+  std::cout << "\n-------------------------------------------------------------\n";
 
-  G4cout << "\n" << fDefaultMaterial << G4endl;
+  std::cout << "\n" << fDefaultMaterial << G4endl;
   for (G4int j=1; j<=fNbOfAbsor; j++)
-     G4cout << "\n" << fAbsorMaterial[j] << G4endl;
+     std::cout << "\n" << fAbsorMaterial[j] << G4endl;
 
-  G4cout << "\n-------------------------------------------------------------\n";
+  std::cout << "\n-------------------------------------------------------------\n";
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -443,7 +443,7 @@ void DetectorConstruction::SetNbOfLayers(G4int ival)
   // set the number of Layers
   //
   if (ival < 1)
-    { G4cout << "\n --->warning from SetfNbOfLayers: "
+    { std::cout << "\n --->warning from SetfNbOfLayers: "
              << ival << " must be at least 1. Command refused" << G4endl;
       return;
     }
@@ -458,7 +458,7 @@ void DetectorConstruction::SetNbOfAbsor(G4int ival)
   // set the number of Absorbers
   //
   if (ival < 1 || ival > (kMaxAbsor-1))
-    { G4cout << "\n ---> warning from SetfNbOfAbsor: "
+    { std::cout << "\n ---> warning from SetfNbOfAbsor: "
              << ival << " must be at least 1 and and most " << kMaxAbsor-1
              << ". Command refused" << G4endl;
       return;
@@ -474,7 +474,7 @@ void DetectorConstruction::SetAbsorMaterial(G4int ival, const G4String& material
   // search the material by its name
   //
   if (ival > fNbOfAbsor || ival <= 0)
-    { G4cout << "\n --->warning from SetAbsorMaterial: absor number "
+    { std::cout << "\n --->warning from SetAbsorMaterial: absor number "
              << ival << " out of range. Command refused" << G4endl;
       return;
     }
@@ -492,12 +492,12 @@ void DetectorConstruction::SetAbsorThickness(G4int ival,G4double val)
   // change Absorber thickness
   //
   if (ival > fNbOfAbsor || ival <= 0)
-    { G4cout << "\n --->warning from SetAbsorThickness: absor number "
+    { std::cout << "\n --->warning from SetAbsorThickness: absor number "
              << ival << " out of range. Command refused" << G4endl;
       return;
     }
   if (val <= DBL_MIN)
-    { G4cout << "\n --->warning from SetAbsorThickness: thickness "
+    { std::cout << "\n --->warning from SetAbsorThickness: thickness "
              << val  << " out of range. Command refused" << G4endl;
       return;
     }
@@ -512,7 +512,7 @@ void DetectorConstruction::SetCalorSizeYZ(G4double val)
   // change the transverse size
   //
   if (val <= DBL_MIN)
-    { G4cout << "\n --->warning from SetfCalorSizeYZ: thickness "
+    { std::cout << "\n --->warning from SetfCalorSizeYZ: thickness "
              << val  << " out of range. Command refused" << G4endl;
       return;
     }

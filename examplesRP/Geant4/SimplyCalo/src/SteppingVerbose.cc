@@ -55,12 +55,12 @@ void SteppingVerbose::TrackingStarted()
 {  
   CopyState();
   
-  G4int prec = G4cout.precision(3);
+  G4int prec = std::cout.precision(3);
   
   //Step zero
   //  
   if( verboseLevel > 0 ){
-    G4cout << std::setw( 5) << "Step#"      << " "
+    std::cout << std::setw( 5) << "Step#"      << " "
            << std::setw( 6) << "X"          << "    "
            << std::setw( 6) << "Y"          << "    "  
            << std::setw( 6) << "Z"          << "    "
@@ -71,7 +71,7 @@ void SteppingVerbose::TrackingStarted()
            << std::setw(10) << "Volume"     << "  "
            << std::setw(10) << "Process"    << G4endl;             
 
-    G4cout << std::setw(5) << fTrack->GetCurrentStepNumber() << " "
+    std::cout << std::setw(5) << fTrack->GetCurrentStepNumber() << " "
         << std::setw(6) << G4BestUnit(fTrack->GetPosition().x(),"Length")
         << std::setw(6) << G4BestUnit(fTrack->GetPosition().y(),"Length")
         << std::setw(6) << G4BestUnit(fTrack->GetPosition().z(),"Length")
@@ -82,7 +82,7 @@ void SteppingVerbose::TrackingStarted()
         << std::setw(10) << fTrack->GetVolume()->GetName()
         << "   initStep" << G4endl;        
   }
-  G4cout.precision(prec);
+  std::cout.precision(prec);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -91,13 +91,13 @@ void SteppingVerbose::StepInfo()
 {  
   CopyState();
     
-  G4int prec = G4cout.precision(3);
+  G4int prec = std::cout.precision(3);
 
   if( verboseLevel >= 1 ){
     if( verboseLevel >= 4 ) VerboseTrack();
     if( verboseLevel >= 3 ){
-      G4cout << G4endl;    
-      G4cout << std::setw( 5) << "#Step#"     << " "
+      std::cout << G4endl;    
+      std::cout << std::setw( 5) << "#Step#"     << " "
              << std::setw( 6) << "X"          << "    "
              << std::setw( 6) << "Y"          << "    "  
              << std::setw( 6) << "Z"          << "    "
@@ -109,7 +109,7 @@ void SteppingVerbose::StepInfo()
              << std::setw(10) << "Process"   << G4endl;                  
     }
 
-    G4cout << std::setw( 5) << fTrack->GetCurrentStepNumber() << " "
+    std::cout << std::setw( 5) << fTrack->GetCurrentStepNumber() << " "
         << std::setw(6) << G4BestUnit(fTrack->GetPosition().x(),"Length")
         << std::setw(6) << G4BestUnit(fTrack->GetPosition().y(),"Length")
         << std::setw(6) << G4BestUnit(fTrack->GetPosition().z(),"Length")
@@ -124,18 +124,18 @@ void SteppingVerbose::StepInfo()
     G4String procName = " UserLimit";
     if (process) procName = process->GetProcessName();
     if (fStepStatus == fWorldBoundary) procName = "OutOfWorld";
-    G4cout << "   " << std::setw(10) << procName;
-    G4cout << G4endl;
+    std::cout << "   " << std::setw(10) << procName;
+    std::cout << G4endl;
 
     if (verboseLevel == 2) {
       const std::vector<const G4Track*>* secondary 
                                     = fStep->GetSecondaryInCurrentStep();
       size_t nbtrk = (*secondary).size();
       if (nbtrk) {
-        G4cout << "\n    :----- List of secondaries ----------------" << G4endl;
-        G4cout.precision(4);
+        std::cout << "\n    :----- List of secondaries ----------------" << G4endl;
+        std::cout.precision(4);
         for (size_t lp=0; lp<(*secondary).size(); lp++) {
-          G4cout << "   "
+          std::cout << "   "
                  << std::setw(13)                 
                  << (*secondary)[lp]->GetDefinition()->GetParticleName()
                  << ":  energy ="
@@ -144,15 +144,15 @@ void SteppingVerbose::StepInfo()
                  << "  time ="
                  << std::setw(6)
                  << G4BestUnit((*secondary)[lp]->GetGlobalTime(),"Time");
-          G4cout << G4endl;
+          std::cout << G4endl;
         }
               
-        G4cout << "    :------------------------------------------\n" << G4endl;
+        std::cout << "    :------------------------------------------\n" << G4endl;
       }
     }
     
   }
-  G4cout.precision(prec);
+  std::cout.precision(prec);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

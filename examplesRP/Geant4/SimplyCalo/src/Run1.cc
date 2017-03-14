@@ -177,33 +177,33 @@ void Run1::EndOfRun()
   }
   std::cout << std::endl;
   std::cout<<" [---------------------------------- Number of steps ----------------------------------] \n";
-  G4cout<<"  ===> "<<fSumNSteps<<G4endl;
+  std::cout<<"  ===> "<<fSumNSteps<<G4endl;
   std::cout<< std::setw(90) << std::setfill('=') << "" << "\n\n";
 /*
-  G4cout<<"  ====> run1::EndOfRun() "<<G4endl;
+  std::cout<<"  ====> run1::EndOfRun() "<<G4endl;
   double norm = 1.0/numberOfEvent;
-  G4cout<<"======================  <Edep> per layer ===================="<<G4endl;
+  std::cout<<"======================  <Edep> per layer ===================="<<G4endl;
   for (G4int il =0; il<fNbOfLayers; ++il) {
-    G4cout<<" "<< il <<" ";
+    std::cout<<" "<< il <<" ";
     for (G4int ia= 1; ia<fNbOfAbsor; ++ia) {
-      G4cout<<fSumEdeps[il][ia]*norm<<"  ";
+      std::cout<<fSumEdeps[il][ia]*norm<<"  ";
     }
-    G4cout<<G4endl;
+    std::cout<<G4endl;
   }
-  G4cout<<G4endl;
-  G4cout<<"======================  <Edep> per layer ===================="<<G4endl;
+  std::cout<<G4endl;
+  std::cout<<"======================  <Edep> per layer ===================="<<G4endl;
   for (G4int il =0; il<fNbOfLayers; ++il) {
-    G4cout<<" "<< il <<" ";
+    std::cout<<" "<< il <<" ";
     for (G4int ia= 1; ia<fNbOfAbsor; ++ia) {
-      G4cout<<fSumLengths[il][ia]*norm<<"  ";
+      std::cout<<fSumLengths[il][ia]*norm<<"  ";
     }
-    G4cout<<G4endl;
+    std::cout<<G4endl;
   }
 
-  G4cout<<G4endl;
-  G4cout<<"======================  # Steps ==============================="<<G4endl;
-  G4cout<<"  ===> "<<fSumNSteps<<G4endl;
-  G4cout<<"---------------------------------------------------------------"<<G4endl;
+  std::cout<<G4endl;
+  std::cout<<"======================  # Steps ==============================="<<G4endl;
+  std::cout<<"  ===> "<<fSumNSteps<<G4endl;
+  std::cout<<"---------------------------------------------------------------"<<G4endl;
 */
 }
 
@@ -224,10 +224,10 @@ void Run1::EndOfRun()
   G4double MeanEAbs,MeanEAbs2,rmsEAbs,resolution,rmsres;
   G4double MeanLAbs,MeanLAbs2,rmsLAbs;
 
-  std::ios::fmtflags mode = G4cout.flags();
-  G4int  prec = G4cout.precision(2);
-  G4cout << "\n------------------------------------------------------------\n";
-  G4cout << std::setw(14) << "material"
+  std::ios::fmtflags mode = std::cout.flags();
+  G4int  prec = std::cout.precision(2);
+  std::cout << "\n------------------------------------------------------------\n";
+  std::cout << std::setw(14) << "material"
          << std::setw(17) << "Edep       RMS"
          << std::setw(33) << "sqrt(E0(GeV))*rmsE/Emean"
          << std::setw(23) << "total tracklen \n \n";
@@ -237,7 +237,7 @@ void Run1::EndOfRun()
       MeanEAbs  = fSumEAbs[k]*norm;
       MeanEAbs2 = fSum2EAbs[k]*norm;
       rmsEAbs  = std::sqrt(std::abs(MeanEAbs2 - MeanEAbs*MeanEAbs));
-      //G4cout << "k= " << k << "  RMS= " <<  rmsEAbs
+      //std::cout << "k= " << k << "  RMS= " <<  rmsEAbs
       //     << "  fApplyLimit: " << fApplyLimit << G4endl;
       if(fApplyLimit) {
         G4int    nn    = 0;
@@ -273,7 +273,7 @@ void Run1::EndOfRun()
 
       //print
       //
-      G4cout
+      std::cout
        << std::setw(14) << fDetector->GetAbsorMaterial(k)->GetName() << ": "
        << std::setprecision(5)
        << std::setw(6) << G4BestUnit(MeanEAbs,"Energy") << " :  "
@@ -286,18 +286,18 @@ void Run1::EndOfRun()
        << std::setw(4) << G4BestUnit( rmsLAbs,"Length")
        << G4endl;
     }
-  G4cout << "\n------------------------------------------------------------\n";
+  std::cout << "\n------------------------------------------------------------\n";
 
-  G4cout << " Beam particle "
+  std::cout << " Beam particle "
          << fParticle->GetParticleName()
          << "  E = " << G4BestUnit(beamEnergy,"Energy") << G4endl;
-  G4cout << " Mean number of gamma       " << (G4double)fN_gamma*norm << G4endl;
-  G4cout << " Mean number of e-          " << (G4double)fN_elec*norm << G4endl;
-  G4cout << " Mean number of e+          " << (G4double)fN_pos*norm << G4endl;
-  G4cout << std::setprecision(6)
+  std::cout << " Mean number of gamma       " << (G4double)fN_gamma*norm << G4endl;
+  std::cout << " Mean number of e-          " << (G4double)fN_elec*norm << G4endl;
+  std::cout << " Mean number of e+          " << (G4double)fN_pos*norm << G4endl;
+  std::cout << std::setprecision(6)
          << " Mean number of charged steps  " << fChargedStep << G4endl;
-  G4cout << " Mean number of neutral steps  " << fNeutralStep << G4endl;
-  G4cout << "------------------------------------------------------------\n";
+  std::cout << " Mean number of neutral steps  " << fNeutralStep << G4endl;
+  std::cout << "------------------------------------------------------------\n";
 
   //Energy flow
   //
@@ -319,18 +319,18 @@ void Run1::EndOfRun()
    EdepTot[iAbsor] += (fEnergyFlow[Id] - fEnergyFlow[Id+1] - fLateralEleak[Id]);
   }
 
-  G4cout << std::setprecision(3)
+  std::cout << std::setprecision(3)
          << "\n Energy deposition from Energy flow balance : \n"
          << std::setw(10) << "  material \t Total Edep \n \n";
-  G4cout.precision(6);
+  std::cout.precision(6);
 
   for (G4int k=1; k<=nbOfAbsor; k++) {
     EdepTot [k] *= norm;
-    G4cout << std::setw(10) << fDetector->GetAbsorMaterial(k)->GetName() << ":"
+    std::cout << std::setw(10) << fDetector->GetAbsorMaterial(k)->GetName() << ":"
            << "\t " << G4BestUnit(EdepTot [k],"Energy") << "\n";
   }
 
-  G4cout << "\n------------------------------------------------------------\n"
+  std::cout << "\n------------------------------------------------------------\n"
          << G4endl;
 
   // Acceptance
@@ -359,8 +359,8 @@ void Run1::EndOfRun()
     analysis->ScaleH1(ih,norm/MeV);
   }
 
-  G4cout.setf(mode,std::ios::floatfield);
-  G4cout.precision(prec);
+  std::cout.setf(mode,std::ios::floatfield);
+  std::cout.precision(prec);
 }
 */
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

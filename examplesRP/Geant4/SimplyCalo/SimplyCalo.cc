@@ -151,7 +151,7 @@ int main(int argc,char** argv) {
   // Number of threads can be defined via 3rd argument
   G4int nThreads = 4;
   runManager->SetNumberOfThreads(nThreads);
-  G4cout << "===== SimplyCalo is started with "
+  std::cout << "===== SimplyCalo is started with "
          <<  runManager->GetNumberOfThreads() << " threads =====" << G4endl;
 #else
   G4RunManager* runManager = new G4RunManager;

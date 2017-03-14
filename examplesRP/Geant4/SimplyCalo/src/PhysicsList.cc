@@ -142,7 +142,7 @@ void PhysicsList::ConstructProcess()
 void PhysicsList::AddPhysicsList(const G4String& name)
 {
   if (verboseLevel>1) {
-    G4cout << "PhysicsList::AddPhysicsList: <" << name << ">" << G4endl;
+    std::cout << "PhysicsList::AddPhysicsList: <" << name << ">" << G4endl;
   }
 
   if (name == fEmName) return;
@@ -227,7 +227,7 @@ void PhysicsList::AddPhysicsList(const G4String& name)
 
   } else {
 
-    G4cout << "PhysicsList::AddPhysicsList: <" << name << ">"
+    std::cout << "PhysicsList::AddPhysicsList: <" << name << ">"
            << " is not defined"
            << G4endl;
   }

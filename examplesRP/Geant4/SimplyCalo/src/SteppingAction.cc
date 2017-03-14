@@ -88,7 +88,7 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep)
     run->AddChargedStep();
   } else { run->AddNeutralStep(); }
   
-  //  G4cout << "Nabs= " << absorNum << "   edep(keV)= " << edep << G4endl;
+  //  std::cout << "Nabs= " << absorNum << "   edep(keV)= " << edep << G4endl;
   
   // sum up per event
   fEventAct->SumEnergy(absorNum,edep,stepl);
@@ -120,7 +120,7 @@ void SteppingAction::UserSteppingAction(const G4Step* aStep)
 ////  example of Birk attenuation
 ///G4double destep   = aStep->GetTotalEnergyDeposit();
 ///G4double response = BirksAttenuation(aStep);
-///G4cout << " Destep: " << destep/keV << " keV"
+///std::cout << " Destep: " << destep/keV << " keV"
 ///       << " response after Birks: " << response/keV << " keV" << G4endl;
 }
 

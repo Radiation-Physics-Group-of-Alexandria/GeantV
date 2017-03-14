@@ -91,7 +91,7 @@ void SteppingAction1::UserSteppingAction(const G4Step* aStep)
 ////  example of Birk attenuation
 ///G4double destep   = aStep->GetTotalEnergyDeposit();
 ///G4double response = BirksAttenuation(aStep);
-///G4cout << " Destep: " << destep/keV << " keV"
+///std::cout << " Destep: " << destep/keV << " keV"
 ///       << " response after Birks: " << response/keV << " keV" << G4endl;
 }
 

@@ -102,9 +102,9 @@ void RunAction::EndOfRunAction(const G4Run*)
     fTimer->Stop();
     if(!((G4RunManager::GetRunManager()->GetRunManagerType() ==
           G4RunManager::sequentialRM))) {
-      G4cout << "\n" << "Total number of events:  "  
+      std::cout << "\n" << "Total number of events:  "  
              << fRun->GetNumberOfEvent() << G4endl;
-      G4cout << "Master thread time:  "  << *fTimer << G4endl;
+      std::cout << "Master thread time:  "  << *fTimer << G4endl;
     }
     delete fTimer;
     fRun->EndOfRun();
