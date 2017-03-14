@@ -195,9 +195,8 @@ int main(int argc, char *argv[]) {
   double  yDir           =   0.;   // x-direction of the particle gun
   double  zDir           =   0.;   // x-direction of the particle gun
 
-
+  using Geant::GeantConfig;
   GeantConfig* config=new GeantConfig();
-
 
 //  TGeoManager::Import(exn03_geometry_filename.c_str());
   config->fGeomFileName = exn03_geometry_filename;

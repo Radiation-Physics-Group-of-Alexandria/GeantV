@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
   double  yDir           =   0.;   // x-direction of the particle gun
   double  zDir           =   0.;   // x-direction of the particle gun
 
-
+  using Geant::GeantConfig;
   GeantConfig* config=new GeantConfig();
 
 
