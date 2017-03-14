@@ -33,7 +33,7 @@ ELossTable::~ELossTable() {
 }
 
 
-double ELossTable::GetRestrictedDEDX(int matcutindx, int partindx, double kinenergy) {
+double ELossTable::GetRestrictedDEDX(int matcutindx, size_t partindx, double kinenergy) {
   double dedx = 0.0;
   // find the ELossData for the Particle and MaterialCuts by their provided indices
   ELossData *lossData = nullptr;
@@ -69,7 +69,7 @@ double ELossTable::GetRestrictedDEDX(int matcutindx, int partindx, double kinene
 }
 
 
-double ELossTable::GetRestrictedRange(int matcutindx, int partindx, double kinenergy) {
+double ELossTable::GetRestrictedRange(int matcutindx, size_t partindx, double kinenergy) {
   double range = 1.0e+20;
   // find the ELossData for the Particle and MaterialCuts by their provided indices
   ELossData *lossData = nullptr;
@@ -105,7 +105,7 @@ double ELossTable::GetRestrictedRange(int matcutindx, int partindx, double kinen
 }
 
 
-double ELossTable::GetEnergyForRestrictedRange(int matcutindx, int partindx, double range) {
+double ELossTable::GetEnergyForRestrictedRange(int matcutindx, size_t partindx, double range) {
   double energy = 0.0;
   // find the ELossData for the Particle and MaterialCuts by their provided indices
   ELossData *lossData = nullptr;
@@ -135,7 +135,7 @@ double ELossTable::GetEnergyForRestrictedRange(int matcutindx, int partindx, dou
 }
 
 
-double ELossTable::GetRange(int matindx, int partindx, double kinenergy) {
+double ELossTable::GetRange(int matindx, size_t partindx, double kinenergy) {
   double range = 1.e+20;
   // find the ELossData for the Particle and MaterialCuts by their provided indices
   ELossData *lossData = nullptr;
