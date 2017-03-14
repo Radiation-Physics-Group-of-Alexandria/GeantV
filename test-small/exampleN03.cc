@@ -211,7 +211,7 @@ int main(int argc,char** argv)
   if(strcmp(physListName,"TABPHYS")) {
     // value is fixed now to 1 keV for consistency with the tabulated data
     setG4ProductionCut();  
-    // setting the tracking cut energy for all registred particles 
+    // setting the tracking cut energy for all registered particles 
     // (value has already been set in Det.Construction)
 //   done in a different way: see physics list setting above!
 //    G4ParticleDefinition* particle;
