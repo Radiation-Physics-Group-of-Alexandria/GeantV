@@ -52,12 +52,13 @@ public:
   template <typename Backend>
   void ModelInteract(GUTrack_v &inProjectile, const int *targetElements, GUTrack_v &outSecondaryV);
 
-private:
+public: // Was private:
   // Implementation methods
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE typename Backend::Double_v CrossSectionKernel(typename Backend::Double_v energyIn,
                                                                         Index_v<typename Backend::Double_v> zElement);
 
+private:
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE void InteractKernel(typename Backend::Double_v energyIn,
                                               Index_v<typename Backend::Double_v> zElement,
