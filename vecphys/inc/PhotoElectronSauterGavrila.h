@@ -176,7 +176,7 @@ VECCORE_ATT_HOST_DEVICE typename Backend::Double_v PhotoElectronSauterGavrila::C
   Double_v energy3 = energy * energy2;
   Double_v energy4 = energy2 * energy2;
 
-  Double_v sgima = fSandiaCof[0] / energy + fSandiaCof[1] / energy2 + fSandiaCof[2] / energy3 + fSandiaCof[3] / energy4;
+  sigma = fSandiaCof[0] / energy + fSandiaCof[1] / energy2 + fSandiaCof[2] / energy3 + fSandiaCof[3] / energy4;
 
   return sigma;
 }
