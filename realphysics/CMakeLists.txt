@@ -7,7 +7,7 @@ file(GLOB headers dummies/inc/*.h material/inc/*.h physics/management/inc/*.h ph
                   physics/processes/EM/inc/*.h physics/utils/inc/*.h)
 
 include_directories(dummies/inc material/inc physics/management/inc physics/models/EM/inc physics/processes/EM/inc
-                    physics/utils/inc)
+                    physics/utils/inc ../vecphys/inc)
 
 set(_extraLibs "")
 
@@ -19,7 +19,7 @@ endif()
 
 add_library(RealPhysics SHARED ${sources})
 
-target_link_libraries(RealPhysics -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v ${_extra_libs}
+target_link_libraries(RealPhysics -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} vecphys Geant_v ${_extra_libs}
                       ${VECGEOM_LIBRARIES} ${VC_LIBRARIES})
 
 add_headers("${headers}")

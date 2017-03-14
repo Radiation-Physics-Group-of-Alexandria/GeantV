@@ -81,13 +81,6 @@ if (CTEST)
   set (DATA_DOWNLOAD ON)
 endif()
 
-option(USE_VECPHYS "Enable activation of vector physics." OFF)
-if(USE_VECPHYS)
-  add_definitions(-DUSE_VECPHYS)
-  message(STATUS "USE_VECPHYS ON  : Vector physics is active !")
-else()
-  message(STATUS "USE_VECPHYS OFF : Vector physics is NOT active !")
-endif()
 
 option(VECTORIZED_GEOMETRY "Enable vectorized geometry" OFF)
 if(VECTORIZED_GEOMETRY)
@@ -109,8 +102,17 @@ option(USE_REAL_PHYSICS "Use the real physics interface in the simulation" OFF)
 if(USE_REAL_PHYSICS)
   add_definitions(-DUSE_REAL_PHYSICS)
   message(STATUS "USE_REAL_PHYSICS ON  : Simulation with the real physics interface")
+  option(USE_VECPHYS "Enable activation of vector physics - Mandatory with REAL_PHYSICS." ON)  
 else()
   message(STATUS "USE_REAL_PHYSICS OFF : Simulation with the old physics interface")
+  option(USE_VECPHYS "Enable activation of vector physics." OFF)  
+endif()
+
+if(USE_VECPHYS)
+  add_definitions(-DUSE_VECPHYS)
+  message(STATUS "USE_VECPHYS ON  : Vector physics is active !")
+else()
+  message(STATUS "USE_VECPHYS OFF : Vector physics is NOT active !")
 endif()
 
 option(BUG_HUNT "Enable crosschecks for finding bugs." OFF)
@@ -520,19 +522,18 @@ if (ROOT_mathmore_FOUND)
   add_subdirectory (Nudy)
 endif()
 
-if(USE_VECPHYS)
-  add_subdirectory(vecphys)
-  add_subdirectory(vectphysproc)
-endif()
-
 if (NOT (USE_REAL_PHYSICS))
   add_subdirectory(physics)
 endif()
 
 if (USE_REAL_PHYSICS)
- add_subdirectory(realphysics)
+  add_subdirectory(realphysics)
 endif()
 
+if(USE_VECPHYS)
+  add_subdirectory(vecphys)
+  ## add_subdirectory(vectphysproc)  ## Code that links VecPhys to old Version 1 PhysicsProcess
+endif()
 
 #----------------------------------------------------------------------------------------------
 # Process Doxygen file
