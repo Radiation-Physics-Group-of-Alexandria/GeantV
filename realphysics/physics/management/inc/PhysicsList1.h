@@ -15,7 +15,9 @@
 #include "SeltzerBergerBremsModel.h"
 #include "RelativisticBremsModel.h"
 
-
+#include "ComptonProcess.h"
+#include "PhotoElectricProcess.h"
+// #include "ConversionProcess.h"
 
 namespace geantphysics {
 
@@ -114,6 +116,29 @@ public:
         // add the process to the e+ particle
         AddProcessToParticle(particle, eBremProc);
       }
+      if (particle==Gamma::Definition()) {
+        std::cout<<"  Gamma - defining processes" <<std::endl;
+
+        EMPhysicsProcess *PhotoElectricProc= new PhotoElectricProcess("Photo Electric Process (Wrapped VecPhys)");
+        // EMModel          *photoElecticModel;
+        // set min/max energies of the model
+        // photoElectricModel->SetLowEnergyUsageLimit (   1.0*geant::keV);
+        // photoElectricModel->SetHighEnergyUsageLimit( 100.0*geant::MeV);
+        std::cout<< " Adding Photo-Electric to gamma.";
+        AddProcessToParticle(particle, PhotoElectricProc);
+        std::cout<< " Adding Photo-Electric to gamma - done.";
+        //
+        EMPhysicsProcess *ComptonProcess= new class ComptonProcess("Compton Process (Wrapped VecPhys)");
+        // EMModel          *comptonModel;
+        // set min/max energies of the model
+        // comptonModel->SetLowEnergyUsageLimit ( 1.0*geant::keV);
+        // comptonModel->SetHighEnergyUsageLimit(10.0*geant::GeV);
+        std::cout<< " Adding Compton to gamma.";
+        AddProcessToParticle(particle, ComptonProcess);
+        std::cout<< " Adding Compton to gamma - done.";
+
+      }
+
     }
   }
 };

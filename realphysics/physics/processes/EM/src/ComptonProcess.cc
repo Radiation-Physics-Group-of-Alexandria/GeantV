@@ -22,6 +22,8 @@ ComptonProcess::ComptonProcess(const std::string &name)
      new GammaModelWrapper<vecphys::ComptonKleinNishina>(
         "Compton Klein Nishina model (Wrapped VecPhys model)",
         comptonKNvec);
+  comptonModel->SetLowEnergyUsageLimit ( 1.0*geant::keV);
+  comptonModel->SetHighEnergyUsageLimit(10.0*geant::GeV);
   AddModel( comptonModel );
 }
 

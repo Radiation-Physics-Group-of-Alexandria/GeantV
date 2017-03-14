@@ -15,7 +15,7 @@ namespace geantphysics {
 class PhotoElectricProcess : public EMPhysicsProcess {
 public:
   // CTR
-  PhotoElectricProcess(const std::string &name = "Compton");
+  PhotoElectricProcess(const std::string &name = "PhotoElectricProcess");
 };
 
 } // namespace geantphysics
