@@ -381,15 +381,16 @@ GammaModelWrapper<PhysModelType,isConversion>::
    assert (mat != 0);
    // assert (particle == Gamma::Gamma() );
 
-   double xsec2 = 0.0;  // For cross-checking
+   // double xsec2 = 0.0;  // For cross-checking
 
    static const MaterialCuts* oldMatcut = nullptr; // For initial debugging only.
    bool debugPrint= 1; // (matcut != oldMatcut); 
    oldMatcut = matcut;
    
-   if (kinEnergy>GetLowEnergyUsageLimit() && kinEnergy < GetHighEnergyUsageLimit()) {
-
+   if (kinEnergy>GetLowEnergyUsageLimit() && kinEnergy < GetHighEnergyUsageLimit())
+   {
       double densityXnumAv= geant::kAvogadro * mat->GetDensity();
+
       //  Density of material is in internal [weight/ length/f$^3/f$] units.
       
       int numElements= mat->GetNumberOfElements();
@@ -403,34 +404,65 @@ GammaModelWrapper<PhysModelType,isConversion>::
          Element  *elem   =   elementVec[i];
          double   Zelement=   elem->GetZ();
          double  xsecPart= 0.0;
+
+         //  Density is from Real-Physics - uses new GeantV units
          double numAtomsPerVol= relNumAtomsVec[i] * densityXnumAv / elem->GetA();
 
-         xsecPart= numAtomsPerVol * fVecPhysModel // ->GetG4CrossSection( Zelement, kinEnergy );
-                           -> template CrossSectionKernel<vecCore::backend::Scalar> ( kinEnergy, Zelement );
+         //  X-section right from VecPhys - uses CLHEP units
+         double xsecPerAtom= fVecPhysModel // ->GetG4CrossSection( Zelement, kinEnergy );
+                             -> template CrossSectionKernel<vecCore::backend::Scalar> ( kinEnergy, Zelement );
                          // -> ComputeXSectionPerAtom( Zelement, matcut, kinEnergy );
+         xsecPerAtom /= CLHEP::barn;
+
+         std::cout << " GMWrapper CXSPA call - model " << this->GetName()
+                   << " Element= " << elem->GetName() << " Z= " << Zelement
+                   << " Ekin= " << std::scientific << kinEnergy
+                   << " X-sec/atom = " << std::scientific
+                   << xsecPerAtom << " barn "  << std::endl;
+
+         xsecPerAtom *= geant::barn;
+
+         // Both are now in GeantV units
+         xsecPart = xsecPerAtom * numAtomsPerVol;
+            
          xsec += xsecPart;
          if( debugPrint )
            cout << "   Z: " << Zelement << "  #atoms= " << numAtomsPerVol << "  xSecPart= " << xsecPart << endl;
-         
+
+#if 0
          xsec2 += numAtomsPerVol *
                   fVecPhysModel ->
                      // template CrossSectionKernel<vecCore::backend::Scalar> (kinEnergy, Zelement);
                                  G4CrossSectionPerAtom(Zelement, kinEnergy);
                      // template G4CrossSectionPerAtom<vecCore::backend::Scalar> (Zelement, kinEnergy);
+#endif         
       }
    }
-   assert( std::fabs(xsec - xsec2) < 0.5e5 * (xsec+xsec2) );
+//   assert( std::fabs(xsec - xsec2) < 0.5e5 * (xsec+xsec2) );
  
    // xsec *= CLHEP::barn; // It seems that VecPhys gives X-sec in barn (or similar)
-   xsec *= CLHEP::barn / geant::barn; 
+
+   // constexpr double unitDensityGrPerCm3_geant = geant::gram / (geant::cm * geant::cm * geant::cm );
+   // constexpr double unitDensityGrPerCm3_clhep = CLHEP::gram / (CLHEP::cm * CLHEP::cm * CLHEP::cm );
+
+   constexpr double unitDensityGrPerCm_geant = geant::gram / geant::cm;
+   constexpr double unitDensityGrPerCm_clhep = CLHEP::gram / CLHEP::cm;   
+
+   xsec /= unitDensityGrPerCm_clhep;
    
-   // xsec *= 0.01; // ( geant::barn / clhep::barn ) ; // Since, for now, VecPhys is using CLHEP units
+   // xsec *= CLHEP::barn / geant::barn;    
+   
+   // xsec *= 0.01; // ( geant::barn / CLHEP::barn ) ; // Since, for now, VecPhys is using CLHEP units
    
    // std::cout << std::scientific; 
    std::cout << " GMWrapper CXSPA call - model " << this->GetName()
              << " Material= " << mat->GetName() << " Ekin= " << std::scientific << kinEnergy
-             << " X-sec = " << std::scientific << xsec / geant::barn << " barn "
+             << " X-sec = " << std::scientific
+             << xsec       //  / geant::barn
+             << " g / cm "
              << std::endl;
+
+   xsec *= unitDensityGrPerCm_geant;
    
    return xsec;   
 }
