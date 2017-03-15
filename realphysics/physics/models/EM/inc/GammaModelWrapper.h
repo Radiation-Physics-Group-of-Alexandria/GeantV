@@ -7,7 +7,7 @@
 #include <cassert>
 
 #include "base/VecPhys.h"
-// #include "base/SystemOfUnits.h"   //  The OLD units - clhep namespace
+#include "base/SystemOfUnits.h"   //  The OLD units - CLHEP namespace
 
 // #include "VecCore/Backend/Scalar.h"
 // #include "GeantTaskData.h"
@@ -53,9 +53,11 @@ class GammaModelWrapper : public EMModel
   GammaModelWrapper(const std::string&  name,
                     PhysModelType*      vecPhysModel )
       : EMModel( name )
-                    // bool             isConversion = false ) // double minimumPrimaryEnergy= 0.0);
   {
      fVecPhysModel= vecPhysModel;
+     std::cout << "Constructor called for Gamma Model Wrapper with process name= "
+               << name << "  physics model ptr= " << vecPhysModel
+               << std::endl;
   }
   /**
    * @brief DTR
@@ -72,30 +74,29 @@ class GammaModelWrapper : public EMModel
    *        This method is called when its EMPhysicsProcess, is initialized by the
    *        EmModelManager member of the EMPhysicsProcess.
    */
-  void  Initialize() final;
+  void  Initialize() override final;
 
   /**
    * @brief Method to compute stopping power relevant to energy loss models only.
    *
    */
-  virtual double ComputeDEDX(const MaterialCuts * /*matcut*/, double /*kinenergy*/, const Particle * /*particle*/,
-                             bool /*istotal=false*/ ) { return 1.0; }
+  double ComputeDEDX(const MaterialCuts * /*matcut*/, double /*kinenergy*/, const Particle * /*particle*/,
+                             bool /*istotal=false*/ ) override final { return 1.0; }
 
   /**
    * @brief Method to compute macroscopic cross section for a given MaterialCuts, Partcile, kinetic energy.
    *
-   * ALL DISCRETE MODELS (i.e. those that describes interaction happening at the post-step point) NEEDS TO IMPLEMENT
-   * this method. This method is called at initialization to build the lambda tables through the corresponding
+   * Mandatory method called at initialization to build the lambda tables through the corresponding
    * PhysicsProcess by the PhysicsManagerPerParticle object.
    *
-   * @param[in] matcut      Pointer to the MaterialCuts object in which the macroscopic cross section must be computed.
-   * @param[in] kinenergy   Kinetic energy of the Partcile at which the macroscopic cross section must be computed.
-   * @param[in] particle    Pointer to the Partcile object for which the macroscopic cross section must be computed.
+   * @param[in] matcut      Pointer to the MaterialCuts object
+   * @param[in] kinenergy   Kinetic energy of the Particle
+   * @param[in] particle    Pointer to the Particle object
    * @return    Macroscopic cross section computed by the given electromagnetic model in internal [1/length] units for
    *            the given Particle, MaterialCuts/Material and particle kinetic energy combination.
    */
-  virtual double ComputeMacroscopicXSection(const MaterialCuts * /*matcut*/, double /*kinenergy*/,
-                                            const Particle * /*particle*/);
+  double ComputeMacroscopicXSection(const MaterialCuts * /*matcut*/, double /*kinenergy*/,
+                                    const Particle * /*particle*/) override final;
 
   /**
    * @brief Method to compute atomic cross section for a given Element, MaterialCuts, Partcile, kinetic energy.
@@ -117,10 +118,10 @@ class GammaModelWrapper : public EMModel
    *            the given ELement, Particle, MaterialCuts/Material and particle kinetic energy combination.
    */
   double ComputeXSectionPerAtom(const Element * /*elem*/, const MaterialCuts * /*matcut*/, double /*kinenergy*/,
-                                const Particle * /*particle*/) final;
+                                const Particle * /*particle*/) override final;
 
   int    SampleSecondaries(LightTrack & /*track*/, std::vector<LightTrack> & /*sectracks*/,
-                                   Geant::GeantTaskData * /*td*/) final;
+                                   Geant::GeantTaskData * /*td*/) override final;
 
   /**
    * @brief Method to obtain minimum primary particle kinetic energy at which the discrete part (if any) of the 
@@ -170,6 +171,8 @@ template <class PhysModelType, bool isConversion>
 void
    GammaModelWrapper<PhysModelType,isConversion>::Initialize()
 {
+   std::cout << " GammaModelWrapper - method Initialize() called for model " << this->GetName() << std::endl;
+   
   //  fVecPhysModel->template Initialize<vecCore::backend::Scalar>Initialization();
   fVecPhysModel->Initialization();
 }
@@ -250,6 +253,14 @@ GammaModelWrapper<PhysModelType,isConversion>::
    int  zElement =  (int) (elem-> GetZ()) ;
    double xsec;
 
+   static bool firstCall= true;
+   if( firstCall ) { 
+     std::cout << " GammaModelWrapper - method ComputeXSectionPerAtom() called for model " << this->GetName() << std::endl;
+     firstCall= false;
+   }
+
+   std::cout << " GMWrapper CXSPA call - model " << this->GetName()
+             << " Elem= " << elem->GetZ() << " Ekin= " << kinEnergy << std::endl;
    // Use the  CrossSectionKernel() method of
    //  template <class Backend>
    //  VECCORE_ATT_HOST_DEVICE typename Backend::Double_v
@@ -279,6 +290,12 @@ GammaModelWrapper<PhysModelType,isConversion>::
   double    weight=    projectile.GetWeight();
   double    time=      projectile.GetTime();
 
+   static bool firstCall= true;
+   if( firstCall ) { 
+     std::cout << " GammaModelWrapper - method SampleSecondaries() called for model " << this->GetName() << std::endl;
+     firstCall= false;
+   }
+  
   fVecPhysModel->template Interact<vecCore::backend::Scalar>( guProjectile, ZtargetElement, guSecondary);
   // *****************************
 
@@ -353,13 +370,21 @@ GammaModelWrapper<PhysModelType,isConversion>::
    using  std::cout;
    using  std::endl;
 
+   kinEnergy *= 1000.0; // ( CLHEP::GeV / geant::GeV ) ; // Since, for now, VecPhys is using CLHEP units
+   
+   static bool firstCall= true;
+   if( firstCall ) { 
+     std::cout << " GammaModelWrapper - method ComputeMacroscopicXSection() called for model " << this->GetName() << std::endl;
+     firstCall= false;
+   }
+   
    assert (mat != 0);
    // assert (particle == Gamma::Gamma() );
 
    double xsec2 = 0.0;  // For cross-checking
 
    static const MaterialCuts* oldMatcut = nullptr; // For initial debugging only.
-   bool debugPrint= (matcut != oldMatcut); 
+   bool debugPrint= 1; // (matcut != oldMatcut); 
    oldMatcut = matcut;
    
    if (kinEnergy>GetLowEnergyUsageLimit() && kinEnergy < GetHighEnergyUsageLimit()) {
@@ -389,15 +414,30 @@ GammaModelWrapper<PhysModelType,isConversion>::
          
          xsec2 += numAtomsPerVol *
                   fVecPhysModel ->
-                        template CrossSectionKernel<vecCore::backend::Scalar> (kinEnergy, Zelement);
+                     // template CrossSectionKernel<vecCore::backend::Scalar> (kinEnergy, Zelement);
+                                 G4CrossSectionPerAtom(Zelement, kinEnergy);
+                     // template G4CrossSectionPerAtom<vecCore::backend::Scalar> (Zelement, kinEnergy);
       }
    }
    assert( std::fabs(xsec - xsec2) < 0.5e5 * (xsec+xsec2) );
+ 
+   // xsec *= CLHEP::barn; // It seems that VecPhys gives X-sec in barn (or similar)
+   xsec *= CLHEP::barn / geant::barn; 
    
-   xsec *= 100.0; // ( clhep::barn / geant::barn ) ; // Since, for now, VecPhys is using CLHEP units
+   // xsec *= 0.01; // ( geant::barn / clhep::barn ) ; // Since, for now, VecPhys is using CLHEP units
+   
+   // std::cout << std::scientific; 
+   std::cout << " GMWrapper CXSPA call - model " << this->GetName()
+             << " Material= " << mat->GetName() << " Ekin= " << std::scientific << kinEnergy
+             << " X-sec = " << std::scientific << xsec / geant::barn << " barn "
+             << std::endl;
+   
    return xsec;   
 }
-  
+
+// Alternative is to use the VecPhys method:
+//  VECCORE_ATT_HOST double EmModelBase<EmModel>::G4CrossSectionPerVolume(const vecgeom::Material *material, double energy)
+
 } // namespace geantphysics
 
 #endif // GammaModelWrapper_H
