@@ -370,6 +370,7 @@ GammaModelWrapper<PhysModelType,isConversion>::
    using  std::cout;
    using  std::endl;
 
+   // double kinE_inGeV= kinEnergy;
    kinEnergy *= 1000.0; // ( CLHEP::GeV / geant::GeV ) ; // Since, for now, VecPhys is using CLHEP units
    
    static bool firstCall= true;
@@ -405,9 +406,6 @@ GammaModelWrapper<PhysModelType,isConversion>::
          double   Zelement=   elem->GetZ();
          double  xsecPart= 0.0;
 
-         //  Density is from Real-Physics - uses new GeantV units
-         double numAtomsPerVol= relNumAtomsVec[i] * densityXnumAv / elem->GetA();
-
          //  X-section right from VecPhys - uses CLHEP units
          double xsecPerAtom= fVecPhysModel // ->GetG4CrossSection( Zelement, kinEnergy );
                              -> template CrossSectionKernel<vecCore::backend::Scalar> ( kinEnergy, Zelement );
@@ -415,12 +413,16 @@ GammaModelWrapper<PhysModelType,isConversion>::
          xsecPerAtom /= CLHEP::barn;
 
          std::cout << " GMWrapper CXSPA call - model " << this->GetName()
-                   << " Element= " << elem->GetName() << " Z= " << Zelement
-                   << " Ekin= " << std::scientific << kinEnergy
+                   << " Element= " << elem->GetName() << " Z= " << int(Zelement)
+                   << " Ekin= " << std::scientific << kinEnergy / CLHEP::MeV << " MeV "
                    << " X-sec/atom = " << std::scientific
                    << xsecPerAtom << " barn "  << std::endl;
 
+         // Convert to GeantV Units
          xsecPerAtom *= geant::barn;
+
+         //  Density is from Real-Physics - uses new GeantV units
+         double numAtomsPerVol= relNumAtomsVec[i] * densityXnumAv / elem->GetA();
 
          // Both are now in GeantV units
          xsecPart = xsecPerAtom * numAtomsPerVol;
@@ -445,12 +447,9 @@ GammaModelWrapper<PhysModelType,isConversion>::
    // constexpr double unitDensityGrPerCm3_geant = geant::gram / (geant::cm * geant::cm * geant::cm );
    // constexpr double unitDensityGrPerCm3_clhep = CLHEP::gram / (CLHEP::cm * CLHEP::cm * CLHEP::cm );
 
-   constexpr double unitDensityGrPerCm_geant = geant::gram / geant::cm;
-   constexpr double unitDensityGrPerCm_clhep = CLHEP::gram / CLHEP::cm;   
-
-   xsec /= unitDensityGrPerCm_clhep;
-   
-   // xsec *= CLHEP::barn / geant::barn;    
+   // constexpr double unitDensityGrPerCm_geant = geant::gram / geant::cm;
+   // constexpr double unitDensityGrPerCm_clhep = CLHEP::gram / CLHEP::cm;   
+   // xsec /= unitDensityGrPerCm_clhep;
    
    // xsec *= 0.01; // ( geant::barn / CLHEP::barn ) ; // Since, for now, VecPhys is using CLHEP units
    
@@ -462,7 +461,7 @@ GammaModelWrapper<PhysModelType,isConversion>::
              << " g / cm "
              << std::endl;
 
-   xsec *= unitDensityGrPerCm_geant;
+   // xsec *= unitDensityGrPerCm_geant;
    
    return xsec;   
 }
