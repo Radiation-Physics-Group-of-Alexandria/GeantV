@@ -1,4 +1,6 @@
-
+//
+//  J. Apostolakis & S.Y. Jun,  March 2017
+//
 #include "PhotoElectricProcess.h"
 #include "PhotoElectronSauterGavrila.h"
 #include "GammaModelWrapper.h"
@@ -18,13 +20,21 @@ PhotoElectricProcess::PhotoElectricProcess(const std::string &name)
   AddToListParticlesAlloedToAssigned(Gamma::Definition());
 
   // PhotoElectricModel(Random_t *states = 0, int threadId = -1);    
-  auto photoElectricModelSG= new PhotoElectronSauterGavrila(nullptr);
-
-  EMModel *comptonModel=
+  auto vecphysPhotoElectricSG= new PhotoElectronSauterGavrila(nullptr);
+  double lowE_inKeV =    1.0;
+  double highE_inMeV = 100.0;
+  
+  vecphysPhotoElectricSG->SetLowEnergyLimit (  lowE_inKeV * CLHEP::keV);  // geant::keV);
+  vecphysPhotoElectricSG->SetHighEnergyLimit( highE_inMeV * CLHEP::MeV);  // geant::MeV);
+  
+  EMModel *photoElectricModel=
      new GammaModelWrapper<PhotoElectronSauterGavrila>(
-        "PhotoElectronSautherGavrila model (Wrapped VecPhys model)",
-        photoElectricModelSG);
-  AddModel( comptonModel );
+        "PhotoElectronSauterGavrila model (Wrapped VecPhys model)",
+        vecphysPhotoElectricSG);
+  photoElectricModel->SetLowEnergyUsageLimit (  lowE_inKeV * geant::keV);
+  photoElectricModel->SetHighEnergyUsageLimit( highE_inMeV * geant::MeV);
+  
+  AddModel( photoElectricModel );
 }
 
 } // namespace geantphysics

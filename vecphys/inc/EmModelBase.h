@@ -81,14 +81,17 @@ public:
   VECCORE_ATT_HOST_DEVICE
   SamplingMethod GetSamplingMethod() { return fSampleType; }
 
-protected:
+public:
   // Auxiliary methods
+  // Set the low energy limit of the tables - Must be called before initialisation
   VECCORE_ATT_HOST_DEVICE
   void SetLowEnergyLimit(double lowLimit) { fLowEnergyLimit = lowLimit; }
 
+  // Set the high energy limit of the tables - Must be called before initialisation  
   VECCORE_ATT_HOST_DEVICE
   void SetHighEnergyLimit(double highLimit) { fHighEnergyLimit = highLimit; }
 
+protected:
   VECCORE_ATT_HOST_DEVICE double ComputeCoulombFactor(double fZeff);
 
 protected:
