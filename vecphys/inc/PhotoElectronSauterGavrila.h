@@ -132,7 +132,9 @@ private:
 // Implementation
 
 template <class Backend>
-VECCORE_ATT_HOST_DEVICE typename Backend::Double_v PhotoElectronSauterGavrila::CrossSectionKernel(
+VECCORE_ATT_HOST_DEVICE typename
+Backend::Double_v PhotoElectronSauterGavrila::
+   CrossSectionKernel(
     typename Backend::Double_v energy, Index_v<typename Backend::Double_v> Z)
 {
   using Double_v = typename Backend::Double_v;
