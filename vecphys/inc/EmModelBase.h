@@ -85,12 +85,13 @@ public:
   // Auxiliary methods
   // Set the low energy limit of the tables - Must be called before initialisation
   VECCORE_ATT_HOST_DEVICE
-  void SetLowEnergyLimit(double lowLimit) { fLowEnergyLimit = lowLimit; }
+     void SetLowEnergyLimit(double lowLimit)
+  { fLowEnergyLimit = lowLimit;  std::cout << "EmModelBase: Set Low-E limit " << lowLimit << " for EmModel" << this << std::endl;}
 
   // Set the high energy limit of the tables - Must be called before initialisation  
   VECCORE_ATT_HOST_DEVICE
-  void SetHighEnergyLimit(double highLimit) { fHighEnergyLimit = highLimit; }
-
+  void SetHighEnergyLimit(double highLimit) { fHighEnergyLimit = highLimit; // }
+     std::cout << "EmModelBase: Set High-E limit " << highLimit << " for EmModel" << this << std::endl;}
 protected:
   VECCORE_ATT_HOST_DEVICE double ComputeCoulombFactor(double fZeff);
 
