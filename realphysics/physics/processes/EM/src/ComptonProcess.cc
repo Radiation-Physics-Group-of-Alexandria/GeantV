@@ -1,6 +1,8 @@
 //
 //  J. Apostolakis & S.Y. Jun,  March 2017
 //
+#include <cassert>
+
 #include "ComptonProcess.h"
 #include "ComptonKleinNishina.h"
 #include "GammaModelWrapper.h"
@@ -26,14 +28,26 @@ ComptonProcess::ComptonProcess(const std::string &name)
 
   comptonKNvec->SetLowEnergyLimit ( lowE_inKeV  * CLHEP::keV);  // geant::keV);
   comptonKNvec->SetHighEnergyLimit( highE_inGeV * CLHEP::GeV);  // geant::GeV);
+
+  static bool gammaSurvives = true;
+  const  bool isItConversion= false;
+  // static const int electronCode= electron::GetDefinition()->PCode(); // GetCode();
+  static const int electronCode= Electron::Definition()->GetInternalCode(); // GetCode();
+  // assert( electronCode == Electron::Definition()->GetInternalCode() ); 
+
+  // int Pcode() const { return fPcode; }  ==> for the original particle type
   
   EMModel *comptonModel=
-     new GammaModelWrapper<vecphys::ComptonKleinNishina>(
+     new GammaModelWrapper<vecphys::ComptonKleinNishina, isItConversion>(
         "Compton Klein Nishina model (Wrapped VecPhys model)",
-        comptonKNvec);
+        comptonKNvec,
+        electronCode,
+        gammaSurvives
+        );
   comptonModel->SetLowEnergyUsageLimit ( lowE_inKeV  * geant::keV);
   comptonModel->SetHighEnergyUsageLimit( highE_inGeV * geant::GeV);
-  std::cout << "Registered Compton model for energy range: "
+  std::cout << "Registered Compton model to gamma ( code = " <<  Gamma::Definition()->GetInternalCode() << " ) " 
+            << "for energy range: "
                << lowE_inKeV << " keV ( = "<< lowE_inKeV  * geant::keV << ")  to "
             << highE_inGeV << " GeV ( = " << highE_inGeV * geant::GeV << " ) " << std::endl;
   AddModel( comptonModel );

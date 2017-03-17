@@ -18,6 +18,10 @@ public:
 
   int  GetSizeListOfSecondaries() const  { return fListOfSecondaries.size(); }
   void SetSizeListOfSecondaries(int val) { fListOfSecondaries.resize(val); }
+
+  //  Resize list if needed to accomodate the extra secondaries
+  void PrepareForSecondaries( int numNewSecondaries );
+
   std::vector<LightTrack>& GetListOfSecondaries() { return fListOfSecondaries; }
 
   static void ClearAll();
@@ -27,6 +31,16 @@ private:
   int    fNumUsedSecondaries;   // number of secondary tracks currently used from fListOfSecondaries
   std::vector<LightTrack>  fListOfSecondaries;
 };
+
+inline
+void PhysicsData::PrepareForSecondaries( int newSecondaries )
+{
+   int  currentSize= fListOfSecondaries.size();
+   if(  fNumUsedSecondaries + newSecondaries > currentSize  ) {
+      SetSizeListOfSecondaries( 2 * currentSize );
+   }
+}
+
 
 } // namespace geantphysics
 

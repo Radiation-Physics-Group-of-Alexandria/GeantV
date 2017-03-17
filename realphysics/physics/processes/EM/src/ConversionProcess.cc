@@ -1,6 +1,8 @@
 //
 //  J. Apostolakis & S.Y. Jun,  March 2017
 //
+#include "Positron.h"
+
 #include "ConversionProcess.h"
 #include "ConversionBetheHeitler.h"
 #include "GammaModelWrapper.h"
@@ -26,11 +28,21 @@ ConversionProcess::ConversionProcess(const std::string &name)
   
   vecphysConversionSG->SetLowEnergyLimit (  lowE_inMeV * CLHEP::MeV);  // geant::MeV);
   vecphysConversionSG->SetHighEnergyLimit( highE_inGeV * CLHEP::GeV);  // geant::GeV);
+
+  static bool gammaSurvives = false;
+  const  bool isConversion= true;
+  // static const int emittedType= electron::GetDefinition()->PCode(); 
+  // static const int emittedType= positron::GetDefinition()->PCode(); 
+  static const int emittedType= Positron::Definition()->GetInternalCode();  // geantphysics::
   
   EMModel *conversionModel=
-     new GammaModelWrapper<ConversionBetheHeitler, true>(
+     new GammaModelWrapper<ConversionBetheHeitler, isConversion>(
         "Photon Conversion process model (Wrapped VecPhys model)",
-        vecphysConversionSG);
+        vecphysConversionSG,
+        emittedType,
+        gammaSurvives
+        );
+  
   conversionModel->SetLowEnergyUsageLimit (  lowE_inMeV * geant::MeV);
   conversionModel->SetHighEnergyUsageLimit( highE_inGeV * geant::GeV);
 

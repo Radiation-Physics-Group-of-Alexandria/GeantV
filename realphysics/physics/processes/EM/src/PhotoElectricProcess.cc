@@ -26,11 +26,18 @@ PhotoElectricProcess::PhotoElectricProcess(const std::string &name)
   
   vecphysPhotoElectricSG->SetLowEnergyLimit (  lowE_inKeV * CLHEP::keV);  // geant::keV);
   vecphysPhotoElectricSG->SetHighEnergyLimit( highE_inMeV * CLHEP::MeV);  // geant::MeV);
+
+  static bool gammaSurvives = false;
+  const  bool isItConversion= false;
+  static const int emittedType= Electron::Definition()->GetInternalCode();
   
   EMModel *photoElectricModel=
-     new GammaModelWrapper<PhotoElectronSauterGavrila>(
+     new GammaModelWrapper<PhotoElectronSauterGavrila, isItConversion>(
         "PhotoElectronSauterGavrila model (Wrapped VecPhys model)",
-        vecphysPhotoElectricSG);
+        vecphysPhotoElectricSG,
+        emittedType,
+        gammaSurvives
+        );
   photoElectricModel->SetLowEnergyUsageLimit (  lowE_inKeV * geant::keV);
   photoElectricModel->SetHighEnergyUsageLimit( highE_inMeV * geant::MeV);
   

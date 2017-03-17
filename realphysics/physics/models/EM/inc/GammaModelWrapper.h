@@ -9,8 +9,13 @@
 #include "base/VecPhys.h"
 #include "base/SystemOfUnits.h"   //  The OLD units - CLHEP namespace
 
+// #include "Particle.h"
+#include "Electron.h"
+#include "Gamma.h"
+
 // #include "VecCore/Backend/Scalar.h"
-// #include "GeantTaskData.h"
+#include "GeantTaskData.h"
+#include "PhysicsData.h"  // Physics data in 'task data'
 
 #include "PhysicalConstants.h"
 
@@ -27,9 +32,9 @@
 namespace geantphysics {
 
 // forward declarations
-class GeantTaskData;   
-class Material;
-class MaterialCuts;
+// class GeantTaskData;   
+// class Material;
+// class MaterialCuts;
 class MaterialProperties;
 class Element;
 class Particle;
@@ -48,17 +53,18 @@ class GammaModelWrapper : public EMModel
 {
   public:
   /**
-   * @brief CTR
+   * @brief Constructor
+  GammaModelWrapper(const std::string&  name,
+     @param[in]  vecPhysModel,
+     @param[in]  emittedType    int:  code of the particle emitted by the interaction
+     @param[in]  gammaSurvives  boolean: does the projectile survive ?
    */
   GammaModelWrapper(const std::string&  name,
-                    PhysModelType*      vecPhysModel )
-      : EMModel( name )
-  {
-     fVecPhysModel= vecPhysModel;
-     std::cout << "Constructor called for Gamma Model Wrapper with process name= "
-               << name << "  physics model ptr= " << vecPhysModel
-               << std::endl;
-  }
+                    PhysModelType*      vecPhysModel,
+                    int                 emittedType,
+                    bool                gammaSurvives  // Static information -- for checking
+     );  
+
   /**
    * @brief DTR
    */
@@ -157,10 +163,31 @@ protected:
   
 private:
   PhysModelType*  fVecPhysModel;  
-  double          fModelminimumPrimaryEnergy= 0.0;
-
+  // double          fModelminimumPrimaryEnergy= 0.0;
+  const int       fEmittedType;    // Particle type of emitted particle (GeantV id)
+  const bool      fGammaSurvives;  // Is projectile gamma expected to survive interaction ? 
 };
 
+
+// *********************  Implementation *******************************************
+// *********************************************************************************
+
+template <class PhysModelType, bool isConversion>
+   GammaModelWrapper<PhysModelType, isConversion>::
+   GammaModelWrapper(const std::string&  name,
+                    PhysModelType*      vecPhysModel,
+                     int                 emittedType,
+                     bool                gammaSurvives                     
+      )
+     : EMModel( name ),
+       fVecPhysModel(vecPhysModel),
+       fEmittedType(emittedType),
+       fGammaSurvives(gammaSurvives)
+{
+     std::cout << "Constructor called for Gamma Model Wrapper with process name= "
+               << name << "  physics model ptr= " << vecPhysModel
+               << std::endl;
+}
 
 // template <class PhysModelType, bool isConversion>         
 // void
@@ -183,6 +210,8 @@ GUTrack
 {
   GUTrack guTrack;
 
+  assert(lightTrack.GetGVcode() == 22); // GammaDefinition().GetInternalCode(); // .GetPDGCode();
+
   guTrack.status= 1;                             // lightTrack.GetTrackStatus();
   guTrack.particleType= lightTrack.GetGVcode();
   guTrack.id= lightTrack.GetTrackIndex();       // counter
@@ -192,7 +221,7 @@ GUTrack
   guTrack.y= 0.0;
   guTrack.z= 0.0;
   // double restMass= guTrack.GetMass();
-  assert(guTrack.particleType == 22); // Gamma.ParticleType);
+
   double eKin= lightTrack.GetKinE();
   // double momentum= std::sqrt(eKin*(eKin+2*restMass));
   double momentum= eKin;  // Shortcut for gamma :   E = E_kin = p c   
@@ -205,6 +234,8 @@ GUTrack
   //  guTrack.lambda= lightTrack.GetIntLen();   // interaction length
   guTrack.s= lightTrack.GetStepLength();    // step length ??
 
+  assert(guTrack.particleType == 22); // GammaDefinition().GetInternalCode(); // .GetPDGCode();
+  
   return guTrack;
 }
 
@@ -279,8 +310,9 @@ GammaModelWrapper<PhysModelType,isConversion>::
 template <class PhysModelType, bool isConversion>   
 int
 GammaModelWrapper<PhysModelType,isConversion>::
-   SampleSecondaries(LightTrack & projectile, std::vector<LightTrack> &secondaryTracks,
-                     Geant::GeantTaskData * /*td*/ )
+   SampleSecondaries(LightTrack &             projectile,
+                     std::vector<LightTrack> & /*secondaryTracks*/,
+                     Geant::GeantTaskData    *td )
 {
   GUTrack  guSecondary;
   GUTrack  guProjectile= ConvertLightToGUTrack(projectile);
@@ -289,15 +321,30 @@ GammaModelWrapper<PhysModelType,isConversion>::
   int  ZtargetElement= projectile.GetTargetZ();
   double    weight=    projectile.GetWeight();
   double    time=      projectile.GetTime();
+  using std::cout;
+  using std::endl;
+  
+  const  int electronCode = Electron::Definition()->GetInternalCode();
+  const  int    gammaCode =    Gamma::Definition()->GetInternalCode();  
+  cout << " Electron 'internal' code/type = " << electronCode << endl;
 
-   static bool firstCall= true;
-   if( firstCall ) { 
-     std::cout << " GammaModelWrapper - method SampleSecondaries() called for model " << this->GetName() << std::endl;
-     firstCall= false;
-   }
+  // static bool firstCall= true;
+  // if( firstCall ) { 
+  cout << " GammaModelWrapper - method SampleSecondaries() called for model " << this->GetName() << endl;
+  //   firstCall= false;
+  // }
+
+  cout << "  Input projectile: " << guProjectile << endl;
+  cout << "     Input track: GV-code = " << projectile.GetGVcode() << endl
+       << "            vs gamma code=  " << gammaCode << endl;
+      // Gamma::Definition()->GetInternalCode() << endl; // .GetPDGCode();
   
   fVecPhysModel->template Interact<vecCore::backend::Scalar>( guProjectile, ZtargetElement, guSecondary);
   // *****************************
+
+  cout << " Results of Interact : " << endl;
+  cout << "  Changed projectile: " << guProjectile << endl;
+  cout << "  Secondary :         " << guSecondary  << endl;
 
   // To DO:  if the models do not respect the production thresholds (they don't),
   //         we can (should?) apply the production threshold for ongoing gammas & electrons.
@@ -305,10 +352,23 @@ GammaModelWrapper<PhysModelType,isConversion>::
   
   // status = guProjectile.status; // GetStatus();
   // if( status == GUTrack::kAlive ){ ...
+  int numberSecondaries= isConversion ? 2 : 1;  // Conversion creates two new tracks - others 1.
 
+  //  It seems that the list "secondaryTracks" passed in argument is ignored ... e.g. in SeltzerBergerBremmModel
+  //   let's copy what that does instead ...
+  //
+  PhysicsData* physicsData= td->fPhysicsData;
+  physicsData->PrepareForSecondaries( numberSecondaries );
+
+  std::vector<LightTrack>& sectracks = physicsData->GetListOfSecondaries();  
+  int secIndx   = physicsData->GetNumUsedSecondaries();
+  
   if( isConversion ) {
      // Deal with the HACK in Conversion - where the projectile photon is turned into a lepton!!
-     LightTrack ongoingTrack = ConvertGUtoLightTrack( guProjectile,
+
+     // Lets assume ongoing track is an electron
+     guProjectile.particleType= electronCode;
+     LightTrack convertedTrack = ConvertGUtoLightTrack( guProjectile,
                                                       LTrackStatus::kAlive,
                                                       // guProjectile.particleType, // PID  right now
                                                       matCutId,
@@ -317,9 +377,14 @@ GammaModelWrapper<PhysModelType,isConversion>::
                                                       0.0,    // eDeposit = 0 for discrete process
                                                       extraInfo
         );
-     secondaryTracks.push_back( ongoingTrack );  //  A copy is made into the vector !? 
+     // secondaryTracks.push_back( convertedTrack );  //  A copy is made into the vector !?
+     sectracks[secIndx] = convertedTrack;
+     secIndx++;
+  
+     // The original photon is killed
      projectile.SetTrackStatus( LTrackStatus::kKill /*ed*/ );  // Defined in LightTrack.h
-  } else {      
+  }
+  if( fGammaSurvives ){
      projectile.SetKinE( guProjectile.E );
      // projectile.SetDirection( guProjectile.GetDirection() );
      double px=guProjectile.px, py=guProjectile.py, pz=guProjectile.pz;
@@ -327,6 +392,7 @@ GammaModelWrapper<PhysModelType,isConversion>::
      projectile.SetDirection( px * invMomentum, py * invMomentum, pz * invMomentum);
   }
 
+  guSecondary.particleType= fEmittedType;
   LightTrack  lightSecondary= ConvertGUtoLightTrack( guSecondary,
                                                      LTrackStatus::kAlive,
                                                      guSecondary.particleType,
@@ -335,8 +401,20 @@ GammaModelWrapper<PhysModelType,isConversion>::
                                                      0.0,    // eDeposit = 0 for discrete process
                                                      extraInfo
      );
-  secondaryTracks.push_back(lightSecondary);
 
+  // secondaryTracks.push_back(lightSecondary);
+
+  sectracks[secIndx] = lightSecondary;
+  secIndx++;
+  
+  /* sectracks[secIndx].SetDirX(gamDirX); */
+  /* sectracks[secIndx].SetDirY(gamDirY); */
+  /* sectracks[secIndx].SetDirZ(gamDirZ); */
+  /* sectracks[secIndx].SetKinE(gammaEnergy); */
+  /* sectracks[secIndx].SetGVcode(fSecondaryInternalCode);  // gamma GV code */
+  /* sectracks[secIndx].SetMass(0.0); */
+  /* sectracks[secIndx].SetTrackIndex(track.GetTrackIndex()); */
+  
   // void Interact(GUTrack &projectile, const int targetElement, GUTrack &secondary);
   return 2;
 }
@@ -410,6 +488,7 @@ GammaModelWrapper<PhysModelType,isConversion>::
          double xsecPerAtom= fVecPhysModel // ->GetG4CrossSection( Zelement, kinEnergy );
                              -> template CrossSectionKernel<vecCore::backend::Scalar> ( kinEnergy, Zelement );
                          // -> ComputeXSectionPerAtom( Zelement, matcut, kinEnergy );
+#if 1
          xsecPerAtom /= CLHEP::barn;
 
          std::cout << " GMWrapper CXSPA call - model " << this->GetName()
@@ -420,7 +499,11 @@ GammaModelWrapper<PhysModelType,isConversion>::
 
          // Convert to GeantV Units
          xsecPerAtom *= geant::barn;
-
+#else
+         // Unit correction - since, for now, VecPhys is using CLHEP units         
+         const double barnCorrection= geant::barn / CLHEP::barn;
+         xsecPerAtom *= barnCorrection;
+#endif        
          //  Density is from Real-Physics - uses new GeantV units
          double numAtomsPerVol= relNumAtomsVec[i] * densityXnumAv / elem->GetA();
 
@@ -450,8 +533,6 @@ GammaModelWrapper<PhysModelType,isConversion>::
    // constexpr double unitDensityGrPerCm_geant = geant::gram / geant::cm;
    // constexpr double unitDensityGrPerCm_clhep = CLHEP::gram / CLHEP::cm;   
    // xsec /= unitDensityGrPerCm_clhep;
-   
-   // xsec *= 0.01; // ( geant::barn / CLHEP::barn ) ; // Since, for now, VecPhys is using CLHEP units
    
    // std::cout << std::scientific; 
    std::cout << " GMWrapper CXSPA call - model " << this->GetName()
