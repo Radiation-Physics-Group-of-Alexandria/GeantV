@@ -152,7 +152,7 @@ public:
 
 
 // protected
-  void RotateToLabFrame(double &u, double &v, double &w, double x, double y, double z);
+  void RotateToLabFrame(double &u, double &v, double &w, double x, double y, double z) const;
 
 //
 // Target element selector related

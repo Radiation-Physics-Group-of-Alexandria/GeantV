@@ -50,7 +50,7 @@ double EMModel::ComputeDEDX(const MaterialCuts * /*matcut*/, double /*kinenergy*
 
 // [u,v,w] is the direction given in the scattering frame i.e. taking [u1,u2,u3] direction equal to z-direction of
 // this scattering frame
-void EMModel::RotateToLabFrame(double &u, double &v, double &w, double u1, double u2, double u3) {
+void EMModel::RotateToLabFrame(double &u, double &v, double &w, double u1, double u2, double u3) const {
   double up = u1*u1 + u2*u2;
   if (up>0.) {
     up = std::sqrt(up);
