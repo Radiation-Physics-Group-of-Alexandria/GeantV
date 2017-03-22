@@ -326,15 +326,22 @@ void PhysicsProcessHandler::PostStepAction(Material_t *mat, int ntracks, GeantTr
       //
       // create secondary tracks if there are any
       if (nSecParticles) {
+        secLt = td->fPhysicsData->GetListOfSecondaries();
+        if( secLt.size() == 0 ) {
+          std::cout << "WARNING: Issue> List of secondaries is empty.  Size = " << secLt.size() << std::endl;
+        }
+        
         for (int isec=0; isec<nSecParticles; ++isec) {
           // get the list of secondary tracks
-          secLt = td->fPhysicsData->GetListOfSecondaries();
+          // std::cout << " Hander: - handling secondary track " << isec << std::endl;
+
           int   secGVcode = secLt[isec].GetGVcode(); // GV index of this secondary particle
           const Particle *secParticle = Particle::GetParticleByInteralCode(secGVcode);
           // get a GeantTrack geantTrack;
           Geant::GeantTrack &geantTrack = td->GetTrack();
           // set the new track properties
           int t = secLt[isec].GetTrackIndex();          // parent GeantTrack index in the input GeantTrack_v
+          assert( t >= 0 );
           geantTrack.fEvent    = tracks.fEventV[t];
           geantTrack.fEvslot   = tracks.fEvslotV[t];
           geantTrack.fGVcode   = secGVcode;
