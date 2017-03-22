@@ -62,8 +62,8 @@ void PhysicsProcess::Initialize() {
   for (unsigned long i=0; i<fListParticlesAssignedTo.size(); ++i) {
     Particle* part = fListParticlesAssignedTo[i];
     bool isok = false;
-    for (unsigned long j=0; j<fListParticlesAlloedToAssigned.size(); ++j) {
-      if (part==fListParticlesAlloedToAssigned[j]) {
+    for (unsigned long j=0; j<fListParticlesAllowedToAssigned.size(); ++j) {
+      if (part==fListParticlesAllowedToAssigned[j]) {
         isok = true;
       }
     }

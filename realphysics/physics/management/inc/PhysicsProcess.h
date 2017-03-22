@@ -22,11 +22,12 @@ class Particle;
  * @author M Novak, A Ribon
  * @date   november 2015
  *
- * Similarly to the Geant4 G4VProcess concept, this class specifies one single physics process for one particular
- * particle type. This is the base class from which all single physics processes, either in-flight and/or at-rest, must
- * derived from. As in Geant4, it has two main types of methods, "GetLength" (called here differently but with the same
- * property) and "DoIt", and (at most) three main "components": along-the-step (continuous), post-step (discrete) and
- * at-rest.
+ * Similarly to the Geant4 G4VProcess concept, this class specifies one single physics 
+ * process for one particular particle type. This is the base class from which all single 
+ * physics processes, either in-flight and/or at-rest, must derived from. As in Geant4, 
+ * it has two main types of methods, "GetLength" (called here differently but with the
+ * same property) and "DoIt", and (at most) three main "components": along-the-step
+ * (continuous), post-step (discrete) and at-rest.
  */
 enum class ForcedCondition {
              kInActivated,       /** for inactivated processes */
@@ -77,10 +78,10 @@ public:
   virtual bool IsApplicable(const LightTrack &/*track*/) const { return true; }
 
 // NOTE: These 2 methods must be changed:
-//        - virtual double GetAtomicCrossSection(  IS NOT NEEDED because only macroscopic cross sections needs to be
-//          provided by the processes
-//        - virtual double InverseLambda(const LightTrack &track) const IS NOT NEEDED,
-//          because a model needs to provide macroscopic cross section for a given material, energy, particle etc..
+//       - virtual double GetAtomicCrossSection(  IS NOT NEEDED because only macroscopic cross 
+//         sections needs to be provided by the processes
+//       - virtual double InverseLambda(const LightTrack &track) const IS NOT NEEDED, because a
+//         model needs to provide macroscopic cross section for a given material, energy, particle etc..
 //
   /** @brief Methods that return the atomic (i.e. microscopic) cross section
    *         (unit: 1/length^2) of the discrete part of this process.
@@ -108,27 +109,32 @@ public:
 
   /** @brief Method that returns the macroscopic cross section in internal [1/length] unit.
    *
-   *  Each process that has discrete part (except some special processes like multiple scattering) needs to implement
-   *  this method. The macroscopic cross section for a given material, interaction is defined in terms of the
-   *  corresponding elementwise atomic cross sections as their weighted sum. The weights are the number of atoms of the
-   *  given element per unit volume of the material.
+   *  Each process that has discrete part (except some special processes like multiple
+   *  scattering) needs to implement this method. The macroscopic cross section for a
+   *  given material, interaction is defined in terms of the corresponding elementwise
+   *  atomic cross sections as their weighted sum. The weights are the number of atoms
+   *  of the given element per unit volume of the material.
    *  This method is used:
-   *   - either only at initialisation by the PhysicsManagerPerParticle to build both the lambda table per process and
-   *     the total lambda table for the partcile. The lambda table per process is used to sample the type of discrete
-   *     intercation while the total lambda table is used to sample the discrete physics step limit.
-   *   - or only at run time for particles that has only one process for which the macroscopic cross section is easily
-   *     computable (e.g. particles that has only decay).
+   *   - either only at initialisation by the PhysicsManagerPerParticle to build both
+   *     the lambda table per process and the total lambda table for the particle.
+   *     The lambda table per process is used to sample the type of discrete
+   *     interaction while the total lambda table is used to sample the discrete 
+   *     physics step limit.
+   *   - or only at run time for particles that has only one process for which the
+   *     macroscopic cross section is easily computable (e.g. particles that has only
+   *     decay).
    *
-   *  @param[in] matcut     Material production cuts couple object in which the macroscopic cross section is requested.
-   *                        Note, that the material of a MaterialCuts object can be obtained from the MaterialCuts
-   *                        object.
+   *  @param[in] matcut     Material production cuts couple object in which the macroscopic
+   *                         cross section is requested.
+   *                        Note, that the material of a MaterialCuts object can be 
+   *                        obtained from the MaterialCuts object.
    *  @param[in] kinenergy  Kinetic energy of the particle in internal [energy] unit.
    *  @param[in] particle   Pointer to the partcile object (NOTE:we pass this for processes that can be used for more than one particle).
    *  @return               Computed macroscopic cross section in internal [1/length] unit.
    */
-  virtual double ComputeMacroscopicXSection(const MaterialCuts * /*matcut*/, double /*kinenergy*/,
+  virtual double ComputeMacroscopicXSection(const MaterialCuts * /*matcut*/,
+                                            double /*kinenergy*/,
                                             const Particle * /*particle*/) const {return 0.;}
-
 
   /** @brief Method that returns the along-the-step limitation length
    *         (unit: length)
@@ -253,16 +259,25 @@ public:
     fType = aType;
   }
 
+  void AddToListParticlesAssignedTo(Particle* part)
+    { fListParticlesAssignedTo.push_back(part); }
+  const std::vector<Particle*>& GetListParticlesAssignedTo() const
+    { return fListParticlesAssignedTo; }
 
-  void AddToListParticlesAssignedTo(Particle* part) { fListParticlesAssignedTo.push_back(part); }
-  const std::vector<Particle*>& GetListParticlesAssignedTo() const { return fListParticlesAssignedTo; }
+  void AddToListParticlesAllowedToAssign(Particle* part)
+    { fListParticlesAllowedToAssigned.push_back(part); }
+  // void AllowParticle(Particle* part) { fListOfParticlesAllowed.push_back(part); }
+  const std::vector<Particle*>& GetListParticlesAllowedToAssign () const
+    { return fListParticlesAllowedToAssigned; }
 
-  void AddToListParticlesAlloedToAssigned(Particle* part) { fListParticlesAlloedToAssigned.push_back(part); }
-  const std::vector<Particle*>& GetListParticlesAlloedToAssigned () const { return fListParticlesAlloedToAssigned; }
+  // Old names of methods -- to obsolete
+  void AddToListParticlesAlloedToAssigned(Particle* part)
+    { AddToListParticlesAllowedToAssign(part); }  
+  const std::vector<Particle*>& GetListParticlesAlloedToAssigned () const
+    { return GetListParticlesAllowedToAssign(); }
 
   // to delete all created process object; must be called only by the main manager
   static void ClearAllProcess();
-
 
   static double GetAVeryLargeValue() {return gAVeryLargeValue;}
 private:
@@ -270,8 +285,6 @@ private:
   PhysicsProcess(const PhysicsProcess &other);
   /** @brief Operator = is not defined*/
   PhysicsProcess& operator=(const PhysicsProcess &other);
-
-
 
 private:
   int  fIndex;
@@ -283,18 +296,21 @@ private:
   std::string fName;                 /** name of the process (useful for debugging) */
   std::vector< bool > fListActiveRegions;  /** is this process active in the i-th region?;
                                                will be set by the PhysicsListManager */
-  std::vector<Particle*> fListParticlesAssignedTo; /** list of particles this process is assigned to;
-                                                       this list is determined by the physics list; do NOT own the
-                                                       Particle objects
-                                                   */
-  std::vector<Particle*> fListParticlesAlloedToAssigned; /** list of particles that this process can be used;
-                                                             this list is determined by the developer, do NOT own the
-                                                             Particle objects */
+  std::vector<Particle*> fListParticlesAssignedTo;
+     /** list of particles this process is assigned to;
+          this list is determined by the physics list; do NOT own the Particle objects */
+                                                   
+  std::vector<Particle*> fListParticlesAllowedToAssigned; // fListOfParticlesAllowed;
+     /** list of particles that this process can be used;
+         this list is determined by the developer, do NOT own the Particle objects */
 
-  static const double    gAVeryLargeValue; // for the along step limitation of those that do not limit the step
-  // unique collection of process object pointers that has been created so far; will be used to delete all
-  // processes
+  static const double    gAVeryLargeValue;
+     // for the along step limitation of those that do not limit the step
+
   static std::vector<PhysicsProcess*> gThePhysicsProcessTable;
+     // unique collection of process object pointers that has been created so far; 
+     //  It will be used to delete all processes (upon destruction)
+  
 };
 
 }  // end of namespace geantphysics
