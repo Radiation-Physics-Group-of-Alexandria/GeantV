@@ -17,7 +17,7 @@
 
 #include "ComptonProcess.h"
 #include "PhotoElectricProcess.h"
-// #include "ConversionProcess.h"
+#include "ConversionProcess.h"
 
 namespace geantphysics {
 
@@ -31,6 +31,7 @@ public:
     std::vector<Particle*> pTable = Particle::GetTheParticleTable();
     for (unsigned int i=0; i<pTable.size(); ++i) {
       Particle *particle = pTable[i];
+// #if 0      
       if (particle==Electron::Definition()) {
         //std::cout<<"  ELECTRON" <<std::endl;
         //
@@ -116,29 +117,36 @@ public:
         // add the process to the e+ particle
         AddProcessToParticle(particle, eBremProc);
       }
+// #endif
       if (particle==Gamma::Definition()) {
-        std::cout<<"  Gamma - defining processes" <<std::endl;
+// #if 0      
+        std::cout<<"**** PhysicsList1:  Gamma - defining processes **************** " <<std::endl;
 
         EMPhysicsProcess *PhotoElectricProc= new PhotoElectricProcess("Photo Electric Process (Wrapped VecPhys)");
         // EMModel          *photoElecticModel;
         // set min/max energies of the model
         // photoElectricModel->SetLowEnergyUsageLimit (   1.0*geant::keV);
         // photoElectricModel->SetHighEnergyUsageLimit( 100.0*geant::MeV);
-        std::cout<< " Adding Photo-Electric to gamma.";
+        std::cout<< " Adding Photo-Electric to gamma." << std::endl;
         AddProcessToParticle(particle, PhotoElectricProc);
-        std::cout<< " Adding Photo-Electric to gamma - done.";
+        std::cout<< " Adding Photo-Electric to gamma - done." << std::endl;
         //
         EMPhysicsProcess *ComptonProcess= new class ComptonProcess("Compton Process (Wrapped VecPhys)");
         // EMModel          *comptonModel;
         // set min/max energies of the model
         // comptonModel->SetLowEnergyUsageLimit ( 1.0*geant::keV);
         // comptonModel->SetHighEnergyUsageLimit(10.0*geant::GeV);
-        std::cout<< " Adding Compton to gamma.";
+        std::cout<< " Adding Compton to gamma."<<std::endl;
         AddProcessToParticle(particle, ComptonProcess);
-        std::cout<< " Adding Compton to gamma - done.";
-
-      }
-
+        std::cout<< " Adding Compton to gamma - done."<<std::endl;
+// #endif
+#if 0        
+        EMPhysicsProcess *ConversionProcess= new class ConversionProcess("Conversion Process (Wrapped VecPhys)");
+        std::cout<< " Adding Conversion to gamma."<<std::endl;
+        AddProcessToParticle(particle, ConversionProcess);
+        std::cout<< " Adding Conversion to gamma - done."<<std::endl;        
+#endif
+      }        
     }
   }
 };
