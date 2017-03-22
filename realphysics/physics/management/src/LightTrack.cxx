@@ -1,3 +1,5 @@
+#include <cmath>
+#include "SystemOfUnits.h"  // For units use in printing in StreamInfo method
 
 #include "LightTrack.h"
 
@@ -12,6 +14,7 @@ LightTrack::LightTrack() :
   fExtraInfo( nullptr )
 {}
 
+// ****************************************************************************************
 
 LightTrack::LightTrack( const LTrackStatus aTrackStatus, const int aGVcode, const int aGTrackIndex,
                         const int aMaterialCutCoupleIndex,
@@ -30,6 +33,7 @@ LightTrack::LightTrack( const LTrackStatus aTrackStatus, const int aGVcode, cons
   fStepLength( aStepLength ), fEdep ( aEdep ), fNintLen(aNintLen), fIntLen(aIntLen), fExtraInfo( aExtraInfo )
 {}
 
+// ****************************************************************************************
 
 LightTrack::LightTrack( const LightTrack &other ) :
   fTrackStatus( other.fTrackStatus ), fGVcode( other.fGVcode ), fGTrackIndex( other.fGTrackIndex ),
@@ -40,6 +44,7 @@ LightTrack::LightTrack( const LightTrack &other ) :
   fStepLength( other.fStepLength ), fEdep( other.fEdep ), fExtraInfo( other.fExtraInfo )
 {}
 
+// ****************************************************************************************
 
 LightTrack& LightTrack::operator=( const LightTrack &other ) {
   if ( this != &other ) {
@@ -130,4 +135,58 @@ void LightTrack_v::AddTrack( LightTrack &aLightTrack ) {
   fNtracks++;
 }
 
+
+template <class T> T square(T x) {  T result; result = x * x; return result;  };
+   
+// ***********************************************************************************   
+
+std::ostream& LightTrack::StreamInfo(std::ostream& os) const
+{
+  const int flpPrec= 4;
+  // using clhep::cm;
+  using geant::keV;
+  using geant::MeV;
+  using geant::GeV;  
+  // const double cm= 10.;
+  // const double MeV= 1.;
+
+  int oldPrec = os.precision(flpPrec); // For charge
+  os << " LightTrack: " // "-----------------------------------------------------------\n"
+     << " *** Dump of LightTrack - " << this << " ***\n"
+     << " ==========================================================\n"
+     << " id= " << fGTrackIndex
+     << " Particle type: " << fGVcode
+     << " charge= " <<  " ?? "
+     << " parent id = " << " ?? "
+     << " process chosen = " << fProcessIndex << "\n";
+  // int oldPrec = os.precision(flpPrec);  
+  /* os << " Position: (in cm)      : "
+     << "    X: " << x/cm << " "
+     << "    Y: " << y/cm << " "
+     << "    Z: " << z/cm << " \n"
+   */
+  std::string unitName= "KeV";
+  double unit = keV;
+  if( fKinE > GeV ) {  unit= GeV; unitName= "GeV"; }
+  else if ( fKinE > MeV ) {  unit= MeV; unitName= "MeV"; }
+
+  os << " Mass        = " << fMass / unit << " " << unitName << "\n";
+  os << " Kin. Energy = " << fKinE / unit << " " << unitName << "\n";
+  
+  double momentumMag= std::sqrt( (2 *fMass + fKinE) * fKinE );
+  momentumMag /= unit;
+  os << " Momentum: ( in MeV/c ) : "
+     << "   pX: " << fXdir * momentumMag << " "
+     << "   pY: " << fYdir * momentumMag << " "
+     << "   pZ: " << fZdir * momentumMag << " " << unitName << "/c\n";
+  /* os << "  # int-len left = " << nint
+     << "  lambda = " << lambda
+     << "  s = " << s << "\n" // std::endl
+     << "-----------------------------------------------------------\n";
+   */
+  os.precision(oldPrec);
+
+  return os;
+}
+   
 } // namespace geantphysics

@@ -3,6 +3,7 @@
 #define LIGHT_TRACK
 
 #include <atomic>
+#include <ostream>
 
 namespace geantphysics {
 
@@ -280,6 +281,17 @@ public:
     fExtraInfo = aExtraInfo;
   }
 
+  /**
+   * @brief Streaming operator
+   */
+  friend std::ostream& operator<< ( std::ostream& os, const LightTrack& t )
+  { return t.StreamInfo(os); }   
+
+  /**
+   * @brief Method that prints the content of a LightTrack
+   * @param[in] os Output stream to use
+   */  
+  std::ostream& StreamInfo(std::ostream& os) const;
 };
 
 

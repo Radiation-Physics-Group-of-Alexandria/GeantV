@@ -39,34 +39,52 @@ inline
 std::ostream& GUTrack::StreamInfo(std::ostream& os) const
 {
   const int flpPrec= 4;
-  // using clhep::cm;
-  // using clhep::MeV;
-  const double cm= 10.;
-  const double MeV= 1.;
+  // using CLHEP::cm;  
+  using CLHEP::keV;
+  using CLHEP::MeV;
+  using CLHEP::GeV;  
   
   int oldPrec = os.precision(flpPrec); // For charge
-  os << " guTrack: " // "-----------------------------------------------------------\n"
+  // os << " guTrack: " // "-----------------------------------------------------------\n"
      // << " *** Dump of GUTrack - " << " ***\n"
-     // << " ==========================================================\n"
-     << " id= " << id
-     << " Particle type: " << particleType
-     << " charge= " <<  int(q)
-     << " parent id = " << parentId
-     << " process chosen = " << proc << "\n";
+     // << " ==========================================================\n";
+  os << " id= " << id
+     << " type: " << particleType
+     << " q= " <<  int(q)
+     << " parent = " << parentId
+     << " proc chosen= " << proc << "\n";
   // int oldPrec = os.precision(flpPrec);  
-  os << " Position: (in cm)      : "
+  /* os << " Position: (in cm)      : "
      << "    X: " << x/cm << " "
      << "    Y: " << y/cm << " "
      << "    Z: " << z/cm << " \n"
-     << " Momentum: ( in MeV/c ) : "
-     << "   pX: " << px / MeV << " "
-     << "   pY: " << py / MeV << " "
-     << "   pZ: " << pz / MeV << " "
-     << " Energy = " << E / MeV << " MeV\n"
-     << "  # int-len left = " << nint
+   */
+  if( E > 1.0 * GeV ) {
+     os << " Momentum: ( in GeV/c ) : "
+        << "   pX: " << px / GeV << " "
+        << "   pY: " << py / GeV << " "
+        << "   pZ: " << pz / GeV << " "
+        << " Energy = " << E / GeV << " GeV\n";     
+  }
+  else if( E > 1.0 * MeV ) {
+     os << " Momentum: ( in MeV/c ) : "
+        << "   pX: " << px / MeV << " "
+        << "   pY: " << py / MeV << " "
+        << "   pZ: " << pz / MeV << " "
+        << " Energy = " << E / MeV << " MeV\n";
+  }
+  else{
+     os << " Momentum: ( in keV/c ) : "
+        << "   pX: " << px / keV << " "
+        << "   pY: " << py / keV << " "
+        << "   pZ: " << pz / keV << " "
+        << " Energy = " << E / keV << " KeV\n";     
+  }
+  /* os << "  # int-len left = " << nint
      << "  lambda = " << lambda
      << "  s = " << s << "\n" // std::endl
      << "-----------------------------------------------------------\n";
+   */
   os.precision(oldPrec);
 
   return os;
