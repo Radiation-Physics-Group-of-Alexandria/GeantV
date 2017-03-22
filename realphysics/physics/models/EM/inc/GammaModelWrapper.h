@@ -11,11 +11,13 @@
 
 // #include "Particle.h"
 #include "Electron.h"
+#include "Positron.h"
 #include "Gamma.h"
 
 // #include "VecCore/Backend/Scalar.h"
 #include "GeantTaskData.h"
-#include "PhysicsData.h"  // Physics data in 'task data'
+
+#include "PhysicsData.h"  // Type of Physics data in 'task data'
 
 #include "PhysicalConstants.h"
 
@@ -75,8 +77,9 @@ class GammaModelWrapper : public EMModel
 //
   // will set the physics parameter object that belongs to the regions(s) where this model is active
   /**
-   * @brief The base class implementation Initialize() must be called in the first line because to set
-   *        the PhysicsParameters member variable for the regions(s) where this model is active.
+   * @brief The base class implementation Initialize() must be called in the first
+   *        line because to set the PhysicsParameters member variable for the 
+   *        regions(s) where this model is active.
    *        This method is called when its EMPhysicsProcess, is initialized by the
    *        EmModelManager member of the EMPhysicsProcess.
    */
@@ -86,14 +89,16 @@ class GammaModelWrapper : public EMModel
    * @brief Method to compute stopping power relevant to energy loss models only.
    *
    */
-  double ComputeDEDX(const MaterialCuts * /*matcut*/, double /*kinenergy*/, const Particle * /*particle*/,
-                             bool /*istotal=false*/ ) override final { return 1.0; }
+  double ComputeDEDX(const MaterialCuts * /*matcut*/, double /*kinenergy*/,
+                     const Particle * /*particle*/,   bool   /*istotal=false*/
+                    ) override final { return 1.0; }
 
   /**
-   * @brief Method to compute macroscopic cross section for a given MaterialCuts, Partcile, kinetic energy.
+   * @brief Method to compute macroscopic cross section for a given MaterialCuts, 
+   *        Partcile, kinetic energy.
    *
-   * Mandatory method called at initialization to build the lambda tables through the corresponding
-   * PhysicsProcess by the PhysicsManagerPerParticle object.
+   * Mandatory method called at initialization to build the lambda tables through 
+   * the corresponding PhysicsProcess by the PhysicsManagerPerParticle object.
    *
    * @param[in] matcut      Pointer to the MaterialCuts object
    * @param[in] kinenergy   Kinetic energy of the Particle
@@ -105,69 +110,79 @@ class GammaModelWrapper : public EMModel
                                     const Particle * /*particle*/) override final;
 
   /**
-   * @brief Method to compute atomic cross section for a given Element, MaterialCuts, Partcile, kinetic energy.
+   * @brief Compute atomic cross section for given Element, MaterialCuts, Particle, kinetic energy.
    *
-   * Method is called at initialization to build the lambda tables through the corresponding PhysicsProcess by
-   *  - by the PhysicsManagerPerParticle object and 
-   *  - by the EMElementSelector object if it was requested in the derived class Initialize() method.
+   * Method is called at initialization to build the lambda tables through the corresponding 
+   *  PhysicsProcess by
+   *  - the PhysicsManagerPerParticle object, and 
+   *  - the EMElementSelector object, if this was requested in the derived class
+   *     Initialize() method.
    * 
-   * Note, that the MaterialCut object, that corresponds to the material-region to which the current element belongs to
-   * is also provided to include any material, or cut dependences. However, this infomation does not necessary to use by
-   * each GammaModelWrapper-s (e.g. those models that describes discrete interaction that doesn't depend on production
-   * threshold and material dependent properties won't use this extra information).
+   * Note, that the MaterialCut object, that corresponds to the material-region to
+   *    which the current element belongs to is also provided to include any 
+   *    material, or cut dependences. However, this infomation does not necessary
+   *    to use by each GammaModelWrapper-s (e.g. those models that 
+   *    describes discrete interaction that doesn't depend on production
+   *    threshold and material dependent properties won't use this extra information).
    *
-   * @param[in] elem        Pointer to the Element object for which the atomic cross section must be computed.
-   * @param[in] matcut      Pointer to the MaterialCuts object in which the atomic cross section must be computed.
-   * @param[in] kinenergy   Kinetic energy of the Partcile at which the atomic cross section must be computed.
-   * @param[in] particle    Pointer to the Partcile object for which the atomic cross section must be computed.
-   * @return    Atomic cross section computed by the given electromagnetic model in internal [length^2] units for
-   *            the given ELement, Particle, MaterialCuts/Material and particle kinetic energy combination.
+   * @param[in] elem        Pointer to the Element object relating request
+   * @param[in] matcut      Pointer to the MaterialCuts object 
+   * @param[in] kinenergy   Kinetic energy of the Partcile
+   * @param[in] particle    Pointer to the Partcile object
+   * @return    Atomic cross section computed by the given electromagnetic model in
+   *            internal [length^2] units for the given ELement, Particle, 
+   *            MaterialCuts/Material and particle kinetic energy combination.
    */
-  double ComputeXSectionPerAtom(const Element * /*elem*/, const MaterialCuts * /*matcut*/, double /*kinenergy*/,
+  double ComputeXSectionPerAtom(const Element * /*elem*/,
+                                const MaterialCuts * /*matcut*/,
+                                double /*kinenergy*/,
                                 const Particle * /*particle*/) override final;
 
   int    SampleSecondaries(LightTrack & /*track*/, std::vector<LightTrack> & /*sectracks*/,
                                    Geant::GeantTaskData * /*td*/) override final;
 
   /**
-   * @brief Method to obtain minimum primary particle kinetic energy at which the discrete part (if any) of the 
-   *        interaction can happen i.e. kinematic minimum for the discrete part of the interaction.
+   * @brief Method to obtain minimum primary particle kinetic energy at which the discrete part
+   *         (if any) of the interaction can happen i.e. kinematic minimum for the discrete 
+   *         part of the interaction.
    *
-   * ALL DISCRETE MODELS (i.e. those that describes interaction happening at the post-step point) THAT HAS PRODUCTION
-   * CUT DEPENDENCE NEEDS TO IMPLEMENT this method. It is used e.g. to build the energy grid of the target element
-   * selector (if it was requested by the derived model) for providing run-time functionality to select target element
-   * for the discrete interaction.
+   * All discrete models which have production-cut dependence *must* implement this method. 
+   *    It is used e.g. to build the energy grid of the target element selector (if it was
+   *    by the derived model) for providing run-time functionality to select target element
+   *    for the discrete interaction.
    *
-   * @param[in] matcut      Pointer to the MaterialCuts object in which the discrete kinematic minimum is requested.
-   * @param[in] particle    Pointer to the Partcile object for which the discrete kinematic minimum is requested.
-   * @return    Minimum primary particle kinetic energy at which the discrete interaction can happen in interanl
-   *            [energy] units for the given Particle, MaterialCuts/Material combination.
+   * @param[in] matcut      Pointer to the MaterialCuts object (for interaction)
+   * @param[in] particle    Pointer to the Particle object 
+   * @return    Minimum primary particle kinetic energy (at which the discrete interaction
+   *            can happen) in internal [energy] units (for the given Particle, 
+   *            MaterialCuts/Material combination).
    */
   double MinimumPrimaryEnergy(const MaterialCuts * /*matcut*/, const Particle * /*part*/) const final
   { return  ( isConversion ? 2.0 * geant::kElectronMassC2 : 0.0 ); }
 
 protected:
+  // Rotate outgoing particle's momentum  'finalMomentum' using projectile's initial vector
+  void RotateToLabFrame(       vecgeom::Vector3D<double> &outgoingVector,
+                         const vecgeom::Vector3D<double> &initialVec ) const;
+
   // Some short cuts will be used in methods below, for speed - knowing 
   //    the type of primary and the implementation of the interactions
   GUTrack    ConvertLightToGUTrack(LightTrack &lightTrack) const;
-  LightTrack ConvertGUtoLightTrack(GUTrack      &guTrack,
-                                   LTrackStatus  status,  
-                                   int           materialCutCoupleIndex,
-                                   double        time= -1.0,
-                                   double        weight = 1.0,                                   
-                                   double        eDeposit = 0.0,
-                                   ExtraInfo*    aExtraInfo = 0
+  LightTrack ConvertGUtoLightTrack( GUTrack      &guTrack,
+                                    LTrackStatus  status,  
+                                    int           materialCutCoupleIndex,
+                                    double        time     = -1.0,
+                                    double        weight   =  1.0,                                   
+                                    double        eDeposit =  0.0,
+                                    ExtraInfo*    aExtraInfo = 0
                                    ) const ;
 
-  // friend PhysModelType;
-  
 private:
   PhysModelType*  fVecPhysModel;  
   // double          fModelminimumPrimaryEnergy= 0.0;
   const int       fEmittedType;    // Particle type of emitted particle (GeantV id)
   const bool      fGammaSurvives;  // Is projectile gamma expected to survive interaction ? 
 };
-
 
 // *********************  Implementation *******************************************
 // *********************************************************************************
@@ -184,47 +199,52 @@ template <class PhysModelType, bool isConversion>
        fEmittedType(emittedType),
        fGammaSurvives(gammaSurvives)
 {
-     std::cout << "Constructor called for Gamma Model Wrapper with process name= "
-               << name << "  physics model ptr= " << vecPhysModel
-               << std::endl;
+   std::cout << "Constructor called for Gamma Model Wrapper with process name= "
+             << name << "  physics model ptr= " << vecPhysModel
+             << std::endl;
 }
 
-// template <class PhysModelType, bool isConversion>         
-// void
-//    GammaModelWrapper<PhysModelType,isConversion>:: METHOD
-// { }
+// **************************************************************************
 
 template <class PhysModelType, bool isConversion>         
 void
    GammaModelWrapper<PhysModelType,isConversion>::Initialize()
 {
-   std::cout << " GammaModelWrapper - method Initialize() called for model " << this->GetName() << std::endl;
-   
+  std::cout << "GammaModelWrapper method Initialize() called for model "
+            << this->GetName() << std::endl;
+
   //  fVecPhysModel->template Initialize<vecCore::backend::Scalar>Initialization();
   fVecPhysModel->Initialization();
 }
 
+// **************************************************************************
+
 template <class PhysModelType, bool isConversion>         
 GUTrack
-   GammaModelWrapper<PhysModelType,isConversion>::ConvertLightToGUTrack(LightTrack &lightTrack) const
+   GammaModelWrapper<PhysModelType,isConversion>::
+      ConvertLightToGUTrack(LightTrack &lightTrack) const
 {
   GUTrack guTrack;
+  const int gammaCode= Gamma::Definition()->GetInternalCode();
 
-  assert(lightTrack.GetGVcode() == 22); // GammaDefinition().GetInternalCode(); // .GetPDGCode();
-
-  guTrack.status= 1;                             // lightTrack.GetTrackStatus();
+  if (lightTrack.GetGVcode() != gammaCode ) {
+     std::cerr << " ERROR: Expected light track with gamma (code= " << gammaCode << " ) "
+               << " .  Track has GV code = " << lightTrack.GetGVcode() << std::endl;
+  }
+  // assert(lightTrack.GetGVcode() == gammaCode );
+  
+  guTrack.status= 1;                            // lightTrack.GetTrackStatus();
   guTrack.particleType= lightTrack.GetGVcode();
   guTrack.id= lightTrack.GetTrackIndex();       // counter
-  guTrack.parentId= 0;                           // id of parent
-  guTrack.proc= lightTrack.GetProcessIndex();    // index of physics process
-  guTrack.x= 0.0;
-  guTrack.y= 0.0;
-  guTrack.z= 0.0;
-  // double restMass= guTrack.GetMass();
+  guTrack.parentId= 0;                          // id of parent
+  guTrack.proc= lightTrack.GetProcessIndex();   // index of physics process
+  // guTrack.x= 0.0;
+  // guTrack.y= 0.0;
+  // guTrack.z= 0.0;
 
   double eKin= lightTrack.GetKinE();
   // double momentum= std::sqrt(eKin*(eKin+2*restMass));
-  double momentum= eKin;  // Shortcut for gamma :   E = E_kin = p c   
+  double momentum= eKin;  // Shortcut for gamma :  E = E_kin = p * c
   guTrack.px= momentum * lightTrack.GetDirX();
   guTrack.py= momentum * lightTrack.GetDirY();
   guTrack.pz= momentum * lightTrack.GetDirZ();
@@ -234,16 +254,97 @@ GUTrack
   //  guTrack.lambda= lightTrack.GetIntLen();   // interaction length
   guTrack.s= lightTrack.GetStepLength();    // step length ??
 
-  assert(guTrack.particleType == 22); // GammaDefinition().GetInternalCode(); // .GetPDGCode();
+  assert(guTrack.particleType == gammaCode);
   
   return guTrack;
 }
 
+// **************************************************************************
+
+inline
+double
+VectorToUnitAndMag( const vecgeom::Vector3D<double> & vectorIn,
+                          vecgeom::Vector3D<double> & outputDir ) // const
+{
+  double magnitude = vectorIn.Mag();
+  double invFinalMom = 1.0 / magnitude;
+  outputDir = invFinalMom * vectorIn;
+
+  return magnitude;
+}
+
+// **************************************************************************
+inline bool EstimatedMass( double Energy, vecgeom::Vector3D<double> momentum )
+{
+   double xAbs = fabs(momentum.x());
+   double yAbs = fabs(momentum.y());
+   double zAbs = fabs(momentum.z());
+   double maxXY= std::max( xAbs, yAbs );
+   double minXY= std::min( xAbs, yAbs );
+
+   double maxAll = std::max( maxXY, zAbs );
+   double minUP  = std::min( maxXY, zAbs );
+   double middle, minAll;
+   if(  minUP > minXY ) { middle = minUP; minAll= minXY; }
+   else                 { middle = minXY; minAll= minUP; }   
+   // if(  zAbs > minXY ) { middle = zAbs;  minAll= minXY; }
+   // else                { middle = minXY; minAll= zAbs; }
+   assert ( minAll <= middle );
+   assert ( middle <= maxAll );
+
+#if 1   
+   double diff = ( Energy - maxAll) * ( Energy + maxAll ) - middle*middle - minAll*minAll;
+#else
+   double diff1 = ( Energy - maxAll) * ( Energy + maxAll );
+   double s1 = diff1 > 0.0 ?  sqrt(diff1) : 0.0; 
+   double diff2 = ( s1 - middle ) * ( s1 + middle ); 
+   double s2 = diff2 > 0.0 ?  sqrt(diff1) : 0.0;
+   double diff = ( s2 - minAll ) * ( s2 + minAll );
+#endif   
+   diff = ( diff < 0.0 ) ? 0.0 : diff ;
+   return ( sqrt(diff) );
+}
+
+inline bool GoodMass( double Energy, vecgeom::Vector3D<double> momentum, double mass )
+{
+   const double epsilonOK = 1.0e-5;
+   
+   double diff = ( Energy - mass ) * ( Energy - mass ) - momentum.Mag2();
+   return ( diff  < epsilonOK * mass * mass );
+}
+
+// **************************************************************************
+
+template <class PhysModelType, bool isConversion>
+void
+GammaModelWrapper<PhysModelType,isConversion>::
+   RotateToLabFrame(       vecgeom::Vector3D<double> & outputVec,
+                     const vecgeom::Vector3D<double> & initialDir ) const
+{
+  // using  ThreeVector= vecgeom::Vector3D<double>;   
+  // double outDirX= invFinalMom * outputVec.x(), outDirY = invFinalMom * outputVec.y(), outDirZ= invFinalMom * outputVec.z();
+  double outDirX= outputVec.x(), outDirY= outputVec.y(), outDirZ= outputVec.z();
+  
+  // double mag= initialDir.Mag();
+  assert (  std::fabs(initialDir.Mag() - 1.0 ) < 1.0e-6 );
+  // double invMag= mag > 0.0 ? 1.0 / mag : 1.0; 
+  // ThreeVector dirInit= invMag * initialVec;
+
+  EMModel::RotateToLabFrame(outDirX, outDirY, outDirZ,
+                            -initialDir.x(), -initialDir.y(), -initialDir.z());                            
+  //                         initialDir.x(), initialDir.y(), initialDir.z());
+
+  outputVec.Set(outDirX, outDirY, outDirZ );  
+  return;
+}    
+
+// **************************************************************************
+   
 template <class PhysModelType, bool isConversion>
 LightTrack 
 GammaModelWrapper<PhysModelType,isConversion>::ConvertGUtoLightTrack(
                                          GUTrack      &guTrack,
-                                         LTrackStatus  status,  
+                                         LTrackStatus  status,
                                          int           materialCutCoupleIndex,
                                          double        time,
                                          double        weight,
@@ -253,28 +354,30 @@ GammaModelWrapper<PhysModelType,isConversion>::ConvertGUtoLightTrack(
 {
   double aMass = (guTrack.id == 22) ? 0.0: geant::kElectronMassC2; 
   return LightTrack( 
-             status,  // LTrackStatus::kAlive
+             status,                // LTrackStatus::kAlive
              guTrack.particleType,  // aGVcode,
-             guTrack.id,    //  aGTrackIndex,   => should be -1/null for new particles
+             guTrack.parentId,      // --> will be used by PostStepDoIt of PhysicsProcessHandler
              materialCutCoupleIndex,
              0, // aProcessIndex ==> this particle is new, no process is chosen for it
              0, // aTargetZ,
-             0, // aTargetN, 
+             0, // aTargetN,
              guTrack.px, guTrack.py, guTrack.pz,
-             guTrack.E, 
+             guTrack.E,
              aMass,
-             time, 
+             time,
              weight,
              guTrack.s,
              eDeposit,
-             guTrack.nint,    // aNintLen
+             guTrack.nint,    // aNintLen,
              guTrack.lambda,  // aIntLen,
              aExtraInfo
          );
 }
 
+// **************************************************************************
+   
 template <class PhysModelType, bool isConversion>
-double 
+double
 GammaModelWrapper<PhysModelType,isConversion>::
     ComputeXSectionPerAtom(const  Element      *elem,
                            const  MaterialCuts * /*matcut*/ ,
@@ -285,7 +388,7 @@ GammaModelWrapper<PhysModelType,isConversion>::
    double xsec;
 
    static bool firstCall= true;
-   if( firstCall ) { 
+   if( firstCall ) {
      std::cout << " GammaModelWrapper - method ComputeXSectionPerAtom() called for model " << this->GetName() << std::endl;
      firstCall= false;
    }
@@ -306,7 +409,8 @@ GammaModelWrapper<PhysModelType,isConversion>::
    return xsec;
 }
 
-// template <class PhysModelType, PhysModelType VecPhysModel, bool isConversion>            
+// **************************************************************************
+   
 template <class PhysModelType, bool isConversion>   
 int
 GammaModelWrapper<PhysModelType,isConversion>::
@@ -314,38 +418,141 @@ GammaModelWrapper<PhysModelType,isConversion>::
                      std::vector<LightTrack> & /*secondaryTracks*/,
                      Geant::GeantTaskData    *td )
 {
-  GUTrack  guSecondary;
-  GUTrack  guProjectile= ConvertLightToGUTrack(projectile);
-  int      matCutId=    projectile.GetMaterialCutCoupleIndex();
-  ExtraInfo *extraInfo= projectile.GetExtraInfo();
-  int  ZtargetElement= projectile.GetTargetZ();
-  double    weight=    projectile.GetWeight();
-  double    time=      projectile.GetTime();
   using std::cout;
   using std::endl;
-  
+  using  ThreeVector= vecgeom::Vector3D<double>;
+
   const  int electronCode = Electron::Definition()->GetInternalCode();
-  const  int    gammaCode =    Gamma::Definition()->GetInternalCode();  
-  cout << " Electron 'internal' code/type = " << electronCode << endl;
+  const  int positronCode = Positron::Definition()->GetInternalCode();  
+  const  int    gammaCode =    Gamma::Definition()->GetInternalCode();
 
-  // static bool firstCall= true;
-  // if( firstCall ) { 
-  cout << " GammaModelWrapper - method SampleSecondaries() called for model " << this->GetName() << endl;
-  //   firstCall= false;
-  // }
+  static bool firstCall= true;
+  if( 0 ) { // firstCall ) {
+    cout << " GammaModelWrapper - method SampleSecondaries() called for model " << this->GetName() << endl;     
+    cout << " Gamma    'internal' code/type = " << electronCode << endl;
+    cout << " Electron 'internal' code/type = " << gammaCode << endl;  
+    cout << " Positron 'internal' code/type = " << positronCode << endl;
+    firstCall= false;
+  }
+  assert( projectile.GetGVcode() == gammaCode );
 
-  cout << "  Input projectile: " << guProjectile << endl;
-  cout << "     Input track: GV-code = " << projectile.GetGVcode() << endl
-       << "            vs gamma code=  " << gammaCode << endl;
-      // Gamma::Definition()->GetInternalCode() << endl; // .GetPDGCode();
+  cout << " Gamma Wrapper - sampling model " << this->GetName() << endl;
+  
+  GUTrack  guSecondary;
+  GUTrack  guProjectile= ConvertLightToGUTrack(projectile);
+  
+  int         matCutId= projectile.GetMaterialCutCoupleIndex();
+  ExtraInfo *extraInfo= projectile.GetExtraInfo();
+  int   ZtargetElement= projectile.GetTargetZ();
+  double        weight= projectile.GetWeight();
+  double          time= projectile.GetTime();
+
+  double      initialEn =   guProjectile.E;
+  ThreeVector initialMom= { guProjectile.px, guProjectile.py, guProjectile.pz };
+  ThreeVector initialDir;   // double      initialMomMag=
+
+  VectorToUnitAndMag( initialMom, initialDir );  
+  
+  int       idProjectile= projectile.GetTrackIndex();
+
+  cout << " ****** 'Input' of Interaction :  ***************** " << endl;  
+  cout << " **     Input projectile: " << guProjectile << endl;
   
   fVecPhysModel->template Interact<vecCore::backend::Scalar>( guProjectile, ZtargetElement, guSecondary);
-  // *****************************
+  // **********  ******** ********
 
-  cout << " Results of Interact : " << endl;
-  cout << "  Changed projectile: " << guProjectile << endl;
-  cout << "  Secondary :         " << guSecondary  << endl;
+  cout << " ****** Results of Interact(ion) : **************** " << endl;
+  cout << " ** 1. Changed projectile: " << guProjectile << endl;
+  // cout << " ************************************************** " << endl;  
+  cout << " ** 2.  Secondary :         " << guSecondary  << endl;
+  // cout << " ************************************************** " << endl;
 
+  ThreeVector finalMom=    { guProjectile.px, guProjectile.py, guProjectile.pz };
+  ThreeVector secondaryMom= { guSecondary.px, guSecondary.py, guSecondary.pz };
+
+#if 1    // CHECK_EACH_EN_MOMENTUM
+  // Check the relationship between E and p for output particles
+  const double electronMass= 1000.0 * geant::kElectronMassC2; // geant::kElectronMassC2;
+  if( fGammaSurvives ){
+     double pEratio = finalMom.Mag() / guProjectile.E;
+     if( fabs(pEratio - 1.0) > 1.0e-6 ) 
+        cout << " p/E ratio (gamma-out) = " << pEratio << " r-1= "  << pEratio - 1.0 << endl;
+     assert( fabs( finalMom.Mag() - guProjectile.E ) < 1.0e-4 * guProjectile.E );     
+  } else {
+     assert( GoodMass( guProjectile.E, finalMom, electronMass ) );
+  }
+  // Secondary is always an electron / positron
+  // assert( GoodMass( guSecondary.E, secondaryMom, electronMass ) );
+  if( ! GoodMass( guSecondary.E, secondaryMom, electronMass ) ){
+     double estimM= EstimatedMass( guSecondary.E, secondaryMom );
+     cout << " BAD mass from E/p - for secondary : "
+          << " Mass estimated = " << estimM
+          << " vs expected = " << electronMass
+          << "  rel. diff = " << (estimM/electronMass) - 1.0
+          << endl;
+  }
+#endif
+#if  1   // DEBUG_CONSERVATION_LAWS
+  //     DEBUG printout - START
+  double initialMomentumMag= initialMom.Mag();
+  {
+     ThreeVector totalMomentumOut= finalMom + secondaryMom;  
+     ThreeVector diffMomentum= initialMom - totalMomentumOut;
+     double      diffEnergy  = initialEn - guProjectile.E - guSecondary.E;
+     
+     cout << " particle 1 - out " << finalMom << endl;
+     cout << " particle 2 - out " << secondaryMom << endl;
+     cout << " Sum P out        " << totalMomentumOut << endl;
+     cout << " P     in         " << initialMom   << endl;     
+     
+     if( initialMomentumMag == 0.0 ) { initialMomentumMag= -0.1e-70; }
+     cout << " DiffE = ";
+     if (diffEnergy == 0.0) {cout << "0 ";} else { cout << diffEnergy; }
+     cout << " (UnRotated) d-Momentum= " << diffMomentum
+          << " mag(dP)= " << diffMomentum.Mag() << " relative: " <<  diffMomentum.Mag() / initialMomentumMag
+          << " d|P|= " << initialMomentumMag - totalMomentumOut.Mag()
+          << " relative diff " << totalMomentumOut.Mag() / initialMomentumMag - 1.0
+          << endl;
+  }   // DEBUG printout - END
+#endif
+
+  // Rotate outgoing momentum directions - and re-check conservation
+  ThreeVector finalMomDir;
+  double finalMomMag = VectorToUnitAndMag( finalMom, finalMomDir );
+  
+  ThreeVector secondaryMomDir;
+  double secondaryMomMag = VectorToUnitAndMag( secondaryMom, secondaryMomDir );  
+
+  // rotate back to lab frame - 1st argument is changed in place
+  RotateToLabFrame(     finalMomDir, initialDir );
+  RotateToLabFrame( secondaryMomDir, initialDir );
+
+  finalMom=     finalMomMag     * finalMomDir;
+  secondaryMom= secondaryMomMag * secondaryMomDir;  
+
+#if  1 // DEBUG_CONSERVATION_LAWS  
+  {
+     ThreeVector totalMomentumOutRot= finalMom + secondaryMom;     
+     ThreeVector diffMomentumRot= initialMom - totalMomentumOutRot;
+     double      diffEnergyRot  = initialEn - guProjectile.E - guSecondary.E;
+
+     cout << " Sum P out (Rot)  " << totalMomentumOutRot << endl;
+     
+     cout << " DiffE = ";
+     if (diffEnergyRot == 0.0) {cout << "0 ";} else { cout << diffEnergyRot; }
+     cout << " (Rotated)   d-Momentum= " << diffMomentumRot
+          << " mag(d-P)= " << diffMomentumRot.Mag() << " relative: " <<  diffMomentumRot.Mag() /  initialMomentumMag
+          << " d|P|= " << initialMomentumMag - totalMomentumOutRot.Mag()
+          << " relative diff " << totalMomentumOutRot.Mag() / initialMomentumMag - 1.0
+          << endl;
+  }
+  
+  if( projectile.GetGVcode() != gammaCode ){
+     cout << " - projectile changed from gamma (code= " << gammaCode << " ) to code "
+          << projectile.GetGVcode() << endl;
+  }
+#endif
+  
   // To DO:  if the models do not respect the production thresholds (they don't),
   //         we can (should?) apply the production threshold for ongoing gammas & electrons.
   //         Ongoing positrons should be cut only if the production threshold is above 2 * massElectron
@@ -362,12 +569,17 @@ GammaModelWrapper<PhysModelType,isConversion>::
 
   std::vector<LightTrack>& sectracks = physicsData->GetListOfSecondaries();  
   int secIndx   = physicsData->GetNumUsedSecondaries();
+
+  guSecondary.parentId= idProjectile;
   
   if( isConversion ) {
      // Deal with the HACK in Conversion - where the projectile photon is turned into a lepton!!
 
      // Lets assume ongoing track is an electron
      guProjectile.particleType= electronCode;
+     guSecondary.particleType= positronCode;
+     guProjectile.parentId= idProjectile;
+
      LightTrack convertedTrack = ConvertGUtoLightTrack( guProjectile,
                                                       LTrackStatus::kAlive,
                                                       // guProjectile.particleType, // PID  right now
@@ -380,30 +592,38 @@ GammaModelWrapper<PhysModelType,isConversion>::
      // secondaryTracks.push_back( convertedTrack );  //  A copy is made into the vector !?
      sectracks[secIndx] = convertedTrack;
      secIndx++;
-  
+
      // The original photon is killed
      projectile.SetTrackStatus( LTrackStatus::kKill /*ed*/ );  // Defined in LightTrack.h
   }
   if( fGammaSurvives ){
+     // CheckEPGamma( guProjectile );
+     
      projectile.SetKinE( guProjectile.E );
      // projectile.SetDirection( guProjectile.GetDirection() );
-     double px=guProjectile.px, py=guProjectile.py, pz=guProjectile.pz;
-     double invMomentum = 1.0 / std::sqrt( px*px + py*py + pz*pz ); // ( pMag2 );
-     projectile.SetDirection( px * invMomentum, py * invMomentum, pz * invMomentum);
+     // double px=guProjectile.px, py=guProjectile.py, pz=guProjectile.pz;
+     // double invMomentum = 1.0 / std::sqrt( px*px + py*py + pz*pz ); // ( pMag2 );
+     // projectile.SetDirection( px * invMomentum, py * invMomentum, pz * invMomentum);
+     projectile.SetDirection( finalMom.x(), finalMom.y(), finalMom.z() );
+     // projectile.SetDirection( finalMom );
   }
 
   guSecondary.particleType= fEmittedType;
   LightTrack  lightSecondary= ConvertGUtoLightTrack( guSecondary,
                                                      LTrackStatus::kAlive,
-                                                     guSecondary.particleType,
+                                                     // fEmittedType, // electronCode, // guSecondary.particleType,
                                                      matCutId,
                                                      time,
+                                                     1.0,
                                                      0.0,    // eDeposit = 0 for discrete process
-                                                     extraInfo
-     );
-
+                                                     extraInfo );
   // secondaryTracks.push_back(lightSecondary);
 
+  lightSecondary.SetTrackIndex( idProjectile );  // Expects parent index for new tracks !!
+
+  cout << endl;
+  cout << ">>> Secondary (light) is " << lightSecondary << endl;
+  
   sectracks[secIndx] = lightSecondary;
   secIndx++;
   
@@ -416,7 +636,10 @@ GammaModelWrapper<PhysModelType,isConversion>::
   /* sectracks[secIndx].SetTrackIndex(track.GetTrackIndex()); */
   
   // void Interact(GUTrack &projectile, const int targetElement, GUTrack &secondary);
-  return 2;
+
+  cout << " GammaModelWrapper - end of method SampleSecondaries() called for model " << this->GetName() << endl;
+  
+  return numberSecondaries;
 }
 
 /**
@@ -513,34 +736,18 @@ GammaModelWrapper<PhysModelType,isConversion>::
          xsec += xsecPart;
          if( debugPrint )
            cout << "   Z: " << Zelement << "  #atoms= " << numAtomsPerVol << "  xSecPart= " << xsecPart << endl;
-
-#if 0
-         xsec2 += numAtomsPerVol *
-                  fVecPhysModel ->
-                     // template CrossSectionKernel<vecCore::backend::Scalar> (kinEnergy, Zelement);
-                                 G4CrossSectionPerAtom(Zelement, kinEnergy);
-                     // template G4CrossSectionPerAtom<vecCore::backend::Scalar> (Zelement, kinEnergy);
-#endif         
       }
    }
-//   assert( std::fabs(xsec - xsec2) < 0.5e5 * (xsec+xsec2) );
  
-   // xsec *= CLHEP::barn; // It seems that VecPhys gives X-sec in barn (or similar)
-
    // constexpr double unitDensityGrPerCm3_geant = geant::gram / (geant::cm * geant::cm * geant::cm );
-   // constexpr double unitDensityGrPerCm3_clhep = CLHEP::gram / (CLHEP::cm * CLHEP::cm * CLHEP::cm );
-
-   // constexpr double unitDensityGrPerCm_geant = geant::gram / geant::cm;
    // constexpr double unitDensityGrPerCm_clhep = CLHEP::gram / CLHEP::cm;   
-   // xsec /= unitDensityGrPerCm_clhep;
    
-   // std::cout << std::scientific; 
    std::cout << " GMWrapper CXSPA call - model " << this->GetName()
              << " Material= " << mat->GetName() << " Ekin= " << std::scientific << kinEnergy
              << " X-sec = " << std::scientific
-             << xsec       //  / geant::barn
-             << " g / cm "
+             << xsec        << " g / cm "
              << std::endl;
+   std::cout << std::fixed;
 
    // xsec *= unitDensityGrPerCm_geant;
    
