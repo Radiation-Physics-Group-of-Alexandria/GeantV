@@ -492,13 +492,13 @@ template <class EmModel>
 template <class Backend>
 VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::RotateAngle(
     typename Backend::Double_v sinTheta, typename Backend::Double_v xhat, typename Backend::Double_v yhat,
-    typename Backend::Double_v zhat, typename Backend::Double_v &xr, typename Backend::Double_v &yr,
+    typename Backend::Double_v zhat,    typename Backend::Double_v &xr, typename Backend::Double_v &yr,
     typename Backend::Double_v &zr)
 {
   using Double_v = typename Backend::Double_v;
 
   Double_v phi = UniformRandom<Double_v>(fRandomState, fThreadId);
-  Double_v pt = xhat * xhat + yhat * yhat;
+  Double_v pt2 = xhat * xhat + yhat * yhat;
 
   Double_v cosphi, sinphi;
   math::SinCos(phi, &sinphi, &cosphi);
@@ -507,19 +507,45 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::RotateAngle(
   Double_v vhat = sinTheta * sinphi; // sin(phi);
   Double_v what = math::Sqrt((1. - sinTheta) * (1. + sinTheta));
 
-  Mask_v<Double_v> positive = (pt > 0.);
+  Mask_v<Double_v> positive  = (pt2 > 0.);
   Mask_v<Double_v> negativeZ = (zhat < 0.);
 
-  Double_v phat = math::Sqrt(pt);
+  Double_v pt =   math::Sqrt(pt);
+  Double_v invPt= Blend( positive , 1.0 / pt, Double_v(1.0) );
 
-  Double_v px = (xhat * zhat * uhat - yhat * vhat) / phat + xhat * what;
-  Double_v py = (yhat * zhat * uhat - xhat * vhat) / phat + yhat * what;
-  Double_v pz = -phat * uhat + zhat * what;
+  Double_v px = (xhat * zhat * uhat - yhat * vhat) * invPt + xhat * what;
+  Double_v py = (yhat * zhat * uhat - xhat * vhat) * invPt + yhat * what;
+  Double_v pz = -pt * uhat + zhat * what;
 
-  xr = Blend(negativeZ, -xhat, Blend(positive, px, xhat));
-  yr = Blend(negativeZ, yhat, Blend(positive, py, yhat));
-  zr = Blend(negativeZ, -zhat, Blend(positive, pz, zhat));
+  // Values in case  pt == 0.0
+  Double_v xAlt = Blend(negativeZ, -xhat, xhat);
+  Double_v yAlt = Blend(negativeZ,  yhat, yhat);
+  Double_v zAlt = Blend(negativeZ, -zhat, zhat);
+
+  xr = Blend(positive, px, xAlt);
+  yr = Blend(positive, py, yAlt);
+  zr = Blend(positive, pz, zAlt);
 }
+
+// Remember - the original (sequential) code was
+
+  //mask operation???
+ /* if(positive) {
+    Double_t phat = Sqrt(pt);
+    xr = (xhat*zhat*uhat - yhat*vhat)/phat + xhat*what;
+    yr = (yhat*zhat*uhat - xhat*vhat)/phat + yhat*what;
+    zr = -phat*uhat + zhat*what;
+  }
+  else if(negativeZ) {
+    xr = -xhat;
+    yr =  yhat;
+    zr = -zhat;
+  }  
+  else {
+    xr = xhat;
+    yr = yhat;
+    zr = zhat;
+  }*/
 
 template <class EmModel>
 template <typename Backend>
@@ -533,13 +559,17 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(double e
   double yhat = inProjectile.py * invp;
   double zhat = inProjectile.pz * invp;
 
+  double pXin = inProjectile.px;
+  double pYin = inProjectile.py;
+  double pZin = inProjectile.pz;  
+  
   double uhat = 0.;
   double vhat = 0.;
   double what = 0.;
 
   RotateAngle<Backend>(sinTheta, xhat, yhat, zhat, uhat, vhat, what);
 
-  // update primary
+  // update primary -- assumes it (remains) a photon !!
   inProjectile.E = energyOut;
   inProjectile.px = energyOut * uhat;
   inProjectile.py = energyOut * vhat;
@@ -547,10 +577,10 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::ConvertXtoFinalState(double e
 
   // create secondary
   outSecondary.E = (energyIn - energyOut);
-  outSecondary.px = outSecondary.E * (xhat - uhat);
-  outSecondary.py = outSecondary.E * (yhat - vhat);
-  outSecondary.pz = outSecondary.E * (zhat - what);
-
+  outSecondary.px = pXin - inProjectile.px; // outSecondary.E * (xhat - uhat);
+  outSecondary.py = pYin - inProjectile.py; // outSecondary.E * (yhat - vhat);
+  outSecondary.pz = pZin - inProjectile.py; // outSecondary.E * (zhat - what);
+  
   // fill other information
 }
 
@@ -569,7 +599,7 @@ void EmModelBase<EmModel>::ConvertXtoFinalState(typename Backend::Double_v energ
   Double_v py = FromPtr<Double_v>(&primary.py[ibase]);
   Double_v pz = FromPtr<Double_v>(&primary.pz[ibase]);
 
-  Double_v invp = 1. / energyIn;
+  Double_v invp = 1. / energyIn;  // Assumes photon !!
   Double_v xhat = px * invp;
   Double_v yhat = py * invp;
   Double_v zhat = pz * invp;
@@ -580,7 +610,7 @@ void EmModelBase<EmModel>::ConvertXtoFinalState(typename Backend::Double_v energ
 
   RotateAngle<Backend>(sinTheta, xhat, yhat, zhat, uhat, vhat, what);
 
-  // Update primary
+  // Update primary -- assumes photon !!
   Store(energyOut, &primary.E[ibase]);
   Double_v pxFinal, pyFinal, pzFinal;
 
@@ -593,9 +623,9 @@ void EmModelBase<EmModel>::ConvertXtoFinalState(typename Backend::Double_v energ
 
   // create Secondary
   Double_v secE = energyIn - energyOut;
-  Double_v pxSec = secE * (xhat - uhat);
-  Double_v pySec = secE * (yhat - vhat);
-  Double_v pzSec = secE * (zhat - what);
+  Double_v pxSec = px - pxFinal;  // secE * (xhat - uhat); -- This again assumed photon ???
+  Double_v pySec = py - pyFinal;  // secE * (yhat - vhat);
+  Double_v pzSec = pz - pzFinal;  // secE * (zhat - what);
 
   Store(secE, &secondary.E[ibase]);
   Store(pxSec, &secondary.px[ibase]);
