@@ -336,9 +336,134 @@ GammaModelWrapper<PhysModelType,isConversion>::
 
   outputVec.Set(outDirX, outDirY, outDirZ );  
   return;
-}    
+}
+   
+// **************************************************************************
+
+const double electronMass= 1000.0 * geant::kElectronMassC2;
+
+// static atomic<int> numBadEPMass= 0;
+
+inline
+bool CheckEnergyMomentum( const vecgeom::Vector3D<double>& Momentum,
+                          double             energy,
+                          int                particleCode,
+                          const std::string& name,
+                          bool               verbose= false)
+{
+  const  int electronCode = Electron::Definition()->GetInternalCode();
+  const  int positronCode = Positron::Definition()->GetInternalCode();  
+  const  int    gammaCode =    Gamma::Definition()->GetInternalCode();
+  bool   good= false;
+
+  if( particleCode == gammaCode )
+  {
+     good= GoodMass( energy, Momentum, 0.0 );
+     if( ! good ) { 
+        if( verbose ) { // || (++numBadEPMass % 100 == 0) ){
+           double pEratio = Momentum.Mag2() / (energy*energy);
+           std::cerr << " ERROR> Incorrect p/E ratio for gamma, r = " << pEratio
+                     << " r-1= "  << pEratio - 1.0 << std::endl;
+             // << "  occurance # " << numBadEPMass << std::endl;
+        }
+     }
+     assert( fabs( Momentum.Mag() / energy ) < 1.0e-4 * energy );
+  }
+  else if( particleCode == electronCode || particleCode == positronCode )
+  {
+     good = GoodMass( energy, Momentum, electronMass );
+     if( verbose && ! good ) {
+        double estimM= EstimatedMass( energy, Momentum );
+        std::cerr << " ERROR> BAD mass from E/p - for secondary : "
+                  << " Mass estimated = " << estimM
+                  << " vs expected = " << electronMass
+                  << "  rel. diff = " << (estimM/electronMass) - 1.0
+                  << " momentum= " << Momentum << "  E= " << energy
+                  << " label= " << name
+                  << std::endl;
+     }
+     assert( GoodMass( energy, Momentum, electronMass ) );
+  }
+  return good;
+}
 
 // **************************************************************************
+
+inline
+bool CheckEPGamma( const GUTrack& aTrack, const std::string &label, bool verbose= false )
+{
+  using  ThreeVector= vecgeom::Vector3D<double>;     
+  const  int  gammaCode =    Gamma::Definition()->GetInternalCode();
+  const  ThreeVector  momentum(aTrack.px, aTrack.py, aTrack.pz);
+  
+  return CheckEnergyMomentum( momentum, aTrack.E, gammaCode, label, verbose);
+}
+
+// **************************************************************************
+
+inline
+bool CheckEPMass( const GUTrack& guTrack, const std::string &label, bool verbose )  
+{
+  vecgeom::Vector3D<double> momentum(guTrack.px, guTrack.py, guTrack.pz);
+  return CheckEnergyMomentum( momentum, guTrack.E, guTrack.particleType,
+                              label, verbose );
+}
+   
+// **************************************************************************
+inline
+bool CheckConservationLaws( const typename vecgeom::Vector3D<double> initialMom,   double initialEn,
+                            const typename vecgeom::Vector3D<double> finalProjMom, double finalE,
+                            const typename vecgeom::Vector3D<double> secondaryMom, double secondaryE,
+                            bool verbose = false )
+{
+  using  ThreeVector= vecgeom::Vector3D<double>;   
+  double initialMomentumMag= initialMom.Mag();
+  const double epsilon = 1.0e-5;
+     
+  ThreeVector totalMomentumOut= finalProjMom + secondaryMom;  
+  ThreeVector diffMomentum=     initialMom - totalMomentumOut;
+  double      diffEnergy  =     initialEn - guProjectile.E - guSecondary.E;
+
+  bool bigDiffP = ( totalMomentumOut.Mag() > epsilon * initialMomentumMag );
+  bool bigDiffE = ( std::fabs(diffEnergy) > epsilon * initialEn );
+
+  bool bigDiff = bigDiffE || bigDiffP ;  
+  
+  if( bigDiff || verbose )
+  {
+     int oldPrc= cout.precision(10);     
+     cout << " particle 1 - out " << finalProjMom << endl;
+     cout << " particle 2 - out " << secondaryMom << endl;
+     cout << " Sum P out        " << totalMomentumOut << endl;
+     cout << " P     in         " << initialMom   << endl;     
+     cout.precision(oldPrc);
+     
+     if( initialMomentumMag == 0.0 ) { initialMomentumMag= -0.1e-70; }
+     cout << " DiffE = ";
+     if (diffEnergy == 0.0) {cout << "0 ";} else { cout << diffEnergy; }
+     cout << " (UnRotated) d-Momentum= " << diffMomentum
+          << " mag(dP)= " << diffMomentum.Mag() << " relative: " <<  diffMomentum.Mag() / initialMomentumMag
+          << " d|P|= " << initialMomentumMag - totalMomentumOut.Mag()
+          << " relative diff " << totalMomentumOut.Mag() / initialMomentumMag - 1.0
+          << endl;
+  }   // DEBUG printout - END
+}
+   
+// initialEn - guProjectile.E - guSecondary.E;
+
+/*    
+inline
+bool CheckEPMass( const LightTrack& track, const std::string &label, bool verbose )  
+{
+  vecgeom::Vector3D<double> momentum(track.GetDirX(), track.GetDirY(), guTrack.GetDirZ());
+  momentum *= 
+  return CheckEnergyMomentum( momentum, guTrack.E, guTrack.particleType,
+                       "Convert GU to Light Track", verbose );
+}
+*/
+   
+// **************************************************************************
+
    
 template <class PhysModelType, bool isConversion>
 LightTrack 
@@ -352,16 +477,28 @@ GammaModelWrapper<PhysModelType,isConversion>::ConvertGUtoLightTrack(
                                          ExtraInfo*    aExtraInfo
                                          ) const
 {
-  double aMass = (guTrack.id == 22) ? 0.0: geant::kElectronMassC2; 
+  const  int gammaCode = Gamma::Definition()->GetInternalCode();
+
+  double aMass = (guTrack.id == gammaCode) ? 0.0: geant::kElectronMassC2;
+
+  // Basic check of relation between E, p & mass
+  vecgeom::Vector3D<double> momentum(guTrack.px, guTrack.py, guTrack.pz);
+  CheckEnergyMomentum( momentum, guTrack.E, guTrack.particleType,
+                       "Convert GU to Light Track", true ); // verbose
+  
+  double momentumMag = ( guTrack.particleType != gammaCode ) ? momentum.Mag() : guTrack.E;
+  double invMag= 1.0 / momentumMag;
+  momentum *= invMag;
+  
   return LightTrack( 
              status,                // LTrackStatus::kAlive
              guTrack.particleType,  // aGVcode,
-             guTrack.parentId,      // --> will be used by PostStepDoIt of PhysicsProcessHandler
+             guTrack.parentId,      // --> needed by PostStepDoIt of PhysicsProcessHandler ( used to get => x,y,z,..com )
              materialCutCoupleIndex,
              0, // aProcessIndex ==> this particle is new, no process is chosen for it
              0, // aTargetZ,
              0, // aTargetN,
-             guTrack.px, guTrack.py, guTrack.pz,
+             momentum.x(), momentum.y(), momentum.z(), // invMag * guTrack.px, invMag * guTrack.py, invMag * guTrack.pz,
              guTrack.E,
              aMass,
              time,
@@ -470,7 +607,18 @@ GammaModelWrapper<PhysModelType,isConversion>::
   ThreeVector finalMom=    { guProjectile.px, guProjectile.py, guProjectile.pz };
   ThreeVector secondaryMom= { guSecondary.px, guSecondary.py, guSecondary.pz };
 
-#if 1    // CHECK_EACH_EN_MOMENTUM
+#if 1 // CHECK_EACH_EN_MOMENTUM
+  bool verbose= true;
+  if( fGammaSurvives ){
+     CheckEPGamma( guProjectile, "Surviving gamma", verbose );
+     // CheckEPGamma( finalMom, guProjectile.E, "Surviving gamma", verbose );
+  } else {
+     // guProjectile.particleType= electronCode;
+     // CheckEPMass( guProjectile, "Primary (Changed to e)" );
+     CheckEnergyMomentum( finalMom,  guProjectile.E, electronCode, "Primary (Changed to e)", verbose );
+  }
+  CheckEnergyMomentum( secondaryMom, guSecondary.E, electronCode, "Secondary electron from gamma", verbose );
+#else  
   // Check the relationship between E and p for output particles
   const double electronMass= 1000.0 * geant::kElectronMassC2; // geant::kElectronMassC2;
   if( fGammaSurvives ){
@@ -499,11 +647,13 @@ GammaModelWrapper<PhysModelType,isConversion>::
      ThreeVector totalMomentumOut= finalMom + secondaryMom;  
      ThreeVector diffMomentum= initialMom - totalMomentumOut;
      double      diffEnergy  = initialEn - guProjectile.E - guSecondary.E;
-     
+
+     int oldPrc= cout.precision(10);
      cout << " particle 1 - out " << finalMom << endl;
      cout << " particle 2 - out " << secondaryMom << endl;
      cout << " Sum P out        " << totalMomentumOut << endl;
      cout << " P     in         " << initialMom   << endl;     
+     cout.precision(oldPrc);
      
      if( initialMomentumMag == 0.0 ) { initialMomentumMag= -0.1e-70; }
      cout << " DiffE = ";
@@ -524,8 +674,8 @@ GammaModelWrapper<PhysModelType,isConversion>::
   double secondaryMomMag = VectorToUnitAndMag( secondaryMom, secondaryMomDir );  
 
   // rotate back to lab frame - 1st argument is changed in place
-  RotateToLabFrame(     finalMomDir, initialDir );
-  RotateToLabFrame( secondaryMomDir, initialDir );
+  // RotateToLabFrame(     finalMomDir, initialDir );
+  // RotateToLabFrame( secondaryMomDir, initialDir );
 
   finalMom=     finalMomMag     * finalMomDir;
   secondaryMom= secondaryMomMag * secondaryMomDir;  
@@ -597,7 +747,7 @@ GammaModelWrapper<PhysModelType,isConversion>::
      projectile.SetTrackStatus( LTrackStatus::kKill /*ed*/ );  // Defined in LightTrack.h
   }
   if( fGammaSurvives ){
-     // CheckEPGamma( guProjectile );
+     CheckEPGamma( guProjectile, "Surviving gamma", true );
      
      projectile.SetKinE( guProjectile.E );
      // projectile.SetDirection( guProjectile.GetDirection() );
