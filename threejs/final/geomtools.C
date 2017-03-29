@@ -283,6 +283,7 @@ void cloneVolume(varStore *prm,Int_t nv){
   prm->PrimFile << "]}";
 }
 
+// prm->PrimFile   << ",\n\t{\"fn\":\"clone\",\"nv\":"<<nv<<",\"lv\":"<<prm->level  <<",\"m\":\""<<getMother(prm) <<"\",\"ovn\":\"" << getVolName(prm) <<"\",\"gid\":<<prm->current->GetVolume()->GetNumber() <<",\"cn\":"<<prm->current->GetNumber() <<",\"v\":[";
 
 
 int geomtools(){
