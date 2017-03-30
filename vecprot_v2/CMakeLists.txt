@@ -24,6 +24,10 @@ if (USE_VECGEOM_NAVIGATOR)
   include_directories(${CMAKE_SOURCE_DIR}/material/inc)
 endif()
 
+if(USE_HPC)
+   include_directories(${ZeroMQ_INCLUDE_DIR})
+endif()
+
 if (USE_TBB)
   include_directories(${TBB_INCLUDE_DIR})
 endif()
@@ -73,6 +77,8 @@ set(sources
    ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantRunManager.cxx
    ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventServer.cxx
    ${CMAKE_CURRENT_SOURCE_DIR}/src/TrackStat.cxx
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventDispatcher.cxx
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventReceiver.cxx
 )
 
 set(headers
@@ -117,6 +123,11 @@ set(headers
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventServer.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantConfig.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/TrackStat.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventDispatcher.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantVZMQMessenger.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantPerfEvaluator.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantHPCMGraph.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventReceiver.h
 )
 
 # Add codes that describes some stages (and handlers) that are different when real-physics is used
@@ -237,6 +248,10 @@ else()
 )
 endif()
 
+if(USE_HPC)
+  add_subdirectory(hpctests)
+endif()
+
 if(USE_ROOT)
   set(TEST_EXECUTABLES
     ${TEST_EXECUTABLES}
@@ -249,9 +264,9 @@ macro(build_executables EXECUTABLES)
     get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
     add_executable(${TARGET_NAME} ${EXECUTABLE})
     if(USE_VECGEOM_NAVIGATOR)
-      target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Xsec Geant_v GeantExamples ${ROOT_LIBRARIES} -lpthread ${VC_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES})
+      target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Xsec Geant_v GeantExamples ${ROOT_LIBRARIES} -lpthread ${VC_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES} ${cppzmq_LIBRARY} ${MPI_LIBRARIES})
     else()
-      target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v Xsec GeantExamples ${ROOT_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES})
+      target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v Xsec GeantExamples ${ROOT_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES} ${cppzmq_LIBRARY} ${MPI_LIBRARIES})
     endif()
     if (USE_TBB)
       target_link_libraries(${TARGET_NAME} Geant_tbb  ${TBB_LIBS})
@@ -323,7 +338,7 @@ macro(build_executables EXECUTABLES)
   foreach(EXECUTABLE ${EXECUTABLES})
     get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
     add_executable(${TARGET_NAME} ${EXECUTABLE})
-    target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v RealPhysics GeantExamplesRP ${ROOT_LIBRARIES} -lpthread ${VC_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES})
+    target_link_libraries(${TARGET_NAME} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Geant_v RealPhysics GeantExamplesRP ${ROOT_LIBRARIES} -lpthread ${VC_LIBRARIES} ${HEPMC_LIBRARIES} ${NUMA_ALL_LIBRARIES} ${MPI_LIBRARIES} ${cppzmq_LIBRARY})
     if (USE_TBB)
       target_link_libraries(${TARGET_NAME} Geant_tbb  ${TBB_LIBS})
     endif()

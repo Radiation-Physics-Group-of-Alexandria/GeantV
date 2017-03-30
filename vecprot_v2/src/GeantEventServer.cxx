@@ -26,6 +26,11 @@
 #endif
 #endif
 
+#ifdef USE_HPC
+#include "zmq.hpp"
+#include "mpi.h"
+#endif
+
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
@@ -68,6 +73,11 @@ GeantEventServer::~GeantEventServer()
     delete fEvents[i];
   }
   delete [] fEvents;
+}
+
+//______________________________________________________________________________
+void GeantEventServer::CheckNewEvents(){
+
 }
 
 //______________________________________________________________________________
@@ -259,12 +269,14 @@ int GeantEventServer::ActivateEvents()
   if (fEventsServed) return 0;
   int nactivated = 0;
   int nactive = fNactive.load();
+  std::cout << "Number of activated events - EventServer " << nactive << std::endl;
   while (nactive < fNactiveMax && !fEventsServed) {
     // Try to activate next event
     if (fNactive.compare_exchange_strong(nactive, nactive+1)) {
       // We can actually activate one event
       int lastactive = fLastActive.fetch_add(1) + 1;
       nactivated++;
+      std::cout << "Number of activated events - counter " << nactivated << std::endl;
       if (lastactive == fNevents - 1) fEventsServed = true;
       fHasTracks = true;
     }
