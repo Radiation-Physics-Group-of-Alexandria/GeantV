@@ -64,6 +64,7 @@ protected:
 
 public:
   GeantEventServer(int event_capacity, GeantRunManager *runmgr);
+
   ~GeantEventServer();
 
   GEANT_FORCE_INLINE
@@ -71,6 +72,12 @@ public:
   { size_t i = 1, new_size = 2; while ((size >> i++) > 0) new_size *= 2; return new_size; }
 
 // Accessors
+  GEANT_FORCE_INLINE
+  GeantEvent** GetNEvents() const { return fEvents; }
+
+  GEANT_FORCE_INLINE
+  int  GetNload() const { return fNload.load(); }
+
   GEANT_FORCE_INLINE
   int  GetNevents() const { return fNevents; }
 
@@ -108,6 +115,8 @@ public:
   int FillStackBuffer(StackLikeBuffer *buffer, int ntracks);
   
   int AddEvent(GeantTaskData *td = nullptr);
+
+  void CheckNewEvents();
   
   int ActivateEvents();
   

@@ -85,8 +85,22 @@ set(CMAKE_INSTALL_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib)
 # Process various options
 #
 option(CTEST "Enable CTest when building." OFF)
-if (CTEST)
+if(CTEST)
   set (DATA_DOWNLOAD ON)
+endif()
+
+option(HPC "Activate High Performance Computing layout" OFF)
+if(HPC)
+  add_definitions(-DUSE_HPC)
+  message(STATUS "HPC mode is ON!")
+  find_package(MPI REQUIRED)
+  find_package(ZeroMQ REQUIRED)
+  find_package(cppzmq REQUIRED)
+  set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+  set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+  include_directories(${MPI_CXX_INCLUDE_PATH})
+  include_directories(${cppzmq_INCLUDE_DIR})
+  include_directories(${ZeroMQ_INCLUDE_DIR})
 endif()
 
 option(USE_VECPHYS "Enable activation of vector physics." OFF)
@@ -662,3 +676,42 @@ if(DOXYGEN_FOUND)
   message(${DOXYFILE_SOURCE_DIRS})
   configure_file("${DOXYFILE_IN}" "${DOXYFILE}" @ONLY)
 endif()
+
+#-----------------------------------------------------------------------------
+set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries.")
+set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files.")
+set(INSTALL_BIN_DIR bin CACHE PATH "Installation of binary files") 
+set(INSTALL_CMAKE_DIR cmake  CACHE PATH "Installation directory for CMake files.")
+
+# Make relative paths absolute
+foreach(p LIB BIN INCLUDE CMAKE)
+  set(var INSTALL_${p}_DIR)
+  if(NOT IS_ABSOLUTE "${${var}}")
+    set(${var} "${CMAKE_INSTALL_PREFIX}/${${var}}")
+  endif()
+endforeach()
+
+file(RELATIVE_PATH INSTALL_INCLUDE_DIR_RELATIVE "${INSTALL_CMAKE_DIR}" "${INSTALL_INCLUDE_DIR}")
+file(RELATIVE_PATH INSTALL_LIB_DIR_RELATIVE "${INSTALL_CMAKE_DIR}" "${INSTALL_LIB_DIR}")
+
+# Setup conf file
+set(CONF_INCLUDE_DIR "\${THIS_DIR}/${INSTALL_INCLUDE_DIR_RELATIVE}"
+"\${THIS_DIR}/${INSTALL_INCLUDE_DIR_RELATIVE}/xsec"
+"\${THIS_DIR}/${INSTALL_INCLUDE_DIR_RELATIVE}/examples")
+set(CONF_LIBRARY_DIR "\${THIS_DIR}/${INSTALL_LIB_DIR_RELATIVE}")
+set(CONF_LIBRARIES
+"${CONF_LIBRARY_DIR}/libGeant_v.so"
+"${CONF_LIBRARY_DIR}/libXsec.so"
+"${CONF_LIBRARY_DIR}/libGeantExamples.so"
+"${CONF_LIBRARY_DIR}/libVmagfield.so")
+if (CUDA)
+   set(CONF_LIBRARIES "${CONF_LIBRARY_DIR}/" ${CONF_LIBRARIES} "${CONF_LIBRARY_DIR}/libGeant_v_cuda.a")
+endif()
+configure_file(GeantVConfig.cmake.in "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/GeantVConfig.cmake" @ONLY)
+install(FILES "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/GeantVConfig.cmake" DESTINATION "${INSTALL_CMAKE_DIR}" COMPONENT dev)
+
+#Install includes
+install(DIRECTORY vecprot_v2/inc/ DESTINATION include REGEX "LinkDef" EXCLUDE)
+install(DIRECTORY xsec/inc/ DESTINATION include/xsec)
+install(DIRECTORY base/inc/Geant/ DESTINATION include/Geant)
+install(DIRECTORY examples/inc/ DESTINATION include) 

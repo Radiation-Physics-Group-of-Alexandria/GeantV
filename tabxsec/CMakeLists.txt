@@ -45,8 +45,8 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${GEANTV_CXX_NOW_FLAGS_RELWITHDEBINFO}")
 #
 add_executable(tabxsec tabxsec.cc ${sources} ${c_sources} ${headers})
 set_target_properties(tabxsec PROPERTIES LINK_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-target_link_libraries(tabxsec -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CALLOC_LIBRARY} ${Geant4_LIBRARIES} ${ROOT_LIBRARIES}
-                              ${VECGEOM_LIBRARIES} ${XSEC_LINK_LIBS} Geant_v NewPhysics)
+target_link_libraries(tabxsec -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CALLOC_LIBRARY} ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} 
+                              ${VECGEOM_LIBRARIES} ${XSEC_LINK_LIBS} ${MPI_LIBRARIES} ${cppzmq_LIBRARY} Geant_v NewPhysics)
 add_dependencies(tabxsec xseclib NewPhysics)
 set(CMAKE_EXE_LINKER_FLAGS         "${GEANTV_EXE_NOW_LINKER_FLAGS}")
 add_custom_target(ExtracXS DEPENDS tabxsec)

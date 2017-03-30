@@ -1,0 +1,21 @@
+# - Config file for the GeantV package
+# Defines the following variables
+#   GEANTV_INCLUDE_DIR  - include directories for VecGeom
+#   GEANTV_LIBRARIES    - libraries to link against
+#   GEANTV_INCLUDE_DIRS - include directories for USolids
+#   GEANTV_LIBRARIES    - libraries to link against
+#   GEANTV_DEFINITIONS - some core flags used to build the vecgeom library and which need to be reused 
+#                               in projects using VecGeom 
+#   GEANTV_INSTALL_DIR     - the top level installation path
+
+
+message(STATUS
+  "Using GeantV @CONF_TYPE@ configuration at ${CMAKE_CURRENT_LIST_FILE}.")
+
+get_filename_component(THIS_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(GEANTV_INCLUDE_DIR "@CONF_INCLUDE_DIR@")
+set(GEANTV_LIBRARIES "@CONF_LIBRARIES@")
+set(GEANTV_INSTALL_DIR "@CMAKE_INSTALL_PREFIX@")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} @GEANTV_COMPILATION_FLAGS@")
+
+

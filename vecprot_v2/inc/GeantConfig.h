@@ -86,6 +86,10 @@ public:
   std::string fGeomFileName; /** Geometry file name */
 #endif
 
+#ifdef USE_HPC
+  int fNClients = 2; /** Define at least two clients for HPC (master EventServer and slave EventServer) */
+#endif
+
 public:
   VECCORE_ATT_DEVICE
   GeantConfig() {};

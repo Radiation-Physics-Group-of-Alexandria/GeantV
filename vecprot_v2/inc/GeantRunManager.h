@@ -9,6 +9,7 @@
 #include "Geant/Typedefs.h"
 #include "GeantTaskData.h"
 #include "GeantEventServer.h"
+#include "GeantEventDispatcher.h"
 #include "GeantConfig.h"
 #ifdef USE_ROOT
 class TGeoMaterial;
@@ -34,6 +35,10 @@ class GeantEventServer;
 class GeantEvent;
 class PrimaryGenerator;
 class MCTruthMgr;
+
+#ifdef USE_HPC
+class GeantEventDispatcher;
+#endif
 
 class GeantRunManager
 {
@@ -61,6 +66,10 @@ private:
   GeantEventServer *fEventServer = nullptr;     /** The event server */
   TDManager *fTDManager = nullptr;              /** The task data manager */
 
+#ifdef USE_HPC
+  GeantEventDispatcher *fEventDispatcher = nullptr;    /** The event dispatcher */
+#endif
+
   vector_t<GeantPropagator *> fPropagators;
   vector_t<Volume_t const *> fVolumes;
 
@@ -80,6 +89,9 @@ public:
   ~GeantRunManager();
 
 // Accessors
+  GEANT_FORCE_INLINE
+  BitSet* GetDoneEvents() { return fDoneEvents; }
+
   GEANT_FORCE_INLINE
   int  GetNthreads() { return fNthreads; }
 
@@ -123,6 +135,9 @@ public:
   std::atomic_int &GetPriorityEvents() { return fPriorityEvents; }
 
   GEANT_FORCE_INLINE
+  int DecreasePriorityEvents() { return fPriorityEvents.fetch_sub(1); }
+
+  GEANT_FORCE_INLINE
   int GetNpriority() const { return fPriorityEvents.load(); }
 
   GEANT_FORCE_INLINE
@@ -133,6 +148,10 @@ public:
 
   GEANT_FORCE_INLINE
   GeantEventServer *GetEventServer() const { return fEventServer; }
+#ifdef USE_HPC
+  GEANT_FORCE_INLINE
+  GeantEventDispatcher *GetEventDispatcher() const { return fEventDispatcher; }
+#endif
 
 //  GEANT_FORCE_INLINE
 //  GeantTaskData *GetTaskData(int tid) { return fTaskData[tid]; }
