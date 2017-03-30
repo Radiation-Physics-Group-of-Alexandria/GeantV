@@ -39,6 +39,8 @@
 #include "TGeoNode.h"
 #include "TGeoMaterial.h"
 #endif
+#ifdef USE_HPC
+#include "GeantEventDispatcher.h"
 #endif
 
 // The classes for integrating in a non-uniform magnetic field
@@ -188,13 +190,23 @@ bool GeantRunManager::Initialize() {
   }
   fApplication->Initialize();
   fPrimaryGenerator->InitPrimaryGenerator();
+#ifdef USE_HPC
+  std::cout << "_HPC mode version_" << std::endl;
+  std::string topiczmq = "HPC";
+  fEventDispatcher = new GeantEventDispatcher(this, topiczmq);
+  // Testing purposes, later it will proper options
+  int argc;
+  char *argv = nullptr;
+  fEventDispatcher->InitializeDiscovery(argc, &argv);
+#else
+  std::cout << "_No HPC - single node version_" << std::endl;
   fEventServer = new GeantEventServer(fConfig->fNtotal, this);
   for (int i=0; i<fConfig->fNtotal; ++i)
     fEventServer->AddEvent();
+#endif 
 
   for (auto i=0; i<fNpropagators; ++i)
     fPropagators[i]->Initialize();
-
   fInitialized = true;
   return fInitialized;
 }
@@ -417,7 +429,6 @@ GeantPropagator *GeantRunManager::GetIdlePropagator() const {
 void GeantRunManager::RunSimulation() {
   // Start simulation for all propagators
   Initialize();
-
   Printf("==========================================================================");
   Printf("= GeantV run started with %d propagator(s) using %d worker threads each ====", fNpropagators, fNthreads);
   if (fConfig->fUsePhysics)
@@ -437,6 +448,9 @@ void GeantRunManager::RunSimulation() {
 #endif
   vecgeom::Stopwatch timer;
   timer.Start();
+#ifdef USE_HPC
+  Printf("===========================HPC::Version==================================");
+#endif
   for (auto i=0; i<fNpropagators; ++i)
     fListThreads.emplace_back(GeantPropagator::RunSimulation, fPropagators[i], fNthreads);
 
@@ -488,6 +502,9 @@ void GeantRunManager::RunSimulation() {
 //______________________________________________________________________________
 bool GeantRunManager::FinishRun() {
   // Run termination actions.
+#ifdef USE_HPC
+  fEventDispatcher->Finalize();
+#endif
   if (fTaskMgr) fTaskMgr->Finalize();
   fApplication->FinishRun();
   if (fStdApplication)

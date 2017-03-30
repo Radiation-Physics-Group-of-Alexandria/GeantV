@@ -45,7 +45,7 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${GEANTV_CXX_NOW_FLAGS_RELWITHDEBINFO}")
 add_executable(testcomplex testcomplex.cc ${sources} ${headers})
 set_target_properties(testcomplex PROPERTIES LINK_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
 target_link_libraries(testcomplex -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${Geant4_LIBRARIES} ${ROOT_LIBRARIES}
-  ${XSEC_LINK_LIBS} Geant_v Xsec)
+  ${XSEC_LINK_LIBS} ${MPI_LIBRARIES} ${cppzmq_LIBRARY} Geant_v Xsec)
 
 set(CMAKE_EXE_LINKER_FLAGS         "${GEANTV_EXE_NOW_LINKER_FLAGS}")
 

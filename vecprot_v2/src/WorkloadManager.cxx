@@ -154,7 +154,7 @@ bool WorkloadManager::LoadGeometry(vecgeom::VPlacedVolume const *const volume) {
 
 //______________________________________________________________________________
 bool WorkloadManager::StartTasks(GeantVTaskMgr *taskmgr) {
-  GeantPropagator *prop=fPropagator;
+  GeantPropagator *prop = fPropagator;
   // Start the threads
   fStarted = true;
   if (!fListThreads.empty())
@@ -571,9 +571,18 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
   GeantBasketMgr *prioritizer = new GeantBasketMgr(prop,sch, 0, 0, true);
   td->fBmgr = prioritizer;
   prioritizer->SetThreshold(propagator->fConfig->fNperBasket);
-  prioritizer->SetFeederQueue(feederQ);
-  
+  prioritizer->SetFeederQueue(feederQ); 
+  GeantEventServer *evserv;
+#ifndef USE_HPC
   GeantEventServer *evserv = runmgr->GetEventServer();
+#else
+  if(runmgr->GetEventDispatcher()->GetRank() == 0){
+    GeantEventServer *evserv = runmgr->GetEventDispatcher()->GetMasterEventServer();
+  }
+  else{
+    GeantEventServer *evserv = runmgr->GetEventDispatcher()->GetEventReceiver()->GetSlaveEventServer();
+  }
+#endif
   int bindex = evserv->GetBindex();
   GeantBasket *bserv = sch->GetBasketManagers()[bindex]->GetNextBasket(td);
   bserv->SetThreshold(propagator->fConfig->fNperBasket);
@@ -616,7 +625,6 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
   // The first injection must produce some baskets
   if (!ninjected) sch->GarbageCollect(td, true);
 */
-
   // Activate events in the server
   evserv->ActivateEvents();
 
@@ -639,9 +647,8 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
     nbaskets = feederQ->size_async();
     if (nbaskets > nworkers)
       ngcoll = 0;
-
     // Fire garbage collection if starving
-//    if (!firstTime && (nbaskets < 1) && (!runmgr->IsFeeding(propagator))) {
+    //    if (!firstTime && (nbaskets < 1) && (!runmgr->IsFeeding(propagator))) {
     if (!firstTime && (nbaskets < 1) && (!evserv->HasTracks())) {
       sch->GarbageCollect(td);
      ngcoll++;
@@ -754,8 +761,8 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
         }
       }
 
-      //         Geant::Print("","====== WorkloadManager:");
-      //         input.PrintTracks();
+      // Geant::Print("","====== WorkloadManager:");
+      // input.PrintTracks();
       // Propagate all remaining tracks
       if (basket->IsMixed())
         ncross += input.PropagateTracksScalar(td);
