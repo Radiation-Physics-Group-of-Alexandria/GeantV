@@ -27,7 +27,18 @@ MaterialHandler::MaterialHandler()
     fElementArray[i] = 0;
 
   // build the element array
-  BuildElementTable();
+  //  BuildElementTable();
+  //@syjun once directories are restructured, build elist as follow
+  //1) get the material tabe:  static std::vector<Material*> gTheMaterialTable; 
+  //2) loop over materials and and get elements
+  //3) push_back each (unique) element into the elist
+  
+  std::vector<int> elist;
+
+  //temporarily build the element table for all elements
+  for(int ie = 0 ; ie < maximumZ ; ie++) elist.push_back(ie);
+
+  BuildElementTable(elist);
 }
 
 VECCORE_ATT_HOST
@@ -52,10 +63,25 @@ void MaterialHandler::BuildElementTable()
 }
 
 VECCORE_ATT_HOST
+void MaterialHandler::BuildElementTable(std::vector<int> elist)
+{
+  // This should interface with the global material manager of GeantV so that
+  // the element arrary is properly filled with all elements of detector
+  // materials. 
+
+  for (unsigned ie = 0; ie < elist.size() ; ++ie) {
+    int element = elist[ie];
+    if(element >= 0 && element < maximumZ){
+      AddElement(element);
+    }
+  }
+}
+
+VECCORE_ATT_HOST
 void MaterialHandler::AddElement(int element)
 {
   // check validity of the element
-  if (element > 0 && element < maximumZ) {
+  if (element >= 0 && element < maximumZ) {
     // seach whether this element already exists
     bool found = false;
     for (int i = 0; i < fNumberOfElements; ++i) {

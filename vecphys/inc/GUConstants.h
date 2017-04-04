@@ -3,6 +3,11 @@
 
 namespace vecphys {
 
+// unit conversion from CLHEP (MeV) to GeantV (GeV) for Energy
+constexpr double EScaleToGeant4 = 1000.;  
+// unit conversion from CLHEP (mm^2) to GeantV (cm^2) for Energy
+constexpr double XsecScaleToGeant4 = 100.;  
+
 // maximum of the atomic number
 constexpr int maximumZ                = 92;
 

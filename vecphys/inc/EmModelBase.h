@@ -81,7 +81,6 @@ public:
   VECCORE_ATT_HOST_DEVICE
   SamplingMethod GetSamplingMethod() { return fSampleType; }
 
-protected:
   // Auxiliary methods
   VECCORE_ATT_HOST_DEVICE
   void SetLowEnergyLimit(double lowLimit) { fLowEnergyLimit = lowLimit; }
@@ -89,9 +88,12 @@ protected:
   VECCORE_ATT_HOST_DEVICE
   void SetHighEnergyLimit(double highLimit) { fHighEnergyLimit = highLimit; }
 
-  VECCORE_ATT_HOST_DEVICE double ComputeCoulombFactor(double fZeff);
+  VECCORE_ATT_HOST_DEVICE
+  double GetLowEnergyLimit() { return fLowEnergyLimit; }
 
-protected:
+  VECCORE_ATT_HOST_DEVICE
+  double GetHighEnergyLimit() { return fHighEnergyLimit; }
+
   // Implementation methods
   template <class Backend>
   VECCORE_ATT_HOST_DEVICE void RotateAngle(typename Backend::Double_v sinTheta, typename Backend::Double_v xhat,
@@ -116,6 +118,10 @@ protected:
                                                             typename Backend::Double_v energyOut,
                                                             typename Backend::Double_v sinTheta, int index,
                                                             GUTrack_v &primary, GUTrack_v &secondary);
+
+protected:
+  VECCORE_ATT_HOST_DEVICE double ComputeCoulombFactor(double fZeff);
+
   // data members
 protected:
   Random_t *fRandomState;
