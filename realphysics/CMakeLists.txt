@@ -2,12 +2,12 @@
 # Add source files & include directories
 #
 file(GLOB sources dummies/src/*.cc physics/management/src/*.cxx physics/models/EM/src/*.cc
-                  physics/processes/EM/src/*.cc physics/utils/src/*.cc)
+                  physics/processes/EM/src/*.cc physics/utils/src/*.cc physics/vecem/src/*.cc)
 file(GLOB headers ${CMAKE_SOURCE_DIR}/base/inc/PhysicalConstants.h ${CMAKE_SOURCE_DIR}/base/inc/SystemOfUnits.h
                   dummies/inc/*.h physics/management/inc/*.h physics/models/EM/inc/*.h
-                  physics/processes/EM/inc/*.h physics/utils/inc/*.h)
+                  physics/processes/EM/inc/*.h physics/utils/inc/*.h physics/vecem/inc/*.h)
 
-include_directories(${CMAKE_SOURCE_DIR}/material/inc ${CMAKE_SOURCE_DIR}/base/inc dummies/inc physics/management/inc physics/models/EM/inc physics/processes/EM/inc physics/utils/inc ${CMAKE_SOURCE_DIR}/numa/inc)
+include_directories(${CMAKE_SOURCE_DIR}/material/inc ${CMAKE_SOURCE_DIR}/base/inc dummies/inc physics/management/inc physics/models/EM/inc physics/processes/EM/inc physics/vecem/inc physics/utils/inc ${CMAKE_SOURCE_DIR}/vecphys/inc ${CMAKE_SOURCE_DIR}/numa/inc)
 
 set(_extraLibs "")
 
@@ -20,7 +20,7 @@ endif()
 add_library(RealPhysics SHARED ${sources})
 
 target_link_libraries(RealPhysics -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Material Geant_v ${_extra_libs}
-                      ${VECGEOM_LIBRARIES} ${VC_LIBRARIES})
+                      ${VECGEOM_LIBRARIES} ${VC_LIBRARIES} vecphys)
 
 add_headers("${headers}")
 add_custom_target(realphyslib DEPENDS RealPhysics)

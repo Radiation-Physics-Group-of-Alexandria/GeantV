@@ -24,7 +24,7 @@ DiscreteProcHandler::~DiscreteProcHandler()
 
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
-void DiscreteProcHandler::DoIt(GeantTrack *track, Basket& output, GeantTaskData *td)
+void DiscreteProcHandler::DoIt(GeantTrack *track, Basket& output, GeantTaskData * /*td*/ )
 {
 // Invoke scalar post step processes
 

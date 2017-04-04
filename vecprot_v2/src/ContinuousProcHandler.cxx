@@ -24,10 +24,10 @@ ContinuousProcHandler::~ContinuousProcHandler()
 
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
-void ContinuousProcHandler::DoIt(GeantTrack *track, Basket& output, GeantTaskData *td)
+void ContinuousProcHandler::DoIt(GeantTrack *track, Basket& output, GeantTaskData * /*td*/ )
 {
 // Invoke scalar along step processes
-  int nextra_at_rest = 0;
+   // int nextra_at_rest = 0;
 #ifdef USE_REAL_PHYSICS
 //      fPropagator->GetPhysicsInterface()->AlongStepAction(mat, output.GetNtracks(), output, nextra_at_rest, td);
 #else
@@ -39,14 +39,14 @@ void ContinuousProcHandler::DoIt(GeantTrack *track, Basket& output, GeantTaskDat
 
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
-void ContinuousProcHandler::DoIt(Basket &input, Basket& output, GeantTaskData *td)
+void ContinuousProcHandler::DoIt(Basket &input, Basket& output, GeantTaskData * /*td*/ )
 {
 // Vector geometry length computation. The tracks are moved into the output basket.
 
   // Copy tracks to output
-  int nextra_at_rest = 0;
   TrackVec_t &tracks = input.Tracks();
 #ifdef USE_REAL_PHYSICS
+  // int nextra_at_rest = 0;
 //      fPropagator->GetPhysicsInterface()->AlongStepAction(mat, output.GetNtracks(), output, nextra_at_rest, td);
 #else
       fPropagator->Process()->Eloss(tracks, nextra_at_rest, output.Tracks(), td);
