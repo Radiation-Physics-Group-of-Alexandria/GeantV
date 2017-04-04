@@ -16,7 +16,12 @@
 #include "SeltzerBergerBremsModel.h"
 #include "RelativisticBremsModel.h"
 
-
+#include "GUGammaComptonProcess.h"
+#include "GUKleinNishinaComptonModel.h"
+#include "GUGammaPhotoElectricProcess.h"
+#include "GUSauterGavrilaModel.h"
+#include "GUGammaConversionProcess.h"
+#include "GUBetheHeitlerConversionModel.h"
 
 namespace geantphysics {
 
@@ -30,6 +35,52 @@ public:
     std::vector<Particle*> pTable = Particle::GetTheParticleTable();
     for (unsigned int i=0; i<pTable.size(); ++i) {
       Particle *particle = pTable[i];
+
+      if (particle==Gamma::Definition()) {
+        //1. create compton process with the Klein-Nishina model:
+
+        EMPhysicsProcess *gCompProc = new GUGammaComptonProcess("gCompton");
+        EMModel          *gKNModel  = new GUKleinNishinaComptonModel(true);
+
+        // set min/max energies of the model
+        gKNModel->SetLowEnergyUsageLimit (1.0*geant::keV);
+        gKNModel->SetHighEnergyUsageLimit(1.0*geant::TeV);
+
+        // add the model to the process
+        gCompProc->AddModel(gKNModel);
+
+        // add the process to the gamma particle
+        AddProcessToPartcile(particle, gCompProc);
+
+        //2. create photo-electri process with the SauterGavrila angular distribution:
+        EMPhysicsProcess *gPhotoElecProc = new GUGammaPhotoElectricProcess("gPhotoElectic");
+        EMModel          *gSGModel  = new GUSauterGavrilaModel(true);
+
+        // set min/max energies of the model
+        gSGModel->SetLowEnergyUsageLimit (1.0*geant::keV);
+        gSGModel->SetHighEnergyUsageLimit(1.0*geant::TeV);
+
+        // add the model to the process
+        gPhotoElecProc->AddModel(gSGModel);
+
+        // add the process to the gamma particle
+        AddProcessToPartcile(particle, gPhotoElecProc);
+
+        //3. create the conversion process with the Bethe-Heitler model
+        EMPhysicsProcess *gConvProc = new GUGammaConversionProcess("gConversion");
+        EMModel          *gBHModel  = new GUBetheHeitlerConversionModel(true);
+
+        // set min/max energies of the model
+        gBHModel->SetLowEnergyUsageLimit (2.0*geant::kElectronMassC2);
+        gBHModel->SetHighEnergyUsageLimit(1.0*geant::TeV);
+
+        // add the model to the process
+        gConvProc->AddModel(gBHModel);
+
+        // add the process to the gamma particle
+        AddProcessToPartcile(particle,gConvProc );
+      }
+
       if (particle==Electron::Definition()) {
         //std::cout<<"  ELECTRON" <<std::endl;
         //
