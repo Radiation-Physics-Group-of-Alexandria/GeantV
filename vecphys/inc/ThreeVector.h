@@ -159,6 +159,7 @@ public:
 
   // Rotates reference frame from Uz to newUz (unit vector) (Geant4)
   VECCORE_ATT_HOST_DEVICE 
+  VECCORE_FORCE_INLINE
   ThreeVector<T>& RotateUz(ThreeVector<T>& newUz);
 
 // Inplace binary operators
@@ -202,6 +203,7 @@ public:
 
 template <typename T>
 VECCORE_ATT_HOST_DEVICE 
+VECCORE_FORCE_INLINE
 ThreeVector<T>& ThreeVector<T>::RotateUz(ThreeVector<T>& newUz)
 {
   // newUzVector must be normalized !
@@ -209,25 +211,48 @@ ThreeVector<T>& ThreeVector<T>::RotateUz(ThreeVector<T>& newUz)
   T u1 = newUz.x();
   T u2 = newUz.y();
   T u3 = newUz.z();
-  T up = u1*u1 + u2*u2;
+  T up = math::Sqrt(u1*u1 + u2*u2);
 
   Mask_v<T> positive = (up > 0.);
   Mask_v<T> negativeZ = (u3 < 0.);
 
-  up = math::Sqrt(up);
+  T invup = Blend(positive,1.0/up, static_cast<T>(0.0));
 
   T px = dx;
   T py = dy;
   T pz = dz;
 
-  dx = (u1*u3*px - u2*py)/up + u1*pz;
-  dy = (u2*u3*px + u1*py)/up + u2*pz;
-  dz =    -up*px +             u3*pz;
+  dx = (u1*u3*px - u2*py)*invup + u1*pz;
+  dy = (u2*u3*px + u1*py)*invup + u2*pz;
+  dz =    -up*px +                u3*pz;
 
-  dx = Blend(negativeZ, -px, Blend(positive, dx, px));
-  dy = Blend(negativeZ,  py, Blend(positive, dy, py));
-  dz = Blend(negativeZ, -pz, Blend(positive, dz, pz));
+  dx = Blend(positive, dx, Blend(negativeZ, -px, px));
+  dy = Blend(positive, dy, Blend(negativeZ,  py, py));
+  dz = Blend(positive, dz, Blend(negativeZ, -pz, pz));
 
+  return *this;
+}
+
+template <>
+VECCORE_ATT_HOST_DEVICE 
+VECCORE_FORCE_INLINE
+ThreeVector<double>& ThreeVector<double>::RotateUz(ThreeVector<double>& newUz)
+{
+  //from CLHEP Hep3Vector::rotateUz
+  double u1 = newUz.x();
+  double u2 = newUz.y();
+  double u3 = newUz.z();
+  double up = u1*u1 + u2*u2;
+
+  if (up>0) {
+    up = std::sqrt(up);
+    double px = dx,  py = dy,  pz = dz;
+    dx = (u1*u3*px - u2*py)/up + u1*pz;
+    dy = (u2*u3*px + u1*py)/up + u2*pz;
+    dz =    -up*px +             u3*pz;
+  }
+  else if (u3 < 0.) { dx = -dx; dz = -dz; }      // phi=0  teta=pi
+  else {};
   return *this;
 }
 
