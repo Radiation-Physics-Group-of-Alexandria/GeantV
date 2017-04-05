@@ -534,10 +534,6 @@ if (ROOT_mathmore_FOUND)
   add_subdirectory (Nudy)
 endif()
 
-if(USE_VECPHYS)
-  add_subdirectory(vectphysproc)
-endif()
-
 if (NOT (USE_REAL_PHYSICS))
   add_subdirectory(physics)
 endif()
