@@ -554,6 +554,10 @@ if (NOT (USE_REAL_PHYSICS))
   add_subdirectory(physics)
 endif()
 
+if(USE_VECPHYS)
+ add_subdirectory(vecphys)
+endif()
+
 if (USE_REAL_PHYSICS)
  add_subdirectory(realphysics)
 endif()
