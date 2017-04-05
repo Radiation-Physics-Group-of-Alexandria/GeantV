@@ -375,7 +375,7 @@ int main(int argc,  char *argv[]){
     
     if(argc<2)
     {
-        std::cout<<"Usage: ./AliasUnitTest <index> \n <1: gaussian> <2: poissonA> <3: poissonB> <4: sqroot>\n";
+        std::cout<<"Usage: ./AliasUnitTest <index> \n <1: gaussian> <2: poissonA> <3: poissonB> <4: sqroot> <5: abs(sin(x)/x)>\n";
         return -1;
     }
     
