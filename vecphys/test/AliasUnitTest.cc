@@ -144,12 +144,12 @@ void interactAlias(GUAliasTable* fAliasTable, TH1F *histo, int size, double lowE
     //pValueP=eOutG4->Chi2Test(eOutScalar,"UU P",resA1);
     TPaveText* pt3 = new TPaveText(0.13, 0.55, 0.43, 0.75, "brNDC");
     Char_t str[50];
-    sprintf(str, "p-value from Pearson chi2 test: %g", pvalue);
-    pt3->AddText(str);
+    //sprintf(str, "p-value from Pearson chi2 test: %g", pvalue);
+    //pt3->AddText(str);
     pt3->SetFillColor(18);
     pt3->SetTextFont(20);
     pt3->SetTextColor(4);
-    pt3-> Draw();
+    //pt3-> Draw();
     //Add the legend to the Canvas
     auto leg = new TLegend(0.1,0.8,0.48,0.9);
     //leg->SetHeader("The Legend Title");
@@ -192,10 +192,10 @@ void testGaussian(int i){
         case 2 :{
             //*********** POISSON 1 ***********//
             std::cout<<"\nAlias test with POISSON A: START.\n";
-            auto *f1 = new TF1("poisson","[0]*TMath::Power(([1]/[2]),(x/[2]))*(TMath::Exp(-([1]/[2])))/TMath::Gamma((x/[2])+1)", 0, 10); // "xmin" = 0, "xmax" = 10
-            f1->SetParameters(4, 4, 4); // you MUST set non-zero initial values for parameters
+            auto *f1 = new TF1("poisson","[0]*TMath::Power(([1]/[2]),(x/[2]))*(TMath::Exp(-([1]/[2])))/TMath::Gamma((x/[2])+1)", 0, 6); // "xmin" = 0, "xmax" = 10
+            f1->SetParameters(1, 1, 1); // you MUST set non-zero initial values for parameters
             //hPois->Fit("f1", "R"); // "R" = fit between "xmin" and "xmax" of the "f1"
-            histo = new TH1F("h1f","Test random numbers",histo_bins,0,10);
+            histo = new TH1F("h1f","Test random numbers",histo_bins,0,6);
             //histo->SetFillColor(45);
             histo->FillRandom("poisson",histo_entries);
             break;
@@ -231,6 +231,15 @@ void testGaussian(int i){
             histo = new TH1F("h1f","Test random numbers",histo_bins,0,10);
             //histo->SetFillColor(45);
             histo->FillRandom("sqroot",histo_entries);
+            break;
+        }
+        case 5: {
+            TF1 *sin = new TF1("sin","std::abs(sin(x)/x)",0,10);
+            sin->Draw();
+            histo = new TH1F("h1f","Test random numbers",histo_bins,0,10);
+            //histo->SetFillColor(45);
+            histo->FillRandom("sin",histo_entries);
+
             break;
         }
             
