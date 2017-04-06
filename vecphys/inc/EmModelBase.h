@@ -514,13 +514,15 @@ VECCORE_ATT_HOST_DEVICE void EmModelBase<EmModel>::RotateAngle(
 
   Double_v phat = math::Sqrt(pt);
 
-  Double_v px = (xhat * zhat * uhat - yhat * vhat) / phat + xhat * what;
-  Double_v py = (yhat * zhat * uhat - xhat * vhat) / phat + yhat * what;
+  Double_v invphat = Blend(positive, 1.0/phat, Double_v(0.0));
+
+  Double_v px = (xhat * zhat * uhat - yhat * vhat) * invphat + xhat * what;
+  Double_v py = (yhat * zhat * uhat - xhat * vhat) * invphat + yhat * what;
   Double_v pz = -phat * uhat + zhat * what;
 
-  xr = Blend(negativeZ, -xhat, Blend(positive, px, xhat));
-  yr = Blend(negativeZ, yhat, Blend(positive, py, yhat));
-  zr = Blend(negativeZ, -zhat, Blend(positive, pz, zhat));
+  xr = Blend(positive, px, Blend(negativeZ, -xhat, xhat));
+  yr = Blend(positive, py, Blend(negativeZ,  yhat, yhat));
+  zr = Blend(positive, pz, Blend(negativeZ, -zhat, zhat));
 }
 
 template <class EmModel>
