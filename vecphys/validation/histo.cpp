@@ -4,7 +4,7 @@
  
  NB:
  1. How to compile:
- g++ histo.cpp -o histo `root-config --cflags --glibs`
+ g++ validation.cpp -o validation `root-config --cflags --glibs`
  
  2. Then execute the file and give the input interactively
  
@@ -72,6 +72,8 @@
 #include "Math/DistFunc.h"
 //
 
+#include "TKey.h"
+
 constexpr double electron_mass_c2 = 0.510998910 * 1.;
 constexpr double inv_electron_mass_c2 = 1.0/electron_mass_c2;
 
@@ -85,8 +87,8 @@ using namespace ROOT::Math;
 void MSaveBigPDF(double scale=5) {
     TCanvas* old_canv = gPad->GetCanvas();
     
-    gROOT->SetBatch(true);
-    gROOT->ForceStyle(true);
+    gROOT->SetBatch(kTRUE);
+    gROOT->ForceStyle(kTRUE);
     
     Int_t orig_msz = gStyle->GetMarkerSize();
     Int_t orig_mst = gStyle->GetMarkerStyle();
@@ -118,8 +120,8 @@ void MSaveBigPDF(double scale=5) {
     gStyle->SetMarkerStyle(orig_mst);
     gStyle->SetLineWidth(orig_lt);
     
-    gROOT->ForceStyle(false);
-    gROOT->SetBatch(false);
+    gROOT->ForceStyle(kFALSE);
+    gROOT->SetBatch(kFALSE);
     
     std::cout<<"Saving the image as: "<<filename<<"\n";
     
@@ -127,7 +129,8 @@ void MSaveBigPDF(double scale=5) {
 }
 
 
-//_________
+//______________________________________________________________________________
+// This method is drawing a Latex formula inside a canvas
 void drawLatex(double x, double y, const char *s)
 {
     //TLatex *t = new TLatex(x,y,Form("#chi^{2}: %s",s));
@@ -140,7 +143,8 @@ void drawLatex(double x, double y, const char *s)
     t->Draw();
 }
 
-//_________
+//______________________________________________________________________________
+// This method is drawing a Text inside a canvas
 void drawText(double x, double y, const char *s)
 {
     TText *t = new TText(x,y,s);
@@ -154,6 +158,7 @@ void drawText(double x, double y, const char *s)
 
 
 //______________________________________________________________________________
+//This method compares the original pdf shape with the histograms ones (after scaling them)
 void validatePdf(TH1F* eOutScalar, TH1F* eOutVector, TH1F* eOutG4, char* energy)
 {
     
@@ -279,7 +284,10 @@ void validatePdf(TH1F* eOutScalar, TH1F* eOutVector, TH1F* eOutG4, char* energy)
     
 }
 
+
+
 //______________________________________________________________________________
+//This method is calculating the KleinNishina pdf and comparing it with the histograms shape
 void chiSquare_pdf(TH1F* eOutScalar, TH1F* eOutVector, TH1F* eOutG4, int energy)
 {
     
@@ -298,7 +306,6 @@ void chiSquare_pdf(TH1F* eOutScalar, TH1F* eOutVector, TH1F* eOutG4, int energy)
     
     //// pdf calculation
     double energy0 = exp(logxmin + dx*energy);
-
     
     double ymin = energy0/(1+2.0*energy0*inv_electron_mass_c2); //MeV
     double dy = (energy0 - ymin)/(1000);
@@ -308,6 +315,7 @@ void chiSquare_pdf(TH1F* eOutScalar, TH1F* eOutVector, TH1F* eOutG4, int energy)
     double sum = 0.;
     //double integralPdf=0;
     
+    //KleinNishina pdf
     for(int j = 0; j < entries ; ++j) {
         //for each output energy bin
         double energy1 = yo + dy*j;
@@ -387,8 +395,9 @@ void chiSquare_pdf(TH1F* eOutScalar, TH1F* eOutVector, TH1F* eOutG4, int energy)
 }
 
 
-//______
 
+//______________________________________________________________________________
+//This method plays with TGaxis objects and draw them in different format - not used
 void gaxis(){
     // draw TGaxis objects in various formats.
     //To see the output of this macro, click begin_html <a href="gif/gaxis.gif" >here</a> end_html
@@ -446,17 +455,17 @@ void gaxis(){
     c1->SaveAs("gaxis.pdf");
 }
 
-
-//_________________________
+// This function is calculating applying the Pearson chi2 test (from ROOT) and plotting the results in a 4 quadrant canvas with ratio plot, residuals plot and QQplot
+//______________________________________________________________________________
 double chi2test_Plots(Float_t w, TH1F *hist1, TH1F *hist2, const char *process, const char *variable, const char* energy)
 {
     // Note: The parameter w is used to produce the 2 pictures in
     // the TH1::Chi2Test method. The 1st picture is produced with
     // w=0 and the 2nd with w=17 (see TH1::Chi2Test() help).
     
-    TH1F *h1 = (TH1F*)(hist1->Clone("Geant4"));
-    TH1F *h2 = (TH1F*)(hist2->Clone("GeantV"));
-    TH1F *h3 = (TH1F*)(h1->Clone("G4/GeantV"));
+    TH1F *h1 = (TH1F*)(hist1->Clone("Hist1"));
+    TH1F *h2 = (TH1F*)(hist2->Clone("Hist2"));
+    TH1F *h3 = (TH1F*)(h1->Clone("h1/h2"));
     //TH1F *h3 = (TH1F*)(h2->Clone("GeantV/G4"));
     
     
@@ -510,8 +519,8 @@ double chi2test_Plots(Float_t w, TH1F *hist1, TH1F *hist2, const char *process, 
     
     //h3
     h3->Divide(h2);
-    auto minch= new TGraphAsymmErrors();
-    minch->Divide(h1,h2, "pois");
+    auto munich= new TGraphAsymmErrors();
+    munich->Divide(h1,h2, "pois");
     
     TAxis *xaxis_h3 = h3->GetXaxis();
     int first_h3 = h3->GetXaxis()->GetFirst();
@@ -550,7 +559,7 @@ double chi2test_Plots(Float_t w, TH1F *hist1, TH1F *hist2, const char *process, 
      Double_t chi2=h1->Chi2Test(h2,"UU P",resLo.data());
      //if(variable=="AngleOut2")
      //if(  !strcmp(variable,"AngleOut2"))
-
+     
      
      auto hres = (TH1D*) h1->Clone();
      //auto hres = new TH1D("Nres","Normalized Residuals",n,bblow_h1,bbup_h1);
@@ -713,16 +722,16 @@ double chi2test_Plots(Float_t w, TH1F *hist1, TH1F *hist2, const char *process, 
      h3->SetMarkerStyle(20);
      //h3->Draw("");*/
     
-    minch->SetTitle("Histograms Ratio");
-    minch->GetXaxis()->SetTitle("Bins");
-    minch->GetYaxis()->SetTitle("G4/GV");
-    minch->GetYaxis()->SetTitleOffset(1.4);
-    minch->SetMarkerColor(4);
-    minch->SetMarkerSize(.6);
-    minch->SetMarkerStyle(21);
+    munich->SetTitle("Histograms Ratio");
+    munich->GetXaxis()->SetTitle("Bins");
+    munich->GetYaxis()->SetTitle("G4/GV");
+    munich->GetYaxis()->SetTitleOffset(1.4);
+    munich->SetMarkerColor(4);
+    munich->SetMarkerSize(.6);
+    munich->SetMarkerStyle(21);
     
     
-    minch->Draw("ALP");
+    munich->Draw("ALP");
     ps1 = (TPaveStats*)h3->GetListOfFunctions()->FindObject("stats");
     ps1->SetX1NDC(0.70); ps1->SetX2NDC(0.96);
     
@@ -731,7 +740,7 @@ double chi2test_Plots(Float_t w, TH1F *hist1, TH1F *hist2, const char *process, 
     gPad->SetFrameFillColor(0);
     gPad->SetGrid();
     hres->SetStats(0);
-    //resgr->Draw("APL"); //invece di plottare questo:
+    //resgr->Draw("APL");
     //hres->Draw("E");
     hres->SetMarkerStyle(20);
     hres->Fit("pol0");
@@ -756,8 +765,12 @@ double chi2test_Plots(Float_t w, TH1F *hist1, TH1F *hist2, const char *process, 
 }
 
 // need to use Functor1D
+//______________________________________________________________________________
 double landau(double x) { return ROOT::Math::landau_pdf(x); }
 
+
+//Goodness of fit test with Kolmogorov-Smirnov and Anderson-Darling
+//______________________________________________________________________________
 void goftest() {
     
     // ------------------------------------------------------------------------
@@ -986,6 +999,8 @@ void goftest() {
     c->SaveAs("GoF_test.pdf");
 }
 
+//GOF test on a single model - single variable at a certain energy
+//______________________________________________________________________________
 void goftestSingleMod(const char *phisicsModel, const char*  variable, const char* energy){
     
     TString histPath= Form("%s/%s",phisicsModel, variable);
@@ -1001,7 +1016,7 @@ void goftestSingleMod(const char *phisicsModel, const char*  variable, const cha
     TFile *fG4 = new TFile(geant4RootFileName,"w");
     TH1F *eOutG4 = (TH1F*)fG4->Get(histPath);
     if(eOutG4) eOutG4->SetName("geant4");
-    else std::cout<<"eOutG4 is null\n";
+    else std::cout<<"eOutG4 for "<<geant4RootFileName<<" is null\n";
     
     //GeantV scalar
     TFile *fScalar = new TFile(scalarRootFileName,"w");
@@ -1115,6 +1130,8 @@ void goftestSingleMod(const char *phisicsModel, const char*  variable, const cha
     
 }
 
+
+//______________________________________________________________________________
 //void goftestAllMod(int entries1, Double_t* sample1, int entries2, Double_t* sample2, Double_t pvalueAD_1, Double_t pvalueKS_1){
 void goftestAllMod(TH1F *histo1, TH1F *histo2, Double_t & pvalueAD_1, Double_t & pvalueKS_1){
     
@@ -1193,6 +1210,7 @@ void goftestAllMod(TH1F *histo1, TH1F *histo2, Double_t & pvalueAD_1, Double_t &
 }
 
 
+
 //______________________________________________________________________________
 double chiSquare(TH1F* eOutG4, TH1F* eOutScalar)
 {
@@ -1232,21 +1250,509 @@ double chiSquare(TH1F* eOutG4, TH1F* eOutScalar)
     return chiSquare_scaled;
 }
 
+//run statistical analysis
+//______________________________________________________________________________
+void runStatisticalAnalysis (const char* file1, const char*  file2, const char* model, const char* energy, double *chi2PV, double *adPV, double *ksPV)
+//void genAllHisto(const char *process, const char* energy, double *chi2PV, double *adPV, double *ksPV)
+{
+    
+    TString processName= model;
+    TString rootFileName1= Form("%s_%sMeV.root",file1, energy);
+    TString rootFileName2= Form("%s_%sMeV.root",file2, energy);
+    TString histPath= Form("%s","EnergyOut1");
+    
+    // uncomment to save all the single histograms
+    TString histoFileNameEps= Form("%s-%sMeV.eps",model, energy);
+    TString histoFileNamePdf= Form("%s-%sMeV.pdf",model, energy);
+    
+    //File 1 - benchmark
+    TFile *f1 = new TFile(rootFileName1,"w");
+    TH1F *eOut1 = (TH1F*)f1->Get(histPath);
+    if(eOut1) eOut1->SetName(file1);
+    else std::cout<<"eOut1 is null\n";
+    
+    //File 2 - to validate
+    TFile *f2 = new TFile(rootFileName2,"w");
+    TH1F *eOut2 = (TH1F*)f2->Get(histPath);
+    if(eOut2) eOut2->SetName(file2);
+    else std::cout<<"eOut2 is null\n";
+    
+    
+    TCanvas *firstPage=new TCanvas(model,model,800,200,1200,1000);
+    drawText(.4,0.45,Form("Model: %s, energyIn: %s MeV ",model,energy));
+    
+    TString nameFileMerge=Form("%s-Validation.pdf", model);
+    firstPage->Print(nameFileMerge);
+    
+    
+    TCanvas *MyC1 = new TCanvas(model,model,800,200,1200,1000);
+    MyC1->Divide(2,2);
+    
+    
+    //1
+    MyC1->cd(1);
+    gPad->SetLogy();
+    
+    if(!strcmp(model,"KleinNishina"))
+    {
+        eOut1->GetXaxis()->SetTitle("Scattered Photon Energy [MeV]");
+        eOut1->GetYaxis()->SetTitle("dN/dE");
+    } else
+    {
+        eOut1->GetXaxis()->SetTitle("EnergyOut1");
+        eOut1->GetYaxis()->SetTitle("dN/dE");
+    }
+    
+    gStyle->SetEndErrorSize(3);
+    gStyle->SetErrorX(1.);
+    eOut1->Draw("E");
+    
+    MyC1->Update();
+    
+    TPaveStats *ps1 = (TPaveStats*)eOut1->GetListOfFunctions()->FindObject("stats");
+    ps1->SetX1NDC(0.4); ps1->SetX2NDC(0.55);
+    MyC1->Modified();
+    MyC1->Update();
+    eOut2->SetLineColor(kYellow+10);
+    eOut2->Draw("sames");
+    
+    MyC1->Update();
+    
+    TPaveStats *ps2 = (TPaveStats*)eOut2->GetListOfFunctions()->FindObject("stats");
+    ps2->SetX1NDC(0.6); ps2->SetX2NDC(0.75);
+    ps2->SetTextColor(kYellow+10);
+    ps2->SetOptStat(1111);
+    
+    MyC1->Update();
+    
+    //TPaveStats *ps3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
+    //ps3->SetX1NDC(0.8); ps3->SetX2NDC(0.95);
+    //ps3->SetTextColor(kMagenta);
+    //TPaveText *t = new TPaveText(0.0, 0.95, 0.3, 1.0, "brNDC"); // left-up
+    //t->AddText(histName);
+    
+    //double res[eOutG4->GetSize()];
+    double res[eOut1->GetNbinsX()+2];
+    
+    //Added for uoFlows_Analysis
+    // include underflow-overflow in the test
+    //eOutG4->GetXaxis()->SetRange(0, eOutG4->GetNbinsX()+1);
+    double pValueP=eOut1->Chi2Test(eOut2,"UU P",res);
+    //drawText(.1,0.95,Form("chiQuadro: %f",chi2 ));
+    //drawLatex(.1,0.95,Form("%g",chi2));
+    
+    
+    /*ADDED FOR AD and KS test*/
+    double pvalueAD_1, pvalueKS_1;
+    goftestAllMod(eOut2, eOut2, pvalueAD_1, pvalueKS_1);
+    
+    TPaveText* pt1 = new TPaveText(0.13, 0.55, 0.43, 0.75, "brNDC");
+    Char_t str[50];
+    sprintf(str, "p-value for Pearson chi2 test: %g", pValueP);
+    Char_t str1[50];
+    sprintf(str1, "p-value for A-D 2-smps test: %f", pvalueAD_1);
+    pt1->AddText(str);
+    pt1->AddText(str1);
+    pt1->SetFillColor(18);
+    pt1->SetTextFont(20);
+    pt1->SetTextColor(4);
+    Char_t str2[50];
+    sprintf(str2, "p-value for K-S 2-smps test: %f", pvalueKS_1);
+    pt1-> AddText(str2);
+    pt1-> Draw();
+    
+    chi2PV[0]=pValueP;
+    adPV[0]=pvalueAD_1;
+    ksPV[0]=pvalueKS_1;
+    //std::cout<<"EnergyOut1 -  \nPearson p-Value: "<<pValueP<<" \nA-D p-Value: "<<pvalueAD_1<<" \nK-S p-Value: "<<pvalueKS_1<<"\n ";
+    
+    MyC1->Modified();
+    MyC1->Update();
+    
+    chi2test_Plots(0, eOut1, eOut2, model, "EnergyOut1", energy);
+    
+    
+    //2
+    MyC1->cd(2);
+    gPad->SetLogy();
+    histPath= Form("%s", "EnergyOut2");
+    
+    eOut1 = (TH1F*)f1->Get(histPath);
+    eOut2 = (TH1F*)f2->Get(histPath);
+    //eOut1->SetName(" geant4 ");
+    //eOut2->SetName("geantVscalar");
+    eOut2->SetLineColor(kYellow+10);
+    
+    
+    if(!strcmp(model,"KleinNishina"))
+    {
+        eOut1->GetXaxis()->SetTitle("Electron Energy [MeV]");
+        eOut1->GetYaxis()->SetTitle("dN/dE");
+    } else
+    {
+        eOut1->GetXaxis()->SetTitle("EnergyOut2");
+        eOut1->GetYaxis()->SetTitle("dN/dE");
+    }
+    
+    eOut1->Draw("E");
+    eOut2->Draw("sames");
+    
+    MyC1->Update();
+    TPaveStats *psEnOut1 = (TPaveStats*)eOut1->GetListOfFunctions()->FindObject("stats");
+    psEnOut1->SetX1NDC(0.4); psEnOut1->SetX2NDC(0.55);
+    //psEnOut1->SetTextColor(kMagenta);
+    
+    TPaveStats *psEnOut2 = (TPaveStats*)eOut2->GetListOfFunctions()->FindObject("stats");
+    psEnOut2->SetX1NDC(0.6); psEnOut2->SetX2NDC(0.75);
+    psEnOut2->SetTextColor(kYellow+10);
+    psEnOut2->SetOptStat(1111);
+    
+    //chiS=chiSquare(eOutG4,eOutScalar);
+    //chiSquareString= Form("%f",chiS);
+    //drawtext(.1, 0.92, chiSquareString);
+    
+    //TPaveStats *psEnOut3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
+    //psEnOut3->SetX1NDC(0.8); psEnOut3->SetX2NDC(0.95);
+    //psEnOut3->SetTextColor(kMagenta);
+    
+    TText *t22 = new TText(0.05,0.8,"This is pad22");
+    t22->SetTextSize(10);
+    t22->Draw("sames");
+    MyC1->Modified();
+    MyC1->Update();
+    
+    
+    double resE2[eOut1->GetNbinsX()+2];
+    //Added for uoFlows_Analysis
+    // include underflow-overflow in the test
+    //eOutG4->GetXaxis()->SetRange(0, eOutG4->GetNbinsX()+1);
+    pValueP=eOut1->Chi2Test(eOut2,"UU P",resE2);
+    
+    /*ADDED FOR AD and KS test*/
+    //Double_t pvalueAD_1, pvalueKS_1;
+    goftestAllMod(eOut1, eOut2, pvalueAD_1, pvalueKS_1);
+    
+    TPaveText* pt2 = new TPaveText(0.13, 0.55, 0.43, 0.75, "brNDC");
+    //Char_t str[50];
+    sprintf(str, "p-value for Pearson chi2 test: %g", pValueP);
+    //Char_t str1[50];
+    sprintf(str1, "p-value for A-D 2-smps test: %f", pvalueAD_1);
+    pt2->AddText(str);
+    pt2->AddText(str1);
+    pt2->SetFillColor(18);
+    pt2->SetTextFont(20);
+    pt2->SetTextColor(4);
+    //Char_t str2[50];
+    sprintf(str2, "p-value for K-S 2-smps test: %f", pvalueKS_1);
+    pt2-> AddText(str2);
+    pt2-> Draw();
+    std::cout<<"EnergyOut2 -  \nPearson p-Value: "<<pValueP<<" \nA-D p-Value: "<<pvalueAD_1<<" \nK-S p-Value: "<<pvalueKS_1<<"\n ";
+    
+    
+    chi2PV[1]=pValueP;
+    adPV[1]=pvalueAD_1;
+    ksPV[1]=pvalueKS_1;
+    
+    chi2test_Plots(0, eOut1, eOut2, model, "EnergyOut2", energy);
+    
+    
+    //3
+    MyC1->cd(3);
+    gPad->SetLogy();
+    histPath= Form("%s", "AngleOut1");
+    eOut1 = (TH1F*)f1->Get(histPath);
+    eOut2 = (TH1F*)f2->Get(histPath);
+    //eOut1->SetName(" geant4 ");
+    //eOut2->SetName("geantVscalar");
+    
+    if(!strcmp(model,"KleinNishina"))
+    {
+        eOut1->GetXaxis()->SetTitle("Scattered Photon Angle");
+        //eOutG4->GetYaxis()->SetTitle("dN/dE");
+    } else
+    {
+        eOut1->GetXaxis()->SetTitle("AngleOut1");
+        //eOutG4->GetYaxis()->SetTitle("dN/dE");
+    }
+    
+    eOut1->Draw("E");
+    eOut2->SetLineColor(kYellow+10);
+    eOut2->Draw("sames");
+    MyC1->Update();
+    
+    double resA1[eOut1->GetNbinsX()+2];
+    //Added for uoFlows_Analysis
+    // include underflow-overflow in the test
+    //eOutG4->GetXaxis()->SetRange(0, eOutG4->GetNbinsX()+1);
+    pValueP=eOut1->Chi2Test(eOut2,"UU P",resA1);
+    
+    /*AGGIUNTO PER AD e KS test*/
+    //Double_t pvalueAD_1, pvalueKS_1;
+    goftestAllMod(eOut1, eOut2, pvalueAD_1, pvalueKS_1);
+    
+    TPaveText* pt3 = new TPaveText(0.13, 0.55, 0.43, 0.75, "brNDC");
+    //Char_t str[50];
+    sprintf(str, "p-value for Pearson chi2 test: %g", pValueP);
+    //Char_t str1[50];
+    sprintf(str1, "p-value for A-D 2-smps test: %f", pvalueAD_1);
+    pt3->AddText(str);
+    pt3->AddText(str1);
+    pt3->SetFillColor(18);
+    pt3->SetTextFont(20);
+    pt3->SetTextColor(4);
+    //Char_t str2[50];
+    sprintf(str2, "p-value for K-S 2-smps test: %f", pvalueKS_1);
+    pt3-> AddText(str2);
+    pt3-> Draw();
+    
+    std::cout<<"AngleOut1 -  \nPearson p-Value: "<<pValueP<<" \nA-D p-Value: "<<pvalueAD_1<<" \nK-S p-Value: "<<pvalueKS_1<<"\n ";
+    
+    chi2PV[2]=pValueP;
+    adPV[2]=pvalueAD_1;
+    ksPV[2]=pvalueKS_1;
+    
+    TPaveStats *psAOut1 = (TPaveStats*)eOut1->GetListOfFunctions()->FindObject("stats");
+    psAOut1->SetX1NDC(0.4); psAOut1->SetX2NDC(0.55);
+    
+    TPaveStats *psAOut2 = (TPaveStats*)eOut2->GetListOfFunctions()->FindObject("stats");
+    psAOut2->SetX1NDC(0.6); psAOut2->SetX2NDC(0.75);
+    psAOut2->SetTextColor(kYellow+10);
+    psAOut2->SetOptStat(1111);
+    
+    chi2test_Plots(0, eOut1, eOut2, model,"AngleOut1", energy);
+    
+    //4
+    MyC1->cd(4);
+    gPad->SetLogy();
+    histPath= Form("%s", "AngleOut2");
+    eOut1 = (TH1F*)f1->Get(histPath);
+    eOut2 = (TH1F*)f2->Get(histPath);
+    //eOut1->SetName(file1);
+    //eOut2->SetName(file2);
+    
+    if(!strcmp(model,"KleinNishina"))
+        eOut1->GetXaxis()->SetTitle("Electron Angle");
+    else
+        eOut1->GetXaxis()->SetTitle("AngleOut2");
+    eOut1->Draw("E");
+    eOut2->SetLineColor(kYellow+10);
+    eOut2->Draw("sames");
+    MyC1->Update();
+    
+    double resA2[eOut1->GetNbinsX()+2];
+    //Added for uoFlows_Analysis
+    // include underflow-overflow in the test
+    pValueP=eOut1->Chi2Test(eOut2,"UU P",resA2);
+    
+    /*AD e KS test*/
+    //Double_t pvalueAD_1, pvalueKS_1;
+    goftestAllMod(eOut1, eOut2, pvalueAD_1, pvalueKS_1);
+    
+    TPaveText* pt4 = new TPaveText(0.13, 0.55, 0.43, 0.75, "brNDC");
+    //Char_t str[50];
+    sprintf(str, "p-value for Pearson chi2 test: %g", pValueP);
+    //Char_t str1[50];
+    sprintf(str1, "p-value for A-D 2-smps test: %f", pvalueAD_1);
+    pt4->AddText(str);
+    pt4->AddText(str1);
+    pt4->SetFillColor(18);
+    pt4->SetTextFont(20);
+    pt4->SetTextColor(4);
+    //Char_t str2[50];
+    sprintf(str2, "p-value for K-S 2-smps test: %f", pvalueKS_1);
+    pt4-> AddText(str2);
+    pt4-> Draw();
+    std::cout<<"AngleOut2 -  \nPearson p-Value: "<<pValueP<<" \nA-D p-Value: "<<pvalueAD_1<<" \nK-S p-Value: "<<pvalueKS_1<<"\n ";
+    
+    
+    chi2PV[3]=pValueP;
+    adPV[3]=pvalueAD_1;
+    ksPV[3]=pvalueKS_1;
+    
+    TPaveStats *psAngleOut1 = (TPaveStats*)eOut1->GetListOfFunctions()->FindObject("stats");
+    psAngleOut1->SetX1NDC(0.4); psAngleOut1->SetX2NDC(0.55);
+    
+    TPaveStats *psAngleOut2 = (TPaveStats*)eOut2->GetListOfFunctions()->FindObject("stats");
+    psAngleOut2->SetX1NDC(0.6); psAngleOut2->SetX2NDC(0.75);
+    psAngleOut2->SetTextColor(kYellow+10);
+    psAngleOut2->SetOptStat(1111);
+    
+    chi2test_Plots(0, eOut1, eOut2, model, "AngleOut2", energy);
+    MyC1->SaveAs(histoFileNameEps);
+    MyC1->Print(nameFileMerge);
+}
+
+//______________________________________________________________________________
+void compareSingleHisto(const char *outputName, const char *namefile1, const char* namefile2, double *chi2PV, double *adPV, double *ksPV)
+{
+    //TString processName= process;
+    //TString histogramName= variable;
+    
+    //TString histPath= Form("%s/%s",process, variable);
+    //TString histName= Form("%s/%s/%sMeV",process, variable, energy);
+    TString histoFileNamePdf= Form("%s.pdf",outputName);
+    //TString histoFileNameEps= Form("%s.pdf",outputName);
+    TString filename= Form("%s-Validation.pdf",outputName);
+    
+    //TString g4HistoName=Form("%s/geant4",process);
+    //TString gvHistoScalarName=Form("%s/geantVscalar",process);
+    //TString gvHistoVectorName=Form("%s/geantVvector",process);
+    
+    
+    //TString file1= Form("%s",namefile1);
+    //TString file2= Form("%s",namefile2);
+    
+    //File1
+    TFile *f1 = new TFile(namefile1,"w");
+    f1->ls();
+    
+    TList* list1 = f1->GetListOfKeys() ;
+    if (!list1) { printf("<E> No keys found in file\n") ; exit(1) ; }
+    TIter next1(list1) ;
+    TKey* key1 ;
+    TObject* obj1 ;
+    TH1F * eOut1;
+    
+    //Dinamically read histograms
+    while ( (key1 = (TKey*)next1()) )
+    {
+        obj1 = key1->ReadObj() ;
+        if (    (strcmp(obj1->IsA()->GetName(),"TProfile")!=0)
+            && (!obj1->InheritsFrom("TH2"))
+            && (!obj1->InheritsFrom("TH1"))
+            )
+        {
+            printf("<W> Object %s is not 1D or 2D histogram : "
+                   "will not be converted\n",obj1->GetName()) ;
+        }
+        printf("Histo name:%s title:%s\n",obj1->GetName(),obj1->GetTitle());
+        
+        const char *nome1= obj1->GetName();
+        eOut1 =(TH1F*)f1->Get(nome1);
+        if(eOut1)
+        {
+            eOut1->SetName(namefile1);
+            std::cout<<"eOut1 is ok, reading "<<nome1<<"\n";
+        }
+        else std::cout<<"eOut1 is null\n";
+        
+    }
+    
+    TFile *f2 = new TFile(namefile2,"w");
+    f2->ls();
+    TList* list2 = f2->GetListOfKeys() ;
+    if (!list2) { printf("<E> No keys found in file\n") ; exit(1) ; }
+    TIter next2(list2) ;
+    TKey* key2 ;
+    TObject* obj2 ;
+    TH1F * eOut2;
+    
+    //Dinamically read histograms
+    while ( (key2 = (TKey*)next2()) )
+    {
+        obj2 = key2->ReadObj() ;
+        if (    (strcmp(obj2->IsA()->GetName(),"TProfile")!=0)
+            && (!obj2->InheritsFrom("TH2"))
+            && (!obj2->InheritsFrom("TH1"))
+            )
+        {
+            printf("<W> Object %s is not 1D or 2D histogram : "
+                   "will not be converted\n",obj2->GetName()) ;
+        }
+        printf("Histo name:%s title:%s\n",obj2->GetName(),obj2->GetTitle());
+        
+        const char *nome2= obj2->GetName();
+        eOut2 =(TH1F*)f2->Get(nome2);
+        if(eOut2)
+        {
+            eOut2->SetName(namefile2);
+            std::cout<<"eOut2 is ok, reading "<<nome2<<"\n";
+            
+        }else std::cout<<"eOut2 is null\n";
+        
+    }
+    
+    double chiS= chiSquare(eOut1, eOut2);
+    
+    std::cout<<"chiS: "<<chiS<<"\n";
+    
+    TCanvas *c1 = new TCanvas("c1","c1",200,10,700,500);
+    c1->SetLogy();
+    
+    eOut1->Draw("E");
+    c1->Update();
+    
+    
+    TPaveStats *ps1 = (TPaveStats*)eOut1->GetListOfFunctions()->FindObject("stats");
+    ps1->SetX1NDC(0.4); ps1->SetX2NDC(0.55);
+    
+    c1->Modified();
+    c1->Update();
+    
+    eOut2->SetLineColor(kYellow+10);
+    eOut2->Draw("sames");
+    
+    c1->Update();
+    
+    TPaveStats *ps2 = (TPaveStats*)eOut2->GetListOfFunctions()->FindObject("stats");
+    ps2->SetX1NDC(0.6); ps2->SetX2NDC(0.75);
+    ps2->SetTextColor(kYellow+10);
+    ps2->SetOptStat(1111);
+    
+    c1->Update();
+    
+    
+    //TPaveStats *ps3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
+    //ps3->SetX1NDC(0.8); ps3->SetX2NDC(0.95);
+    //ps3->SetTextColor(kMagenta);
+    
+    TPaveText *t = new TPaveText(0.0, 0.95, 0.3, 1.0, "brNDC"); // left-up
+    //t->AddText(outputName);
+    
+    gROOT->SetStyle("Plain");
+    gStyle->SetOptFit(1111);
+    gStyle->SetOptTitle(0);
+    t->SetBorderSize(0);
+    t->SetFillColor(gStyle->GetTitleFillColor());
+    //t->Draw();
+    
+    
+    //TString chiSquareString= Form("%f",chiS);
+    //drawLatex(.1, 0.92, chiSquareString);
+    
+    double res[eOut1->GetSize()];
+    double chi2=eOut1->Chi2Test(eOut2,"UU P",res);
+    drawLatex(.1,0.95,Form("%g",chi2));
+    
+    c1->Modified();
+    c1->Update();
+    
+    //c1->SaveAs(histoFileNameEps);
+    c1->SaveAs(histoFileNamePdf);
+    
+    chi2test_Plots(0, eOut1, eOut2, outputName, outputName , "");
+    c1->Print(filename);
+}
+
+
 //______________________________________________________________________________
 void genAllHisto(const char *process, const char* energy, double *chi2PV, double *adPV, double *ksPV)
 {
     
     TString processName= process;
     //TString histogramName= variable;
-    TString geant4RootFileName= Form("geant4.root");
-    TString scalarRootFileName= Form("scalar.root");
-    TString vectorRootFileName= Form("vector.root");
+    TString geant4RootFileName= Form("geant4_%sMeV.root",energy);
+    TString scalarRootFileName= Form("scalar_%sMeV.root",energy);
+    //TString vectorRootFileName= Form("vector_%sMeV.root",energy);
     
     TString g4HistoName=Form("%s/geant4",process);
     TString gvHistoScalarName=Form("%s/geantVscalar",process);
-    TString gvHistoVectorName=Form("%s/geantVvector",process);
+    //TString gvHistoVectorName=Form("%s/geantVvector",process);
     
-    TString histPath= Form("%s/%s",process, "EnergyOut1");
+    //TString histPath= Form("%s/%s",process, "EnergyOut1");
+    
+    TString histPath= Form("%s","EnergyOut1");
+    
     TString histName= Form("%s/%s/%sMeV",process, "EnergyOut1", energy);
     //TString histoFileNamePdf= Form("%s-%s-%sMeV.pdf",process, variable, energy);
     TString histoFileNameEps= Form("%s-%sMeV.eps",process, energy);
@@ -1265,10 +1771,10 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     else std::cout<<"eOutScalar is null\n";
     
     //GeantV vector
-    TFile *fVector = new TFile(vectorRootFileName,"w");
-    TH1F *eOutVector = (TH1F*)fVector->Get(histPath);
-    if(eOutVector) eOutVector->SetName("geantVvector");
-    else std::cout<<"eOutVector is null\n";
+    //TFile *fVector = new TFile(vectorRootFileName,"w");
+    //TH1F *eOutVector = (TH1F*)fVector->Get(histPath);
+    //if(eOutVector) eOutVector->SetName("geantVvector");
+    //else std::cout<<"eOutVector is null\n";
     
     TCanvas *firstPage=new TCanvas(process,process,800,200,1200,1000);
     drawText(.4,0.45,Form("Model: %s, energyIn: %s MeV ",process, energy));
@@ -1315,15 +1821,15 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     ps2->SetTextColor(kYellow+10);
     ps2->SetOptStat(1111);
     
-    eOutVector->SetLineColor(kMagenta);
+    //eOutVector->SetLineColor(kMagenta);
     //eOutVector->Draw("][sames");
-    eOutVector->Draw("sames");
+    //eOutVector->Draw("sames");
     
     MyC1->Update();
-    TPaveStats *ps3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
-    ps3->SetX1NDC(0.8); ps3->SetX2NDC(0.95);
-    ps3->SetTextColor(kMagenta);
-    TPaveText *t = new TPaveText(0.0, 0.95, 0.3, 1.0, "brNDC"); // left-up
+    //TPaveStats *ps3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
+    //ps3->SetX1NDC(0.8); ps3->SetX2NDC(0.95);
+    //ps3->SetTextColor(kMagenta);
+    //TPaveText *t = new TPaveText(0.0, 0.95, 0.3, 1.0, "brNDC"); // left-up
     //t->AddText(histName);
     
     //double res[eOutG4->GetSize()];
@@ -1370,16 +1876,18 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     //2
     MyC1->cd(2);
     gPad->SetLogy();
-    histPath= Form("%s/%s",process, "EnergyOut2");
+    //histPath= Form("%s/%s",process, "EnergyOut2");
+    histPath= Form("%s", "EnergyOut2");
+    
     histName= Form("%s/%s/%sMeV",process, "EnergyOut2", energy);
     eOutG4 = (TH1F*)fG4->Get(histPath);
     eOutScalar = (TH1F*)fScalar->Get(histPath);
-    eOutVector = (TH1F*)fVector->Get(histPath);
+    //eOutVector = (TH1F*)fVector->Get(histPath);
     eOutG4->SetName(" geant4 ");
     eOutScalar->SetName("geantVscalar");
-    eOutVector->SetName("geantVvector");
+    //eOutVector->SetName("geantVvector");
     eOutScalar->SetLineColor(kYellow+10);
-    eOutVector->SetLineColor(kMagenta);
+    //eOutVector->SetLineColor(kMagenta);
     
     
     if(!strcmp(process,"KleinNishina"))
@@ -1394,7 +1902,7 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     
     eOutG4->Draw("E");
     eOutScalar->Draw("sames");
-    eOutVector->Draw("sames");
+    //eOutVector->Draw("sames");
     MyC1->Update();
     TPaveStats *psEnOut1 = (TPaveStats*)eOutG4->GetListOfFunctions()->FindObject("stats");
     psEnOut1->SetX1NDC(0.4); psEnOut1->SetX2NDC(0.55);
@@ -1409,10 +1917,10 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     //chiSquareString= Form("%f",chiS);
     //drawtext(.1, 0.92, chiSquareString);
     
-    TPaveStats *psEnOut3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
-    psEnOut3->SetX1NDC(0.8); psEnOut3->SetX2NDC(0.95);
-    psEnOut3->SetTextColor(kMagenta);
-
+    //TPaveStats *psEnOut3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
+    //psEnOut3->SetX1NDC(0.8); psEnOut3->SetX2NDC(0.95);
+    //psEnOut3->SetTextColor(kMagenta);
+    
     TText *t22 = new TText(0.05,0.8,"This is pad22");
     t22->SetTextSize(10);
     t22->Draw("sames");
@@ -1460,14 +1968,15 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     //3
     MyC1->cd(3);
     gPad->SetLogy();
-    histPath= Form("%s/%s",process, "AngleOut1");
+    //histPath= Form("%s/%s",process, "AngleOut1");
+    histPath= Form("%s", "AngleOut1");
     histName= Form("%s/%s/%sMeV",process, "AngleOut1", energy);
     eOutG4 = (TH1F*)fG4->Get(histPath);
     eOutScalar = (TH1F*)fScalar->Get(histPath);
-    eOutVector = (TH1F*)fVector->Get(histPath);
+    //eOutVector = (TH1F*)fVector->Get(histPath);
     eOutG4->SetName(" geant4 ");
     eOutScalar->SetName("geantVscalar");
-    eOutVector->SetName("geantVvector");
+    //eOutVector->SetName("geantVvector");
     
     if(!strcmp(process,"KleinNishina"))
     {
@@ -1483,9 +1992,9 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     
     eOutG4->Draw("E");
     eOutScalar->SetLineColor(kYellow+10);
-    eOutVector->SetLineColor(kMagenta);
+    //eOutVector->SetLineColor(kMagenta);
     eOutScalar->Draw("sames");
-    eOutVector->Draw("sames");
+    //eOutVector->Draw("sames");
     MyC1->Update();
     
     //chiS=chiSquare(eOutG4,eOutScalar);
@@ -1535,22 +2044,22 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     psAOut2->SetTextColor(kYellow+10);
     psAOut2->SetOptStat(1111);
     
-    TPaveStats *psAOut3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
-    psAOut3->SetX1NDC(0.8); psAOut3->SetX2NDC(0.95);
-    psAOut3->SetTextColor(kMagenta);
+    //TPaveStats *psAOut3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
+    //psAOut3->SetX1NDC(0.8); psAOut3->SetX2NDC(0.95);
+    //psAOut3->SetTextColor(kMagenta);
     chi2test_Plots(0, eOutG4, eOutScalar, process,"AngleOut1", energy);
     
     //4
     MyC1->cd(4);
     gPad->SetLogy();
-    histPath= Form("%s/%s",process, "AngleOut2");
+    histPath= Form("%s", "AngleOut2");
     histName= Form("%s/%s/%sMeV",process, "AngleOut2", energy);
     eOutG4 = (TH1F*)fG4->Get(histPath);
     eOutScalar = (TH1F*)fScalar->Get(histPath);
-    eOutVector = (TH1F*)fVector->Get(histPath);
+    //eOutVector = (TH1F*)fVector->Get(histPath);
     eOutG4->SetName("geant4");
     eOutScalar->SetName("geantVscalar");
-    eOutVector->SetName("geantVvector");
+    //eOutVector->SetName("geantVvector");
     
     if(!strcmp(process,"KleinNishina"))
     {
@@ -1564,9 +2073,9 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     //eOutG4->GetXaxis()->SetTitle("AngleOut2");
     eOutG4->Draw("E");
     eOutScalar->SetLineColor(kYellow+10);
-    eOutVector->SetLineColor(kMagenta);
+    //eOutVector->SetLineColor(kMagenta);
     eOutScalar->Draw("sames");
-    eOutVector->Draw("sames");
+    //eOutVector->Draw("sames");
     MyC1->Update();
     
     //chiS=chiSquare(eOutG4,eOutScalar);
@@ -1605,7 +2114,7 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     chi2PV[3]=pValueP;
     adPV[3]=pvalueAD_1;
     ksPV[3]=pvalueKS_1;
-
+    
     //drawText(.1,0.95,Form("chiQuadro: %f",chi2 ));
     //drawLatex(.1,0.95,Form("%g",chi2));
     
@@ -1617,9 +2126,9 @@ void genAllHisto(const char *process, const char* energy, double *chi2PV, double
     psAngleOut2->SetTextColor(kYellow+10);
     psAngleOut2->SetOptStat(1111);
     
-    TPaveStats *psAngleOut3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
-    psAngleOut3->SetX1NDC(0.8); psAngleOut3->SetX2NDC(0.95);
-    psAngleOut3->SetTextColor(kMagenta);
+    //TPaveStats *psAngleOut3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
+    //psAngleOut3->SetX1NDC(0.8); psAngleOut3->SetX2NDC(0.95);
+    //psAngleOut3->SetTextColor(kMagenta);
     
     chi2test_Plots(0, eOutG4, eOutScalar, process, "AngleOut2", energy);
     MyC1->SaveAs(histoFileNameEps);
@@ -1805,9 +2314,9 @@ void genSingleHisto(const char *process, const char *variable, const char* energ
     
     //c1->SaveAs(histoFileNameEps);
     c1->SaveAs(histoFileNamePdf);
-
+    
     chi2test_Plots(0, eOutG4, eOutScalar, process, variable, energy);
-
+    
     //validatePdf(eOutScalar, eOutVector, eOutG4, energy);
     /*c1->Destructor();
      if(c1!=NULL)
@@ -1849,10 +2358,14 @@ void scaleHisto(TH1F* eOutScalar, TH1F* eOutVector, TH1F* eOutG4)
     c0->Update();
     
 }
+
+//______________________________________________________________________________
 void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, char **symbol, Bool_t octal);
 
+//______________________________________________________________________________
 void pstable(char **symbol, const char *process)
 {
+    
     
     TString tableName=Form("%s_pValuesTable.pdf", process);
     TString nameFileMerge=Form("%s-Validation.pdf", process);
@@ -1898,13 +2411,13 @@ void pstable(char **symbol, const char *process)
     
 }
 
-
+//______________________________________________________________________________
 void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, char **symbol, Bool_t octal)
 {
     Int_t i;
     Int_t n = 0;
     for (i=0;i<1000;i++) {
-        std::cout<<"symbol["<<i<<"]:"<<symbol[i]<<"\n";
+        std::cout<<"****** symbol["<<i<<"]:"<<symbol[i]<<"\n";
         if (!strcmp(symbol[i],"END")) break;
         n++;
     }
@@ -1958,6 +2471,8 @@ void table(Float_t x1, Float_t x2, Float_t yrange, TText *t, char **symbol, Bool
     }
 }
 
+
+//______________________________________________________________________________
 void createPvTable(){
     std::cout<<"createPvTable, To be Implemented.\n";
 }
@@ -1995,8 +2510,8 @@ int main( int argc,  char *argv[])
         "","En_out1","0.650629","1","1", "10 KeV","En_out1","0.650629","1","1",
         "10 KeV","En_out1","0.650629","1","1","END"};
     
-    TString  in1, in2, in3[10], *in4;
-    const char *phisicsModel, *variable, *energy[10], *nEnergies;
+    TString  in1, in2, in3[10], in4, in5;
+    const char *phisicsModel, *variable, *energySingle, *energy[10], *nEnergies;
     int nEn;
     
     TString myInput;
@@ -2004,71 +2519,227 @@ int main( int argc,  char *argv[])
     
     
     TCanvas *firstPageValidation=new TCanvas("Validation","Validation",800,200,1200,1000);
-    drawText(.6,.45,Form("G4 vs GeantV validation"));
-
-    do{
-        
-        std::cout<<"Press 'D' for the default execution, press 'C' for the customized execution, 'T' to run statistical Tests, 'CT' to create the p-Value Table.\n";
-        
-        std::cin>>myInput;
-        //All models, all validation quantities, one energy
-        if(myInput.EqualTo("D")|| myInput.EqualTo("d"))
+    
+    
+    if (argc>1 && argc<6)
+    {
+        std::cout << "To use in batch mode " << argv[0] << "\n <FILE1>\n: geant4 \n\n <FILE2>\n: geantV_scalar\n\n <PHYSICSMODEL_NAME> \n: KleinNishina  \n: BetheHeitler \n: SauterGavrila \n: MollerBhabha \n: SeltzerBerger\n \n <#ENERGIES to test> \n\n <ENERGY(IES)> [MeV] \n";
+        //std::cout << "\nDefault mode usage: "<< argv[0] <<" <ENERGY> [MeV] \n\n";
+        return 0;
+    }
+    else
+        if(argc==1)
+            do{
+                std::cout << "To use in batch mode " << argv[0] << "\n <FILE1>\n: geant4 \n\n <FILE2>\n: geantV_scalar\n\n <PHYSICSMODEL_NAME> \n: KleinNishina  \n: BetheHeitler \n: SauterGavrila \n: MollerBhabha \n: SeltzerBerger\n \n <#ENERGIES to test> \n\n <ENERGY(IES)> [MeV] \n";
+                std::cout<<"Press 'D' for the default execution (not Active), press 'C' for the customized execution, 'T' to run statistical Tests (not Active), 'CT' to create the p-Value Table (not Active), 'S' for single histograms comparison, 'Q'to quit.\n";
+                
+                //TCanvas *firstPageValidation=new TCanvas("Validation","Validation",800,200,1200,1000);
+                //drawText(.6,.45,Form("G4 vs GeantV validation"));
+                
+                std::cin>>myInput;
+                //All models, all validation quantities, one energy
+                if(myInput.EqualTo("D")|| myInput.EqualTo("d"))
+                {
+                    std::cout<<"Insert the energy of the projectile [Mev]\n";
+                    std::cin>>in5;
+                    energySingle=in5.Data();
+                    std::cout << "Starting default mode.\n";
+                    
+                    //for(int i=0; i<5 ; i++)
+                    //genAllHisto(GUPhysicsModelName[i], energySingle);
+                    
+                }
+                
+                else if(myInput.EqualTo("S")|| myInput.EqualTo("s"))
+                {
+                    std::cout<<"Name of the output file\n";
+                    std::cin>>in1;
+                    std::cout<<"Name of the first histogram\n";
+                    std::cin>>in2;
+                    std::cout<<"Name of the second histogram\n";
+                    std::cin>>in4;
+                    const char *outputfile=in1.Data();
+                    const char *hist1=in2.Data();
+                    const char *hist2=in4.Data();
+                    
+                    double *chi2PV,*adPV,*ksPV;
+                    drawText(.6,.45,Form("%s validation", outputfile));
+                    nameFileMerge=Form("%s-Validation.pdf",outputfile);
+                    TString fp=Form("%s-Validation.pdf(",outputfile);
+                    firstPageValidation->Print(fp);
+                    ////continuare da qui
+                    //genAllHisto(phisicsModel,energy[i], chi2_pval, AD_pval, KS_pval);
+                    compareSingleHisto(outputfile, hist1, hist2, chi2PV, adPV,ksPV);
+                    phisicsModel=outputfile;
+                }
+                
+                //One model, all validation quantities, different energies
+                else if(myInput.EqualTo("C")|| myInput.EqualTo("c"))
+                {
+                    drawText(.6,.45,Form("G4 vs GeantV validation"));
+                    std::cout<<"PhysicsModel: KleinNishina, BetheHeitler, SauterGavrila, MollerBhabha, SeltzerBerger.\n";
+                    std::cin>>in1;
+                    phisicsModel=in1.Data();
+                    //std::cout<<"Variable: EnergyIn, EnergyOut1, EnergyOut2, AngleOut1, AngleOut2, or all.\n";
+                    //std::cin>>in2;
+                    //variable=in2.Data();
+                    variable="all";
+                    
+                    nameFileMerge=Form("%s-Validation.pdf",phisicsModel);
+                    TString fp=Form("%s-Validation.pdf(",phisicsModel);
+                    firstPageValidation->Print(fp);
+                    
+                    std::cout<<"How many energies do you want to test?\n";
+                    std::cin>>in2;
+                    nEnergies=in2.Data();
+                    nEn=atoi(nEnergies);
+                    
+                    TString* energy_string;
+                    TString* chi2_string;
+                    TString* AD_string;
+                    TString* KS_string;
+                    
+                    energy_string=new TString[nEn];
+                    chi2_string=new TString[nEn*4];
+                    AD_string=new TString[nEn*4];
+                    KS_string=new TString[nEn*4];
+                    
+                    
+                    double chi2_pval[4], AD_pval[4], KS_pval[4];
+                    symbolData=new char*[nEn*20+1];
+                    
+                    for (int i=0; i<nEn; i++) //energies
+                    {
+                        std::cout<<"Energy of the projectile [Mev]\n";
+                        std::cin>>in3[i];
+                        energy[i]=in3[i].Data();
+                        
+                        energy_string[i]=Form("%s MeV",energy[i]);
+                        
+                        
+                        genAllHisto(phisicsModel,energy[i], chi2_pval, AD_pval, KS_pval);
+                        
+                        
+                        for (int k=0; k<5; k++) //columns
+                            for (int j=0; j<4; j++) //rows
+                            {
+                                if(k==0)
+                                    if(j==0)
+                                    {
+                                        
+                                        symbolData[i*20]=(char*)energy_string[i].Data();
+                                    }
+                                    else
+                                    {
+                                        //sprintf( symbolData[i*20+j*5], "");
+                                        symbolData[i*20+j*5]=(char*)"";
+                                    }
+                                    else
+                                        if(k==1)
+                                        {
+                                            symbolData[i*20+j*5+k]=(char*)GUPhysicsModelVariable[j+1];
+                                            
+                                        }
+                                        else
+                                            if(k==2)
+                                            {
+                                                chi2_string[4*i+j]= Form("%g",chi2_pval[j]);
+                                                symbolData[i*20+j*5+k]=(char *)chi2_string[4*i+j].Data();
+                                                std::cout<<"chi2_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
+                                            }
+                                            else
+                                                if(k==3)
+                                                {
+                                                    AD_string[4*i+j]= Form("%g",AD_pval[j]);
+                                                    symbolData[i*20+j*5+k]=(char *)AD_string[4*i+j].Data();
+                                                    std::cout<<"AD_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
+                                                }
+                                                else
+                                                    if(k==4)
+                                                    {
+                                                        KS_string[4*i+j]= Form("%g",KS_pval[j]);
+                                                        symbolData[i*20+j*5+k]=(char *)KS_string[4*i+j].Data();
+                                                        std::cout<<"KS_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
+                                                    }
+                                
+                                
+                            }
+                        
+                    }
+                    symbolData[nEn*20]=(char*)"END";
+                    
+                    /*std::cout<<"Print the table\n";
+                     std::cout<<"Energies "<<energy[0]<<" and " << energy[1]<<"\n";
+                     for (int stamico=0; stamico<nEn*20; stamico++)
+                     std::cout<<"symbolData["<<stamico<<"]: "<<symbolData[stamico]<<"\n";*/
+                    pstable(symbolData, phisicsModel);
+                    
+                }
+                else if(myInput.EqualTo("T")|| myInput.EqualTo("t"))
+                {
+                    
+                    goftest();
+                    std::cout<<"PhysicsModel: KleinNishina, BetheHeitler, SauterGavrila, MollerBhabha, SeltzerBerger.\n";
+                    std::cin>>in1;
+                    phisicsModel=in1.Data();
+                    std::cout<<"Variable: EnergyIn, EnergyOut1, EnergyOut2, AngleOut1, AngleOut2.\n";
+                    std::cin>>in2;
+                    variable=in2.Data();
+                    std::cout<<"Energy of the projectile [Mev]\n";
+                    std::cin>>in3[i];
+                    energy[i]=in3[i].Data();
+                    //if(in2.EqualTo("all")||in2.EqualTo("All"))
+                    //  goftestAllMod(phisicsModel,energy);
+                    //else
+                    //goftestSingleMod(phisicsModel, variable, energy[i]);
+                }
+                
+                else if(myInput.EqualTo("CT")|| myInput.EqualTo("ct")|| myInput.EqualTo("Ct")|| myInput.EqualTo("cT"))
+                {
+                    createPvTable();
+                }
+                else if(myInput.EqualTo("Q")|| myInput.EqualTo("q"))
+                {
+                    //std::cout<<"Insert the name of the file.\n";
+                    
+                }
+                
+                std::cout<<"Press 'c' to continue, 'e' to exit\n";
+                std::cin>>myInput;
+                
+            } while(myInput.EqualTo("c")|| myInput.EqualTo("C"));
+    
+        else
         {
-            std::cout<<"Insert the energy of the projectile [Mev]\n";
-            std::cin>>in3[i];
-            energy[i]=in3[i].Data();
-            std::cout << "Starting default mode.\n";
-            
-            //for(int i=0; i<5 ; i++)
-            //genAllHisto(GUPhysicsModelName[i], energy);
-            
-        }
-        //One model, all validation quantities, different energies
-        else if(myInput.EqualTo("C")|| myInput.EqualTo("c"))
-        {
-            std::cout<<"PhysicsModel: KleinNishina, BetheHeitler, SauterGavrila, MollerBhabha, SeltzerBerger.\n";
-            std::cin>>in1;
-            phisicsModel=in1.Data();
-            //std::cout<<"Variable: EnergyIn, EnergyOut1, EnergyOut2, AngleOut1, AngleOut2, or all.\n";
-            //std::cin>>in2;
-            //variable=in2.Data();
-            variable="all";
-            
-            nameFileMerge=Form("%s-Validation.pdf",phisicsModel);
-            TString cazzu=Form("%s-Validation.pdf(",phisicsModel);
-            firstPageValidation->Print(cazzu);
-            
-            std::cout<<"How many energies do you want to test?\n";
-            std::cin>>in2;
-            nEnergies=in2.Data();
-            nEn=atoi(nEnergies);
-            
-            TString* energy_string;
-            TString* chi2_string;
-            TString* AD_string;
-            TString* KS_string;
-            
-            energy_string=new TString[nEn];
-            chi2_string=new TString[nEn*4];
-            AD_string=new TString[nEn*4];
-            KS_string=new TString[nEn*4];
-            
             
             double chi2_pval[4], AD_pval[4], KS_pval[4];
-            symbolData=new char*[nEn*20+1];
+            int numeroEn=atoi(argv[4]);
+            const char * file1=argv[1];
+            const char * file2=argv[2];
+            const char * model=argv[3];
+            phisicsModel=argv[3];
             
-            for (int i=0; i<nEn; i++) //energies
+            drawText(.35,.45,Form("%s vs %s validation", file1, file2));
+            
+            nameFileMerge=Form("%s-Validation.pdf",model);
+            TString fp=Form("%s-Validation.pdf(",model);
+            firstPageValidation->Print(fp);
+            
+            
+            auto energy_string= new TString[numeroEn];
+            auto chi2_string=new TString[numeroEn*4];
+            auto AD_string=new TString[numeroEn*4];
+            auto KS_string=new TString[numeroEn*4];
+            symbolData=new char*[numeroEn*20+1];
+            
+            
+            for(int i=0 ; i<numeroEn; i++)
             {
-                std::cout<<"Energy of the projectile [Mev]\n";
-                std::cin>>in3[i];
-                energy[i]=in3[i].Data();
                 
-                energy_string[i]=Form("%s MeV",energy[i]);
+                energy_string[i]=Form("%s MeV",argv[5+i]);
+                runStatisticalAnalysis(file1, file2, phisicsModel,argv[5+i], chi2_pval, AD_pval, KS_pval);
                 
-                
-                genAllHisto(phisicsModel,energy[i], chi2_pval, AD_pval, KS_pval);
-                
-                
+                //prepare data to be displyed in a table
                 for (int k=0; k<5; k++) //columns
                     for (int j=0; j<4; j++) //rows
                     {
@@ -2094,64 +2765,33 @@ int main( int argc,  char *argv[])
                                     {
                                         chi2_string[4*i+j]= Form("%g",chi2_pval[j]);
                                         symbolData[i*20+j*5+k]=(char *)chi2_string[4*i+j].Data();
-                                        std::cout<<"chi2_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
+                                        std::cout<<"***** chi2_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
                                     }
                                     else
                                         if(k==3)
                                         {
                                             AD_string[4*i+j]= Form("%g",AD_pval[j]);
                                             symbolData[i*20+j*5+k]=(char *)AD_string[4*i+j].Data();
-                                            std::cout<<"AD_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
+                                            std::cout<<"***** AD_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
                                         }
                                         else
                                             if(k==4)
                                             {
                                                 KS_string[4*i+j]= Form("%g",KS_pval[j]);
                                                 symbolData[i*20+j*5+k]=(char *)KS_string[4*i+j].Data();
-                                                std::cout<<"KS_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
+                                                std::cout<<"***** KS_pval symbolData["<<i*20+j*5+k<<"]: "<<symbolData[i*20+j*5+k]<<"\n";
                                             }
                         
                         
                     }
-                
             }
-            symbolData[nEn*20]=(char*)"END";
+            std::cout<<"numeroEn: "<<numeroEn<<" " << numeroEn*20<< std::endl;
+            symbolData[numeroEn*20]=(char*)"END";
+            pstable(symbolData, model);
             
-            /*std::cout<<"Print the table\n";
-             std::cout<<"Energies "<<energy[0]<<" and " << energy[1]<<"\n";
-             for (int stamico=0; stamico<nEn*20; stamico++)
-             std::cout<<"symbolData["<<stamico<<"]: "<<symbolData[stamico]<<"\n";*/
-            pstable(symbolData, phisicsModel);
             
         }
-        else if(myInput.EqualTo("T")|| myInput.EqualTo("t"))
-        {
-            
-            goftest();
-            std::cout<<"PhysicsModel: KleinNishina, BetheHeitler, SauterGavrila, MollerBhabha, SeltzerBerger.\n";
-            std::cin>>in1;
-            phisicsModel=in1.Data();
-            std::cout<<"Variable: EnergyIn, EnergyOut1, EnergyOut2, AngleOut1, AngleOut2.\n";
-            std::cin>>in2;
-            variable=in2.Data();
-            std::cout<<"Energy of the projectile [Mev]\n";
-            std::cin>>in3[i];
-            energy[i]=in3[i].Data();
-            //if(in2.EqualTo("all")||in2.EqualTo("All"))
-            //  goftestAllMod(phisicsModel,energy);
-            //else
-            goftestSingleMod(phisicsModel, variable, energy[i]);
-        }
-        
-        else if(myInput.EqualTo("CT")|| myInput.EqualTo("ct")|| myInput.EqualTo("Ct")|| myInput.EqualTo("cT"))
-        {
-            createPvTable();
-        }
-        
-        std::cout<<"Press 'c' to continue, 'e' to exit\n";
-        std::cin>>myInput;
-        
-    } while(myInput.EqualTo("c")|| myInput.EqualTo("C"));
+    
     
     
     /*
@@ -2191,13 +2831,13 @@ int main( int argc,  char *argv[])
      }
      
      }
-    
+     
      if(argc==2)
      {
      std::cout << "Starting default mode.\n";
      for(int i=0; i<5 ; i++)
-        for(int j=0; j<5; j++)
-            genSingleHisto(GUPhysicsModelName[i], GUPhysicsModelVariable[j], theApp.Argv(1), i+j);
+     for(int j=0; j<5; j++)
+     genSingleHisto(GUPhysicsModelName[i], GUPhysicsModelVariable[j], theApp.Argv(1), i+j);
      
      std::cout << "Run completed.\n";
      theApp.Run();
@@ -2293,7 +2933,7 @@ int main( int argc,  char *argv[])
      
      */
     
-
+    
     /*
      //Plot the not scaled histograms
      TCanvas *c1 = new TCanvas("c1","Physics validation",200,10,700,500);
@@ -2338,7 +2978,7 @@ int main( int argc,  char *argv[])
      c1->Modified();
      c1->Update();
      */
-
+    
     
     /*
      
@@ -2374,7 +3014,7 @@ int main( int argc,  char *argv[])
      yGeant4[j] = eOutGeant4Scaled->GetBinContent(j+1);
      pdfGraph->GetPoint(j, xGeant4[j],zGeant4[j]); //to map
      }
-    
+     
      //Read the pdf File for 500MeV
      TCanvas *c3 = new TCanvas("c3","Graph comparison",200,10,700,500);
      pdfGraph->SetLineColor(kBlue);
