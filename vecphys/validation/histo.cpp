@@ -1253,7 +1253,6 @@ double chiSquare(TH1F* eOutG4, TH1F* eOutScalar)
 //run statistical analysis
 //______________________________________________________________________________
 void runStatisticalAnalysis (const char* file1, const char*  file2, const char* model, const char* energy, double *chi2PV, double *adPV, double *ksPV)
-//void genAllHisto(const char *process, const char* energy, double *chi2PV, double *adPV, double *ksPV)
 {
     
     TString processName= model;
@@ -1324,23 +1323,12 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     ps2->SetOptStat(1111);
     
     MyC1->Update();
-    
-    //TPaveStats *ps3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
-    //ps3->SetX1NDC(0.8); ps3->SetX2NDC(0.95);
-    //ps3->SetTextColor(kMagenta);
-    //TPaveText *t = new TPaveText(0.0, 0.95, 0.3, 1.0, "brNDC"); // left-up
-    //t->AddText(histName);
-    
-    //double res[eOutG4->GetSize()];
     double res[eOut1->GetNbinsX()+2];
     
     //Added for uoFlows_Analysis
     // include underflow-overflow in the test
     //eOutG4->GetXaxis()->SetRange(0, eOutG4->GetNbinsX()+1);
     double pValueP=eOut1->Chi2Test(eOut2,"UU P",res);
-    //drawText(.1,0.95,Form("chiQuadro: %f",chi2 ));
-    //drawLatex(.1,0.95,Form("%g",chi2));
-    
     
     /*ADDED FOR AD and KS test*/
     double pvalueAD_1, pvalueKS_1;
@@ -1364,7 +1352,6 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     chi2PV[0]=pValueP;
     adPV[0]=pvalueAD_1;
     ksPV[0]=pvalueKS_1;
-    //std::cout<<"EnergyOut1 -  \nPearson p-Value: "<<pValueP<<" \nA-D p-Value: "<<pvalueAD_1<<" \nK-S p-Value: "<<pvalueKS_1<<"\n ";
     
     MyC1->Modified();
     MyC1->Update();
@@ -1379,8 +1366,6 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     
     eOut1 = (TH1F*)f1->Get(histPath);
     eOut2 = (TH1F*)f2->Get(histPath);
-    //eOut1->SetName(" geant4 ");
-    //eOut2->SetName("geantVscalar");
     eOut2->SetLineColor(kYellow+10);
     
     
@@ -1400,20 +1385,11 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     MyC1->Update();
     TPaveStats *psEnOut1 = (TPaveStats*)eOut1->GetListOfFunctions()->FindObject("stats");
     psEnOut1->SetX1NDC(0.4); psEnOut1->SetX2NDC(0.55);
-    //psEnOut1->SetTextColor(kMagenta);
     
     TPaveStats *psEnOut2 = (TPaveStats*)eOut2->GetListOfFunctions()->FindObject("stats");
     psEnOut2->SetX1NDC(0.6); psEnOut2->SetX2NDC(0.75);
     psEnOut2->SetTextColor(kYellow+10);
     psEnOut2->SetOptStat(1111);
-    
-    //chiS=chiSquare(eOutG4,eOutScalar);
-    //chiSquareString= Form("%f",chiS);
-    //drawtext(.1, 0.92, chiSquareString);
-    
-    //TPaveStats *psEnOut3 = (TPaveStats*)eOutVector->GetListOfFunctions()->FindObject("stats");
-    //psEnOut3->SetX1NDC(0.8); psEnOut3->SetX2NDC(0.95);
-    //psEnOut3->SetTextColor(kMagenta);
     
     TText *t22 = new TText(0.05,0.8,"This is pad22");
     t22->SetTextSize(10);
@@ -1423,31 +1399,23 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     
     
     double resE2[eOut1->GetNbinsX()+2];
-    //Added for uoFlows_Analysis
-    // include underflow-overflow in the test
-    //eOutG4->GetXaxis()->SetRange(0, eOutG4->GetNbinsX()+1);
     pValueP=eOut1->Chi2Test(eOut2,"UU P",resE2);
     
     /*ADDED FOR AD and KS test*/
-    //Double_t pvalueAD_1, pvalueKS_1;
     goftestAllMod(eOut1, eOut2, pvalueAD_1, pvalueKS_1);
     
     TPaveText* pt2 = new TPaveText(0.13, 0.55, 0.43, 0.75, "brNDC");
-    //Char_t str[50];
     sprintf(str, "p-value for Pearson chi2 test: %g", pValueP);
-    //Char_t str1[50];
     sprintf(str1, "p-value for A-D 2-smps test: %f", pvalueAD_1);
     pt2->AddText(str);
     pt2->AddText(str1);
     pt2->SetFillColor(18);
     pt2->SetTextFont(20);
     pt2->SetTextColor(4);
-    //Char_t str2[50];
     sprintf(str2, "p-value for K-S 2-smps test: %f", pvalueKS_1);
     pt2-> AddText(str2);
     pt2-> Draw();
     std::cout<<"EnergyOut2 -  \nPearson p-Value: "<<pValueP<<" \nA-D p-Value: "<<pvalueAD_1<<" \nK-S p-Value: "<<pvalueKS_1<<"\n ";
-    
     
     chi2PV[1]=pValueP;
     adPV[1]=pvalueAD_1;
@@ -1462,17 +1430,13 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     histPath= Form("%s", "AngleOut1");
     eOut1 = (TH1F*)f1->Get(histPath);
     eOut2 = (TH1F*)f2->Get(histPath);
-    //eOut1->SetName(" geant4 ");
-    //eOut2->SetName("geantVscalar");
     
     if(!strcmp(model,"KleinNishina"))
     {
         eOut1->GetXaxis()->SetTitle("Scattered Photon Angle");
-        //eOutG4->GetYaxis()->SetTitle("dN/dE");
     } else
     {
         eOut1->GetXaxis()->SetTitle("AngleOut1");
-        //eOutG4->GetYaxis()->SetTitle("dN/dE");
     }
     
     eOut1->Draw("E");
@@ -1483,24 +1447,19 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     double resA1[eOut1->GetNbinsX()+2];
     //Added for uoFlows_Analysis
     // include underflow-overflow in the test
-    //eOutG4->GetXaxis()->SetRange(0, eOutG4->GetNbinsX()+1);
     pValueP=eOut1->Chi2Test(eOut2,"UU P",resA1);
     
     /*AGGIUNTO PER AD e KS test*/
-    //Double_t pvalueAD_1, pvalueKS_1;
     goftestAllMod(eOut1, eOut2, pvalueAD_1, pvalueKS_1);
     
     TPaveText* pt3 = new TPaveText(0.13, 0.55, 0.43, 0.75, "brNDC");
-    //Char_t str[50];
     sprintf(str, "p-value for Pearson chi2 test: %g", pValueP);
-    //Char_t str1[50];
     sprintf(str1, "p-value for A-D 2-smps test: %f", pvalueAD_1);
     pt3->AddText(str);
     pt3->AddText(str1);
     pt3->SetFillColor(18);
     pt3->SetTextFont(20);
     pt3->SetTextColor(4);
-    //Char_t str2[50];
     sprintf(str2, "p-value for K-S 2-smps test: %f", pvalueKS_1);
     pt3-> AddText(str2);
     pt3-> Draw();
@@ -1527,8 +1486,6 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     histPath= Form("%s", "AngleOut2");
     eOut1 = (TH1F*)f1->Get(histPath);
     eOut2 = (TH1F*)f2->Get(histPath);
-    //eOut1->SetName(file1);
-    //eOut2->SetName(file2);
     
     if(!strcmp(model,"KleinNishina"))
         eOut1->GetXaxis()->SetTitle("Electron Angle");
@@ -1545,20 +1502,16 @@ void runStatisticalAnalysis (const char* file1, const char*  file2, const char* 
     pValueP=eOut1->Chi2Test(eOut2,"UU P",resA2);
     
     /*AD e KS test*/
-    //Double_t pvalueAD_1, pvalueKS_1;
     goftestAllMod(eOut1, eOut2, pvalueAD_1, pvalueKS_1);
     
     TPaveText* pt4 = new TPaveText(0.13, 0.55, 0.43, 0.75, "brNDC");
-    //Char_t str[50];
     sprintf(str, "p-value for Pearson chi2 test: %g", pValueP);
-    //Char_t str1[50];
     sprintf(str1, "p-value for A-D 2-smps test: %f", pvalueAD_1);
     pt4->AddText(str);
     pt4->AddText(str1);
     pt4->SetFillColor(18);
     pt4->SetTextFont(20);
     pt4->SetTextColor(4);
-    //Char_t str2[50];
     sprintf(str2, "p-value for K-S 2-smps test: %f", pvalueKS_1);
     pt4-> AddText(str2);
     pt4-> Draw();
