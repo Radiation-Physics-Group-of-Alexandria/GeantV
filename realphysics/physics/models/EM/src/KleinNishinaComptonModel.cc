@@ -89,14 +89,16 @@ namespace geantphysics {
     //
     double KleinNishinaComptonModel::ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy,
                                                                 const Particle * ) {
-        //N.B. TO BE PROPERLY IMPLEMENTED
+        //Checking the kinetic energy
         double xsec = 0.0;
         if (kinenergy<GetLowEnergyUsageLimit() || kinenergy>GetHighEnergyUsageLimit()) {
             return xsec;
         }
+        //retrieving the material and the production cuts
         const Material *mat =  matcut->GetMaterial();
         const double *cuts  =  matcut->GetProductionCutsInEnergy();
         double gammacut     =  cuts[0];
+        //compute cross section per volume in a specific material with specific gammacut and kinetic energy
         xsec = ComputeXSectionPerVolume(mat, gammacut, kinenergy);
         return xsec;
     }
@@ -104,36 +106,39 @@ namespace geantphysics {
     //
     double KleinNishinaComptonModel::ComputeXSectionPerVolume(const Material *mat, double prodcutenergy, double particleekin) {
         
-        //N.B. TO BE PROPERLY IMPLEMENTED
         double xsec = 0.0;
+        // check if the particle kinetic energy is lower than the production cut energy
         if (particleekin<=prodcutenergy) {
             return xsec;
         }
         
-        // we will need the element composition of this material
+        // retrieve the element composition of the material
         const Vector_t<Element*> theElements = mat->GetElementVector();
         const double* theAtomicNumDensityVector = mat->GetMaterialProperties()->GetNumOfAtomsPerVolumeVect();
         int   numElems = theElements.size();
         double sum    = 0.0;
         
+        // calculate the macroscopic cross-section, using the additivity approximation, as the sum of the xsec for the i-th element times the density of atoms in that element
         for (int ielem=0; ielem<numElems; ++ielem) {
-            //double zet  = theElements[ielem]->GetZ();
-            ComputeXSectionPerAtom(theElements[ielem], particleekin);
+            
+            // for every element of the material calculate the atomic cross-section and then multiply for the corresponding atomic density
+            xsec = ComputeXSectionPerAtom(theElements[ielem], particleekin);
+            sum  += theAtomicNumDensityVector[ielem] * xsec;
         }
-        return xsec;
+        return sum;
         
     }
     
-    static const double
-    d1= 2.7965e-1*geant::barn, d2=-1.8300e-1*geant::barn,
-    d3= 6.7527   *geant::barn, d4=-1.9798e+1*geant::barn,
-    e1= 1.9756e-5*geant::barn, e2=-1.0205e-2*geant::barn,
-    e3=-7.3913e-2*geant::barn, e4= 2.7079e-2*geant::barn,
-    f1=-3.9178e-7*geant::barn, f2= 6.8241e-5*geant::barn,
-    f3= 6.0480e-5*geant::barn, f4= 3.0274e-4*geant::barn;
-    
     //
     double KleinNishinaComptonModel::ComputeXSectionPerAtom(const Element *elem, double gammaenergy){
+        
+        static const double
+        d1= 2.7965e-1*geant::barn, d2=-1.8300e-1*geant::barn,
+        d3= 6.7527   *geant::barn, d4=-1.9798e+1*geant::barn,
+        e1= 1.9756e-5*geant::barn, e2=-1.0205e-2*geant::barn,
+        e3=-7.3913e-2*geant::barn, e4= 2.7079e-2*geant::barn,
+        f1=-3.9178e-7*geant::barn, f2= 6.8241e-5*geant::barn,
+        f3= 6.0480e-5*geant::barn, f4= 3.0274e-4*geant::barn;
         
         double xsec = 0.0;
         if (gammaenergy<GetLowEnergyUsageLimit() || gammaenergy>GetHighEnergyUsageLimit()) {
@@ -153,24 +158,29 @@ namespace geantphysics {
         if (z < 1.5) { T0 = 40.0 * geant::keV; }
         
         double X   = std::max(gammaenergy, T0) * geant::kInvElectronMassC2;
-        xsec = p1Z*std::log(1.+2.*X)/X + (p2Z + p3Z*X + p4Z*X*X)/(1. + a*X + b*X*X + c*X*X*X);
+        double XX  = X*X;
+        double XXX = XX*X;
+        xsec = p1Z*std::log(1.+2.*X)/X + (p2Z + p3Z*X + p4Z*XX)/(1. + a*X + b*XX + c*XXX);
         
         //  modification for low energy. (special case for Hydrogen)
         if (gammaenergy < T0) {
             static const double dT0 = geant::keV;
-            X = (T0+dT0) / geant::kElectronMassC2 ;
+            X = (T0+dT0) * geant::kInvElectronMassC2 ;
+            XX=X*X;
+            XXX=XX*X;
             double sigma = p1Z*std::log(1.+2*X)/X
-            + (p2Z + p3Z*X + p4Z*X*X)/(1. + a*X + b*X*X + c*X*X*X);
+            + (p2Z + p3Z*X + p4Z*XX)/(1. + a*X + b*XX + c*XXX);
             double   c1 = -T0*(sigma-xsec)/(xsec*dT0);
             double   c2 = 0.150;
             if (z > 1.5) { c2 = 0.375-0.0556*std::log(z); }
             double    y = std::log(gammaenergy/T0);
             xsec *= std::exp(-y*(c1+c2*y));
         }
+        if(xsec < 0.0) { xsec = 0.0; }
         return xsec;
     }
     
-    
+    //
     int KleinNishinaComptonModel::SampleSecondaries(LightTrack &track, std::vector<LightTrack> & /*sectracks*/,
                                                     Geant::GeantTaskData *td) {
         int    numSecondaries      = 0;
