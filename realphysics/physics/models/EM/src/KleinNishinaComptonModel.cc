@@ -188,14 +188,14 @@ namespace geantphysics {
         int    numSecondaries      = 0;
         double gammaekin0          = track.GetKinE();
         const MaterialCuts *matCut = MaterialCuts::GetMaterialCut(track.GetMaterialCutCoupleIndex());
-        const double *cuts         = matCut->GetProductionCutsInEnergy();
-        double gammacut            = cuts[0];
-        double electroncut         = cuts[1]; //THIS MUST BE CHECKED
+        //const double *cuts         = matCut->GetProductionCutsInEnergy();
+        //double gammacut            = cuts[0];
+        //double electroncut         = cuts[1]; //THIS MUST BE CHECKED
         
         // check if kinetic energy is below fLowEnergyUsageLimit and do nothing if yes;
         // check if kinetic energy is above fHighEnergyUsageLimit and do nothing if yes;
         // check if kinetic energy is below gamma production cut and do nothing if yes;
-        if (gammaekin0<GetLowEnergyUsageLimit() || gammaekin0>GetHighEnergyUsageLimit() || gammaekin0<=electroncut) {
+        if (gammaekin0<GetLowEnergyUsageLimit() || gammaekin0>GetHighEnergyUsageLimit()) {
             return numSecondaries;
         }
         // sample gamma energy
@@ -234,86 +234,64 @@ namespace geantphysics {
         // rotate new gamma direction to the lab frame:
         RotateToLabFrame(gamDirX1, gamDirY1, gamDirZ1, gamDirX0, gamDirY0, gamDirZ0);
         
-        double edep=0.;
-        
-        if(gammaekin1 > gammacut) {
-            
-            //Update primary track direction and energy
-            track.SetDirX(gamDirX1);
-            track.SetDirY(gamDirY1);
-            track.SetDirZ(gamDirZ1);
-            // update primary track kinetic energy
-            track.SetKinE(gammaekin1);
-            
-        }
-        else
-        {
-            track.SetTrackStatus(LTrackStatus::kKill);
-            track.SetKinE(0.0);
-            edep = gammaekin1;
-        }
+        //Update primary track direction and energy
+        track.SetDirX(gamDirX1);
+        track.SetDirY(gamDirY1);
+        track.SetDirZ(gamDirZ1);
+        // update primary track kinetic energy
+        track.SetKinE(gammaekin1);
         
         double eDirX ;
         double eDirY ;
         double eDirZ ;
         double eekin = gammaekin0 - gammaekin1;
         
+        //create the secondary particle is effectively created
+        eDirX = gammaekin0*gamDirX0 - gammaekin1*gamDirX1;
+        eDirY = gammaekin0*gamDirY0 - gammaekin1*gamDirY1;
+        eDirZ = gammaekin0*gamDirZ0 - gammaekin1*gamDirZ1;
+        double norm  = 1.0/std::sqrt(eDirX*eDirX + eDirY*eDirY + eDirZ*eDirZ);
         
-        //if the energy of the e- is greater than the cut, the secondary particle is effectively created
-        if(eekin > electroncut) {
-            
-            eDirX = gammaekin0*gamDirX0 - gammaekin1*gamDirX1;
-            eDirY = gammaekin0*gamDirY0 - gammaekin1*gamDirY1;
-            eDirZ = gammaekin0*gamDirZ0 - gammaekin1*gamDirZ1;
-            double norm  = 1.0/std::sqrt(eDirX*eDirX + eDirY*eDirY + eDirZ*eDirZ);
-            
-            // create the secondary particle i.e. the electron
-            numSecondaries = 1;
-            
-            // current capacity of secondary track container
-            int curSizeOfSecList = td->fPhysicsData->GetSizeListOfSecondaries();
-            // currently used secondary tracks in the container
-            int curNumUsedSecs   = td->fPhysicsData->GetNumUsedSecondaries();
-            if (curSizeOfSecList-curNumUsedSecs<numSecondaries) {
-                td->fPhysicsData->SetSizeListOfSecondaries(2*curSizeOfSecList);
-            }
-            int secIndx = curNumUsedSecs;
-            curNumUsedSecs +=numSecondaries;
-            td->fPhysicsData->SetNumUsedSecondaries(curNumUsedSecs);
-            
-            std::vector<LightTrack>& sectracks = td->fPhysicsData->GetListOfSecondaries();
-            
-            // this is known since it is a secondary track
-            //sectracks[secIndx].SetTrackStatus(LTrackStatus::kNew); // to kew
-            sectracks[secIndx].SetDirX(eDirX*norm); //THIS MUST BE CHECKED
-            sectracks[secIndx].SetDirY(eDirY*norm);
-            sectracks[secIndx].SetDirZ(eDirZ*norm);
-            
-            sectracks[secIndx].SetKinE(eekin);
-            sectracks[secIndx].SetGVcode(fSecondaryInternalCode);     // electron GV code
-            sectracks[secIndx].SetMass(geant::kElectronMassC2);
-            sectracks[secIndx].SetTrackIndex(track.GetTrackIndex());  // parent GeantTrack index
-            
-            // these are known from the parent GeantTrack
-            //  sectracks[secIndx].SetMaterialCutCoupleIndex(track.GetMaterialCutCoupleIndex());
-            //  sectracks[secIndx].SetNumOfInteractionLegthLeft(-1.); // i.e. need to sample in the step limit
-            //  sectracks[secIndx].SetInvTotalMFP(0.);
-            //  sectracks[secIndx].SetStepLength(0.);
-            //  sectracks[secIndx].SetEnergyDeposit(0.);
-            //  sectracks[secIndx].SetTime(??);
-            //  sectracks[secIndx].SetWeight(??);
-            //  sectracks[secIndx].SetProcessIndex(-1); // ???
-            //  sectracks[secIndx].SetTargetZ(-1);
-            //  sectracks[secIndx].SetTargetN(-1);
-            //
-    
-        } else {
-            edep += eekin;
-        }
+        // create the secondary particle i.e. the electron
+        numSecondaries = 1;
         
-        if(edep > 0.0) {
-            track.SetEnergyDeposit(edep);
+        // current capacity of secondary track container
+        int curSizeOfSecList = td->fPhysicsData->GetSizeListOfSecondaries();
+        // currently used secondary tracks in the container
+        int curNumUsedSecs   = td->fPhysicsData->GetNumUsedSecondaries();
+        if (curSizeOfSecList-curNumUsedSecs<numSecondaries) {
+            td->fPhysicsData->SetSizeListOfSecondaries(2*curSizeOfSecList);
         }
+        int secIndx = curNumUsedSecs;
+        curNumUsedSecs +=numSecondaries;
+        td->fPhysicsData->SetNumUsedSecondaries(curNumUsedSecs);
+        
+        std::vector<LightTrack>& sectracks = td->fPhysicsData->GetListOfSecondaries();
+        
+        // this is known since it is a secondary track
+        //sectracks[secIndx].SetTrackStatus(LTrackStatus::kNew); // to kew
+        sectracks[secIndx].SetDirX(eDirX*norm); //THIS MUST BE CHECKED
+        sectracks[secIndx].SetDirY(eDirY*norm);
+        sectracks[secIndx].SetDirZ(eDirZ*norm);
+        
+        sectracks[secIndx].SetKinE(eekin);
+        sectracks[secIndx].SetGVcode(fSecondaryInternalCode);     // electron GV code
+        sectracks[secIndx].SetMass(geant::kElectronMassC2);
+        sectracks[secIndx].SetTrackIndex(track.GetTrackIndex());  // parent GeantTrack index
+        
+        // these are known from the parent GeantTrack
+        //  sectracks[secIndx].SetMaterialCutCoupleIndex(track.GetMaterialCutCoupleIndex());
+        //  sectracks[secIndx].SetNumOfInteractionLegthLeft(-1.); // i.e. need to sample in the step limit
+        //  sectracks[secIndx].SetInvTotalMFP(0.);
+        //  sectracks[secIndx].SetStepLength(0.);
+        //  sectracks[secIndx].SetEnergyDeposit(0.);
+        //  sectracks[secIndx].SetTime(??);
+        //  sectracks[secIndx].SetWeight(??);
+        //  sectracks[secIndx].SetProcessIndex(-1); // ???
+        //  sectracks[secIndx].SetTargetZ(-1);
+        //  sectracks[secIndx].SetTargetN(-1);
+        //
+        
         // return with number of secondaries i.e. 1 electron
         return numSecondaries;
     }
