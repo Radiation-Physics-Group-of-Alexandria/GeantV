@@ -2,6 +2,7 @@
 #define TTabPhysMgr_H
 
 #include "Geant/Config.h"
+#include "GeantTrack.h"
 
 #define MAXNELEMENTS 20 // max number of elements in one material(TMXsec)
 
@@ -99,6 +100,57 @@ public:
   const char *GetVersion() const;
 
   TPDecay* GetDecayTable() {return fDecay;}
+
+//=== N E W   I N T E R F A C E S ===//
+  // Rotation+boost utility
+  VECCORE_ATT_HOST_DEVICE
+  void TransformLF(int indref, TrackVec_t &tracks, int nproducts, int indprod,
+                   TrackVec_t &output); // not. imp. but done
+
+  VECCORE_ATT_HOST_DEVICE
+  void ApplyMsc(Material_t *mat, TrackVec_t &tracks, GeantTaskData *td);
+
+  VECCORE_ATT_HOST_DEVICE
+  int Eloss(GeantTrack *track, TrackVec_t &output, GeantTaskData *td);
+  VECCORE_ATT_HOST_DEVICE
+  int Eloss(TrackVec_t &tracks, TrackVec_t &output, GeantTaskData *td);
+
+  VECCORE_ATT_HOST_DEVICE
+  void ProposeStep(GeantTrack *track, GeantTaskData *td);
+  VECCORE_ATT_HOST_DEVICE
+  void ProposeStep(TrackVec_t &tracks, GeantTaskData *td);
+
+  VECCORE_ATT_HOST_DEVICE
+  int SampleDecay(TrackVec_t &tracks, TrackVec_t &output); // not. imp.
+  // # sampling target, type of interaction, final states;
+  // # updating primary track properties and inserting secondary tracks;
+  // int SampleInt(int imat, TrackVec_t &tracks, GeantTaskData *td);
+ // VECCORE_ATT_HOST_DEVICE
+ // int SampleInt(int imat, TrackVec_t &tracks, GeantTaskData *td);
+
+  // # smapling: target atom and type of the interaction for each primary tracks
+  VECCORE_ATT_HOST_DEVICE
+  void SampleTypeOfInteractions(GeantTrack *track, GeantTaskData *td);
+  VECCORE_ATT_HOST_DEVICE
+  void SampleTypeOfInteractions(TrackVec_t &tracks, GeantTaskData *td);
+
+  // # sampling final states for each primary tracks based on target atom and
+  //    interaction type sampled in SampleTypeOfInteractionsInt;
+  // # upadting primary track properties and inserting secondary tracks;
+  // # return: number of inserted secondary tracks
+  VECCORE_ATT_HOST_DEVICE
+  int SampleFinalStates(GeantTrack *track, TrackVec_t &output, GeantTaskData *td);
+  VECCORE_ATT_HOST_DEVICE
+  int SampleFinalStates(TrackVec_t &tracks, TrackVec_t &output, GeantTaskData *td);
+
+  VECCORE_ATT_HOST_DEVICE
+  void GetRestFinStates(int partindex, TMXsec *mxs, double energyLimit, GeantTrack *track,
+                        int &nTotSecPart, TrackVec_t &output, GeantTaskData *td);
+  VECCORE_ATT_HOST_DEVICE
+  void SampleDecayInFlight(int partindex, TMXsec *mxs, double energyLimit, GeantTrack *track,
+                           int &nTotSecPart, TrackVec_t &output, GeantTaskData *td);
+
+//===================================//
 
 private:
   TTabPhysMgr(const TTabPhysMgr &);            // no imp.

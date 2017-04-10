@@ -1,6 +1,18 @@
 #ifndef GEANT_TYPEDEFS_H
 #define GEANT_TYPEDEFS_H
 
+#include "Geant/Config.h"
+
+#ifdef VECCORE_CUDA
+#include "base/Vector.h"
+  template <class T>
+  using vector_t = vecgeom::Vector<T>;
+#else
+#include <vector>
+  template <class T>
+  using vector_t = std::vector<T>;
+#endif
+
 #ifdef USE_VECGEOM_NAVIGATOR
 #include "navigation/NavigationState.h"
 typedef VECGEOM_NAMESPACE::NavigationState VolumePath_t;

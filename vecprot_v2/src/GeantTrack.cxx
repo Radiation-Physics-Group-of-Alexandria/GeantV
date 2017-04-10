@@ -12,7 +12,7 @@ inline namespace GEANT_IMPL_NAMESPACE {
 VECCORE_ATT_HOST_DEVICE
 GeantTrack::GeantTrack()
     : fEvent(-1), fEvslot(-1), fParticle(-1), fMother(0), fPDG(0), fGVcode(0), fEindex(0), fCharge(0), fProcess(-1),
-      fNsteps(0), fMaxDepth(0), fSpecies(kHadron), fStatus(kAlive), fMass(0), fXpos(0), fYpos(0), fZpos(0), fXdir(0), fYdir(0),
+      fNsteps(0), fMaxDepth(0), fStage(0), fGeneration(0), fSpecies(kHadron), fStatus(kAlive), fMass(0), fXpos(0), fYpos(0), fZpos(0), fXdir(0), fYdir(0),
       fZdir(0), fP(0), fE(0), fTime(0), fEdep(0), fPstep(1.E20), fStep(0), fSnext(0), fSafety(0), fNintLen(0), fIntLen(0), 
       fBoundary(false), fPending(false), fOwnPath(true), fPath(0), fNextpath(0) {
   // Dummy constructor
@@ -41,7 +41,7 @@ void printrace(void) {
 VECCORE_ATT_HOST_DEVICE
 GeantTrack::GeantTrack(int ipdg, int maxdepth)
     : fEvent(-1), fEvslot(-1), fParticle(-1), fMother(0), fPDG(ipdg), fGVcode(0), fEindex(0), fCharge(0), fProcess(-1),
-      fNsteps(0), fMaxDepth(maxdepth), fSpecies(kHadron), fStatus(kAlive), fMass(0), fXpos(0), fYpos(0), fZpos(0), fXdir(0), fYdir(0),
+      fNsteps(0), fMaxDepth(maxdepth), fStage(0), fGeneration(0), fSpecies(kHadron), fStatus(kAlive), fMass(0), fXpos(0), fYpos(0), fZpos(0), fXdir(0), fYdir(0),
       fZdir(0), fP(0), fE(0), fTime(0), fEdep(0), fPstep(1.E20), fStep(0), fSnext(0), fSafety(0), fNintLen(0), fIntLen(0),
       fBoundary(false), fPending(false), fOwnPath(true), fPath(0), fNextpath(0) {
   // Constructor
@@ -53,7 +53,7 @@ GeantTrack::GeantTrack(int ipdg, int maxdepth)
 VECCORE_ATT_HOST_DEVICE
 GeantTrack::GeantTrack(void *addr, int maxdepth)
     : fEvent(-1), fEvslot(-1), fParticle(-1), fMother(0), fPDG(0), fGVcode(0), fEindex(0), fCharge(0), fProcess(-1),
-      fNsteps(0), fMaxDepth(maxdepth), fSpecies(kHadron), fStatus(kAlive), fMass(0), fXpos(0), fYpos(0), fZpos(0), fXdir(0), fYdir(0),
+      fNsteps(0), fMaxDepth(maxdepth), fStage(0), fGeneration(0), fSpecies(kHadron), fStatus(kAlive), fMass(0), fXpos(0), fYpos(0), fZpos(0), fXdir(0), fYdir(0),
       fZdir(0), fP(0), fE(0), fTime(0), fEdep(0), fPstep(1.E20), fStep(0), fSnext(0), fSafety(0), fNintLen(0), fIntLen(0),
       fBoundary(false), fPending(false), fOwnPath(true), fPath(nullptr), fNextpath(nullptr) {
   // In place private constructor
@@ -68,8 +68,8 @@ VECCORE_ATT_HOST_DEVICE
 GeantTrack::GeantTrack(const GeantTrack &other)
     : fEvent(other.fEvent), fEvslot(other.fEvslot), fParticle(other.fParticle), fMother(other.fMother), fPDG(other.fPDG),
       fGVcode(other.fGVcode), fEindex(other.fEindex), fCharge(other.fCharge), fProcess(other.fProcess),
-      fNsteps(other.fNsteps), fMaxDepth(other.fMaxDepth), fSpecies(other.fSpecies), fStatus(other.fStatus),
-      fMass(other.fMass), fXpos(other.fXpos), fYpos(other.fYpos), fZpos(other.fZpos), fXdir(other.fXdir),
+      fNsteps(other.fNsteps), fMaxDepth(other.fMaxDepth), fStage(other.fStage), fGeneration(other.fGeneration), fSpecies(other.fSpecies),
+      fStatus(other.fStatus), fMass(other.fMass), fXpos(other.fXpos), fYpos(other.fYpos), fZpos(other.fZpos), fXdir(other.fXdir),
       fYdir(other.fYdir), fZdir(other.fZdir), fP(other.fP), fE(other.fE), fTime(other.fTime), fEdep(other.fEdep),
       fPstep(other.fPstep), fStep(other.fStep), fSnext(other.fSnext), fSafety(other.fSafety), fNintLen(other.fNintLen), fIntLen(other.fIntLen),
       fBoundary(other.fBoundary), fPending(other.fPending), fOwnPath(true), fPath(0), fNextpath(0) {
@@ -117,8 +117,8 @@ GeantTrack &GeantTrack::operator=(const GeantTrack &other) {
     fBoundary = other.fBoundary;
     fPending = other.fPending;
     fMaxDepth = other.fMaxDepth;
-    fPath = VolumePath_t::MakeInstance(fMaxDepth);
-    fNextpath = VolumePath_t::MakeInstance(fMaxDepth);
+    fStage = other.fStage;
+    fGeneration = other.fGeneration;
     *fPath = *other.fPath;
     *fNextpath = *other.fNextpath;
   }
@@ -171,6 +171,8 @@ void GeantTrack::Clear(const char *) {
   fBoundary = false;
   fPending = false;
   fMaxDepth = 0;
+  fStage = 0;
+  fGeneration = 0;
 #ifdef USE_VECGEOM_NAVIGATOR
   fPath->Clear();
   fNextpath->Clear();
@@ -231,7 +233,7 @@ void GeantTrack::Print(const char *msg) const {
   const char *status[8] = {"alive", "killed", "inflight", "boundary", "exitSetup", "physics", "postponed", "new"};
 #ifdef USE_VECGEOM_NAVIGATOR
   Geant::Print(msg,
-      ": evt=%d slt=%d part=%d mth=%d pdg=%d gvc=%d eind=%d bind=%d chg=%d proc=%d nstp=%d spc=%d status=%s mass=%g "
+      "evt=%d slt=%d part=%d mth=%d pdg=%d gvc=%d eind=%d bind=%d chg=%d proc=%d nstp=%d spc=%d status=%s mass=%g "
       "xpos=%g ypos=%g zpos=%g xdir=%g ydir=%g zdir=%g mom=%g ene=%g time=%g pstp=%g stp=%g snxt=%g saf=%g nil=%g ile=%g bdr=%d\n",
       fEvent, fEvslot, fParticle, fMother, fPDG, fGVcode, fEindex, fBindex,
       fCharge, fProcess, fNsteps, (int)fSpecies, status[int(fStatus)],
@@ -248,7 +250,7 @@ void GeantTrack::Print(const char *msg) const {
   TString nextpath;
   fNextpath->GetPath(nextpath);
 
-  Geant::Print(msg, ": evt=%d slt=%d part=%d mth=%d pdg=%d gvc=%d eind=%d bind=%d chg=%d proc=%d nstp=%d "
+  Geant::Print(msg, "evt=%d slt=%d part=%d mth=%d pdg=%d gvc=%d eind=%d bind=%d chg=%d proc=%d nstp=%d "
          "spc=%d status=%s mass=%g xpos=%g ypos=%g zpos=%g xdir=%g ydir=%g zdir=%g mom=%g ene=%g "
          "time=%g edep=%g pstp=%g stp=%g snxt=%g saf=%g nil=%g ile=%g bdr=%d\n pth=%s npth=%s\n",
          fEvent, fEvslot, fParticle, fMother, fPDG, fGVcode, fEindex, fBindex,
@@ -257,6 +259,12 @@ void GeantTrack::Print(const char *msg) const {
          fTime, fEdep, fPstep, fStep, fSnext, fSafety, fNintLen, fIntLen, fBoundary, path.Data(),
          nextpath.Data());
 #endif
+}
+
+//______________________________________________________________________________
+void GeantTrack::PrintTracks(TrackVec_t &tracks)
+{
+  for (auto track : tracks) track->Print("xxx");
 }
 
 //______________________________________________________________________________

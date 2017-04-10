@@ -27,6 +27,10 @@
 #include "GeantEvent.h"
 #include "GeantVApplication.h"
 #include "GeantVTaskMgr.h"
+#include "StackLikeBuffer.h"
+#include "SimulationStage.h"
+#include "TrackStat.h"
+#include "TrackManager.h"
 #if USE_VECGEOM_NAVIGATOR
 #include "base/TLS.h"
 #include "management/GeoManager.h"
@@ -94,7 +98,6 @@ int WorkloadManager::ThreadId() {
 #if USE_VECGEOM_NAVIGATOR
   return BaseTLS::ThreadId();
 #else
-  gGeoManager->SetMultiThread();
   return TGeoManager::ThreadId();
 #endif
 }
@@ -173,7 +176,10 @@ bool WorkloadManager::StartTasks(GeantVTaskMgr *taskmgr) {
   // Start CPU transport threads (static mode)
   if (!taskmgr) {
     for (; ith < fNthreads; ith++) {
-      fListThreads.emplace_back(WorkloadManager::TransportTracks, prop);
+      if ( fPropagator->fConfig->fUseV3 )
+        fListThreads.emplace_back(WorkloadManager::TransportTracksV3, prop);
+      else
+        fListThreads.emplace_back(WorkloadManager::TransportTracks, prop);
     }
   }
 
@@ -269,24 +275,20 @@ static inline void MaybeCleanupBaskets(GeantTaskData *td, GeantBasket *basket) {
 
 //______________________________________________________________________________
 /** @brief Call Feeder (if needed) and check exit condition. */
-WorkloadManager::FeederResult WorkloadManager::CheckFeederAndExit(GeantBasketMgr &/*prioritizer*/,
-                                                  GeantPropagator &propagator,
-                                                  GeantTaskData &/*td*/) {
+WorkloadManager::FeederResult WorkloadManager::CheckFeederAndExit() {
 
 //  if (!prioritizer.HasTracks() && (propagator.fRunMgr->GetNpriority() || propagator.GetNworking() == 1)) {
 //    bool didFeeder = propagator.fRunMgr->Feeder(&td) > 0;
 
   // Check exit condition
-  if (propagator.fRunMgr->TransportCompleted()) {
-    int nworkers = propagator.fNthreads;
+  if (fPropagator->fRunMgr->TransportCompleted()) {
+    int nworkers = fPropagator->fNthreads;
     for (int i = 0; i < nworkers; i++)
       FeederQueue()->push_force(0);
     TransportedQueue()->push_force(0);
     Stop();
     return FeederResult::kStopProcessing;
   }
-//    if (didFeeder) return FeederResult::kFeederWork;
-//  }
   return FeederResult::kNone;
 }
 
@@ -314,6 +316,187 @@ int WorkloadManager::ShareBaskets(WorkloadManager *other)
   }
   ReleaseShareLock();
   return nshared;
+}
+//______________________________________________________________________________
+void WorkloadManager::TransportTracksV3(GeantPropagator *prop) {
+
+//  int nstacked = 0;
+//  int nprioritized = 0;
+//  int ninjected = 0;
+  int tid = prop->fWMgr->ThreadId();
+  Geant::Print("","=== Worker thread %d created for propagator %p ===", tid, prop);
+  GeantPropagator *propagator = prop;
+  GeantRunManager *runmgr = prop->fRunMgr;
+  Geant::GeantTaskData *td = runmgr->GetTaskData(tid);
+  td->fTid = tid;
+  td->fPropagator = prop;
+  td->fStackBuffer = new StackLikeBuffer(propagator->fConfig->fNstackLanes, td);
+  td->fStackBuffer->SetStageBuffer(td->fStageBuffers[0]);
+  td->fBlock = prop->fTrackMgr->GetNewBlock();
+
+//  int nworkers = propagator->fNthreads;
+//  WorkloadManager *wm = propagator->fWMgr;
+  GeantEventServer *evserv = runmgr->GetEventServer();
+//  bool firstTime = true;
+//  bool multiPropagator = runmgr->GetNpropagators() > 1;
+  // IO handling
+  #ifdef USE_ROOT
+  bool concurrentWrite = td->fPropagator->fConfig->fConcurrentWrite && td->fPropagator->fConfig->fFillTree;
+//  int treeSizeWriteThreshold = td->fPropagator->fConfig->fTreeSizeWriteThreshold;
+
+  GeantFactoryStore* factoryStore = GeantFactoryStore::Instance();
+  GeantFactory<MyHit> *myhitFactory = factoryStore->GetFactory<MyHit>(16,runmgr->GetNthreadsTotal());
+
+  TThreadMergingFile* file=0;
+  TTree *tree=0;
+  GeantBlock<MyHit>* data=0;
+
+  if (concurrentWrite)
+    {
+      file = new TThreadMergingFile("hits_output.root", propagator->fWMgr->IOQueue(), "RECREATE");
+      tree = new TTree("Tree","Simulation output");
+
+      tree->Branch("hitblockoutput", "GeantBlock<MyHit>", &data);
+
+      // set factory to use thread-local queues
+      myhitFactory->queue_per_thread = true;
+    }
+  #endif
+
+  // Activate events in the server
+  evserv->ActivateEvents();
+
+  bool flush = false;
+#ifndef USE_VECGEOM_NAVIGATOR
+  // If we use ROOT make sure we have a navigator here
+  TGeoNavigator *nav = gGeoManager->GetCurrentNavigator();
+  if (!nav)
+    nav = gGeoManager->AddNavigator();
+#endif
+
+/*** STEPPING LOOP ***/
+  while (1) {
+    // Check if simulation has finished
+    auto feedres = PreloadTracksForStep(td);
+    if (feedres == FeederResult::kStopProcessing) {
+       break;
+    }
+    flush = feedres == FeederResult::kNone;
+    SteppingLoop(td, flush);
+  }
+  // WP
+  #ifdef USE_ROOT
+  if(concurrentWrite)
+    {
+      file->Write();
+    }
+  #endif
+  prop->fWMgr->DoneQueue()->push_force(nullptr);
+  // Final reduction of counters
+  propagator->fNsteps += td->fNsteps;
+  propagator->fNsnext += td->fNsnext;
+  propagator->fNphys += td->fNphys;
+  propagator->fNmag += td->fNmag;
+  propagator->fNsmall += td->fNsmall;
+  propagator->fNcross += td->fNcross;
+
+  // If transport is completed, make send the signal to the run manager
+  if (runmgr->TransportCompleted())
+    runmgr->StopTransport();
+  Geant::Print("","=== Thread %d: exiting ===", tid);
+
+  #ifdef USE_ROOT
+  if (prop->fWMgr->IsStopped()) prop->fWMgr->MergingServer()->Finish();
+
+  if (concurrentWrite) {
+    delete file;
+  }
+  #endif
+}
+
+//______________________________________________________________________________
+WorkloadManager::FeederResult WorkloadManager::PreloadTracksForStep(GeantTaskData *td) {
+ // The method will apply a policy to inject tracks into the first stepping
+ // stage buffer. The policy has to be exhaustively described...
+  auto feedres = td->fPropagator->fWMgr->CheckFeederAndExit();
+  if (feedres == FeederResult::kStopProcessing)
+     return feedres;
+
+  // Take tracks from the event server  
+  int ninjected = 0;
+  GeantEventServer *evserv = td->fPropagator->fRunMgr->GetEventServer();
+  if (evserv->HasTracks()) {
+    // In the initial phase we distribute a fair share of baskets to all propagators
+    if (!evserv->IsInitialPhase() ||
+        td->fPropagator->fNbfeed < td->fPropagator->fRunMgr->GetInitialShare())
+      ninjected = evserv->FillStackBuffer(td->fStackBuffer, td->fPropagator->fConfig->fNperBasket);
+  }
+  td->fStat->AddTracks(ninjected);
+  if (ninjected) return FeederResult::kFeederWork;
+  return FeederResult::kNone;
+}
+
+//______________________________________________________________________________
+int WorkloadManager::FlushOneLane(GeantTaskData *td)
+{
+// Flush a single track lane from the stack-like buffer into the first stage.
+  // Check the stack buffer and flush priority events first
+  int ninjected = 0;
+  int maxspill = td->fPropagator->fConfig->fNmaxBuffSpill;
+  if ( td->fStackBuffer->IsPrioritized())
+    ninjected = td->fStackBuffer->FlushPriorityLane();
+  if (ninjected) return ninjected;
+
+  // Inject the last lane in the buffer
+  int nlane = td->fStackBuffer->FlushLastLane();
+  ninjected += nlane;
+  while (nlane && (ninjected < maxspill)) {
+    nlane = td->fStackBuffer->FlushLastLane();
+    ninjected += nlane;
+  }
+  return ( ninjected );
+}  
+
+//______________________________________________________________________________
+int WorkloadManager::SteppingLoop(GeantTaskData *td, bool flush)
+{
+// The main stepping loop over simulation stages.
+  static int count = 0;
+  constexpr int nstages = int(ESimulationStage::kSteppingActionsStage) + 1;
+  bool flushed = !flush;
+  int nprocessed = 0;
+  int ninput = 0;
+  int istage = 0;
+  while ( FlushOneLane(td) || !flushed ) {
+    while (1) {
+      count++;
+      int nstart = td->fStageBuffers[istage]->size();
+/*
+      for (auto track : td->fStageBuffers[istage]->Tracks()) {
+        if (track->fEvent == 0 && track->fParticle == 0) {
+          td->InspectStages(istage);
+          track->Print("");
+          break;
+        }
+      }
+*/
+      ninput += nstart;
+      if ( nstart || !flushed ) {
+        if (flush) 
+          nprocessed += td->fPropagator->fStages[istage]->FlushAndProcess(td);
+        else
+          nprocessed += td->fPropagator->fStages[istage]->Process(td);
+      }
+      istage = (istage + 1) % nstages;
+      if (istage == 0) {
+        if (flush) flushed = true;
+        if (ninput == 0) break;
+        ninput = 0;
+      }
+//      assert(td->fStat->CountBalance() == 0);
+    }
+  }
+  return nprocessed; // useless instruction intended for dummy compilers
 }
 
 //______________________________________________________________________________
@@ -344,6 +527,8 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
   Geant::GeantTaskData *td = runmgr->GetTaskData(tid);
   td->fTid = tid;
   td->fPropagator = prop;
+  td->fStackBuffer = new StackLikeBuffer(propagator->fConfig->fNstackLanes, td);
+  td->fStackBuffer->SetStageBuffer(td->fStageBuffers[0]);
   int nworkers = propagator->fNthreads;
   WorkloadManager *wm = propagator->fWMgr;
   Geant::priority_queue<GeantBasket *> *feederQ = wm->FeederQueue();
@@ -412,7 +597,7 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
   // TGeoBranchArray *crt[500], *nxt[500];
   while (1) {
     // Call the feeder if in priority mode
-    auto feedres = wm->CheckFeederAndExit(*prioritizer, *propagator, *td);
+    auto feedres = wm->CheckFeederAndExit();
     if (feedres == FeederResult::kStopProcessing) {
        break;
     }
@@ -766,7 +951,7 @@ void *WorkloadManager::TransportTracksCoprocessor(GeantPropagator *prop,TaskBrok
   while (1) {
 
     // Call the feeder if in priority mode
-    auto feedres = wm->CheckFeederAndExit(*prioritizer, *propagator, *td);
+    auto feedres = wm->CheckFeederAndExit();
     if (feedres == FeederResult::kStopProcessing) {
        break;
     }

@@ -36,6 +36,24 @@ set(sources
    src/GeantTrackVec.cxx
    src/GeantTrackGeo.cxx
    src/GeantBasket.cxx
+   src/Basket.cxx
+   src/Handler.cxx
+   src/PreStepHandler.cxx
+   src/XSecSamplingHandler.cxx
+   src/GeomQueryHandler.cxx
+   src/FieldPropagationHandler.cxx
+   src/LinearPropagationHandler.cxx
+   src/ContinuousProcHandler.cxx
+   src/DiscreteProcHandler.cxx
+   src/SteppingActionsHandler.cxx
+   src/SimulationStage.cxx
+   src/PreStepStage.cxx
+   src/XSecSamplingStage.cxx
+   src/GeomQueryStage.cxx
+   src/PropagationStage.cxx
+   src/ContinuousProcStage.cxx
+   src/DiscreteProcStage.cxx
+   src/SteppingActionsStage.cxx
    src/sync_objects.cxx
    src/GeantOutput.cxx
    src/GeantPropagator.cxx
@@ -56,6 +74,7 @@ set(sources
    src/MCTruthMgr.cxx
    src/GeantRunManager.cxx
    src/GeantEventServer.cxx
+   src/TrackStat.cxx
 )
 
 set(headers
@@ -64,6 +83,25 @@ set(headers
    inc/GeantTaskData.h
    inc/PhysicsInterface.h
    inc/PhysicsProcessOld.h
+   inc/Basket.h
+   inc/Handler.h
+   inc/StackLikeBuffer.h
+   inc/PreStepHandler.h
+   inc/XSecSamplingHandler.h
+   inc/GeomQueryHandler.h
+   inc/FieldPropagationHandler.h
+   inc/LinearPropagationHandler.h
+   inc/ContinuousProcHandler.h
+   inc/DiscreteProcHandler.h
+   inc/SteppingActionsHandler.h
+   inc/SimulationStage.h
+   inc/PreStepStage.h
+   inc/XSecSamplingStage.h
+   inc/GeomQueryStage.h
+   inc/PropagationStage.h
+   inc/ContinuousProcStage.h
+   inc/DiscreteProcStage.h
+   inc/SteppingActionsStage.h
    inc/GeantBasket.h
    inc/GeantPropagator.h
    inc/GeantTrack.h
@@ -86,6 +124,7 @@ set(headers
    inc/GeantRunManager.h
    inc/GeantEventServer.h
    inc/GeantConfig.h
+   inc/TrackStat.h
 )
 
 if(USE_ROOT AND (NOT USE_VECGEOM_NAVIGATOR))
@@ -108,7 +147,11 @@ if(USE_VECGEOM_NAVIGATOR)
 endif()
 
 if (USE_ROOT)
-  ROOT_GENERATE_DICTIONARY(G__Geant ${headers} MODULE Geant_v LINKDEF inc/LinkDef.h OPTIONS "-DVC_COMMON_SIMDIZE_H_=1")
+  if (USE_UMESIMD)
+     ROOT_GENERATE_DICTIONARY(G__Geant ${headers} MODULE Geant_v LINKDEF inc/LinkDef.h OPTIONS "-DVECGEOM_UMESIMD=1")
+   else() 
+     ROOT_GENERATE_DICTIONARY(G__Geant ${headers} MODULE Geant_v LINKDEF inc/LinkDef.h OPTIONS "-DVC_COMMON_SIMDIZE_H_=1")
+   endif()
 endif()
 
 #----------------------------------------------------------------------------

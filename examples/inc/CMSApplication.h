@@ -49,10 +49,10 @@ class CMSApplication : public Geant::GeantVApplication {
   static const int kNHCALModules = 112;
   using GeantRunManager = Geant::GeantRunManager;
   using GeantEvent = Geant::GeantEvent;
+  using GeantTrack_v = Geant::GeantTrack_v;
+  using GeantTaskData = Geant::GeantTaskData;
 
 public:
-  template <class T>
-  using vector_t = vecgeom::Vector<T>;
 
 enum EScoreType {
   kNoScore = 0,

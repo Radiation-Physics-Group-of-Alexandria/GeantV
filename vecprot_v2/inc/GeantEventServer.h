@@ -15,6 +15,8 @@ inline namespace GEANT_IMPL_NAMESPACE {
 class PrimaryGenerator;
 class GeantTaskData;
 class GeantEvent;
+class Basket;
+class StackLikeBuffer;
 
 //------------------------------------------------------------------------------
 //
@@ -91,6 +93,10 @@ public:
   bool IsInitialPhase() const { return fInitialPhase; }
 
   int FillBasket(GeantTrack_v &tracks, int ntracks);
+
+  int FillBasket(Basket *basket, int ntracks);
+
+  int FillStackBuffer(StackLikeBuffer *buffer, int ntracks);
   
   int AddEvent(GeantTaskData *td = nullptr);
   

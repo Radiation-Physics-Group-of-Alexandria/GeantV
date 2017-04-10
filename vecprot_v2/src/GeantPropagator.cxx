@@ -41,6 +41,8 @@
 #endif
 
 #include "Geant/Error.h"
+#include "LocalityManager.h"
+#include "TrackManager.h"
 #include "GeantRunManager.h"
 #include "GeantTrackVec.h"
 #include "PhysicsInterface.h"
@@ -56,6 +58,14 @@
 #include "GeantScheduler.h"
 #include "PrimaryGenerator.h"
 #include "MCTruthMgr.h"
+
+#include "PreStepStage.h"
+#include "XSecSamplingStage.h"
+#include "GeomQueryStage.h"
+#include "PropagationStage.h"
+#include "ContinuousProcStage.h"
+#include "DiscreteProcStage.h"
+#include "SteppingActionsStage.h"
 
 #ifdef USE_CALLGRIND_CONTROL
 #include <valgrind/callgrind.h>
@@ -158,6 +168,41 @@ void GeantPropagator::StopTrack(const GeantTrack_v &tracks, int itr) {
 }
 
 //______________________________________________________________________________
+void GeantPropagator::StopTrack(GeantTrack *track) {
+  // Mark track as stopped for tracking.
+  //   Printf("Stopping track %d", track->particle);
+
+#ifdef VECCORE_CUDA
+  assert(0 && "StopTrack not implemented yet for CUDA host/device code.");
+#else  // stoping track in MCTruthManager
+  // stoping track in MCTruthManager
+  if(fTruthMgr)
+    {
+      if(track->fStatus == kKilled) fTruthMgr->EndTrack(track);
+    }
+  
+  if (fRunMgr->GetEvent(track->fEvent)->StopTrack(fRunMgr)) {
+    std::atomic_int &priority_events = fRunMgr->GetPriorityEvents();
+    priority_events++;
+  }
+#endif
+}
+
+//______________________________________________________________________________
+/*
+GeantTrack &GeantPropagator::GetTempTrack(int tid) {
+  // Returns a temporary track support for the physics processes, unique per
+  // thread which can be used to add tracks produced by physics processes.
+  if (tid < 0)
+    tid = fWMgr->ThreadId();
+  if (tid > fNthreads)
+    Geant::Fatal("GeantPropagator::GetTempTrack", "Thread id %d is too large (max %d)", tid, fNthreads);
+  GeantTrack &track = fRunMgr->GetTaskData(tid)->fTrack;
+  track.Clear();
+  return track;
+}
+*/
+//______________________________________________________________________________
 bool GeantPropagator::IsIdle() const {
   // Check if work queue is empty and all used threads are waiting
   return (!fCompleted && GetNworking()==0 && GetNpending()==0);
@@ -166,11 +211,40 @@ bool GeantPropagator::IsIdle() const {
 //______________________________________________________________________________
 void GeantPropagator::Initialize() {
   // Initialize the propagator.
+#ifndef VECCORE_CUDA
+  LocalityManager *mgr = LocalityManager::Instance();
+  if (!mgr->IsInitialized()) {
+    mgr->SetNblocks(100);
+    mgr->SetBlockSize(1000);
+    mgr->SetMaxDepth(fConfig->fMaxDepth);
+    mgr->Init();
+  }
+  int numa = (fNuma >= 0) ? fNuma : 0;
+  fTrackMgr = &mgr->GetTrackManager(numa);
+#endif
+
   // Add some empty baskets in the queue
 #ifdef VECCORE_CUDA
   // assert(0 && "Initialize not implemented yet for CUDA host/device code.");
 #else
-  fWMgr->CreateBaskets(this);
+  if (!fConfig->fUseV3) 
+    fWMgr->CreateBaskets(this);
+#endif
+  CreateSimulationStages();
+}
+
+//______________________________________________________________________________
+void GeantPropagator::SetNuma(int numa)
+{
+// Set locality for the propagator
+#ifndef VECCORE_CUDA
+  LocalityManager *mgr = LocalityManager::Instance();
+  fNuma  = numa;
+  if (!mgr->IsInitialized()) return;
+  if (numa >= 0)
+    fTrackMgr = &mgr->GetTrackManager(numa);
+  else
+    fTrackMgr = &mgr->GetTrackManager(0);
 #endif
 }
 
@@ -216,7 +290,7 @@ void GeantPropagator::ProposeStep(int ntracks, GeantTrack_v &tracks, GeantTaskDa
 #ifdef USE_REAL_PHYSICS
   fPhysicsInterface->ComputeIntLen(mat, ntracks, tracks, 0, td);
 #else
-  fProcess->ComputeIntLen(mat, ntracks, tracks, 0, td);
+  fProcess->ComputeIntLen(mat, ntracks, tracks, td);
 #endif
 }
 
@@ -345,6 +419,82 @@ int GeantPropagator::ShareWork(GeantPropagator &other)
   return ( fWMgr->ShareBaskets(other.fWMgr) );
 #endif
 }
+
+//______________________________________________________________________________
+VECCORE_ATT_HOST_DEVICE
+int GeantPropagator::CreateSimulationStages()
+{
+  // Create stages in the same order as the enumeration ESimulationStage
+  SimulationStage *stage = nullptr;
+  (void)stage;
+  // kPreStepStage
+  stage = new PreStepStage(this);
+  assert(stage->GetId() == int(kPreStepStage));
+  // kXSecSamplingStage
+  stage = new XSecSamplingStage(this);
+  assert(stage->GetId() == int(kXSecSamplingStage));
+  // kGeometryStepStage
+  stage = new GeomQueryStage(this);
+  assert(stage->GetId() == int(kGeometryStepStage));
+  // kPropagationStage
+  stage = new PropagationStage(this);
+  assert(stage->GetId() == int(kPropagationStage));
+  // kMSCStage
+  // stage = new MSCStage(this);
+  //assert(stage->GetId() == int(kMSCStage));
+  // kContinuousProcStage
+  stage = new ContinuousProcStage(this);
+  assert(stage->GetId() == int(kContinuousProcStage));
+  // kDiscreteProcStage
+  stage = new DiscreteProcStage(this);
+  assert(stage->GetId() == int(kDiscreteProcStage));
+  // kSteppingActionsStage
+  stage = new SteppingActionsStage(this);
+  assert(stage->GetId() == int(kSteppingActionsStage));
+  
+  // Define connections between stages
+  GetStage(kPreStepStage)->SetFollowUpStage(kXSecSamplingStage);
+  GetStage(kXSecSamplingStage)->SetFollowUpStage(kGeometryStepStage);
+  GetStage(kGeometryStepStage)->SetFollowUpStage(kPropagationStage);
+  GetStage(kGeometryStepStage)->ActivateBasketizing(true);
+  GetStage(kContinuousProcStage)->SetFollowUpStage(kDiscreteProcStage);
+  GetStage(kDiscreteProcStage)->SetFollowUpStage(kSteppingActionsStage);
+  GetStage(kSteppingActionsStage)->SetFollowUpStage(kPreStepStage);
+  GetStage(kSteppingActionsStage)->SetEndStage();
+
+  for (auto stage : fStages) {
+    int nhandlers = stage->CreateHandlers();
+    (void)nhandlers;
+    assert((nhandlers > 0) && "Number of handlers for a simulation stage cannot be 0");
+  }
+  return fStages.size();  
+}
+
+//______________________________________________________________________________
+VECCORE_ATT_HOST_DEVICE
+int GeantPropagator::GetNextStage(GeantTrack &/*track*/, int /*current*/)
+{
+// Get the next simulation stage for a track
+//  0 - Sample X-sec for discrete processes to propose the physics step
+//  1 - Compute geometry step length to boundary with a physics limitation
+//  2 - Propagate track with selected step, performing relocation if needed.
+//        - Follow-up to 1 for charged tracks if neither the geometry nor 
+//          physics steps are completed
+//        - In case MSC is available, apply it for charged tracks
+//        - Detect loopers and send them to RIP stage
+//  2'- Apply multiple scattering and change track position/direction
+//        - Follow-up to 1 after
+//        - Handle boundary crossing by MSC
+//  3 - Apply along-step continuous processes
+//        - Send particles killed by energy threshold to graveyard
+//  4 - Do post step actions for particles suffering a physics process
+//        - Follow-up to stage 0 after running user actions stage
+//  5 - RIP stage - execute user actions then terminate tracks
+//  6 - Stepping actions is invoked as a stage, but the follow-up stage is backed-up
+//      beforehand in the track state.
+  return -1;  
+}
+
 
 } // GEANT_IMPL_NAMESPACE
 } // Geant

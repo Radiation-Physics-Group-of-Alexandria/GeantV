@@ -36,6 +36,9 @@ typedef veccore::BitSet BitSet;
 #include "backend/cuda/Interface.h"
 #endif
 
+namespace Geant {
+inline namespace GEANT_IMPL_NAMESPACE {
+
 /**
  * @enum TrackStatus_t
  */
@@ -56,12 +59,27 @@ enum TransportAction_t {
  */
 enum Species_t { kHadron, kLepton };
 
-namespace Geant {
-inline namespace GEANT_IMPL_NAMESPACE {
+/** Basket simulation stages. */
+enum ESimulationStage {
+  kPreStepStage         = 0, // Actions at the beginning of the step
+  kXSecSamplingStage,        // Propose physics step by sampling total Xsec
+  kGeometryStepStage,        // Compute geometry transport length
+  kPropagationStage,         // Propagation in field stage
+//  kMSCStage,                 // Multiple scattering stage
+  kContinuousProcStage,      // Continuous processes stage
+  kDiscreteProcStage,        // Discrete processes stage
+  kSteppingActionsStage      // User actions
+};
 
 GEANT_DECLARE_CONSTANT(double, gTolerance);
 
 class GeantTaskData;
+class GeantTrack;
+#ifndef VECCORE_CUDA
+typedef std::vector<GeantTrack *> TrackVec_t;
+#else
+typedef vecgeom::Vector<GeantTrack *> TrackVec_t;
+#endif
 
 /**
  * @brief Class GeantTrack
@@ -79,7 +97,9 @@ public:
   int fCharge;           /** Particle charge */
   int fProcess;          /** Current process */
   int fNsteps;           /** Number of steps made */
-  int fMaxDepth;
+  int fMaxDepth;         /** Maximum geometry depth */
+  int fStage;            /** Simulation stage */
+  int fGeneration;       /** Track generation: 0=primary */
   Species_t fSpecies;    /** Particle species */
   TrackStatus_t fStatus; /** Track status */
   double fMass;          /** Particle mass */
@@ -159,7 +179,7 @@ public:
     constexpr double kB2C = -0.299792458e-3;
     constexpr double kTiny = 1.E-50;
     double qB = fCharge * Bz;
-    if (qB < kTiny) return kTiny;
+    if (fabs(qB) < kTiny) return kTiny;
     return fabs(kB2C * qB / (Pt() + kTiny));
   }
 
@@ -394,7 +414,10 @@ public:
   double PosZ() const { return fZpos; }
 
   /** @brief Print function */
-  void Print(const char *location) const;
+  void Print(const char *msg = "") const;
+  
+  /** @brief Print function for a container of tracks */
+  static void PrintTracks(TrackVec_t &tracks);
 
   /** Function that return particle species */
   VECCORE_ATT_HOST_DEVICE
@@ -456,6 +479,11 @@ public:
   VECCORE_ATT_HOST_DEVICE
   GEANT_FORCE_INLINE
   void SetParticle(int particle) { fParticle = particle; }
+
+  /** @brief Setter for stage */
+  VECCORE_ATT_HOST_DEVICE
+  GEANT_FORCE_INLINE
+  void SetStage(ESimulationStage stage) { fStage = stage; }
 
   /**
    * @brief Function that sets mother index

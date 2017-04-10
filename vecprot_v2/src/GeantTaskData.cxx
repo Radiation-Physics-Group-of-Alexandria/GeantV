@@ -1,9 +1,15 @@
 #include "GeantTaskData.h"
 #include "globals.h"
 #include "GeantBasket.h"
+#include "Basket.h"
+#include "StackLikeBuffer.h"
 #include "GeantPropagator.h"
+#include "TrackManager.h"
 #include "GeantTrackGeo.h"
 #include "Geant/Typedefs.h"
+#include "Geant/Error.h"
+#include "SimulationStage.h"
+#include "TrackStat.h"
 
 #ifdef USE_ROOT
 #include "TRandom.h"
@@ -18,7 +24,7 @@ inline namespace GEANT_IMPL_NAMESPACE {
 GeantTaskData::GeantTaskData(size_t nthreads, int maxDepth, int maxPerBasket)
     : fPropagator(nullptr), fTid(-1), fNode(0), fNthreads(nthreads), fMaxDepth(0), fSizeBool(0), fSizeDbl(0), fToClean(false),
       fVolume(nullptr), fRndm(nullptr), fBoolArray(nullptr), fDblArray(nullptr), fTrack(0, maxDepth),
-      fPath(nullptr), fBmgr(nullptr), fReused(nullptr), fImported(nullptr), fPool(),
+      fPath(nullptr), fBmgr(nullptr), fReused(nullptr), fImported(nullptr), fStackBuffer(nullptr), fPool(),
       fSizeInt(5 * maxPerBasket), fIntArray(new int[fSizeInt]), fTransported(nullptr), fTransported1(maxPerBasket), fNkeepvol(0),
       fNsteps(0), fNsnext(0), fNphys(0), fNmag(0), fNpart(0), fNsmall(0), fNcross(0), fPhysicsData(nullptr)
 {
@@ -41,6 +47,11 @@ GeantTaskData::GeantTaskData(size_t nthreads, int maxDepth, int maxPerBasket)
 #endif
 #endif
   fTransported = new GeantTrack_v(maxPerBasket, maxDepth);
+  fShuttleBasket = new Basket(1000, 0, -1);
+  fBvector = new Basket(256, 0, -1);
+  fStat = new TrackStat(this);
+  for (int i=0; i<=int(kSteppingActionsStage); ++i)
+    fStageBuffers.push_back(new Basket(1000, 0, -1));
 }
 
 //______________________________________________________________________________
@@ -48,7 +59,7 @@ VECCORE_ATT_DEVICE
 GeantTaskData::GeantTaskData(void *addr, size_t nthreads, int maxDepth, int maxPerBasket, GeantPropagator *prop /* = nullptr */)
     : fPropagator(prop), fTid(-1), fNode(0), fNthreads(nthreads), fMaxDepth(maxDepth), fSizeBool(0), fSizeDbl(0), fToClean(false),
       fVolume(nullptr), fRndm(nullptr), fBoolArray(nullptr), fDblArray(nullptr), fTrack(0, maxDepth),
-      fPath(nullptr), fBmgr(nullptr), fReused(nullptr), fImported(nullptr), fPool(),
+      fPath(nullptr), fBmgr(nullptr), fReused(nullptr), fImported(nullptr), fStackBuffer(nullptr), fPool(),
       fSizeInt( 5*maxPerBasket ), fIntArray( nullptr ), fTransported(nullptr), fNkeepvol(0),
       fNsteps(0), fNsnext(0), fNphys(0), fNmag(0), fNpart(0), fNsmall(0), fNcross(0), fPhysicsData(nullptr)
 {
@@ -88,6 +99,11 @@ GeantTaskData::GeantTaskData(void *addr, size_t nthreads, int maxDepth, int maxP
   fRndm = new TRandom();
 #endif
 #endif
+  fShuttleBasket = new Basket(1000, 0, -1);
+  fBvector = new Basket(256, 0, -1);
+  fStat = new TrackStat(this);
+  for (int i=0; i<=int(kSteppingActionsStage); ++i)
+    fStageBuffers.push_back(new Basket(1000, 0, prop->fNuma));
 }
 
 //______________________________________________________________________________
@@ -108,6 +124,12 @@ GeantTaskData::~GeantTaskData()
   delete fRndm;
   VolumePath_t::ReleaseInstance(fPath);
   delete fTransported;
+  delete fStackBuffer;
+  delete fShuttleBasket;
+  delete fBvector;
+  delete fStat;
+  for (int i=0; i<=int(kSteppingActionsStage); ++i)
+    delete fStageBuffers[i];
 }
 
 //______________________________________________________________________________
@@ -136,6 +158,7 @@ size_t GeantTaskData::SizeOfInstance(size_t /*nthreads*/, int maxDepth, int maxP
 
 
 #ifndef VECCORE_CUDA
+//______________________________________________________________________________
 GeantBasket *GeantTaskData::GetNextBasket()
 {
   // Gets next free basket from the queue.
@@ -148,10 +171,29 @@ GeantBasket *GeantTaskData::GetNextBasket()
 }
 
 //______________________________________________________________________________
+Basket *GeantTaskData::GetFreeBasket()
+{
+  // Gets next free basket from the queue.
+  if (fBPool.empty())
+    return ( new Basket(fPropagator->fConfig->fMaxPerBasket) );
+  Basket *basket = fBPool.back();
+  //  basket->Clear();
+  fBPool.pop_back();
+  return basket;
+}
+
+//______________________________________________________________________________
 void GeantTaskData::RecycleBasket(GeantBasket *b)
 {
   // Recycle a basket.
   fPool.push_back(b);
+}
+
+//______________________________________________________________________________
+void GeantTaskData::RecycleBasket(Basket *b)
+{
+  // Recycle a basket.
+  fBPool.push_back(b);
 }
 
 //______________________________________________________________________________
@@ -175,6 +217,39 @@ int GeantTaskData::CleanBaskets(size_t ntoclean)
   //  Printf("Thread %d cleaned %d baskets", fTid, ncleaned);
   return ncleaned;
 }
+
+//______________________________________________________________________________
+VECCORE_ATT_HOST_DEVICE
+GeantTrack &GeantTaskData::GetNewTrack()
+{
+  size_t index;
+  if (fBlock->IsDistributed()) {
+    fBlock = fPropagator->fTrackMgr->GetNewBlock();
+    //printf("== New block: %d (%d) current=%d used=%d\n",
+    //       fBlock->GetId(), fBlock->GetNode(), fBlock->GetCurrent(), fBlock->GetUsed());
+    assert(fBlock->GetCurrent() == 0 && fBlock->GetUsed() == 0);
+  }
+  GeantTrack *track = fBlock->GetObject(index);
+  track->Clear();
+  track->fBindex = index;
+  track->fMaxDepth = fMaxDepth;
+  return *track;
+  
+//  return ( fPropagator->fTrackMgr->GetTrack() );
+}
+
+//______________________________________________________________________________
+void GeantTaskData::InspectStages(int istage)
+{
+  Geant::Printf("** Thread %d: **", fTid);
+  for (auto stage : fPropagator->fStages) {
+    if (stage->GetId() == istage)
+      Geant::Printf("*** -> %15s:  %d tracks", stage->GetName(), fStageBuffers[stage->GetId()]->size());
+    else
+      Geant::Printf("***    %15s:  %d tracks", stage->GetName(), fStageBuffers[stage->GetId()]->size());    
+  }
+}
+
 
 #endif
 

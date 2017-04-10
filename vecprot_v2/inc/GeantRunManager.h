@@ -33,26 +33,23 @@ class PrimaryGenerator;
 class MCTruthMgr;
 
 // Volume-basket manager connector structure attached to volumes as extension
-#ifdef USE_ROOT
+#if defined(USE_ROOT) && !defined(VECCORE_CUDA)
 class VBconnector : public TGeoExtension {
 #else
 class VBconnector {
 #endif
 public:
   int index;                      /** Index of basket manager */
+  VECCORE_ATT_HOST_DEVICE
   VBconnector(int i) : index(i) {}
- #ifdef USE_ROOT
+#if defined(USE_ROOT) && !defined(VECCORE_CUDA)
   virtual TGeoExtension *Grab() { return this; }
   virtual void Release() const {}
- #endif 
+#endif
 };
 
 class GeantRunManager
 {
-public:
-  template <class T>
-  using vector_t = vecgeom::Vector<T>;
-
 private:
   bool fInitialized = false;
   int fNpropagators = 0;          /** Number of propagators */
@@ -110,9 +107,11 @@ public:
   GEANT_FORCE_INLINE
   GeantConfig *GetConfig() { return fConfig; }
 
+  VECCORE_ATT_HOST_DEVICE
   GEANT_FORCE_INLINE
   int  GetNvolumes() { return fNvolumes; }
-  
+
+  VECCORE_ATT_HOST_DEVICE
   GEANT_FORCE_INLINE
   vector_t<Volume_t const *> &GetVolumes() { return fVolumes; }
 

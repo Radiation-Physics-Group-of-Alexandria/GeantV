@@ -32,18 +32,16 @@ class TrackManager {
   using NumaTrackBlock_t = NumaBlock<GeantTrack, true>;
   
 private:
-  size_t fBlockSize;      // Number of tracks stored by each block
-  int fNode;              // Numa id for the managed blocks
+//  size_t fBlockSize;      // Number of tracks stored by each block
+//  int fNode;              // Numa id for the managed blocks
   int fMaxdepth;          // Maximum geometry depth to be used
   NumaBlockMgr<GeantTrack, true> fBlockMgr; // Block manager for tracks
     
 public:
   /** @brief Constructor */
   TrackManager(size_t nblocks, size_t block_size, int maxdepth, int numa_node=0)
-              :fBlockSize(block_size),
-               fNode(numa_node),
-               fMaxdepth(maxdepth),
-               fBlockMgr(nblocks, numa_node, maxdepth, block_size) {      
+              : fMaxdepth(maxdepth),
+                fBlockMgr(nblocks, numa_node, maxdepth, block_size) {      
 //    std::cout << "Track manager for numa #" << numa_node << " created at:" << this << std::endl;
 //    std::cout << "   NumaBlockMgr: " << &fBlockMgr << std::endl;
   }
@@ -58,9 +56,19 @@ public:
     GeantTrack &track = fBlockMgr.GetObject(index);
     track.Clear();
     track.fBindex = index;
+    track.fMaxDepth = fMaxdepth;
     return track;
   }
-  
+
+  /** @brief Get number of queued blocks */
+  int GetNqueued() const { return fBlockMgr.GetNqueued(); }
+
+  /** @brief Get number of queued blocks */
+  int GetNblocks() const { return fBlockMgr.GetNblocks(); }
+
+  /** @brief Get number of queued blocks */
+  int GetNreleased() const { return fBlockMgr.GetNreleased(); }
+
   /** @brief Service to get the NUMA block a track belongs to */
   GEANT_FORCE_INLINE
   static
@@ -73,6 +81,18 @@ public:
     return *((NumaTrackBlock_t**)((char*)&track - tr_size*track.fBindex - sizeof(NumaTrackBlock_t*) - sizeof(GeantTrack*)));
   }
 
+  /** @brief Get a new NUMA block */
+  GEANT_FORCE_INLINE
+  NumaTrackBlock_t *GetNewBlock() {
+    return ( fBlockMgr.GetBlock() );
+  }
+
+  /** @brief Recycle NUMA block */
+  GEANT_FORCE_INLINE
+  void RecycleBlock(NumaTrackBlock_t *block) {
+    fBlockMgr.RecycleBlock(block);
+  }
+ 
   /** @brief Service to get the NUMA node corresponding to a track */
   GEANT_FORCE_INLINE
   int GetNode(GeantTrack const &track) {

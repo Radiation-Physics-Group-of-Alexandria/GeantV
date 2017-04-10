@@ -32,7 +32,6 @@ class TStopwatch;
 #include "base/BitSet.h"
 using veccore::BitSet;
 
-#include "GeantFwd.h"
 #include "GeantConfig.h"
 
 class PhysicsInterface;
@@ -40,6 +39,7 @@ class PhysicsInterface;
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
+class GeantTrack_v;
 class GeantRunManager;
 class GeantEvent;
 class GeantVApplication;
@@ -51,6 +51,8 @@ class GeantVTaskMgr;
 class PrimaryGenerator;
 class MCTruthMgr;
 class TaskBroker;
+class SimulationStage;
+class TrackManager;
 
 class GeantPropagator {
 #ifdef VECCORE_CUDA_DEVICE_COMPILATION
@@ -63,12 +65,10 @@ class GeantPropagator {
   using atomic_t = std::atomic<T>;
 #endif
 
-  using GeantTrack = Geant::GeantTrack;
-  using GeantTrack_v = Geant::GeantTrack_v;
-  using GeantTaskData = Geant::GeantTaskData;
 public:
   GeantConfig *fConfig = nullptr;      /** Run configuration*/
   GeantRunManager *fRunMgr = nullptr;  /** Run manager */
+  int fNuma = -1;                      /** NUMA id */
 
   int fNthreads = 0;                   /** Number of worker threads */
   int fNbuff = 0;                      /** Number of buffered events */
@@ -102,7 +102,9 @@ public:
   PhysicsInterface *fPhysicsInterface = nullptr;     /** The new, real physics interface */
   GeantTrack_v *fStoredTracks = nullptr;         /** Stored array of tracks (history?) */
   PrimaryGenerator *fPrimaryGenerator = nullptr; /** Primary generator */
-  MCTruthMgr *fTruthMgr = nullptr;     /** MCTruth manager */
+  MCTruthMgr *fTruthMgr = nullptr;               /** MCTruth manager */
+  TrackManager *fTrackMgr = nullptr;             /** Track manager */
+  vector_t<SimulationStage *> fStages;           /** Simulation stages */
 
   // Data per event
   int *fNtracks = nullptr;        /** ![fNbuff] Number of tracks per slot */
@@ -175,6 +177,14 @@ public:
   /**
    * @brief  Function for marking a track as stopped
    *
+   * @param track Track to be stopped
+   * @param itr Track id
+   */
+  void StopTrack(GeantTrack *track);
+
+  /**
+   * @brief  Function for marking a track as stopped
+   *
    * @param tracks Track array container
    * @param itr Track id
    */
@@ -203,6 +213,7 @@ public:
    * @brief Getter for the process
    * @return  Generic process pointing to the tabulated physics
    */
+  VECCORE_ATT_HOST_DEVICE
   PhysicsProcessOld *Process() const { return fProcess; }
 
   /**
@@ -249,6 +260,40 @@ public:
   
   /** @brief  Share work with some other propagator */
   int ShareWork(GeantPropagator &other);
+
+  /** @brief  Register a simulation stage */
+  GEANT_FORCE_INLINE
+  VECCORE_ATT_HOST_DEVICE
+  int RegisterStage(SimulationStage *stage)
+  { 
+    fStages.push_back(stage);
+    return ( fStages.size() - 1);
+  }
+
+  /** @brief  Inspect simulation stages */
+  VECCORE_ATT_HOST_DEVICE
+  void InspectStages();
+
+  /** @brief  Getter for a simulation stage */
+  VECCORE_ATT_HOST_DEVICE
+  GEANT_FORCE_INLINE
+  SimulationStage *GetStage(ESimulationStage id) { return fStages[int(id)]; }
+
+  /** @brief  Getter for the number of simulation stages */
+  VECCORE_ATT_HOST_DEVICE
+  GEANT_FORCE_INLINE
+  int GetNstages() { return fStages.size(); }
+
+  /** @brief Function creating all simulation stages for a propagator */
+  VECCORE_ATT_HOST_DEVICE
+  int CreateSimulationStages();
+
+  /** @brief Function allowing to retrieve the next simulation stage for a track */
+  VECCORE_ATT_HOST_DEVICE
+  int GetNextStage(GeantTrack &track, int current);
+
+  /** @brief Setter for locality */
+  void SetNuma(int numa);
 
 private:
   /** @brief Assignment operator not implemented */

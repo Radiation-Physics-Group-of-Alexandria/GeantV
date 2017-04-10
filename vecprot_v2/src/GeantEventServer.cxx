@@ -10,6 +10,8 @@
 #include "PrimaryGenerator.h"
 #include "GeantTaskData.h"
 #include "GeantBasket.h"
+#include "Basket.h"
+#include "StackLikeBuffer.h"
 #include "MCTruthMgr.h"
 
 #ifdef USE_VECGEOM_NAVIGATOR
@@ -47,7 +49,7 @@ GeantEventServer::GeantEventServer(int event_capacity, GeantRunManager *runmgr)
   LocalityManager *mgr = LocalityManager::Instance();
   if (!mgr->IsInitialized()) {
     mgr->SetNblocks(100);
-    mgr->SetBlockSize(10000);
+    mgr->SetBlockSize(1000);
     mgr->SetMaxDepth(runmgr->GetConfig()->fMaxDepth);
     mgr->Init();
   }
@@ -123,7 +125,7 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
   
   for (int itr=0; itr<ntracks; ++itr) {
     GeantTrack &track = trk_mgr.GetTrack();
-    fEvents[evt]->AddPrimary(&track);
+    track.fParticle = fEvents[evt]->AddPrimary(&track);
     track.SetPath(startpath);
     track.SetNextPath(startpath);
     track.SetEvent(evt);
@@ -131,7 +133,7 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
     if (!track.IsNormalized())
       track.Print("Not normalized");
     track.fBoundary = false;
-    track.fStatus = kAlive;
+    track.fStatus = kNew;
     fEvents[evt]->fNfilled++;
     if (fRunMgr->GetMCTruthMgr()) fRunMgr->GetMCTruthMgr()->AddTrack(track);
   }
@@ -145,6 +147,7 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
       nactivep += fEvents[evt]->GetNprimaries();
     // Initial basket share per propagator: nactivep/nperbasket
     fNbasketsInit = nactivep/(fRunMgr->GetConfig()->fNperBasket);
+    if (!fNbasketsInit) fNbasketsInit = 1;
     if (fNbasketsInit < fRunMgr->GetNpropagators()) {
       Error("EventServer", "Too many worker threads for this configuration.");
     }
@@ -212,6 +215,49 @@ int GeantEventServer::FillBasket(GeantTrack_v &tracks, int ntracks)
   return ndispatched;
 }
 
+//______________________________________________________________________________
+int GeantEventServer::FillBasket(Basket *basket, int ntracks)
+{
+// Fill concurrently a basket of tracks, up to the requested number of tracks.
+// The client should test first the track availability using HasTracks().
+  if (!fHasTracks) return 0;
+  int ndispatched = 0;
+  for (int i=0; i<ntracks; ++i) {
+    GeantTrack *track = GetNextTrack();
+    if (!track) break;
+    basket->AddTrack(track);
+    ndispatched++;
+  }
+  if (fInitialPhase) {
+    int nserved = fNserved.fetch_add(1) + 1;
+    if (nserved >= fNbasketsInit) fInitialPhase = false;
+  }
+  return ndispatched;
+}
+
+//______________________________________________________________________________
+int GeantEventServer::FillStackBuffer(StackLikeBuffer *buffer, int ntracks)
+{
+// Fill concurrently up to the requested number of tracks into a stack-like buffer.
+// The client should test first the track availability using HasTracks().
+
+// *** I should template on the container to be filled, making sure that all
+//     containers provide AddTrack(GeantTrack *)
+  if (!fHasTracks) return 0;
+  int ndispatched = 0;
+  for (int i=0; i<ntracks; ++i) {
+    GeantTrack *track = GetNextTrack();
+    if (!track) break;
+    buffer->AddTrack(track);
+    ndispatched++;
+  }
+  if (fInitialPhase) {
+    int nserved = fNserved.fetch_add(1) + 1;
+    if (nserved >= fNbasketsInit) fInitialPhase = false;
+  }
+  return ndispatched;
+}
+  
 //______________________________________________________________________________
 int GeantEventServer::ActivateEvents()
 {

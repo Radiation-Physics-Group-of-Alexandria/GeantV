@@ -13,15 +13,11 @@
 #ifndef GEANT_TASKDATA
 #define GEANT_TASKDATA
 
-#ifndef GEANT_TRACK
-#include "GeantTrackVec.h"
-#endif
- #include "GeantPropagator.h"
-
 #include <deque>
-#include <vector>
-
 #include "Geant/Typedefs.h"
+#include "GeantTrackVec.h"
+#include "GeantPropagator.h"
+#include "TrackManager.h"
 
 namespace geantphysics {
   class PhysicsData;
@@ -34,12 +30,6 @@ class TRandom;
 #include "base/RNG.h"
 #endif
 
-#ifdef VECCORE_CUDA
-#include "base/Vector.h"
-#else
-#include <vector>
-#endif
-
 /**
  * @brief Class GeantTaskData
  * @details Class descripting data organized per thread
@@ -48,19 +38,17 @@ class TRandom;
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
+class Basket;
 class GeantBasketMgr;
 class GeantBasket;
 class GeantTrackGeo_v;
+class StackLikeBuffer;
+class TrackStat;
 
 class GeantTaskData {
 public:
-#ifdef VECCORE_CUDA
-  template <class T>
-  using vector_t = vecgeom::Vector<T>;
-#else
-  template <class T>
-  using vector_t = std::vector<T>;
-#endif
+
+  using NumaTrackBlock_t = NumaBlock<GeantTrack, true>;
 
   GeantPropagator *fPropagator; /** GeantPropagator */
   int fTid;              /** Thread unique id */
@@ -85,11 +73,20 @@ public:
   GeantTrackGeo_v *fGeoTrack; /** Geometry track SOA */
   GeantBasketMgr *fBmgr; /** Basket manager collecting mixed tracks */
   GeantBasket *fReused;  /** Basket having tracks to be reused in the same volume */
-  GeantBasket *fImported;/** Basket used to import tracks from the event server */
+  Basket *fBvector = nullptr;  /** Buffer basket used for vector API */
+  Basket *fShuttleBasket = nullptr;  /** Shuttle basket from selectors to follow-up simulation stage */
+  vector_t<Basket *> fStageBuffers; /** Buffers for tracks at input of simulation stages */
+  GeantBasket *fImported; /** Basket used to import tracks from the event server */
+  StackLikeBuffer *fStackBuffer; /** Stack buffer tor this thread */
+  TrackStat *fStat; /** Track statictics */
+  NumaTrackBlock_t *fBlock; /** Current track block */
+  
 #ifdef VECCORE_CUDA
   char fPool[sizeof(std::deque<GeantBasket *>)]; // Use the same space ...
+  char fBPool[sizeof(std::deque<Basket *>)]; /** Pool of empty baskets */
 #else
   std::deque<GeantBasket *> fPool; /** Pool of empty baskets */
+  std::deque<Basket *> fBPool; /** Pool of empty baskets */
 #endif
   int fSizeInt;                             // current size of IntArray
   int *fIntArray;                           // Thread array of ints (used in vector navigation)
@@ -108,8 +105,10 @@ public:
 
 private:
    // a helper function checking internal arrays and allocating more space if necessary
-  template <typename T> static void CheckSizeAndAlloc(T *&array, int &currentsize, size_t wantedsize) {
-     if (wantedsize < (size_t) currentsize)
+  template <typename T> static
+   VECCORE_ATT_HOST_DEVICE
+  void CheckSizeAndAlloc(T *&array, int &currentsize, size_t wantedsize) {
+     if (wantedsize <= (size_t) currentsize)
       return;
     T *newarray = new T[wantedsize];
     memcpy(newarray,array,currentsize*sizeof(T));
@@ -146,6 +145,7 @@ public:
    *
    * @param size Size of double array
    */
+  VECCORE_ATT_HOST_DEVICE
   double *GetDblArray(int size) {
     CheckSizeAndAlloc<double>(fDblArray, fSizeDbl, size);
     return fDblArray;
@@ -156,6 +156,7 @@ public:
    *
    * @param size Size of boolean array
    */
+  VECCORE_ATT_HOST_DEVICE
   bool *GetBoolArray(int size) {
     CheckSizeAndAlloc<bool>(fBoolArray, fSizeBool, size);
     return fBoolArray;
@@ -166,6 +167,7 @@ public:
    *
    * @param size Size of int array
    */
+  VECCORE_ATT_HOST_DEVICE
   int *GetIntArray(int size) {
     CheckSizeAndAlloc<int>(fIntArray, fSizeInt, size);
     return fIntArray;
@@ -188,25 +190,22 @@ public:
     return fTrack;
   }
 
+  /** @brief Get new track from track manager */
+  VECCORE_ATT_HOST_DEVICE
+  GeantTrack &GetNewTrack();
+
+#ifndef VECCORE_CUDA
   /**
    * @brief Get next free basket or null if not available
    * @details Get pointer to next free basket
    */
   GeantBasket *GetNextBasket();
 
-  /*
-   * @brief Return the size of the basket pool
-   *
+  /**
+   * @brief Get next free basket
+   * @details Get pointer to next free basket
    */
-#ifndef VECCORE_CUDA
-  size_t GetBasketPoolSize() const { return fPool.size(); }
-#endif
-
-  /** @brief Setter for the toclean flag */
-  void SetToClean(bool flag) { fToClean = flag; }
-
-  /** @brief Getter for the toclean flag */
-  bool NeedsToClean() const { return fToClean; }
+  Basket *GetFreeBasket();
 
   /**
    * @brief Recycles a given basket
@@ -216,19 +215,42 @@ public:
   void RecycleBasket(GeantBasket *b);
 
   /**
+   * @brief Recycles a given basket
+   *
+   * @param b Pointer to current GeantBasket for recycling
+   */
+  void RecycleBasket(Basket *b);
+
+  /*
+   * @brief Return the size of the basket pool
+   *
+   */
+  size_t GetBasketPoolSize() const { return fPool.size(); }
+
+  /**
    * @brief Function cleaning a number of free baskets
    *
    * @param ntoclean Number of baskets to be cleaned
    * @return Number of baskets actually cleaned
    */
   int CleanBaskets(size_t ntoclean);
+#endif
 
+  /** @brief Setter for the toclean flag */
+  void SetToClean(bool flag) { fToClean = flag; }
+
+  /** @brief Getter for the toclean flag */
+  bool NeedsToClean() const { return fToClean; }
+  
   /**
    * @brief Function that returns a temporary track object per task data.
    * @details Temporary track for the current caller thread
    *
    */
   GeantTrack &GetTempTrack() { fTrack.Clear(); return fTrack; }
+
+  /** @brief  Inspect simulation stages */
+  void InspectStages(int istage);
 
 private:
   /**

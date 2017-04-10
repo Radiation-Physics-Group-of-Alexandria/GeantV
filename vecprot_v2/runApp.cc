@@ -31,7 +31,8 @@ static int n_track_max = 500;
 static int n_learn_steps = 0;
 static int n_reuse = 100000;
 static int n_propagators = 1;
-static bool monitor = false, score = false, debug = false, coprocessor = false, tbbmode = false;
+static bool monitor = false, score = false, debug = false, coprocessor = false;
+static bool tbbmode = false, usev3 = false;
 
 static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"fstate", required_argument, 0, 'f'},
@@ -48,6 +49,7 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"tbbmode", required_argument, 0, 'i'},
                                   {"reuse", required_argument, 0, 'u'},
                                   {"propagators", required_argument, 0, 'p'},
+                                  {"v3", no_argument, 0, 'v'},
                                   {0, 0, 0, 0}};
 
 void help() {
@@ -73,7 +75,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "e:f:g:l:B:b:t:x:r:i:u:p:", options, &optidx);
+    c = getopt_long(argc, argv, "e:f:g:l:B:m:b:t:x:r:i:u:p:v:", options, &optidx);
 
     if (c == -1)
       break;
@@ -155,6 +157,10 @@ int main(int argc, char *argv[]) {
       n_propagators = (int)strtol(optarg, NULL, 10);
       break;
 
+    case 'v':
+      usev3 = true;
+      break;
+
     default:
       errx(1, "unknown option %c", c);
     }
@@ -180,14 +186,17 @@ int main(int argc, char *argv[]) {
   config->fGeomFileName = exn03_geometry_filename;
   config->fNtotal = n_events;
   config->fNbuff = n_buffered;
+  config->fBmag = 1.; // 0.1 Tesla
+  config->fNmaxBuffSpill = 128;  // New configuration parameter!!!
+  config->fUseV3 = usev3;
   config->fUseMonitoring = monitor;
   config->fNminThreshold=5*n_threads;
-  config->SetMonitored(GeantConfig::kMonQueue, monitor);
+  config->SetMonitored(GeantConfig::kMonQueue, false);
   config->SetMonitored(GeantConfig::kMonMemory, monitor);
-  config->SetMonitored(GeantConfig::kMonBasketsPerVol, monitor);
-  config->SetMonitored(GeantConfig::kMonVectors, monitor);
-  config->SetMonitored(GeantConfig::kMonConcurrency, monitor);
-  config->SetMonitored(GeantConfig::kMonTracksPerEvent, monitor);
+  config->SetMonitored(GeantConfig::kMonBasketsPerVol, false);
+  config->SetMonitored(GeantConfig::kMonVectors, false);
+  config->SetMonitored(GeantConfig::kMonConcurrency, false);
+  config->SetMonitored(GeantConfig::kMonTracksPerEvent, false);
   config->fNaverage = 500;   // Average number of tracks per event
   
   // Threshold for prioritizing events (tunable [0, 1], normally <0.1)
@@ -201,7 +210,7 @@ int main(int argc, char *argv[]) {
   // This is now the most important parameter for memory considerations
   config->fMaxPerBasket = n_track_max;   // Maximum vector size (tunable)
   config->fEmin = 3.E-6; // [3 KeV] energy cut
-  config->fEmax = 0.03;  // [30MeV] used for now to select particle gun energy
+  config->fEmax = 0.3;  // [30MeV] used for now to select particle gun energy
 
    // Number of steps for learning phase (tunable [0, 1e6])
    // if set to 0 disable learning phase
