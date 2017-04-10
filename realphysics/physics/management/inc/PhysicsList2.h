@@ -83,7 +83,7 @@ namespace geantphysics {
                     //
                     EMPhysicsProcess *gComptonProc = new GammaComptonProcess("gCompton");
                     // create a KleinNishinaComptonModel for gamma
-                    EMModel          *gKNModel  = new KleinNishinaComptonModel(true);
+                    EMModel          *gKNModel  = new KleinNishinaComptonModel("KleinNishinaModel");
                     // set min/max energies of the model
                     gKNModel->SetLowEnergyUsageLimit (1.0*geant::keV);
                     gKNModel->SetHighEnergyUsageLimit(100.0*geant::GeV);

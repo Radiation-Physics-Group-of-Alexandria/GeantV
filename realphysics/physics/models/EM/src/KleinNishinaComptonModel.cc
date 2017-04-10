@@ -28,18 +28,68 @@
 
 namespace geantphysics {
     
+    
+    
+    KleinNishinaComptonModel::KleinNishinaComptonModel(const std::string &modelname)
+    : EMModel(modelname) {
+        
+        fNumSamplingGammaEnergies    = 71;// 171=>25 per decada//71; // between the min/max gamma kinetic energies ? mb: why this value? - need some tuning
+        fNumSamplingElectronEnergies = 54;              // at each energy grid points
+        fMinGammaEnergy              =  1.0*geant::keV; // minimum kinetic energy of the interacting gamma
+        fMaxGammaEnergy              = 10.0*geant::GeV; // maximum kinetic energy of the interacting gamma
+        fGammaEnLMin                 = 0.0;
+        fGammaEnILDelta              = 1.0;
+        fSamplingGammaEnergies       = nullptr;
+        fLSamplingGammaEnergies      = nullptr;
+        
+        fNumMaterialCuts             = 0;
+        fNumDifferentMaterialECuts   = 0;
+        fGlobalMatGCutIndxToLocal    = nullptr;
+        fAliasData                   = nullptr; //alias data for each matrial-gammacut pairs
+        fAliasSampler                = nullptr;
+        fSecondaryInternalCode       = Electron::Definition()->GetInternalCode();
+        
+    }
+    
+    KleinNishinaComptonModel::~KleinNishinaComptonModel() {
+        
+        if (fSamplingGammaEnergies)
+            delete [] fSamplingGammaEnergies;
+        if (fLSamplingGammaEnergies)
+            delete [] fLSamplingGammaEnergies;
+        
+        if (fGlobalMatGCutIndxToLocal)
+            delete [] fGlobalMatGCutIndxToLocal;
+        
+        if (fAliasData)
+            for (int i=0; i<fNumDifferentMaterialECuts; ++i)
+                for (int j=0; j<fNumSamplingGammaEnergies; ++j) {
+                    int indx = i*fNumSamplingGammaEnergies+j;
+                    if (fAliasData[indx]) {
+                        delete [] fAliasData[indx]->fXdata;
+                        delete [] fAliasData[indx]->fYdata;
+                        delete [] fAliasData[indx]->fAliasW;
+                        delete [] fAliasData[indx]->fAliasIndx;
+                        delete fAliasData[indx];
+                    }
+                }
+        
+        if (fAliasSampler)
+            delete fAliasSampler;
+        
+    }
+        
     void KleinNishinaComptonModel::Initialize() {
         EMModel::Initialize();
-        Initialise();
-        // if it needs element selector: particle is coded in the model in case of this model and due to the cut dependence
-        // we we need element selectors per MaterialCuts
-        //  InitialiseElementSelectors(this, nullptr, false);
+        InitSamplingTables();
+        fAliasSampler          = new AliasTable();
+        fSecondaryInternalCode = Electron::Definition()->GetInternalCode();
     }
     
     //
     double KleinNishinaComptonModel::ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy,
                                                                 const Particle * ) {
-        
+        //N.B. TO BE PROPERLY IMPLEMENTED
         double xsec = 0.0;
         if (kinenergy<GetLowEnergyUsageLimit() || kinenergy>GetHighEnergyUsageLimit()) {
             return xsec;
@@ -54,28 +104,24 @@ namespace geantphysics {
     //
     double KleinNishinaComptonModel::ComputeXSectionPerVolume(const Material *mat, double prodcutenergy, double particleekin) {
         
+        //N.B. TO BE PROPERLY IMPLEMENTED
         double xsec = 0.0;
         if (particleekin<=prodcutenergy) {
             return xsec;
         }
         
         // we will need the element composition of this material
-        const std::vector<Element*> theElements = mat->GetElementVector();
+        const Vector_t<Element*> theElements = mat->GetElementVector();
         const double* theAtomicNumDensityVector = mat->GetMaterialProperties()->GetNumOfAtomsPerVolumeVect();
         int   numElems = theElements.size();
         double sum    = 0.0;
-
+        
         for (int ielem=0; ielem<numElems; ++ielem) {
-            
-            double zet  = theElements[ielem]->GetZ();
+            //double zet  = theElements[ielem]->GetZ();
             ComputeXSectionPerAtom(theElements[ielem], particleekin);
-            
         }
-
-        
-        
         return xsec;
-
+        
     }
     
     static const double
@@ -85,31 +131,17 @@ namespace geantphysics {
     e3=-7.3913e-2*geant::barn, e4= 2.7079e-2*geant::barn,
     f1=-3.9178e-7*geant::barn, f2= 6.8241e-5*geant::barn,
     f3= 6.0480e-5*geant::barn, f4= 3.0274e-4*geant::barn;
-
     
     //
     double KleinNishinaComptonModel::ComputeXSectionPerAtom(const Element *elem, double gammaenergy){
-        
-        /*double xsec = 0.0;
-        if (kinenergy<GetLowEnergyUsageLimit() || kinenergy>GetHighEnergyUsageLimit()) {
-            return xsec;
-        }
-        const Material *mat =  matcut->GetMaterial();
-        const double *cuts  =  matcut->GetProductionCutsInEnergy();
-        double electroncut     =  cuts[0];
-        xsec = ComputeXSectionPerAtom(elem, mat, electroncut, kinenergy);
-        return xsec; */
         
         double xsec = 0.0;
         if (gammaenergy<GetLowEnergyUsageLimit() || gammaenergy>GetHighEnergyUsageLimit()) {
             return xsec;
         }
         
-        //const Material *mat =  matcut->GetMaterial();
-        //const double *cuts  =  matcut->GetProductionCutsInEnergy();
-        //double electroncut     =  cuts[0];
         double z=elem->GetZ();
-
+        
         static const double a = 20.0 , b = 230.0 , c = 440.0;
         
         double p1Z = z*(d1 + e1*z + f1*z*z);
@@ -135,11 +167,8 @@ namespace geantphysics {
             double    y = std::log(gammaenergy/T0);
             xsec *= std::exp(-y*(c1+c2*y));
         }
-        // G4cout<<"e= "<< gammaenergy<<" Z= "<<Z<<" cross= " << xSection << G4endl;
         return xsec;
-        
     }
-    
     
     
     int KleinNishinaComptonModel::SampleSecondaries(LightTrack &track, std::vector<LightTrack> & /*sectracks*/,
@@ -241,10 +270,6 @@ namespace geantphysics {
             std::vector<LightTrack>& sectracks = td->fPhysicsData->GetListOfSecondaries();
             
             
-            
-        
-            
-            
             // this is known since it is a secondary track
             //  sectracks[secIndx].SetTrackStatus(LTrackStatus::kNew); // to kew
             sectracks[secIndx].SetDirX(eDirX*norm); //mb: controllare questa operazione
@@ -304,72 +329,6 @@ namespace geantphysics {
         return mine;
     }
     
-    
-    
-    KleinNishinaComptonModel::KleinNishinaComptonModel(int datafileindx, const std::string &modelname)
-    : EMModel(modelname), fDataFileIndx(datafileindx) {
-        fDCSMaxZet                       = 0;
-        fLoadDCSNumElectronEnergies      = 0;
-        fLoadDCSReducedPhotonEnergyGrid  = 0;
-        fLoadDCSElectronEnergyGrid       = nullptr;
-        fLoadDCSReducedPhotonEnergyGrid  = nullptr;
-        fLoadDCSForElements              = nullptr;
-        
-        
-        fNumSamplingGammaEnergies = 71;// 171=>25 per decada//71; // between the min/max gamma kinetic energies ? mb: why this value?
-        fNumSamplingElectronEnergies = 54; // at each energy grid points
-        fMinGammaEnergy           =  1.0*geant::keV; // minimum kinetic energy of the interacting gamma
-        fMaxGammaEnergy           = 10.0*geant::GeV; // maximum kinetic energy of the interacting gamma
-        fGammaEnLMin                = 0.0;
-        fGammaEnILDelta             = 1.0;
-        fSamplingGammaEnergies    = nullptr;
-        fLSamplingGammaEnergies   = nullptr;
-        
-        fNumMaterialCuts           = 0;
-        fNumDifferentMaterialECuts = 0;
-        fGlobalMatGCutIndxToLocal = nullptr;
-        fAliasData                = nullptr; //alias data for each matrial-gammacut pairs
-        fAliasSampler             = nullptr;
-        
-        fSecondaryInternalCode    = Electron::Definition()->GetInternalCode();
-        
-    }
-    
-    KleinNishinaComptonModel::~KleinNishinaComptonModel() {
-        
-        if (fSamplingGammaEnergies)
-            delete [] fSamplingGammaEnergies;
-        if (fLSamplingGammaEnergies)
-            delete [] fLSamplingGammaEnergies;
-        
-        if (fGlobalMatGCutIndxToLocal)
-            delete [] fGlobalMatGCutIndxToLocal;
-        
-        if (fAliasData)
-            for (int i=0; i<fNumDifferentMaterialECuts; ++i)
-                for (int j=0; j<fNumSamplingGammaEnergies; ++j) {
-                    int indx = i*fNumSamplingGammaEnergies+j;
-                    if (fAliasData[indx]) {
-                        delete [] fAliasData[indx]->fXdata;
-                        delete [] fAliasData[indx]->fYdata;
-                        delete [] fAliasData[indx]->fAliasW;
-                        delete [] fAliasData[indx]->fAliasIndx;
-                        delete fAliasData[indx];
-                    }
-                }
-        
-        if (fAliasSampler)
-            delete fAliasSampler;
-        
-    }
-    
-    
-    void KleinNishinaComptonModel::Initialise() {
-        LoadDCSData();
-        InitSamplingTables();
-        fAliasSampler          = new AliasTable();
-        fSecondaryInternalCode = Electron::Definition()->GetInternalCode();
-    }
     
     /**
      
@@ -591,7 +550,7 @@ namespace geantphysics {
     
     
     
-    double KleinNishinaComptonModel::CalculateDiffCrossSection(int /*Zelement*/, double energy0, double energy1)
+    double KleinNishinaComptonModel::CalculateDiffCrossSection(double energy0, double energy1)
     {
         double E0_m = energy0 / geant::kElectronMassC2;
         double epsilon = energy1 / energy0;
@@ -652,13 +611,13 @@ namespace geantphysics {
                 
                 // fill the first, last and middle value (NB: we should convert to 0-1)
                 fAliasData[ialias]->fXdata[0] =  gEnergyOutMin;
-                fAliasData[ialias]->fYdata[0] =  CalculateDiffCrossSection(1, gEnergy, gEnergyOutMin);
+                fAliasData[ialias]->fYdata[0] =  CalculateDiffCrossSection(gEnergy, gEnergyOutMin);
                 
                 fAliasData[ialias]->fXdata[1] =  middlepoint;
-                fAliasData[ialias]->fYdata[1] =  CalculateDiffCrossSection(1, gEnergy, middlepoint);
+                fAliasData[ialias]->fYdata[1] =  CalculateDiffCrossSection(gEnergy, middlepoint);
                 
                 fAliasData[ialias]->fXdata[2] =  gEnergyOutMax;
-                fAliasData[ialias]->fYdata[2] =  CalculateDiffCrossSection(1, gEnergy, gEnergyOutMax);
+                fAliasData[ialias]->fYdata[2] =  CalculateDiffCrossSection(gEnergy, gEnergyOutMax);
                 
                 int numdata=3;
                 /*
@@ -684,7 +643,7 @@ namespace geantphysics {
                         double xx = 0.5*(fAliasData[ialias]->fXdata[i]+fAliasData[ialias]->fXdata[i+1]); // mid point
                         double yy = 0.5*(fAliasData[ialias]->fYdata[i]+fAliasData[ialias]->fYdata[i+1]); // lin func val at the mid point
                         
-                        double xsecVal=CalculateDiffCrossSection(1, gEnergy, xx);
+                        double xsecVal=CalculateDiffCrossSection(gEnergy, xx);
                         double err   = std::fabs(yy-xsecVal);
                         if (err>maxerr) {
                             maxerr     = err;
@@ -721,102 +680,103 @@ namespace geantphysics {
         
     }
     
-    void KleinNishinaComptonModel::LoadDCSData() {
-        using geant::MeV;
-        using geant::millibarn;
-        
-        // get the path to the main physics data directory
-        char *path = std::getenv("GEANT_PHYSICS_DATA");
-        if (!path) {
-            std::cerr<<"******   ERROR in KleinNishinaComptonModel::LoadDCSData() \n"
-            <<"         GEANT_PHYSICS_DATA is not defined! Set the GEANT_PHYSICS_DATA\n"
-            <<"         environmental variable to the location of Geant data directory!\n"
-            <<std::endl;
-            exit(1);
-        }
-        
-        char baseFilename[512];
-        switch (fDataFileIndx) {
-            case 0: sprintf(baseFilename,"%s/brems/NIST_BREM1/nist_brems_",path);
-                break;
-            case 1: sprintf(baseFilename,"%s/brems/NIST_BREM/nist_brems_",path);
-                break;
-            case 2: sprintf(baseFilename,"%s/brems/NRC_BREM/nist_brems_",path);
-                break;
-            default: sprintf(baseFilename,"%s/brems/NIST_BREM1/nist_brems_",path);
-        }
-        
-        FILE *f = nullptr;
-        char filename[512];
-        sprintf(filename,"%sgrid",baseFilename);
-        f = fopen(filename,"r");
-        if (!f) {
-            std::cerr<<"******   ERROR in KleinNishinaComptonModel::LoadDCSData() \n"
-            <<"         "<< filename << " could not be found!\n"
-            <<std::endl;
-            exit(1);
-        }
-        // before we take the fDCSMaxZet make sure that the fDCSForElements if free
-        if (fLoadDCSForElements) {
-            for (int i=0; i<fDCSMaxZet; ++i)
-                if (fLoadDCSForElements[i]) {
-                    delete [] fLoadDCSForElements[i];
-                    fLoadDCSForElements[i] = nullptr;
-                }
-            delete [] fLoadDCSForElements;
-        }
-        
-        fscanf(f,"%d%d%d",&fDCSMaxZet,&fLoadDCSNumElectronEnergies,&fLoadDCSNumReducedPhotonEnergies);
-        // allocate space for the elemental DCS data, for the electron energy and reduced photon energy grids and load them
-        fLoadDCSForElements = new double*[fDCSMaxZet];
-        for (int i=0; i<fDCSMaxZet; ++i)
-            fLoadDCSForElements[i] = nullptr;
-        if (fLoadDCSElectronEnergyGrid) {
-            delete [] fLoadDCSElectronEnergyGrid;
-            fLoadDCSElectronEnergyGrid = nullptr;
-        }
-        fLoadDCSElectronEnergyGrid = new double[fLoadDCSNumElectronEnergies];
-        if (fLoadDCSReducedPhotonEnergyGrid) {
-            delete [] fLoadDCSReducedPhotonEnergyGrid;
-            fLoadDCSReducedPhotonEnergyGrid = nullptr;
-        }
-        fLoadDCSReducedPhotonEnergyGrid = new double[fLoadDCSNumReducedPhotonEnergies];
-        for (int i=0;i<fLoadDCSNumElectronEnergies;++i) {
-            fscanf(f,"%lf",&(fLoadDCSElectronEnergyGrid[i]));
-            fLoadDCSElectronEnergyGrid[i] *= MeV;   // change to internal energy units
-        }
-        for (int i=0;i<fLoadDCSNumReducedPhotonEnergies;++i)
-            fscanf(f,"%lf",&(fLoadDCSReducedPhotonEnergyGrid[i]));
-        fclose(f);
-        //
-        // for (int i=0;i<fDCSNumElectronEnergies;++i)
-        //   printf("%.6e\n",fDCSElectronEnergyGrid[i]);
-        // for (int i=0;i<fDCSNumReducedPhotonEnergies;++i)
-        //   printf("%.6e\n",fDCSReducedPhotonEnergyGrid[i]);
-        
-        // now go for each element that we have in the global element table and load data for them
-        int numDCSdataPerElement = fLoadDCSNumElectronEnergies*fLoadDCSNumReducedPhotonEnergies;
-        const std::vector<Element*> theElements = Element::GetTheElementTable();
-        //std::cout<<theElements;
-        int numElements = theElements.size();
-        for (int i=0; i<numElements; ++i) {
-            int zet = std::lrint(theElements[i]->GetZ());
-            sprintf(filename,"%s%d",baseFilename,zet);
-            f = fopen(filename,"r");
-            if (!f) {
-                std::cerr<<"******   ERROR in KleinNishinaComptonModel::LoadDCSData() \n"
-                <<"         "<< filename << " could not be found!\n"
-                <<std::endl;
-                exit(1);
-            }
-            // allocate space for this elemental DCS
-            fLoadDCSForElements[zet-1] = new double[numDCSdataPerElement];
-            for (int j=0; j<numDCSdataPerElement; ++j) {
-                fscanf(f,"%lf",&(fLoadDCSForElements[zet-1][j]));
-                fLoadDCSForElements[zet-1][j] *= millibarn;   // change to internal units
-            }
-            fclose(f);
-        }
-    }
+    /*  void KleinNishinaComptonModel::LoadDCSData()
+     {
+     using geant::MeV;
+     using geant::millibarn;
+     
+     // get the path to the main physics data directory
+     char *path = std::getenv("GEANT_PHYSICS_DATA");
+     if (!path) {
+     std::cerr<<"******   ERROR in KleinNishinaComptonModel::LoadDCSData() \n"
+     <<"         GEANT_PHYSICS_DATA is not defined! Set the GEANT_PHYSICS_DATA\n"
+     <<"         environmental variable to the location of Geant data directory!\n"
+     <<std::endl;
+     exit(1);
+     }
+     
+     char baseFilename[512];
+     switch (fDataFileIndx) {
+     case 0: sprintf(baseFilename,"%s/brems/NIST_BREM1/nist_brems_",path);
+     break;
+     case 1: sprintf(baseFilename,"%s/brems/NIST_BREM/nist_brems_",path);
+     break;
+     case 2: sprintf(baseFilename,"%s/brems/NRC_BREM/nist_brems_",path);
+     break;
+     default: sprintf(baseFilename,"%s/brems/NIST_BREM1/nist_brems_",path);
+     }
+     
+     FILE *f = nullptr;
+     char filename[512];
+     sprintf(filename,"%sgrid",baseFilename);
+     f = fopen(filename,"r");
+     if (!f) {
+     std::cerr<<"******   ERROR in KleinNishinaComptonModel::LoadDCSData() \n"
+     <<"         "<< filename << " could not be found!\n"
+     <<std::endl;
+     exit(1);
+     }
+     // before we take the fDCSMaxZet make sure that the fDCSForElements if free
+     if (fLoadDCSForElements) {
+     for (int i=0; i<fDCSMaxZet; ++i)
+     if (fLoadDCSForElements[i]) {
+     delete [] fLoadDCSForElements[i];
+     fLoadDCSForElements[i] = nullptr;
+     }
+     delete [] fLoadDCSForElements;
+     }
+     
+     fscanf(f,"%d%d%d",&fDCSMaxZet,&fLoadDCSNumElectronEnergies,&fLoadDCSNumReducedPhotonEnergies);
+     // allocate space for the elemental DCS data, for the electron energy and reduced photon energy grids and load them
+     fLoadDCSForElements = new double*[fDCSMaxZet];
+     for (int i=0; i<fDCSMaxZet; ++i)
+     fLoadDCSForElements[i] = nullptr;
+     if (fLoadDCSElectronEnergyGrid) {
+     delete [] fLoadDCSElectronEnergyGrid;
+     fLoadDCSElectronEnergyGrid = nullptr;
+     }
+     fLoadDCSElectronEnergyGrid = new double[fLoadDCSNumElectronEnergies];
+     if (fLoadDCSReducedPhotonEnergyGrid) {
+     delete [] fLoadDCSReducedPhotonEnergyGrid;
+     fLoadDCSReducedPhotonEnergyGrid = nullptr;
+     }
+     fLoadDCSReducedPhotonEnergyGrid = new double[fLoadDCSNumReducedPhotonEnergies];
+     for (int i=0;i<fLoadDCSNumElectronEnergies;++i) {
+     fscanf(f,"%lf",&(fLoadDCSElectronEnergyGrid[i]));
+     fLoadDCSElectronEnergyGrid[i] *= MeV;   // change to internal energy units
+     }
+     for (int i=0;i<fLoadDCSNumReducedPhotonEnergies;++i)
+     fscanf(f,"%lf",&(fLoadDCSReducedPhotonEnergyGrid[i]));
+     fclose(f);
+     //
+     // for (int i=0;i<fDCSNumElectronEnergies;++i)
+     //   printf("%.6e\n",fDCSElectronEnergyGrid[i]);
+     // for (int i=0;i<fDCSNumReducedPhotonEnergies;++i)
+     //   printf("%.6e\n",fDCSReducedPhotonEnergyGrid[i]);
+     
+     // now go for each element that we have in the global element table and load data for them
+     int numDCSdataPerElement = fLoadDCSNumElectronEnergies*fLoadDCSNumReducedPhotonEnergies;
+     const Vector_t<Element*> theElements= Element::GetTheElementTable();
+     
+     int numElements = theElements.size();
+     for (int i=0; i<numElements; ++i) {
+     int zet = std::lrint(theElements[i]->GetZ());
+     sprintf(filename,"%s%d",baseFilename,zet);
+     f = fopen(filename,"r");
+     if (!f) {
+     std::cerr<<"******   ERROR in KleinNishinaComptonModel::LoadDCSData() \n"
+     <<"         "<< filename << " could not be found!\n"
+     <<std::endl;
+     exit(1);
+     }
+     // allocate space for this elemental DCS
+     fLoadDCSForElements[zet-1] = new double[numDCSdataPerElement];
+     for (int j=0; j<numDCSdataPerElement; ++j) {
+     fscanf(f,"%lf",&(fLoadDCSForElements[zet-1][j]));
+     fLoadDCSForElements[zet-1][j] *= millibarn;   // change to internal units
+     }
+     fclose(f);
+     }
+     }*/
     
 }   // namespace geantphysics
