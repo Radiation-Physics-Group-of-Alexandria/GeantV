@@ -43,7 +43,7 @@ int main() {
     
     using geantphysics::Material;
     using geantphysics::MaterialCuts;  // this is just to print the table
-    using geantphysics::Region;
+    using vecgeom::Region;
     
     using geantphysics::PhysicsManagerPerParticle;
     using geantphysics::Electron;

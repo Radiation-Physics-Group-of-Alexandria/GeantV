@@ -14,6 +14,7 @@ if (USE_REAL_PHYSICS)
     ../examplesRP/GeantV/TestEm3RP/inc
     ../examplesRP/GeantV/Tests/BremTestGV/inc
     ../numa/inc
+    ../material/inc
     )
 else()
   include_directories(
@@ -306,8 +307,8 @@ else()
 set(TEST_EXECUTABLES
   runAppRP.cc
   runAppTestEM3RP.cc
-  ../examplesRP/GeantV/Tests/BremTestGV/bremtestGV.cc
-  ../examplesRP/GeantV/Tests/ComptonTestGV/comptontestGV.cc  
+#  ../examplesRP/GeantV/Tests/BremTestGV/bremtestGV.cc
+#  ../examplesRP/GeantV/Tests/ComptonTestGV/comptontestGV.cc
 )
 
 macro(build_executables EXECUTABLES)
