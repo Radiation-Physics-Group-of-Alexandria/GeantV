@@ -13,7 +13,6 @@ namespace geantphysics {
 
 class GammaComptonProcess : public EMPhysicsProcess {
 public:
-  // CTR
   GammaComptonProcess(const std::string &name = "gCompton");
 };
 
