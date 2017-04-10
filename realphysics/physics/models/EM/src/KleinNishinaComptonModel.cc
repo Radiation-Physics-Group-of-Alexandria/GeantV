@@ -182,19 +182,15 @@ namespace geantphysics {
         return xsec;
     }
     
-    //
+    //NB: The energy cuts are not used in gamma models and the secondary particles are always created independently from the cuts
     int KleinNishinaComptonModel::SampleSecondaries(LightTrack &track, std::vector<LightTrack> & /*sectracks*/,
                                                     Geant::GeantTaskData *td) {
         int    numSecondaries      = 0;
         double gammaekin0          = track.GetKinE();
         const MaterialCuts *matCut = MaterialCuts::GetMaterialCut(track.GetMaterialCutCoupleIndex());
-        //const double *cuts         = matCut->GetProductionCutsInEnergy();
-        //double gammacut            = cuts[0];
-        //double electroncut         = cuts[1]; //THIS MUST BE CHECKED
-        
+    
         // check if kinetic energy is below fLowEnergyUsageLimit and do nothing if yes;
         // check if kinetic energy is above fHighEnergyUsageLimit and do nothing if yes;
-        // check if kinetic energy is below gamma production cut and do nothing if yes;
         if (gammaekin0<GetLowEnergyUsageLimit() || gammaekin0>GetHighEnergyUsageLimit()) {
             return numSecondaries;
         }
