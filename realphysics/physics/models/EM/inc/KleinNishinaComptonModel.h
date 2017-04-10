@@ -143,7 +143,7 @@ namespace geantphysics {
          * @param[in] phi           Phi angle of the scattered gamma in the interaction/process frame coordinate system.
          * @param[in] rnd           Random number distributed uniformly in the 0 1 interval.
          */
-        void SamplePhotonDirection(double gammaEkinIn, double gammaEkinOut, double &sinTheta, double &cosTheta, double &phi, double rnd);
+        void CalculatePhotonDirection(double gammaEkinIn, double gammaEkinOut, double &sinTheta, double &cosTheta, double &phi, double rnd);
         
     private:
         
