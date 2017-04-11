@@ -148,12 +148,19 @@ void PhysicsProcessHandler::BuildMaterials() {
 }
 
 
-void PhysicsProcessHandler::ComputeIntLen(Material_t *mat, int ntracks, GeantTrack_v &tracks, double * /*lengths*/,
+void PhysicsProcessHandler::ComputeIntLen(Material_t *  /*mat*/ ,
+                                          int ntracks,
+                                          GeantTrack_v &tracks,
+                                          double * /*lengths*/,
                                           GeantTaskData *td) {
   for (int i=0; i<ntracks; ++i) {
     // here we will get the MaterialCuts from the LogicalVolume later
     int   matIndx = tracks.GetMaterial(i)->GetIndex();
     int   regIndx = const_cast<vecgeom::LogicalVolume*>(tracks.GetVolume(i))->GetRegion()->GetIndex();
+    // const vecgeom::LogicalVolume* logVol= tracks.GetVolume(i);
+    // int   regIndx = logVol->GetRegion()->GetIndex();
+    
+    
     const MaterialCuts *matCut =  MaterialCuts::GetMaterialCut(regIndx,matIndx);
   /*
     if (mat) {
@@ -201,7 +208,10 @@ void PhysicsProcessHandler::ComputeIntLen(Material_t *mat, int ntracks, GeantTra
 }
 
 
-void PhysicsProcessHandler::AlongStepAction(Material_t *mat, int ntracks, GeantTrack_v &tracks, int &nout,
+void PhysicsProcessHandler::AlongStepAction(Material_t *  /*mat*/,
+                                            int ntracks,
+                                            GeantTrack_v &tracks,
+                                            int &nout,
                                             GeantTaskData * /*td*/) {
   int numSecondaries = 0;
   for (int i=0; i<ntracks; ++i) {
@@ -258,7 +268,10 @@ void PhysicsProcessHandler::AlongStepAction(Material_t *mat, int ntracks, GeantT
 }
 
 
-void PhysicsProcessHandler::PostStepAction(Material_t *mat, int ntracks, GeantTrack_v &tracks, int &nout,
+void PhysicsProcessHandler::PostStepAction(Material_t * /*mat*/,
+                                           int ntracks,
+                                           GeantTrack_v &tracks,
+                                           int &nout,
                                            GeantTaskData *td) {
   int numSecondaries = 0;
   for (int i=0; i<ntracks; ++i) {

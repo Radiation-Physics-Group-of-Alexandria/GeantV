@@ -41,7 +41,7 @@ public:
         //1. create compton process with the Klein-Nishina model:
 
         EMPhysicsProcess *gCompProc = new GUGammaComptonProcess("gCompton");
-        EMModel          *gKNModel  = new GUKleinNishinaComptonModel(true);
+        EMModel          *gKNModel  = new GUKleinNishinaComptonModel(); // true);
 
         // set min/max energies of the model
         gKNModel->SetLowEnergyUsageLimit (1.0*geant::keV);

@@ -33,7 +33,7 @@ int GeomQueryStage::CreateHandlers()
 
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
-void GeomQueryStage::ActivateBasketizing(bool flag)
+void GeomQueryStage::ActivateBasketizing(bool /*flag*/ )
 {
 // Activate basketizers for all volumes.
   for ( auto i = 0; i < GetNhandlers(); ++i)

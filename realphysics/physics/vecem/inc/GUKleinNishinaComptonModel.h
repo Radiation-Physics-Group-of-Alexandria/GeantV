@@ -31,9 +31,9 @@ class LightTrack;
 class GUKleinNishinaComptonModel : public EMModel {
 public:
 
-  virtual void Initialize(); // from EMModel
-  virtual double ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, const Particle *particle);
-  virtual int    SampleSecondaries(LightTrack &track, std::vector<LightTrack> &sectracks, Geant::GeantTaskData *td);
+  void Initialize() override final; // from EMModel
+  double ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, const Particle *particle) override final;
+  int    SampleSecondaries(LightTrack &track, std::vector<LightTrack> &sectracks, Geant::GeantTaskData *td) override final;
 
 public:
 /**
@@ -43,26 +43,24 @@ public:
    /**
     * @brief Constructor.
     *
-    * @param[in] iselectron  Flag to indicate that the model is for electron or for psitron.
     * @param[in] modelname   Name of the model.
     */
-  GUKleinNishinaComptonModel(bool iselectron, const std::string &modelname="gCompton");
+  GUKleinNishinaComptonModel(const std::string &modelname="gCompton");
   /** @brief Destructor. */
  ~GUKleinNishinaComptonModel();
 //@}
 
   /**
-   * @brief Public method to initilise the model.
+   * @brief Public method to initialise the model.
    *
-   * Internal sampling tables for run time sampling of the kinetic energy transfered to the e- will be created during
-   * the initialisation. This method always need to be invoked between the construction and usage of the model.
-   *
+   * Creates internal sampling tables for run time sampling of the kinetic energy transfered to the e-
+   * Must be invoked between construction and using of the model.
    */
   void   Initialise();
 
   /**
-   * @brief Public method to obtain (restricted) macroscopic ionization cross section for a given material, particle
-   *        kinetic energy and e- production cut energy.
+   * @brief Public method to obtain (restricted) macroscopic ionization cross section for a given
+   *        material, particle, kinetic energy and e- production cut energy.
    *
    * @param[in] mat            Pointer to specify the material.
    * @param[in] prodcutenergy  Production cut (kinetic) energy for e- in internal energy units.
@@ -71,53 +69,22 @@ public:
    */
   double ComputeXSectionPerVolume(const Material *mat, double prodcutenergy, double particleekin);
 
-  /**
-    * @brief Public method to sample (restricted) kinetic energy transfered to the electron in Moller/Bhabha scattering.
-    *
-    *  @param[in] matcut     Pointer to the material-production cut object in which the interaction happens.
-    *  @param[in] primekin   Kinetic energy of the primary particle i.e. e-/e+.
-    *  @param[in] r1         Random number distributed uniformly in [0,1].
-    *  @param[in] r2         Random number distributed uniformly in [0,1].
-    *  @param[in] r3         Random number distributed uniformly in [0,1].
-    *  @return    Sample of kinetic energy transfered to the electron (in internal [energy] units) in Moller/Bhabha
-    *             interaction, if it is a kinematically allowed combination of the primary particle kinetic energy -
-    *             current electron production threshold. Zero otherwise.
-    */
 
 private:
-  /** @brief Internal method to build energy transfer sampling tables under <em>linear approximation of
-   *         the p.d.f.</em>.
-   *
-   *  Used at initialisation of the model to prepare energy transfer related transformed variable
-   *  sampling tables for all different material-electron production cut pairs over an e-/e+ kinetic energy grid.
-   *  These tables are prepared for Walker's alias method combined with <em>linear approximation of the p.d.f.</em>
-   *  within the e-/e+ kinetic energy bins.
-   */
+
   void   InitSamplingTables();
 
-  /** @brief Internal method to build energy transfer sampling tables for one given material-electron production kinetic
-   *         energy threshold under <em>linear approximation of the p.d.f.</em>.
-   *
-   *  This method is used by MollerBhabhaIonizationModel::InitSamplingTables() to build energy transfer related
-   *  sampling tables for Walker's alias method combined with <em>linear approximation of the p.d.f.</em>. The
-   *  kinematically allowed energy transfer range is transformed to the [0,1] inteval and there are a fixed number of
-   *  grid points. The transformed variable grid is determined by the value of
-   *  MollerBhabhaIonizationModel::fNumSamplingElecEnergies member.
-   */
 // data members
 private:
   vecphys::ComptonKleinNishina *fVectorModel;
 
-  /** @brief Flag to indicate if the model is for electron or positron interaction. */
-  bool        fIsElectron;
-
   int fSecondaryInternalCode; // internal code i.e. GV code of the secondary partcile i.e. e-
 
   ///
-  // these are to describe and define the common e-/e+ kinetic energy grid above we build sampling tables for run-time
-  // samling of emitted photon energy.
-  /** @brief Number of e-/e+ kinetic energy grid points in [MollerBhabhaIonizationModel::fMinPrimEnergy,
-    *        MollerBhabhaIonizationModel::fMaxPrimEnergy].
+  // The numbers below are for the common kinetic energy grid  (??)
+  //   we build sampling tables for run-time samling of emitted photon energy.
+  /** @brief Number of e-/e+ kinetic energy grid points in [fMinPrimEnergy,
+    *        fMaxPrimEnergy].
     */
   int fNumSamplingPrimEnergies;
   /** @brief Number of energy transfer related transformed variable in [0,1]. */

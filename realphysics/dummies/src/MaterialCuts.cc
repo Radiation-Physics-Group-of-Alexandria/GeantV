@@ -88,8 +88,8 @@ void MaterialCuts::ClearAll() {
   gTheMaterialCutsPerRegionPerMaterial.clear();
 }
 
-const MaterialCuts* MaterialCuts::GetMaterialCut(int indx) {
-  if (indx>-1 && indx<gTheMaterialCutsTable.size()) {
+const MaterialCuts* MaterialCuts::GetMaterialCut(size_t indx) {
+  if ( /*indx>-1 && */ indx<gTheMaterialCutsTable.size()) {
     return gTheMaterialCutsTable[indx];
   } else {
     std::cerr << "  ***  ERROR:  MaterialCuts::GetMaterialCut() \n"
@@ -101,12 +101,12 @@ const MaterialCuts* MaterialCuts::GetMaterialCut(int indx) {
 }
 
 // we should get rid of this
-const MaterialCuts* MaterialCuts::GetMaterialCut(int regionindx, int materialindx) {
-  if (regionindx>-1 && regionindx<gTheMaterialCutsPerRegionPerMaterial.size()
-      && materialindx>-1 && materialindx<gTheMaterialCutsPerRegionPerMaterial[0].size()) {
+const MaterialCuts* MaterialCuts::GetMaterialCut(size_t regionindx, size_t materialindx) {
+  if ( /*regionindx>-1 && */ regionindx<gTheMaterialCutsPerRegionPerMaterial.size()
+      && /* materialindx>-1 && */ materialindx<gTheMaterialCutsPerRegionPerMaterial[0].size()) {
     return gTheMaterialCutsPerRegionPerMaterial[regionindx][materialindx];
   } else {
-    if (!(regionindx>-1 && regionindx<gTheMaterialCutsPerRegionPerMaterial.size())) {
+     if (!( /*regionindx>-1 && */ regionindx<gTheMaterialCutsPerRegionPerMaterial.size())) {
       std::cerr << "  ***  ERROR:  MaterialCuts::GetMaterialCut() \n"
                 << "        Requested MaterialCuts by Region and Material indices = "
                 << regionindx << ", " << materialindx << " cannot be find in the table!"
@@ -217,10 +217,10 @@ void MaterialCuts::CreateAll() {
 
 MaterialCuts* MaterialCuts::CheckMaterialForRegion(const vecgeom::Region *region, const Material *mat) {
   // get the region index
-  int indxReg = region->GetIndex();
-  int indxMat = mat->GetIndex();
+  long  indxReg = region->GetIndex();
+  long  indxMat = mat->GetIndex();
   MaterialCuts *matCut = nullptr;
-  if (indxReg>-1 && indxReg<gTheMaterialCutsPerRegionPerMaterial.size()
+  if ( indxReg<gTheMaterialCutsPerRegionPerMaterial.size()
       && indxMat>-1 && indxMat<gTheMaterialCutsPerRegionPerMaterial[0].size()) {
     matCut = gTheMaterialCutsPerRegionPerMaterial[indxReg][indxMat];
   }

@@ -64,11 +64,11 @@ public:
 
   const Material* GetMaterial() const { return fMaterial; }
   // get a MaterialCuts object pointer by its index
-  static const MaterialCuts* GetMaterialCut(int indx);
+  static const MaterialCuts* GetMaterialCut(size_t indx);
   // get a MaterialCuts object by specifying the Region index and the Material index
   // TODO: we should get rid of it by writing the MaterialCuts global index into the Reagion and requested the kernel
   //       to provide it at each physics call
-  static const MaterialCuts* GetMaterialCut(int regionindx, int materialindx);
+  static const MaterialCuts* GetMaterialCut(size_t regionindx, size_t materialindx);
 
   // get the global mategrial-cuts table
   static const std::vector<MaterialCuts*>& GetTheMaterialCutsTable() { return gTheMaterialCutsTable; }

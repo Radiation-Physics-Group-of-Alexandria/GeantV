@@ -132,24 +132,26 @@ void UserPhysicsList::Initialize() {
       std::cout<<"**** UserPhysicsList:  Gamma - defining processes **************** " <<std::endl;
       
       EMPhysicsProcess *PhotoElectricProc= new
-         geantphysics::GUGammaPhotoElectricProcess("Photo Electric Process (adapted VecPhys)");
+         geantphysics::GUGammaPhotoElectricProcess("Photo Electric" ); // " Process (adapted VecPhys)");
          // class PhotoElectricProcess("Photo Electric Process (Wrapped VecPhys)");
       
       EMModel     *photoElectricModel = new GUSauterGavrilaModel(true);
       // EMModel  *photoElectricModel = PhotoElectricProc->GetModel(); 
       photoElectricModel->SetLowEnergyUsageLimit (   1.0*geant::keV);
       photoElectricModel->SetHighEnergyUsageLimit(   1.0*geant::GeV);
+      PhotoElectricProc->AddModel( photoElectricModel );
+      
       std::cout<< " Adding Photo-Electric to gamma - version = adapted VecPhys." << std::endl;
       AddProcessToParticle(particle, PhotoElectricProc);
       std::cout<< " Adding Photo-Electric to gamma - done." << std::endl;
       //
 
-      EMModel          *comptonModel = new GUKleinNishinaComptonModel(true);
+      EMModel          *comptonModel = new GUKleinNishinaComptonModel();
       comptonModel->SetLowEnergyUsageLimit ( 1.0*geant::keV );
       comptonModel->SetHighEnergyUsageLimit( 1.0*geant::TeV );
       
       EMPhysicsProcess *ComptonProcess= new 
-         geantphysics::GUGammaComptonProcess("Compton Process (Adapted VecPhys)");
+         geantphysics::GUGammaComptonProcess("Compton Process"); // "Adapted VecPhys)");
           // class ComptonProcess("Compton Process (Wrapped VecPhys)");      
       ComptonProcess->AddModel(comptonModel);
         
@@ -163,7 +165,7 @@ void UserPhysicsList::Initialize() {
       conversionBHmodel->SetHighEnergyUsageLimit(1.0*geant::TeV);
         
       EMPhysicsProcess *ConversionProcess= new
-         geantphysics::GUGammaConversionProcess("Conversion Process (Adapted VecPhys)");
+         geantphysics::GUGammaConversionProcess("Conversion Process"); // " (Adapted VecPhys)");
          // class ConversionProcess("Conversion Process (Wrapped VecPhys)");
       ConversionProcess->AddModel(conversionBHmodel);
       

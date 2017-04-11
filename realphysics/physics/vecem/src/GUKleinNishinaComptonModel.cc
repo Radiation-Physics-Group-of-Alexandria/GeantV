@@ -2,7 +2,9 @@
 #include "GUConstants.h"
 #include "ThreeVector.h"
 
+#include "SystemOfUnits.h"
 #include "PhysicalConstants.h"
+
 #include "Material.h"
 #include "Element.h"
 #include "MaterialProperties.h"
@@ -20,9 +22,8 @@
 
 namespace geantphysics {
 
-GUKleinNishinaComptonModel::GUKleinNishinaComptonModel(bool iselectron, const std::string &modelname)
+GUKleinNishinaComptonModel::GUKleinNishinaComptonModel(const std::string &modelname)
   : EMModel(modelname),
-    fIsElectron(iselectron),
     fMinPrimEnergy(1.0*geant::keV),
     fMaxPrimEnergy(1.0*geant::TeV)
 {
@@ -52,7 +53,8 @@ void GUKleinNishinaComptonModel::Initialise() {
   fVectorModel->Initialization();
 }
 
-double GUKleinNishinaComptonModel::ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, 
+double GUKleinNishinaComptonModel::ComputeMacroscopicXSection(const MaterialCuts *matcut,
+                                                              double kinenergy, 
                                                               const Particle*) 
 {
   double xsec = 0.0;
@@ -68,7 +70,8 @@ double GUKleinNishinaComptonModel::ComputeMacroscopicXSection(const MaterialCuts
   return xsec;
 }
 
-double GUKleinNishinaComptonModel::ComputeXSectionPerVolume(const Material *mat, double /* prodcutenergy */, 
+double GUKleinNishinaComptonModel::ComputeXSectionPerVolume(const Material *mat,
+                                                            double /* productionCutEnergy */, 
                                                             double particleekin) 
 {
   //interface to the vecphys
@@ -90,9 +93,10 @@ double GUKleinNishinaComptonModel::ComputeXSectionPerVolume(const Material *mat,
   return xsec;
 }
 
-int GUKleinNishinaComptonModel::SampleSecondaries(LightTrack &track, std::vector<LightTrack> & /*sectracks*/,
-                                                  Geant::GeantTaskData *td) {
-
+int GUKleinNishinaComptonModel::SampleSecondaries(LightTrack &track,
+                                                  std::vector<LightTrack> & /*sectracks*/,
+                                                  Geant::GeantTaskData *td)
+{
   int numSecondaries = 0;
 
   // conversion for vecphys
@@ -100,7 +104,8 @@ int GUKleinNishinaComptonModel::SampleSecondaries(LightTrack &track, std::vector
 
   // do nothing if the primary gamma is outside the valid energy range 
   // @syjun probably this is a redundant check and can be omitted in the vector mode
-  if( energyIn < fVectorModel->GetLowEnergyLimit() || energyIn > fVectorModel->GetHighEnergyLimit()) { 
+  if( energyIn < fVectorModel->GetLowEnergyLimit() ||
+      energyIn > fVectorModel->GetHighEnergyLimit()) { 
     return numSecondaries; 
   };
 
@@ -139,9 +144,28 @@ int GUKleinNishinaComptonModel::SampleSecondaries(LightTrack &track, std::vector
   double deltaKinEnergy = (energyIn - energyOut)/vecphys::EScaleToGeant4;
 
   //@syjun if deltaKinEnergy is below the production thresold, 
-  //deposite deltaKinEnergy and return with numSecondaries = 0
+  //       then deposit 'deltaKinEnergy' and return with numSecondaries = 0
 
   vecphys::ThreeVector<double> electronDir = energyIn*gamDirection0 - energyOut*gamDirection1;
+
+  // Check E/p relation for outgoing electron
+  {
+     double eKin = (energyIn - energyOut);
+     double momentumMag2 = electronDir.Mag2();
+     double eMass= geant::kElectronMassC2;
+     
+     double eKinFromP =  momentumMag2 /
+        ( std::sqrt( momentumMag2 + eMass * eMass ) + eMass );
+     double diffEkin= eKinFromP - eKin ;
+     const double thrDiff= 1.0e-3;  // Threshold level for relative difference
+     if( std::fabs(diffEkin) > thrDiff * eKin ){
+        std::cerr << " WARNING> Difference in electron eKin = "
+                  << diffEkin << " beyond threshold level= " << thrDiff
+                  << "  eKin= "  << eKin << "  and from-P = " << eKinFromP
+                  << std::endl;
+     }
+  }
+  
   electronDir = electronDir.Unit();
 
   //put one electron into the stack of secondaries
