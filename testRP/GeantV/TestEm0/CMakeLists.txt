@@ -13,8 +13,10 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/material/inc
   ${CMAKE_SOURCE_DIR}/realphysics/dummies/inc
   ${CMAKE_SOURCE_DIR}/realphysics/physics/management/inc
-  ${CMAKE_SOURCE_DIR}/realphysics/physics/models/EM/inc
   ${CMAKE_SOURCE_DIR}/realphysics/physics/processes/EM/inc
+  ${CMAKE_SOURCE_DIR}/realphysics/physics/models/EM/inc
+  ${CMAKE_SOURCE_DIR}/realphysics/physics/vecem/inc  
+  ${CMAKE_SOURCE_DIR}/vecphys/inc  
   ${CMAKE_SOURCE_DIR}/realphysics/physics/utils/inc
   )
 
@@ -22,5 +24,5 @@ include_directories(
 # Executable
 #
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/testRP/TestEm0/GeantV)
-add_executable(TextEm0_GV ${CMAKE_SOURCE_DIR}/testRP/GeantV/TestEm0/TestEm0_GV.cc ${sources})
-target_link_libraries(TextEm0_GV ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Material RealPhysics)
+add_executable(TestEm0_GV ${CMAKE_SOURCE_DIR}/testRP/GeantV/TestEm0/TestEm0_GV.cc ${sources})
+target_link_libraries(TestEm0_GV  RealPhysics vecphys Material ${VECGEOM_LIBRARIES} -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} )

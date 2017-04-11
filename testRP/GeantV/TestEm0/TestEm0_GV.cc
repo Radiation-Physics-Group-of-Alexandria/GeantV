@@ -65,7 +65,6 @@ using geantphysics::PhysicsListManager;
 using geantphysics::PhysicsList;
 using geantphysics::PhysicsParameters;
 
-
 using geantphysics::PhysicsManagerPerParticle;
 using geantphysics::PhysicsProcess;
 
@@ -83,9 +82,9 @@ using geantphysics::EMModel;
 
 //
 // default values of the input parameters
-static std::string   particleName("e-");            // primary particle is electron
+static std::string   particleName("gamma");            // primary particle is electron
 static std::string   materialName("NIST_MAT_Pb");   // material is lead
-static double        primaryEnergy     = 0.1;       // primary particle energy in [GeV]
+static double        primaryEnergy     = 1.0;       // primary particle energy in [GeV]
 static double        prodCutValue      = 0.1;       // by default in length and internal units i.e. [cm]
 static bool          isProdCutInLength = true;      // is the production cut value given in length ?
 
@@ -276,7 +275,7 @@ if (thePhysManager) {
   numPostStepCandidateProcesses = thePostStepCandProcVect.size();
 }
 std::cout<< "   The particle has " << numPostStepCandidateProcesses
-         << " processes with discrete part assinged to." << std::endl;
+         << " processes with discrete part assigned to it." << std::endl;
 std::cout<< "   -------------------------------------------------------------------------------- "<<std::endl;
 // terminate if there is no any post-step candidate processes assigned to the particle in the given region.
 if (!numPostStepCandidateProcesses) {

@@ -50,7 +50,7 @@ void DiscreteProcHandler::DoIt(GeantTrack *track, Basket& output, GeantTaskData 
 
 //______________________________________________________________________________
 VECCORE_ATT_HOST_DEVICE
-void DiscreteProcHandler::DoIt(Basket &input, Basket& output, GeantTaskData *td)
+void DiscreteProcHandler::DoIt(Basket &input, Basket& output, GeantTaskData * /*td*/ )
 {
 // Vector post step handling.
 

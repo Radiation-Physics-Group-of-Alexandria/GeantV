@@ -2,6 +2,8 @@
 #include "UserPhysicsList.h"
 
 #include "SystemOfUnits.h"
+#include "PhysicalConstants.h"
+
 #include "PhysicsProcess.h"
 
 #include "Particle.h"
@@ -15,6 +17,20 @@
 #include "SeltzerBergerBremsModel.h"
 #include "RelativisticBremsModel.h"
 
+#include "GUGammaComptonProcess.h"
+#include "GUKleinNishinaComptonModel.h"
+#include "GUGammaPhotoElectricProcess.h"
+#include "GUSauterGavrilaModel.h"
+#include "GUGammaConversionProcess.h"
+#include "GUBetheHeitlerConversionModel.h"
+
+using geantphysics::EMPhysicsProcess;
+using geantphysics::EMModel;
+using geantphysics::Particle;
+
+using geantphysics::GUSauterGavrilaModel;
+using geantphysics::GUKleinNishinaComptonModel;
+using geantphysics::GUBetheHeitlerConversionModel;
 
 namespace userapplication {
 
@@ -111,6 +127,50 @@ void UserPhysicsList::Initialize() {
       // add the process to the e+ particle
       AddProcessToPartcile(particle, eBremProc);
     }
+
+    if (particle==geantphysics::Gamma::Definition()) {
+      std::cout<<"**** UserPhysicsList:  Gamma - defining processes **************** " <<std::endl;
+      
+      EMPhysicsProcess *PhotoElectricProc= new
+         geantphysics::GUGammaPhotoElectricProcess("Photo Electric Process (adapted VecPhys)");
+         // class PhotoElectricProcess("Photo Electric Process (Wrapped VecPhys)");
+      
+      EMModel     *photoElectricModel = new GUSauterGavrilaModel(true);
+      // EMModel  *photoElectricModel = PhotoElectricProc->GetModel(); 
+      photoElectricModel->SetLowEnergyUsageLimit (   1.0*geant::keV);
+      photoElectricModel->SetHighEnergyUsageLimit(   1.0*geant::GeV);
+      std::cout<< " Adding Photo-Electric to gamma - version = adapted VecPhys." << std::endl;
+      AddProcessToParticle(particle, PhotoElectricProc);
+      std::cout<< " Adding Photo-Electric to gamma - done." << std::endl;
+      //
+
+      EMModel          *comptonModel = new GUKleinNishinaComptonModel(true);
+      comptonModel->SetLowEnergyUsageLimit ( 1.0*geant::keV );
+      comptonModel->SetHighEnergyUsageLimit( 1.0*geant::TeV );
+      
+      EMPhysicsProcess *ComptonProcess= new 
+         geantphysics::GUGammaComptonProcess("Compton Process (Adapted VecPhys)");
+          // class ComptonProcess("Compton Process (Wrapped VecPhys)");      
+      ComptonProcess->AddModel(comptonModel);
+        
+      std::cout<< " Adding Compton to gamma - version = adapted VecPhys."<<std::endl;
+      AddProcessToParticle(particle, ComptonProcess);
+      std::cout<< " Adding Compton to gamma - done."<<std::endl;
+
+      // 3. Conversion --- 
+      EMModel  *conversionBHmodel = new GUBetheHeitlerConversionModel(true);
+      conversionBHmodel->SetLowEnergyUsageLimit (2.0*geant::kElectronMassC2);
+      conversionBHmodel->SetHighEnergyUsageLimit(1.0*geant::TeV);
+        
+      EMPhysicsProcess *ConversionProcess= new
+         geantphysics::GUGammaConversionProcess("Conversion Process (Adapted VecPhys)");
+         // class ConversionProcess("Conversion Process (Wrapped VecPhys)");
+      ConversionProcess->AddModel(conversionBHmodel);
+      
+      std::cout<< " Adding Conversion to gamma."<<std::endl;
+      AddProcessToParticle(particle, ConversionProcess);
+      std::cout<< " Adding Conversion to gamma - done."<<std::endl;        
+    }  
   }
 }
 
