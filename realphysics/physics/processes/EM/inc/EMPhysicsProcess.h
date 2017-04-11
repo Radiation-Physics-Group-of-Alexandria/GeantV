@@ -163,7 +163,6 @@ public:
    */
   int AddModel(EMModel *model);
     
-  const EMModelManager* GetModelManager() const {return fModelManager;}
 
 
   /**
