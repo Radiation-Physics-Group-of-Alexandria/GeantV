@@ -19,6 +19,7 @@
 #include "GUGammaComptonProcess.h"
 #include "GUKleinNishinaComptonModel.h"
 #include "GUGammaPhotoElectricProcess.h"
+
 #include "GUSauterGavrilaModel.h"
 #include "GUGammaConversionProcess.h"
 #include "GUBetheHeitlerConversionModel.h"
@@ -50,21 +51,25 @@ public:
         gCompProc->AddModel(gKNModel);
 
         // add the process to the gamma particle
+        std::cout<< " Adding Compton to gamma."<<std::endl;
         AddProcessToPartcile(particle, gCompProc);
-
+        std::cout<< " Adding Compton to gamma - done."<<std::endl;
+        
         //2. create photo-electri process with the SauterGavrila angular distribution:
         EMPhysicsProcess *gPhotoElecProc = new GUGammaPhotoElectricProcess("gPhotoElectic");
         EMModel          *gSGModel  = new GUSauterGavrilaModel(true);
 
         // set min/max energies of the model
         gSGModel->SetLowEnergyUsageLimit (1.0*geant::keV);
-        gSGModel->SetHighEnergyUsageLimit(1.0*geant::TeV);
+        gSGModel->SetHighEnergyUsageLimit(1.0*geant::GeV);
 
         // add the model to the process
         gPhotoElecProc->AddModel(gSGModel);
 
         // add the process to the gamma particle
+        std::cout<< " Adding Photo-Electric to gamma." << std::endl;
         AddProcessToPartcile(particle, gPhotoElecProc);
+        std::cout<< " Adding Photo-Electric to gamma - done." << std::endl;
 
         //3. create the conversion process with the Bethe-Heitler model
         EMPhysicsProcess *gConvProc = new GUGammaConversionProcess("gConversion");
@@ -78,7 +83,9 @@ public:
         gConvProc->AddModel(gBHModel);
 
         // add the process to the gamma particle
+        std::cout<< " Adding Conversion to gamma."<<std::endl;
         AddProcessToPartcile(particle,gConvProc );
+        std::cout<< " Adding Conversion to gamma - done."<<std::endl;                
       }
 
       if (particle==Electron::Definition()) {

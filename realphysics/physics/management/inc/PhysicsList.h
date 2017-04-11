@@ -34,7 +34,7 @@ public:
   /** @brief Main method, called at the initialization, for the physics list by the PhysicsListManager.
    *
    *  The method should do the following:
-   *  - construct all the physics processes for all particles and assigne the processes to partciles;
+   *  - construct all the physics processes for all particles and assigne the processes to particles;
    *  - the PhysicsParameters object will be available in this method so the user can change any values of it
    */
   virtual void Initialize( /* Not defined yet */ ) = 0;
@@ -59,7 +59,11 @@ protected:
     * @param[in] particle Pointer to the particle object to which the process should be assigned.
     * @param[in] process  Pointer to a process obejct that should be assigned to the particle.
     */
-   void AddProcessToPartcile(Particle *particle, PhysicsProcess *process);
+   void AddProcessToParticle(Particle *particle, PhysicsProcess *process);
+   // Old mispelled version: 
+   void AddProcessToPartcile(Particle *particle, PhysicsProcess *process){
+      AddProcessToParticle(particle, process);
+   }
 
 //
 // data members
