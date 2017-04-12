@@ -21,9 +21,8 @@
 
 namespace geantphysics {
 
-GUBetheHeitlerConversionModel::GUBetheHeitlerConversionModel(bool iselectron, const std::string &modelname)
+GUBetheHeitlerConversionModel::GUBetheHeitlerConversionModel(const std::string &modelname)
   : EMModel(modelname), 
-    fIsElectron(iselectron),
     fMinPrimEnergy(2.0*geant::kElectronMassC2),
     fMaxPrimEnergy(1.0*geant::TeV)
 {
@@ -53,7 +52,8 @@ void GUBetheHeitlerConversionModel::Initialise() {
   fVectorModel->Initialization();
 }
 
-double GUBetheHeitlerConversionModel::ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, 
+double GUBetheHeitlerConversionModel::ComputeMacroscopicXSection(const MaterialCuts *matcut,
+                                                                 double kinenergy, 
                                                                  const Particle*) 
 {
   double xsec = 0.0;
@@ -67,6 +67,23 @@ double GUBetheHeitlerConversionModel::ComputeMacroscopicXSection(const MaterialC
   xsec = ComputeXSectionPerVolume(mat, gammacut, kinenergy);
 
   return xsec;
+}
+
+double GUBetheHeitlerConversionModel::ComputeXSectionPerAtom(const Element *elem,
+                                                             const MaterialCuts * /*matcut*/,
+                                                             double kinEnergy,
+                                                             const Particle * /*particle*/ )
+{
+  //interface to vecphys
+  kinEnergy *= EScaleToGeant4;
+
+  double xsec = fVectorModel->G4CrossSectionPerAtom(elem->GetZ(), kinEnergy);
+
+  xsec *= invXsecScaleToGeant4;
+  return xsec;
+
+  // Eventual 'one-line' version:
+  // return fVectorModel->G4CrossSectionPerAtom(elem-GetZ(), kinEnergy*EScaleToGeant4) * invXsecScaleToGeant4;
 }
 
 double GUBetheHeitlerConversionModel::ComputeXSectionPerVolume(const Material *mat, double /* prodcutenergy */, 
@@ -91,9 +108,16 @@ double GUBetheHeitlerConversionModel::ComputeXSectionPerVolume(const Material *m
   return xsec;
 }
 
+double
+GUBetheHeitlerConversionModel::MinimumPrimaryEnergy(const MaterialCuts * /*matcut*/,
+                                                    const Particle * /*part*/) const
+{
+  return 2.0*geant::kElectronMassC2;
+}
+   
 int GUBetheHeitlerConversionModel::SampleSecondaries(LightTrack &track, std::vector<LightTrack> & /*sectracks*/,
-                                                     Geant::GeantTaskData *td) {
-
+                                                     Geant::GeantTaskData *td)
+{
   int    numSecondaries      = 0;
 
   // conversion for vecphys

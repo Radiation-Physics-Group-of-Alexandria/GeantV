@@ -70,6 +70,25 @@ double GUKleinNishinaComptonModel::ComputeMacroscopicXSection(const MaterialCuts
   return xsec;
 }
 
+double GUKleinNishinaComptonModel::ComputeXSectionPerAtom(const Element *elem,
+                                                          const MaterialCuts * /*matcut*/,
+                                                          double kinEnergy,
+                                                          const Particle *particle)
+{
+  assert( particle == Gamma::Definition() );
+  //interface to vecphys
+  double ekin = kinEnergy * EScaleToGeant4;
+
+  double z = elem->GetZ();
+  double xsec = fVectorModel->G4CrossSectionPerAtom(z, ekin);
+
+  //convert xsec to the GeantV unit
+  // xsec /= XsecScaleToGeant4;
+  xsec *= invXsecScaleToGeant4;
+
+  return xsec;
+}
+
 double GUKleinNishinaComptonModel::ComputeXSectionPerVolume(const Material *mat,
                                                             double /* productionCutEnergy */, 
                                                             double particleekin) 
@@ -88,10 +107,15 @@ double GUKleinNishinaComptonModel::ComputeXSectionPerVolume(const Material *mat,
   }
 
   //convert xsec to the GeantV unit
-  xsec /= XsecScaleToGeant4;
+  xsec *= invXsecScaleToGeant4;
 
   return xsec;
 }
+
+double
+GUKleinNishinaComptonModel::MinimumPrimaryEnergy(const MaterialCuts * /*matcut*/,
+                                                 const Particle * /*part*/) const
+{ return 1.e-6; }  //  1.0 * geant::keV;
 
 int GUKleinNishinaComptonModel::SampleSecondaries(LightTrack &track,
                                                   std::vector<LightTrack> & /*sectracks*/,

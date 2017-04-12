@@ -28,13 +28,21 @@ class AliasTable;
 class Particle;
 class LightTrack;
 
-class GUBetheHeitlerConversionModel : public EMModel {
+class GUBetheHeitlerConversionModel : public EMModel
+{
 public:
+  void Initialize() override final; // from EMModel
 
-  virtual void Initialize(); // from EMModel
-  virtual double ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, const Particle *particle);
-  virtual int    SampleSecondaries(LightTrack &track, std::vector<LightTrack> &sectracks, Geant::GeantTaskData *td);
+  double ComputeXSectionPerAtom(const Element *elem,
+                                const MaterialCuts * /*matcut*/,
+                                double kinenergy,
+                                const Particle * particle) override final;
 
+  double ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, const Particle *particle) override final;
+  int    SampleSecondaries(LightTrack &track, std::vector<LightTrack> &sectracks, Geant::GeantTaskData *td) override final;
+
+  double MinimumPrimaryEnergy(const MaterialCuts * /*matcut*/, const Particle * /*part*/) const override final;
+  
 public:
 /**
 * @name Constructor, destructor:
@@ -46,7 +54,7 @@ public:
     * @param[in] iselectron  Flag to indicate that the model is for electron or for psitron.
     * @param[in] modelname   Name of the model.
     */
-  GUBetheHeitlerConversionModel(bool iselectron, const std::string &modelname="gConversion");
+  GUBetheHeitlerConversionModel(const std::string &modelname="gConversion");
   /** @brief Destructor. */
  ~GUBetheHeitlerConversionModel();
 //@}

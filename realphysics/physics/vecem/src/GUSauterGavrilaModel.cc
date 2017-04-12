@@ -51,6 +51,24 @@ void GUSauterGavrilaModel::Initialise() {
   fVectorModel->Initialization();
 }
 
+double GUSauterGavrilaModel::ComputeXSectionPerAtom(const Element *elem,
+                                                    const MaterialCuts * /*matcut*/,
+                                                    double kinEnergy,
+                                                    const Particle * /*particle*/ )
+{
+  //interface to vecphys
+  kinEnergy *= EScaleToGeant4;
+
+  double z = elem->GetZ();
+  double xsec = fVectorModel->G4CrossSectionPerAtom(z, kinEnergy);
+
+  xsec *= invXsecScaleToGeant4;
+
+  return xsec;
+  // Eventual one-line version:
+  // return fVectorModel->G4CrossSectionPerAtom(elem-GetZ(), kinEnergy*EScaleToGeant4) * invXsecScaleToGeant4;
+}
+
 double GUSauterGavrilaModel::ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, 
                                                         const Particle*) 
 {
@@ -87,6 +105,12 @@ double GUSauterGavrilaModel::ComputeXSectionPerVolume(const Material *mat, doubl
   xsec /= XsecScaleToGeant4;
 
   return xsec;
+}
+
+double GUSauterGavrilaModel::MinimumPrimaryEnergy(const MaterialCuts * /*matcut*/,
+                                                  const Particle * /*part*/)  const
+{
+  return 1.0e-6; // 1.0 * geant::keV;
 }
 
 int GUSauterGavrilaModel::SampleSecondaries(LightTrack &track, std::vector<LightTrack> & /*sectracks*/,

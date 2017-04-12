@@ -28,12 +28,25 @@ class AliasTable;
 class Particle;
 class LightTrack;
 
-class GUSauterGavrilaModel : public EMModel {
-public:
+class GUSauterGavrilaModel : public EMModel
+{
 
-  virtual void Initialize(); // from EMModel
-  virtual double ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, const Particle *particle);
-  virtual int    SampleSecondaries(LightTrack &track, std::vector<LightTrack> &sectracks, Geant::GeantTaskData *td);
+ public:
+
+  void Initialize() override final; // from EMModel
+
+  double ComputeXSectionPerAtom(const Element *elem,
+                                const MaterialCuts *matcut,
+                                double kinenergy,
+                                const Particle *particle) override final;
+  
+  double ComputeMacroscopicXSection(const MaterialCuts *matcut, double kinenergy, const Particle *particle)
+     override final;
+  
+  int    SampleSecondaries(LightTrack &track, std::vector<LightTrack> &sectracks, Geant::GeantTaskData *td)
+     override final;
+
+  double MinimumPrimaryEnergy(const MaterialCuts * /*matcut*/, const Particle * /*part*/) const override final;
 
 public:
 /**
