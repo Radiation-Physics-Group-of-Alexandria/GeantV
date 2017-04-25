@@ -83,7 +83,7 @@ public:
    *            the given Particle, MaterialCuts/Material and particle kinetic energy combination.
    */
   virtual double ComputeMacroscopicXSection(const MaterialCuts * /*matcut*/, double /*kinenergy*/,
-                                            const Particle * /*particle*/) { return 0.; }
+                                            const Particle * /*particle*/) = 0; // { return 0.; }
 
 
   /**
@@ -106,11 +106,11 @@ public:
    *            the given ELement, Particle, MaterialCuts/Material and particle kinetic energy combination.
    */
   virtual double ComputeXSectionPerAtom(const Element * /*elem*/, const MaterialCuts * /*matcut*/, double /*kinenergy*/,
-                                        const Particle * /*particle*/) { return 0.; }
+                                        const Particle * /*particle*/) = 0; // { return 0.; }
 
 
   virtual int    SampleSecondaries(LightTrack & /*track*/, std::vector<LightTrack> & /*sectracks*/,
-                                   Geant::GeantTaskData * /*td*/) { return 0; }
+                                   Geant::GeantTaskData * /*td*/) = 0; // { return 0; }
 
   /**
    * @brief Method to obtain minim primary particle kinetic energy at which the discrete part (if any) of the interaction
@@ -126,7 +126,7 @@ public:
    * @return    Minimum primary particle kinetic energy at which the discrete interaction can happen in interanl
    *            [energy] units for the given Particle, MaterialCuts/Material combination.
    */
-  virtual double MinimumPrimaryEnergy(const MaterialCuts * /*matcut*/, const Particle * /*part*/) const { return 0.0; }
+  virtual double MinimumPrimaryEnergy(const MaterialCuts * /*matcut*/, const Particle * /*part*/) const = 0; // { return 0.0; }
 //
 //
 //
