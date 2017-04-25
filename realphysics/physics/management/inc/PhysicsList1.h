@@ -73,7 +73,7 @@ public:
 
         //3. create the conversion process with the Bethe-Heitler model
         EMPhysicsProcess *gConvProc = new GUGammaConversionProcess("gConversion");
-        EMModel          *gBHModel  = new GUBetheHeitlerConversionModel(true);
+        EMModel          *gBHModel  = new GUBetheHeitlerConversionModel("Bethe-Heitler Model");
 
         // set min/max energies of the model
         gBHModel->SetLowEnergyUsageLimit (2.0*geant::kElectronMassC2);

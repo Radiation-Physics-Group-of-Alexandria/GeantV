@@ -160,7 +160,7 @@ void UserPhysicsList::Initialize() {
       std::cout<< " Adding Compton to gamma - done."<<std::endl;
 
       // 3. Conversion --- 
-      EMModel  *conversionBHmodel = new GUBetheHeitlerConversionModel(true);
+      EMModel  *conversionBHmodel = new GUBetheHeitlerConversionModel();
       conversionBHmodel->SetLowEnergyUsageLimit (2.0*geant::kElectronMassC2);
       conversionBHmodel->SetHighEnergyUsageLimit(1.0*geant::TeV);
         
