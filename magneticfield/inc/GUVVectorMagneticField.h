@@ -5,39 +5,52 @@
 #include "GUVField.h"
 #include "GUVMagneticField.h"
 
+/*
+namespace vecfield {
+
+VECGEOM_DEVICE_FORWARD_DECLARE(class GUVVectorField;);
+VECGEOM_DEVICE_DECLARE_CONV(class, GUVVectorField);
+
+inline namespace VECFIELD_IMPL_NAMESPACE {
+*/
+
 class GUVVectorMagneticField :  public GUVVectorField 
 {
-  typedef typename vecgeom::kVc::precision_v      Double_v;
-//  typedef typename vecgeom::kVc::precision_v      Float_v;     // Was vecgeom::kVcFloat::precision_v 
-  typedef typename vecgeom::kVcFloat::precision_v Float_v;
+    // typedef typename vecgeom::kVc::precision_v      Double_v;
+    // typedef typename vecgeom::kVcFloat::precision_v Float_v;
   
   public:
-    static constexpr int   fNumFieldComponents= 3;
-    static constexpr bool  fFieldChangesEnergy= false;
+    static constexpr int   sNumFieldComponents= 3;
+    static constexpr bool  sFieldChangesEnergy= false;
   
-    GUVVectorMagneticField():  
-     GUVVectorField( fNumFieldComponents, fFieldChangesEnergy) 
-    {std::cout<<"--- GUVVectorMagneticField entered here ---"<<std::endl;}
+    GUVVectorMagneticField():
+     GUVVectorField( sNumFieldComponents, sFieldChangesEnergy) 
+    {std::cout<<"--- GUVVectorMagneticField def c-tor called ---"<<std::endl;}
 
     virtual ~GUVVectorMagneticField(){}; 
 
+    /***
     void  GetFieldValue( const Double_v  Point[4],     // The old interface
                                Double_v* Field );
-    
-    virtual void GetFieldValue( const vecgeom::Vector3D<Double_v> &Position, 
-                                      vecgeom::Vector3D<Float_v> &FieldValue ) = 0;
+    ****/
+    VECGEOM_CUDA_HEADER_BOTH
+    virtual void GetFieldValue( vecgeom::Vector3D<double> const &Position,
+                                vecgeom::Vector3D<float>        &FieldValue ) = 0;
+
+    virtual void GetFieldValueSIMD( vecgeom::Vector3D<Double_v>  const &Position, 
+                                    vecgeom::Vector3D<Float_v>         &FieldValue ) = 0;
 
     GUVVectorMagneticField& operator = (const GUVVectorMagneticField &p);
     //  Copy 'standard' components ...
 };
 
+/*******
 void
-GUVVectorMagneticField::GetFieldValue( const typename vecgeom::kVc::precision_v  Point[4],     // The old interface
-                                             typename vecgeom::kVc::precision_v* FieldArr )
+GUVVectorMagneticField::GetFieldValue( const Double_v  Point[4],     // The old interface
+                                             Double_v* FieldArr )
 {
-   typedef typename vecgeom::kVc::precision_v Double_v;
-   // typedef typename vecgeom::kVc::precision_v Float_v;     // Was  vecgeom::kVcFloat::precision_v;
-   typedef typename vecgeom::kVcFloat::precision_v Float_v;
+   // typedef typename vecgeom::kVc::precision_v Double_v;
+   // typedef typename vecgeom::kVcFloat::precision_v Float_v;
    
    vecgeom::Vector3D<Double_v> PositionV3D( Point[0], Point[1], Point[2]);
    vecgeom::Vector3D<Float_v>  Field_v3f;
@@ -46,4 +59,12 @@ GUVVectorMagneticField::GetFieldValue( const typename vecgeom::kVc::precision_v 
    FieldArr[1]= (Double_v) Field_v3f.y();
    FieldArr[2]= (Double_v) Field_v3f.z();
 }
+ ******/
+
+/*
+} // End inline namespace
+
+} // End global namespace
+*/
+
 #endif

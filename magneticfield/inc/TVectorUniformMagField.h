@@ -5,10 +5,10 @@
 #ifndef TVectorUniformMagField_H
 #define TVectorUniformMagField_H
 
-#include "GUVVectorMagneticField.h"
 #include <iostream>
-
 #include "base/Vector3D.h"
+
+#include "GUVVectorMagneticField.h"
 
 #include "Constants.h"  //   For pi & twopi - Temporary solution ..
 
@@ -19,9 +19,8 @@ class TVectorUniformMagField : public GUVVectorMagneticField
 {
     public:  // with description
 
-      typedef typename vecgeom::kVc::precision_v      Double_v;
-      typedef typename vecgeom::kVcFloat::precision_v Float_v;
-      // typedef typename vecgeom::kVc::precision_v      Float_v;    // Was kVcFloat::precision_v      
+        // typedef typename vecgeom::kVc::precision_v      Double_v;
+        // typedef typename vecgeom::kVcFloat::precision_v Float_v;
      
         TVectorUniformMagField(const vecgeom::Vector3D<float>& FieldVector )
            : GUVVectorMagneticField() //NumberOfComponents(3)
@@ -52,17 +51,20 @@ class TVectorUniformMagField : public GUVVectorMagneticField
         }
 
         // virtual
-        void GetFieldValue( const vecgeom::Vector3D<double> &, // Position,
-                                  vecgeom::Vector3D<float> &FieldValue )
+        void GetFieldValue( vecgeom::Vector3D<double> const &, // Position,
+                            vecgeom::Vector3D<float> &FieldValue )  override final
         {
            FieldValue= fFieldComponents;
         }
 
-        void GetFieldValue( const vecgeom::Vector3D<Double_v> &, // Position,
-                                  vecgeom::Vector3D<Float_v> &FieldValue )
+        void GetFieldValueSIMD( vecgeom::Vector3D<Double_v> const &, // Position,
+                                vecgeom::Vector3D<Float_v> &FieldValue ) override final
         {
-           for (int i=0; i<3; i++) FieldValue[i] = fFieldComponents[i];
-           // FieldValue= fFieldComponents;
+           // for (int i=0; i<3; i++) FieldValue[i] = Float_v( fFieldComponents[i] );
+           FieldValue[0] = Float_v( fFieldComponents[0] );
+           FieldValue[1] = Float_v( fFieldComponents[1] );
+           FieldValue[2] = Float_v( fFieldComponents[2] );           
+           // FieldValue= vecGeom::Vector3D<Float_v> (fFieldComponents);
         }
 
         void SetFieldValue(const vecgeom::Vector3D<float>& fieldValue)
@@ -77,7 +79,7 @@ class TVectorUniformMagField : public GUVVectorMagneticField
         // Return the field value
 
         // virtual
-        TVectorUniformMagField* Clone() const
+        TVectorUniformMagField* Clone() const override final
         {
            return new TVectorUniformMagField( *this );
         }

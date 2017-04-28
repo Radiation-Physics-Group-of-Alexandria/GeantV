@@ -162,10 +162,10 @@ inline
 void GUVVectorEquationOfMotion::GetFieldValue( const typename vecgeom::kVc::precision_v Point[4],
                                                      typename vecgeom::kVc::precision_v Field[] ) const
 {
-   vecgeom::Vector3D<typename vecgeom::kVc::precision_v> Position( Point[0], Point[1], Point[2] );
-   // vecgeom::Vector3D<Double_v> Position( Point[0], Point[1], Point[2] );   
-   vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v>  FieldVec;
-   // vecgeom::Vector3D<Float_v>  FieldVec;   
+   // vecgeom::Vector3D<typename vecgeom::kVc::precision_v> Position( Point[0], Point[1], Point[2] );
+   vecgeom::Vector3D<Double_v> Position( Point[0], Point[1], Point[2] );   
+   // vecgeom::Vector3D<typename vecgeom::kVcFloat::precision_v>  FieldVec;
+   vecgeom::Vector3D<Float_v>  FieldVec;
    fField-> GetFieldValue( Position, FieldVec );
    Field[0] = (Double_v) FieldVec[0];
    Field[1] = (Double_v) FieldVec[1];
