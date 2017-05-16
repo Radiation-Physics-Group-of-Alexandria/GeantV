@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Cogevito: Dynamic particles</title>
+    <script type="text/javascript" src="lib/three.js"></script>
+    <script type="text/javascript" src="lib/THREEx.KeyboardState.js"></script>
+    <script type="text/javascript" src="lib/ThreeCSG.js"></script>
+    <script type="text/javascript" src="lib/dat.gui.min.js"></script>
+    <script type="text/javascript" src="lib/OrbitControls.js"></script>
+    <script type="text/javascript" src="lib/cogevitolibc.js"></script>
+    <style>
+    body {
+        /* set margin to 0 and overflow to hidden, to go fullscreen */
+        margin: 0;
+        overflow: hidden;
+        background-color: #849378;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="WebGL-output">
+    </div>
+    <!-- Javascript code that runs our Three.js examples -->
+    <script type="text/javascript">
+    //-----------Javascript
+
+    //
+    //  Start definition of particles and their properties
+    //
+
+    //Create a canvas to contain the label of the object (mouse over display name)  
+    var canvas = document.createElement('canvas'),
+        ctx = canvas.getContext('2d');
+    var texture, ObjectLabel;
+    VolumeName = "";
+
+    function changeCanvas(label = "") {
+        ctx.font = '12pt Arial';
+        ctx.fillStyle = 'white';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillText(label, canvas.width / 2, canvas.height / 2);
+    }
+
+    function init() {
+
+        var ParticleClock = new THREE.Clock();
+        var LastElapsed = 0;
+
+        var MaxParticlesInScene = 10000;
+        var ParticlesInScene = new THREE.Group();
+        var ParticlesTraceInScene = new THREE.Group();
+        var VolumesInScene = new THREE.Group();
+
+        var ReactedParticles = [];
+        var nReactedParticlesInTime = [];
+        var Nreacted = 0;
+        var MaxTimeSlots = 1000;
+        var NtimeSlots = 0;
+        var GeneratedParticles = false;
+        var spinner;
+
+
+        var NparticleKinds = 10;
+        var ParticleKind = ["default", "gamma", "electron", "positron", "proton", "neutron", "muon", "deuterium", "alpha", "ion"];
+        var ParticleKindVisible = [true, true, true, true, true, true, true, true, true, true];
+        var ParticleColor = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        var ParticleSize = [0, 1, 1, 1, 3, 4, 4, 5, 6, 7];
+        var ParticleWeightNorm = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+        var ParticlesTransparency = true;
+        var ParticlesOpacity = 0.6;
+        var ParticlesSizeAttenuation = true;
+        var ParticleMaterial = [];
+        var ParticleTraceMaterial = [];
+        var ReactedParticleMaterial = [];
+        var ReactedFinalMaterial = [];
+
+        var textureLoader = new THREE.TextureLoader();
+
+        var maps = [];
+
+        var ParticleMaps = ["images/default.png", "images/gamma.png", "images/electron.png", "images/positron.png", "images/proton.png", "images/neutron.png", "images/muon.png", "images/deuterium.png", "images/alpha.png", "images/ion.png"];
+
+
+        for (var i = 0; i < NparticleKinds; i++) {
+            maps[i] = textureLoader.load(ParticleMaps[i]);
+            ParticleMaterial[i] = new THREE.SpriteMaterial({
+                map: maps[i],
+                fog: true
+            });
+            ParticleTraceMaterial[i] = new THREE.LineBasicMaterial({
+                color: colors[ParticleColor[i]],
+                linewidth: 1
+            });
+            //ParticleTraceMaterial[i] = new THREE.LineDashedMaterial( {
+            //    color: colors[ParticleColor[i]], dashSize: 1, gapSize: 0.5
+            //});
+        }
+        for (var i = 0; i < NparticleKinds; i++) {
+            ReactedFinalMaterial[i] = new THREE.SpriteMaterial({
+                map: textureLoader.load("images/r0.png"),
+                color: colors[ParticleColor[i]],
+                transparent: false,
+                blending: THREE.AdditiveBlending
+            });
+
+            //c=colors[ParticleColor[i]];
+            //ReactedFinalMaterial[i].color.setHSL( c.r,c.g,c.b); 
+        }
+        ReactedParticleMaterial[0] = new THREE.SpriteMaterial({
+            map: textureLoader.load("images/r1.png"),
+            fog: true
+        });
+        ReactedParticleMaterial[1] = new THREE.SpriteMaterial({
+            map: textureLoader.load("images/r2.png"),
+            fog: true
+        });
+        ReactedParticleMaterial[2] = new THREE.SpriteMaterial({
+            map: textureLoader.load("images/r3.png"),
+            fog: true
+        });
+
+
+        function SetParticleKind(index, name) {
+            ParticleKind[index] = name;
+            return index;
+        }
+
+        function SetParticleColor(index, color) {
+            ParticleColor[index] = color;
+            return index;
+        }
+
+        function SetParticleSize(index, size) {
+            ParticleSize[index] = size;
+            return index;
+        }
+
+        function SetParticlesTransparency(transparency) {
+            ParticlesTransparency = transparency;
+            return transparency;
+        }
+
+        function SetParticlesOpacity(opacity) {
+            ParticlesOpacity = opacity;
+            return opacity;
+        }
+
+        function SetParticlesSizeAttenuation(attenuation) {
+            ParticlesSizeAttenuation = attenuation;
+            return attenuation;
+        }
+
+        function AddParticleKind(name, color, size) {
+            ParticleKind[NparticleKinds] = name;
+            ParticleColor[NparticleKinds] = color;
+            ParticleSize[NparticleKinds] = size;
+            NparticleKinds++;
+            return NparticleKinds;
+        }
+
+        // end of definition of particles and their properties
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.addEventListener('change', function(event) {
+
+            //console.log(fileInput.files[0]);
+            loadJSON(fileInput.files[0].name, function(response) {
+                var JsonGeom = JSON.parse(response);
+                //console.log(JsonGeom);
+                //for (var i=0;i<JsonGeom.Geometry.length;i++){
+                //    console.log(JsonGeom.Geometry[i].fn);
+                //}
+                if (JsonGeom.Colors) loadColors(JsonGeom);;
+                if (JsonGeom.Geometry) loadGeometry(JsonGeom);
+                if (JsonGeom.Clones) loadClones(JsonGeom);
+                if (JsonGeom.Event) loadEvent(JsonGeom);
+                if (JsonGeom.Graphics) loadGraphics(JsonGeom);
+            });
+        });
+
+        //
+        //  Start dynamic data collection of particles in time (ID, time, weight, kind, position, ...)
+        //
+
+        //SetOfParticlesInTime will contain a "Geometry" as a set of vertexes for each particle indicating also Particle Kind   and energy(size).
+
+        var EventTime = 0;
+        var NtimeSlots = 0;
+        var CurrentTimeSlot = 0
+        var GeometryNotLoaded = true;
+        var ClonesNotLoaded = true;
+
+        var SetOfParticlesInTime;
+
+        var TimeIntervals = [];
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        var scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 60000);
+
+        // create a render and set the size
+        var renderer = new THREE.WebGLRenderer();
+        //renderer.setClearColor(new THREE.Color(0x000000));
+        renderer.setClearColor(new THREE.Color(0x454b3a));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+
+        // add the output of the renderer to the html element
+        document.getElementById("WebGL-output").appendChild(renderer.domElement);
+
+
+        // position and point the camera to the center of the scene
+        camera.position.x = 4000;
+        camera.position.y = 4000;
+        camera.position.z = 0;
+        //camera.lookAt(new THREE.Vector3(20, 30, 0));
+
+        texture = new THREE.Texture(canvas);
+        var materialLabel = new THREE.SpriteMaterial({
+            map: texture
+        });
+
+        ObjectLabel = new THREE.Sprite(materialLabel);
+        ObjectLabel.name = "VolumeLabel";
+        ObjectLabel.position.x = camera.position.x;
+        ObjectLabel.position.y = camera.position.y;
+        ObjectLabel.position.z = camera.position.z;
+        scene.add(ObjectLabel);
+
+        canvas.width = 256.;
+        canvas.height = 256.;
+
+        //Mouse events listeners 
+        renderer.domElement.addEventListener('mousedown', onEventMouseDown, false);
+        renderer.domElement.addEventListener('mouseup', onEventMouseUp, false);
+        //renderer.domElement.addEventListener('dblclick' , onEventDblClick,  false);
+        renderer.domElement.addEventListener('mousemove', onEventMouseMove, false);
+
+        window.addEventListener('resize', onWindowResize, false);
+
+
+        // Trackball controls for rotating and moving the camera
+
+        var trackballControls = new THREE.OrbitControls(camera, renderer.domElement);
+        trackballControls.target.set(0, 1, 0);
+        trackballControls.update();
+
+
+        //Lighting
+        var ambientLight = new THREE.AmbientLight(0x0c0c0c);
+        scene.add(ambientLight);
+
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.angle = Math.PI / 5;
+        spotLight.penumbra = 0.2;
+        spotLight.position.set(12000, 12000, -12000);
+        spotLight.castShadow = true;
+        spotLight.shadow.camera.near = 3;
+        spotLight.shadow.camera.far = 10;
+        spotLight.shadow.mapSize.width = 1024;
+        spotLight.shadow.mapSize.height = 1024;
+        scene.add(spotLight);
+
+        var dirLight = new THREE.DirectionalLight(0x55505a, 1);
+        dirLight.position.set(0, 3000, 0);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 10;
+        dirLight.shadow.camera.right = 1;
+        dirLight.shadow.camera.left = -1;
+        dirLight.shadow.camera.top = 1;
+        dirLight.shadow.camera.bottom = -1;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+
+        var keyboard = new THREEx.KeyboardState();
+        var MenuItems = CreateMenu();
+
+        trackballControls.enabled = MenuItems.EnableMouseTrackBall;
+
+        renderer.localClippingEnabled = false;
+
+        var TimeStamp = 0.0;
+        var TimeStep = 0.02; //seconds
+        var StepByLength = 1 //m
+        var length = 0;
+
+        var scale = 3;
+
+        //AddPrimitives(scene);
+
+        var axisHelper = new THREE.AxisHelper(500);
+        scene.add(axisHelper);
+
+        animate();
+
+        //============================
+        function gCI(Cname, Color) {
+            setColors(JsonGeom.Colors)
+        }
+
+        function loadColors(JsonGeom) {
+            if (!JsonGeom.Colors) return (0);
+            setColors(JsonGeom.Colors);
+            defColorMaterials();
+        }
+
+
+        function checkGeometry(JsonGeom) {
+            var LevelVolumes = [];
+            var tot_volumes;
+            var maxLevel = 0;
+            var ml = 0;
+
+            if (MenuItems.MaxLevel == 0) {
+
+                for (var i = 0; i < 100; i++) LevelVolumes[i] = 0;
+                for (var i = 0; i < JsonGeom.Geometry.length; i++) {
+                    Gm = JsonGeom.Geometry[i];
+                    if (Gm.fn == "mesh" || Gm.fn == "grp" || Gm.fn == "cmp" || Gm.fn == "clone") {
+                        if (Gm.lv > maxLevel) maxLevel = Gm.lv;
+                        LevelVolumes[Gm.lv] += Gm.nv;
+                    }
+                }
+                for (var i = 0; i < maxLevel; i++) console.log("Level: ", i, " volumes: ", LevelVolumes[i]);
+
+                ml = maxLevel;
+                maxlev = maxLevel;
+                tot_volumes = LevelVolumes[1];
+
+                for (var i = maxLevel; i >= 1; i--) {
+                    if (tot_volumes > MenuItems.MaxNumberOfVolumes) {
+                        if ((tot_volumes - LevelVolumes[i]) <= MenuItems.MaxNumberOfVolumes) {
+                            maxlev = i;
+                            break;
+                        }
+                    }
+                }
+                maxLevel = maxlev;
+
+                if (maxLevel < MenuItems.MaxLevel || MenuItems.MaxLevel == 0) {
+                    var text = "WARNING: only (" + (tot_volumes - LevelVolumes[maxLevel]) + ") volumes out of (" + tot_volumes + ")  will be loaded. Max level set to: " + maxLevel + " out of (" + ml + ") total levels: ";
+                    alert(text);
+                    MenuItems.MaxLevel = maxLevel;
+                }
+
+            } else {
+                maxLevel = MenuItems.MaxLevel;
+                var text = " Max level set to: " + maxLevel;
+                alert(text);
+            }
+            return (maxLevel);
+
+        }
+
+
+        function loadGraphics(JsonGeom) {
+            if (!JsonGeom.Graphics) return (0);
+            setTimeout(function() {
+
+                for (var i = 0; i < JsonGeom.Graphics.length; i++) {
+                    Gm = JsonGeom.Graphics[i];
+
+                }
+                //hideSpinner(spinner);
+            }, 200);
+        }
+
+
+        function loadGeometry(JsonGeom) {
+
+            if (!JsonGeom.Geometry) return (0);
+            if (!GeometryNotLoaded) {
+                return (0);
+                alert("Logical Volumes have already been loaded")
+            }
+
+
+            var maxLevel = checkGeometry(JsonGeom);
+
+            //spinner = showSpinner();
+            GeometryNotLoaded = false;
+
+            setTimeout(function() {
+
+                var nlines = 0;
+                var nfaces = 0;
+                var nv = 0;
+                for (var i = 0; i < JsonGeom.Geometry.length; i++) {
+                    Gm = JsonGeom.Geometry[i];
+                    //console.log("Line~ :{", nlines, "}-->", Gm.fn);
+                    switch (Gm.fn) {
+                        case "mesh": //"clone sub-tree structure"
+                            if (Gm.lv <= MenuItems.MaxLevel) {
+                                nlines++;
+                                geoCreateMesh(Gm.gid, Gm.m, addNewColor(Gm.cl, Gm.cn), Gm.vs, Gm.n, Gm.v);
+                                nv += Gm.nv;
+                            }
+                            break;
+                        case "clone": //"clone sub-tree structure"
+                            if (Gm.lv <= MenuItems.MaxLevel) {
+                                makeClone(Gm.m, Gm.ovn, Gm.cn, Gm.v);
+                                nv += Gm.nv;
+                            }
+                            break;
+                        case "grp": //"geoCreateGroup"
+                            geoCreateGroup(Gm.m, Gm.vs, Gm.n, Gm.v);
+                            break;
+                        case "box": //"geoCreateBox"
+                            geoCreateBox(Gm.gid, Gm.x, Gm.y, Gm.z);
+                            break;
+                        case "elc": //"geoCreateElipticalCylinder"
+                            geoCreateElipticalCylinder(Gm.gid, Gm.dz, Gm.a, Gm.b, Gm.phs, Gm.phl);
+                            break;
+                        case "pgn": //"geoCreateLathe"
+                            geoCreatePgon(Gm.gid, Gm.nedg, Gm.r, Gm.z, Gm.phs, Gm.phl);
+                            break;
+                        case "lth": //"geoCreateLathe"
+                            geoCreateLathe(Gm.gid, Gm.r, Gm.z, Gm.phs, Gm.phl);
+                            break;
+                        case "exr": //"geoCreateExtruded"
+                            geoCreateExtruded(Gm.gid, Gm.x, Gm.y, Gm.z, Gm.px, Gm.py, Gm.f);
+                            break;
+                        case "tra": //"geoCreateTrapezoid"
+                            geoCreateTrapezoid(Gm.gid, Gm.x, Gm.y, Gm.z, Gm.nz);
+                            break;
+                        case "par": //"geoCreatePara"
+                            geoCreatePara(Gm.gid, Gm.dx, Gm.dy, Gm.dz, Gm.al, Gm.th, Gm.ph);
+                            break;
+                        case "trd": //"geoCreateTrd"
+                            geoCreateTrd(Gm.gid, Gm.dx1, Gm.dx2, Gm.dy1, Gm.dy2, Gm.dz);
+                            break;
+                        case "trp": //"geoCreateTrap"
+                            geoCreateTrap(Gm.gid, Gm.dz, Gm.th, Gm.ph, Gm.bl1, Gm.tl1, Gm.bl2, Gm.tl2, Gm.h1, Gm.h2, Gm.al1, Gm.al2);
+                            break;
+                        case "gtr": //"geoCreateGTra"
+                            geoCreateGTra(Gm.gid, Gm.dz, Gm.th, Gm.ph, Gm.bl1, Gm.tl1, Gm.bl2, Gm.tl2, Gm.h1, Gm.h2, Gm.al1, Gm.al2, Gm.twist);
+                            break;
+                        case "hpb": //"geoCreateHyperbloid"
+                            geoCreateHyperbloid(Gm.gid, Gm.rmin, Gm.rmax, Gm.stin, Gm.stout, Gm.dz);
+                            break;
+                        case "prb": //"geoCreateParabloid"
+                            geoCreateParabloid(Gm.gid, Gm.rlo, Gm.rhi, Gm.dz);
+                            break;
+                        case "tor": //"geoCreateTorus"
+                            geoCreateTorus(Gm.gid, Gm.r, Gm.rmin, Gm.rmax, Gm.phs, Gm.phl);
+                            break;
+                        case "csg": //"geoCreateConeSeg"
+                            geoCreateConeSeg(Gm.gid, Gm.dz, Gm.rmin1, Gm.rmin2, Gm.rmax1, Gm.rmax2, Gm.phs, Gm.phl);
+                            break;
+                        case "sph": //"geoCreateSphere"
+                            geoCreateSphere(Gm.gid, Gm.rmin, Gm.rmax, Gm.ths, Gm.thl, Gm.phs, Gm.phl);
+                            break;
+                        case "cyl": //"geoCreateCylinder"
+                            geoCreateCylinder(Gm.gid, Gm.dz, Gm.rtop, Gm.rbot, Gm.phs, Gm.phl);
+                            break;
+                        case "cmp": //"Composite"
+                            //console.log("Line~ :{", nlines, "}-->", Gm.fn, Gm.lpn, Gm.rpn, Gm.opr, Gm.cpn);
+                            makeComposite(Gm.m, addNewColor(Gm.cl, Gm.cn), Gm.vs, Gm.v, Gm.lpn, Gm.rpn, Gm.opr, Gm.cpn);
+                            break;
+                        case "END": //"end"
+                            //addClonedVolumes("");
+                            break;
+                        default:
+                            console.log(JsonGeom.Geometry[i].fn);
+                    }
+
+                }
+                console.log("Loaded :", nlines, "  volumes (mesh) ");
+
+                var nmesh = 0;
+                var nvrtx = 0;
+                var nface = 0;
+                var j = 0;
+                root.traverse(function(e) {
+                    j++;
+                    if (e instanceof THREE.Mesh) {
+                        nmesh++;
+                        nvrtx += e.geometry.vertices.length;
+                        nface += e.geometry.faces.length;
+                        e.updateMatrix();
+                    }
+                });
+                console.log("TOTAL number of meshes:", nmesh, "  total number of vertices:", nvrtx, "  total number of faces:", nface);
+                alert("TOTAL number of meshes:" + nmesh + "  total number of vertices:" + nvrtx + "  total number of faces:" + nface);
+
+
+                scene.add(root);
+                hideSpinner(spinner);
+            }, 200);
+        }
+
+
+        function loadClones(JsonGeom) {
+            if (!JsonGeom.Clones) return (0);
+            //spinner = showSpinner();
+            if (!ClonesNotLoaded) {
+                return (0);
+                alert("Logical Volumes have already been loaded")
+            }
+            ClonesNotLoaded = false;
+            nv = 0
+
+            setTimeout(function() {
+
+                var nlines = 0;
+                var nv = 0;
+                for (var i = 0; i < JsonGeom.Clones.length; i++) {
+                    if ((nlines % 1000) == 0) console.log("so far loded: ", nv, " volumes, ", nlines, " lines of a total ", JsonGeom.Clones.length);
+                    Gm = JsonGeom.Clones[i];
+                    nlines++;
+                    //console.log("Line~ :{",nlines,"}-->",JsonGeom.Geometry[i].fn);
+                    switch (Gm.fn) {
+
+                        case "clone": //"clone sub-tree structure"
+                            if (Gm.lv <= MenuItems.MaxLevel) {
+                                makeClone(Gm.m, Gm.ovn, Gm.cn, Gm.v);
+                                nv += Gm.nv;
+                                //loadClone(Gm.g,Gm.m,Gm.ovn,Gm.cn,Gm.mf,Gm.v);
+                            }
+                            break;
+                        case "END":
+                            //addClonedVolumes("");
+                            break;
+                        default:
+                            console.log(JsonGeom.Clones[i].fn);
+                    }
+                }
+                console.log("Loaded :", nlines, "  lenes, ", nv, "  Clones");
+
+
+                var nmesh = 0;
+                var nvrtx = 0;
+                var nface = 0;
+                var j = 0;
+                root.traverse(function(e) {
+                    j++;
+                    if (e instanceof THREE.Mesh) {
+                        nmesh++;
+                        nvrtx += e.geometry.vertices.length;
+                        nface += e.geometry.faces.length;
+                        e.updateMatrix();
+                    }
+                });
+                console.log("TOTAL number of meshes:", nmesh, "  total number of vertices:", nvrtx, "  total number of faces:", nface);
+                alert("TOTAL number of meshes:" + nmesh + "  total number of vertices:" + nvrtx + "  total number of faces:" + nface);
+
+
+                hideSpinner(spinner);
+            }, 200);
+        }
+
+
+        function loadEvent(JsonGeom) {
+            if (!JsonGeom.Event) return (0);
+            SetOfParticlesInTime = JsonGeom;
+            setTimeout(function() {
+                np = CreateSprites(SetOfParticlesInTime.Event.length);
+                setTraceStep(SetOfParticlesInTime, np);
+                CreateTraceParticles(np);
+                scene.add(ParticlesInScene);
+                scene.add(ParticlesTraceInScene);
+                ParticleClock.start();
+                LastElapsed = ParticleClock.getElapsedTime();
+                hideSpinner(spinner);
+            }, 200);
+        }
+
+        function setTraceStep(spt, np) {
+            //This function will set the number of steps that each particle has performed at each time slot
+            //
+
+            for (var j = 0; j < np; j++) {
+                var kstep = 0;
+                for (var i = 0; i < NtimeSlots; i++) {
+                    if (j < SetOfParticlesInTime.Event[i].pset.length) {
+                        if (SetOfParticlesInTime.Event[i].pset[j].type != "v") {
+                            SetOfParticlesInTime.Event[i].pset[j].nsteps = kstep++;
+                        }
+                    }
+                }
+            }
+        }
+
+
+        function CreateMenu() {
+            var MenuItems = new function() {
+                this.EnableMouseTrackBall = true;
+                this.EnableMouseActions = true;
+                this.RestoreMouseActions = function() {
+                    restoreMouseOperations()
+                };
+                this.VolumeLabel = true;
+
+                this.MaxNumberOfVolumes = 150000;
+                this.MaxLevel = 4;
+
+                this.loadFromJsonFile = function() {
+
+                    load();
+
+                };
+                this.setSelection = "";
+                this.drawSelected = function() {
+                    var vol = MenuItems.setSelection;
+                    if (vol == "") {
+                        root.traverse(function(e) {
+                            if (e instanceof THREE.Mesh) {
+                                e.material.transparent = false;
+                                e.material.opacity = 0.6;
+                            }
+                        });
+
+                    } else {
+
+                        root.traverse(function(e) {
+                            if (e instanceof THREE.Mesh) {
+                                e.material.transparent = true;
+                                e.material.opacity = 0.1;
+                            }
+                        });
+                        var vId = root.getObjectByName(vol);
+
+                        if (vId instanceof THREE.Mesh) {
+                            var mat = vId.material.clone();
+                            vId.material = mat;
+                            vId.material.transparent = false;
+                            vId.material.opacity = 0.6;
+                        } else if (vIds instanceof THREE.Group) {
+
+                        }
+
+
+
+                    }
+
+
+                };
+                this.hideVolumes = function() {
+                    for (var i = 0; i < scene.children.length; i++) {
+                        if (scene.children[i].name == "root") {
+                            scene.remove(scene.children[i]);
+                            break;
+                        }
+                    }
+                };
+                this.showVolumes = function() {
+                    for (var i = 0; i < scene.children.length; i++) {
+                        var inScene = false;
+                        if (scene.children[i].name == "root") {
+                            inScene = true;
+                            break;
+                        }
+                        if (!inScene) scene.add(root);
+                    }
+                };
+                this.traceParticles = false;
+                this.restartParticles = false;
+
+                this.particlesSizeScaleFactor = 20.;
+                this.ReactedParticlesSizeScaleFactor = 20.;
+                this.particleSpeedScaleFactor = 1.;
+
+
+                this.gamma = true;
+                this.electron = true;
+                this.positron = true;
+                this.proton = true;
+                this.neutron = true;
+                this.muon = true;
+                this.deuterium = true;
+                this.alpha = true;
+                this.ion = true;
+                this.energyMinCut = 0.;
+                this.particleTransparency = true;
+                this.particleOpacity = 0.3;
+
+
+                this.localClipEnabled = false;
+                this.clipingPlaneX = 0.
+                this.clipingPlaneY = 0.
+                this.clipingPlaneZ = 0.
+                    //===========================================================================
+                this.ambientLightColor = "#0c0c0c";
+                this.backgroundColor = "#505050";
+
+                this.spotLightColor = "#ffffff";
+                this.spotAngle = Math.PI / 5;
+                this.spotPenumbra = 0.2;
+                this.spotPositionX = 12000;
+                this.spotPositionY = 12000;
+                this.spotPositionZ = -12000;
+
+                this.spotCastShadow = true;
+                this.spotShadowCameraNear = 3;
+                this.spotShadowCameraFar = 10;
+                this.spotShadowMapSizeWidth = 1024;
+                this.spotShadowMapSizeHeight = 1024;
+
+                this.dirLightColor = "#ffffff";
+                this.dirLightIntensity = 1;
+                this.dirPositionX = 0;
+                this.dirPositionY = 3000;
+                this.dirPositionZ = 0;
+                this.dirCastShadow = true;
+                this.dirShadowCameraNear = 1;
+                this.dirShadowCameraFar = 10;
+                this.dirShadowCameraRight = 1;
+                this.dirShadowCameraLeft = -1;
+                this.dirShadowCameraTop = 1;
+                this.dirShadowCameraBottom = -1;
+                this.dirShadowMapSizeWidth = 1024;
+                this.dirShadowMapSizeHeight = 1024;
+            };
+
+            //===========================================================================
+
+            var gui = new dat.GUI({
+                autoplace: false,
+                width: 500
+            });
+            var fMain = gui.addFolder('Main Selection');
+            fMain.add(MenuItems, 'EnableMouseTrackBall').onChange(function(newValue) {
+                trackballControls.enabled = newValue;
+            });
+            fMain.add(MenuItems, 'EnableMouseActions')
+            fMain.add(MenuItems, 'RestoreMouseActions')
+            fMain.add(MenuItems, 'VolumeLabel');
+
+            fMain.add(MenuItems, 'MaxNumberOfVolumes', 1, 300000);
+            fMain.add(MenuItems, 'MaxLevel', 0, 20).listen();
+            fMain.add(MenuItems, 'loadFromJsonFile');
+
+            fMain.add(MenuItems, 'hideVolumes');
+            fMain.add(MenuItems, 'showVolumes');
+            fMain.open();
+
+            var fPsearchVolume = gui.addFolder('SearchVolume');
+            fPsearchVolume.add(MenuItems, 'setSelection').onChange(function(newValue) {
+                MenuItems.setSelection = newValue;
+
+            });
+            fPsearchVolume.add(MenuItems, 'drawSelected');
+
+
+
+            var fPselection = gui.addFolder('Particles');
+
+            fPselection.add(MenuItems, 'traceParticles').onChange(function(newValue) {
+                MenuItems.traceParticles = newValue
+
+            });
+            fPselection.add(MenuItems, 'restartParticles').onChange(function(newValue) {
+                MenuItems.restartParticles = newValue;
+                if (newValue) RestartParticles();
+            });
+            fPselection.add(MenuItems, 'particlesSizeScaleFactor', {
+                VerySmall: 0.1,
+                Small: 0.2,
+                HalfSize: 0.5,
+                Normal: 1.,
+                DoubleSize: 2.,
+                Big: 5.,
+                VeryBig: 10.,
+                JUMBO: 20.,
+                Giant: 50.
+            });
+            fPselection.add(MenuItems, 'ReactedParticlesSizeScaleFactor', {
+                VerySmall: 0.1,
+                Small: 0.2,
+                HalfSize: 0.5,
+                Normal: 1.,
+                DoubleSize: 2.,
+                Big: 5.,
+                VeryBig: 10.,
+                JUMBO: 20.,
+                Giant: 50.
+            });
+            fPselection.add(MenuItems, 'particleSpeedScaleFactor', {
+                Stopped: 0.,
+                Boring: 0.01,
+                microView: 0.05,
+                closeView: 0.1,
+                verySlow: 0.3,
+                Slower: 0.5,
+                Slow: 0.8,
+                Normal: 1.
+            });
+
+
+
+            fPselection.add(MenuItems, 'gamma').onChange(function(newValue) {
+                ParticleKindVisible[1] = newValue
+            });
+            fPselection.add(MenuItems, 'electron').onChange(function(newValue) {
+                ParticleKindVisible[2] = newValue
+            });
+            fPselection.add(MenuItems, 'positron').onChange(function(newValue) {
+                ParticleKindVisible[3] = newValue
+            });
+            fPselection.add(MenuItems, 'proton').onChange(function(newValue) {
+                ParticleKindVisible[4] = newValue
+            });
+            fPselection.add(MenuItems, 'neutron').onChange(function(newValue) {
+                ParticleKindVisible[5] = newValue
+            });
+            fPselection.add(MenuItems, 'muon').onChange(function(newValue) {
+                ParticleKindVisible[6] = newValue
+            });
+            fPselection.add(MenuItems, 'deuterium').onChange(function(newValue) {
+                ParticleKindVisible[7] = newValue
+            });
+            fPselection.add(MenuItems, 'alpha').onChange(function(newValue) {
+                ParticleKindVisible[8] = newValue
+            });
+            fPselection.add(MenuItems, 'ion').onChange(function(newValue) {
+                ParticleKindVisible[9] = newValue
+            });
+
+
+            var fTuning = gui.addFolder('Tuning Parameters');
+            fTuning.add(MenuItems, 'energyMinCut', 0., 1.);
+            fTuning.add(MenuItems, 'particleTransparency');
+            fTuning.add(MenuItems, 'particleOpacity', 0., 1.);
+
+            var fLocalClip = gui.addFolder("Local Clipping");
+
+            fLocalClip.add(MenuItems, 'localClipEnabled').onChange(function(newValue) {
+                MenuItems.localClipEnabled = newValue;
+                renderer.localClippingEnabled = newValue;
+            });
+            fLocalClip.add(MenuItems, 'clipingPlaneX', -5000, 5000).onChange(function(newValue) {
+                MenuItems.clipingPlaneX = newValue;
+                clipPlanes[0].constant = newValue;
+            });
+            fLocalClip.add(MenuItems, 'clipingPlaneY', -5000, 5000).onChange(function(newValue) {
+                MenuItems.clipingPlaneY = newValue;
+                clipPlanes[1].constant = newValue;
+            });
+            fLocalClip.add(MenuItems, 'clipingPlaneZ', -5000, 5000).onChange(function(newValue) {
+                MenuItems.clipingPlaneZ = newValue;
+                clipPlanes[2].constant = newValue;
+            });
+
+
+            //===========================================================================
+            var fAmbientLighting = gui.addFolder("Ambient Light");
+            fAmbientLighting.addColor(MenuItems, 'ambientLightColor').onChange(function(newValue) {
+                ambientLight.color.set(newValue);
+
+            });
+            fAmbientLighting.addColor(MenuItems, 'backgroundColor').onChange(function(newValue) {
+                renderer.setClearColor(new THREE.Color(newValue));
+
+            });
+
+            var fSpotLighting = gui.addFolder("Spot Light");
+
+            fSpotLighting.addColor(MenuItems, 'spotLightColor').onChange(function(newValue) {
+                MenuItems.spotLightColor = newValue;
+                spotLight.color.set(newValue);;
+            });
+            fSpotLighting.add(MenuItems, 'spotAngle').onChange(function(newValue) {
+                MenuItems.spotAngle = newValue;
+                spotLight.spotAngle = newValue;
+            });
+            fSpotLighting.add(MenuItems, 'spotPenumbra').onChange(function(newValue) {
+                MenuItems.spotPenumbra = newValue;
+                spotLight.spotPenumbra = newValue;
+            });
+            fSpotLighting.add(MenuItems, 'spotPositionX').onChange(function(newValue) {
+                MenuItems.spotPositionX = newValue;
+                spotLight.position.x = newValue;
+            });
+            fSpotLighting.add(MenuItems, 'spotPositionY').onChange(function(newValue) {
+                MenuItems.spotPositionY = newValue;
+                spotLight.position.y = newValue;
+            });
+            fSpotLighting.add(MenuItems, 'spotPositionZ').onChange(function(newValue) {
+                MenuItems.spotPositionZ = newValue;
+                spotLight.position.z = newValue;
+            });
+
+            fSpotLighting.add(MenuItems, 'spotCastShadow').onChange(function(newValue) {
+                MenuItems.spotCastShadow = newValue;
+                spotLight.castShadow = newValue;
+            });
+            fSpotLighting.add(MenuItems, 'spotShadowCameraNear').onChange(function(newValue) {
+                MenuItems.spotShadowCameraNear = newValue;
+                spotLight.shadow.camera.near = newValue;
+            });
+            fSpotLighting.add(MenuItems, 'spotShadowCameraFar').onChange(function(newValue) {
+                MenuItems.spotShadowCameraFar = newValue;
+                spotLight.shadow.camera.far = newValue;
+            });
+            fSpotLighting.add(MenuItems, 'spotShadowMapSizeWidth').onChange(function(newValue) {
+                MenuItems.spotShadowMapSizeWidth = newValue;
+                spotLight.shadow.mapSize.width = newValue;
+            });
+            fSpotLighting.add(MenuItems, 'spotShadowMapSizeHeight').onChange(function(newValue) {
+                MenuItems.spotShadowMapSizeWidth = newValue;
+                spotLight.shadow.mapSize.height = newValue;
+            });
+
+            var fDirLighting = gui.addFolder("Diectional Light");
+
+            fDirLighting.addColor(MenuItems, 'dirLightColor').onChange(function(newValue) {
+                MenuItems.dirLightColor = newValue;
+                dirLight.color.set(newValue);
+            });
+            fDirLighting.add(MenuItems, 'dirLightIntensity').onChange(function(newValue) {
+                MenuItems.dirLightIntensity = newValue;
+                dirLight.intensity = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirPositionX').onChange(function(newValue) {
+                MenuItems.dirPositionX = newValue;
+                dirLight.position.x = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirPositionY').onChange(function(newValue) {
+                MenuItems.dirPositionY = newValue;
+                dirLight.position.y = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirPositionZ').onChange(function(newValue) {
+                MenuItems.dirPositionZ = newValue;
+                dirLight.position.z = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirCastShadow').onChange(function(newValue) {
+                MenuItems.dirCastShadow = newValue;
+                dirLight.castShadow = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirShadowCameraNear').onChange(function(newValue) {
+                MenuItems.dirCastShadow = newValue;
+                dirLight.castShadow = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirShadowCameraFar').onChange(function(newValue) {
+                MenuItems.dirShadowCameraFar = newValue;
+                dirLight.shadow.camera.far = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirShadowCameraRight').onChange(function(newValue) {
+                MenuItems.dirShadowCameraRight = newValue;
+                dirLight.shadow.camera.right = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirShadowCameraLeft').onChange(function(newValue) {
+                MenuItems.dirShadowCameraLeft = newValue;
+                dirLight.shadow.camera.left = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirShadowCameraTop').onChange(function(newValue) {
+                MenuItems.dirShadowCameraTop = newValue;
+                dirLight.shadow.camera.top = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirShadowCameraBottom').onChange(function(newValue) {
+                MenuItems.dirShadowCameraBottom = newValue;
+                dirLight.shadow.camera.bottom = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirShadowMapSizeWidth').onChange(function(newValue) {
+                MenuItems.dirShadowMapSizeWidth = newValue;
+                dirLight.shadow.mapSize.width = newValue;
+            });
+            fDirLighting.add(MenuItems, 'dirShadowMapSizeHeight').onChange(function(newValue) {
+                MenuItems.dirShadowMapSizeHeight = newValue;
+                dirLight.shadow.mapSize.height = newValue;
+            });
+
+            //===========================================================================
+
+
+
+            //f2.open();
+            //gui.closed = true;
+            return (MenuItems);
+        }
+
+        function RestartParticles(fromTime = 0) {
+            CurrentTimeSlot = 0;
+            for (var i = 0; i < ParticlesInScene.children.length; i++) {
+                ParticlesInScene.children[i].visible = false;
+            }
+            for (var i = 0; i < ParticlesTraceInScene.children.length; i++) {
+                ParticlesTraceInScene.children[i].visible = false;
+
+            }
+
+            //ParticleClock.start();
+            LastElapsed = ParticleClock.getElapsedTime() + fromTime;
+        }
+
+        function CreateSprites(nts = 0) {
+
+            //var geometry = new THREE.SphereGeometry(0.5, 32, 32);
+            //var material = new THREE.MeshBasicMaterial({
+            //    color: 0xffff00
+            //});
+            //var sphere = new THREE.Mesh(geometry, material);
+            //sphere.name = "Particle Generator";
+            //scene.add(sphere);
+
+            NtimeSlots = nts;
+            np = SetOfParticlesInTime.Event[0].pset.length;
+            for (var i = 1; i < NtimeSlots; i++) {
+                if (np < SetOfParticlesInTime.Event[i].pset.length) np = SetOfParticlesInTime.Event[i].pset.length;
+            }
+            console.log("Number of Sprites:", np);
+
+
+            for (var j = 0; j < np; j++) {
+                var sprite = new THREE.Sprite(ParticleMaterial[0]);
+                sprite.visible = false;
+                sprite.transparent = MenuItems.particleTransparency;
+                sprite.opacity = MenuItems.particleOpacity;
+                ParticlesInScene.add(sprite);
+            }
+
+            for (var i = 1; i < NtimeSlots; i++) {
+                nReactedParticlesInTime[j] = 0;
+                for (var j = 0; j < SetOfParticlesInTime.Event[i].pset.length; j++) {
+                    if (SetOfParticlesInTime.Event[i].pset[j].type == "v") {
+                        nReactedParticlesInTime[j]++;
+                    }
+                }
+            }
+            return (np);
+        }
+
+        function CreateTraceParticles(np) {
+
+            //Tracing particles: 
+            //For each particle that will be generated up to the end of the animation,
+            //there exist a a Buffer geometry will the full trace of particles
+            //The animation is done by displaying only the number of points that are conserned at each step
+            //and this is done by the function TraceParticles()h which is called in the animate() function.
+            var kind = 0;
+            var kp = 0;
+
+            for (var j = 0; j < np; j++) {
+                var geometry = new THREE.BufferGeometry();
+                // attributes
+                kp = 0;
+                var val = [];
+                for (var i = 0; i < NtimeSlots; i++) {
+                    if (j < SetOfParticlesInTime.Event[i].pset.length) {
+                        kind = SetOfParticlesInTime.Event[i].pset[j].kind;
+                        v = SetOfParticlesInTime.Event[i].pset[j];
+                        val[kp++] = v.pos[0];
+                        val[kp++] = v.pos[1];
+                        val[kp++] = v.pos[2];
+                    }
+                }
+                var positions = new Float32Array(kp); // 3 vertices per point
+                //var positions = new Float32Array( kp  ); // 3 vertices per point
+                geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+                for (var kv = 0; kv < kp; kv++) geometry.attributes.position.array[kv] = val[kv];
+
+                geometry.setDrawRange(0, 0);
+                var line = new THREE.Line(geometry, ParticleTraceMaterial[kind]);
+                line.transparent = true;
+                line.opacity = 0.3;
+
+                ParticlesTraceInScene.add(line);
+            }
+        }
+
+
+        function checkTraverse(intersectsUnique, intersects) {
+            //Check if traversed (same object pointed fron the oposite side)
+            var items = 0;
+            nv = intersects.length;
+            if (intersects[0].object.name == "VolumeLabel") {
+                if (nv > 1) intersectsUnique[0] = intersects[1];
+                else return items;
+                var ii = 1;
+            } else {
+                var ii = 0;
+                intersectsUnique[0] = intersects[0];
+            }
+            for (var i = ii; i < nv; i++) {
+                var notFound = true;
+                for (var j = 0; j < intersectsUnique.length; j++) {
+                    if (intersects[i].object == intersectsUnique[j].object) {
+                        notFound = false;
+                        break;
+                    }
+                }
+                if (notFound && (intersects[i].object.name != "VolumeLabel")) {
+                    items++;
+                    intersectsUnique[items] = intersects[i];
+                }
+            }
+            return items;
+        }
+
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+
+        function onEventMouseDown(event) {
+            event.preventDefault();
+            var saveTrackballControlsStatus = trackballControls.enabled;
+            if (MenuItems.EnableMouseActions) {
+                var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+                vector = vector.unproject(camera);
+
+                var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+
+                var intersects = raycaster.intersectObjects(scene.children, true);
+
+
+                if (intersects.length > 0) {
+
+                    var intersectsUnique = [];
+                    checkTraverse(intersectsUnique, intersects);
+
+                    trackballControls.enabled = false;
+
+                    if (keyboard.pressed("shift+Z")) {
+                        restoreVol(intersectsUnique);
+                    } else {
+                        var lastObject = -1
+                        for (var i = 0; i < intersectsUnique.length; i++) {
+                            if (!intersectsUnique[i].object.material.visible || intersectsUnique[i].object.material.wireframe || intersectsUnique[i].object.material.transparent) {
+                                lastObject++
+                            } else {
+                                lastObject++
+                                break;
+                            }
+                        }
+                        if (lastObject >= 0) {
+                            if (keyboard.pressed("ctrl")) newmat = intersectsUnique[lastObject].object.material.clone();
+
+                            if (keyboard.pressed("ctrl+w")) {
+                                newmat.wireframe = true;
+                                intersectsUnique[lastObject].object.material = newmat;
+                            } else if (keyboard.pressed("shift+W")) {
+                                intersectsUnique[lastObject].object.material.wireframe = true;
+                            } else if (keyboard.pressed("ctrl+t")) {
+                                newmat.opacity = 0.3;
+                                newmat.transparent = true;
+                                intersectsUnique[lastObject].object.material = newmat;
+                            } else if (keyboard.pressed("shift+T")) {
+                                intersectsUnique[lastObject].object.material.transparent = true;
+                            } else if (keyboard.pressed("ctrl")) {
+                                newmat.visible = false;
+                                intersectsUnique[lastObject].object.material = newmat;
+                            } else if (keyboard.pressed("shift")) {
+                                intersectsUnique[lastObject].object.material.visible = false;
+                            }
+                        }
+                    }
+                    trackballControls.enabled = saveTrackballControlsStatus;
+                }
+            }
+
+        }
+
+        function restoreMouseOperations(vol = root) {
+            for (var i = 0; i < vol.children.length; i++) {
+                restoreMouseOperations(vol.children[i]);
+            }
+            if (vol.material) {
+                vol.material.wireframe = false;
+                vol.material.transparent = false;
+                vol.material.visible = true;
+            }
+        }
+
+        function onEventMouseUp(event) {
+            event.preventDefault();
+            if (MenuItems.EnableMouseTrackBall) trackballControls.enabled = true;
+        }
+
+
+        function restoreVol(intersects) {
+
+            trackballControls.enabled = false;
+
+            var lastObject = -1;
+            for (var i = 0; i < intersects.length; i++) {
+
+                if (!intersects[i].object.material.visible || intersects[i].object.material.wireframe || intersects[i].object.material.transparent) {
+                    lastObject = i;
+                } else {
+                    lastObject = i - 1;
+                    break;
+                }
+            }
+            if (lastObject >= 0) {
+                if (intersects[lastObject].object.material.wireframe) {
+                    intersects[lastObject].object.material.wireframe = false;
+                } else if (intersects[lastObject].object.material.transparent) {
+                    intersects[lastObject].object.material.transparent = false;
+                } else if (!intersects[lastObject].object.material.visible) {
+                    intersects[lastObject].object.material.visible = true;
+                }
+            }
+        }
+
+
+
+        function onEventMouseMove(event) {
+            event.preventDefault();
+
+            //    if (!MenuItems.EnableMouseTrackBall && MenuItems.VolumeLabel){
+            if (MenuItems.VolumeLabel) {
+                var vector = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1, 0.5);
+                var vector1 = new THREE.Vector3((event.clientX / window.innerWidth) * 2 - 1, -((event.clientY - 33) / window.innerHeight) * 2 + 1, 0.5);
+                vector = vector.unproject(camera);
+                vector1 = vector1.unproject(camera);
+                //console.log(event.clientX,event.clientY,window.innerWidth,window.innerHeight)
+
+                ObjectLabel.position.x = vector1.x;
+                ObjectLabel.position.y = vector1.y;
+                ObjectLabel.position.z = vector1.z;
+
+                var v = ObjectLabel.position.clone().applyMatrix4(camera.matrixWorldInverse);
+                var virtualDistanceScale = 10 * camera.position.z;
+                var sf = Math.abs((v.z - camera.position.z) / virtualDistanceScale);
+                ObjectLabel.scale.set(sf, sf, sf);
+
+                var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+
+                var intersects = raycaster.intersectObjects(scene.children, true);
+
+
+                if (intersects.length > 0) {
+
+                    var intersectsUnique = [];
+                    checkTraverse(intersectsUnique, intersects);
+
+                    var lastObject = -1
+                        //console.log(intersectsUnique);
+                    for (var i = 0; i < intersectsUnique.length; i++) {
+                        if (!intersectsUnique[i].object.material.visible || intersectsUnique[i].object.material.wireframe || intersectsUnique[i].object.material.transparent) {
+                            lastObject++
+                        } else {
+                            lastObject++
+                            break;
+                        }
+                    }
+                    if (lastObject >= 0) {
+                        VolumeName = intersectsUnique[lastObject].object.name;
+                    } else {
+                        VolumeName = "";
+                    }
+                    changeCanvas(VolumeName);
+                    texture.needsUpdate = true;
+                }
+            }
+        }
+
+
+        function TraceParticles(i, visible, nsteps) {
+            line = ParticlesTraceInScene.children[i];
+            line.visible = visible;
+            line.geometry.setDrawRange(0, nsteps - 1);
+        }
+
+        function animate() {
+
+            var delta = ParticleClock.getDelta();
+            trackballControls.update(delta);
+
+            var flyTime = (ParticleClock.getElapsedTime() - LastElapsed);
+
+            var rmat = Math.round(flyTime) % 3;
+
+            if (CurrentTimeSlot < NtimeSlots) {
+
+                var spt = SetOfParticlesInTime.Event[CurrentTimeSlot];
+                var slotTime = spt.time / 1000.
+
+                flyTime = flyTime * MenuItems.particleSpeedScaleFactor;
+
+                if (slotTime <= flyTime) {
+
+                    for (var i = 0; i < spt.pset.length; i++) {
+                        var v = spt.pset[i].pos;
+                        var kind = spt.pset[i].kind;
+
+                        //visible
+                        ParticlesInScene.children[i].visible = ParticleKindVisible[kind];
+
+                        //position
+                        if (spt.pset[i].type == "a") {
+                            ParticlesInScene.children[i].position.x = v[0];
+                            ParticlesInScene.children[i].position.y = v[1];
+                            ParticlesInScene.children[i].position.z = v[2];
+
+                            ParticlesInScene.children[i].name = ParticleKind[kind];
+                            //material/kind
+                            ParticlesInScene.children[i].material = ParticleMaterial[kind];
+                            //scale
+                            ParticlesInScene.children[i].scale.set(MenuItems.particlesSizeScaleFactor, MenuItems.particlesSizeScaleFactor, 1.);
+                            if (MenuItems.traceParticles) TraceParticles(i, ParticleKindVisible[kind], spt.pset[i].nsteps);
+
+                        } else {
+                            ParticlesInScene.children[i].material = ReactedParticleMaterial[rmat];
+                            ParticlesInScene.children[i].scale.set(MenuItems.ReactedParticlesSizeScaleFactor, MenuItems.ReactedParticlesSizeScaleFactor, 1.);
+                            //if (MenuItems.traceParticles) TraceParticles(i, ParticleKindVisible[kind], spt.pset[i].nsteps);
+                            //ParticlesInScene.children[i].visible = false;
+                        }
+
+                        //Trace particles
+                    }
+
+                    CurrentTimeSlot++;
+
+                }
+            } else { // display only blinking reacted  vertices
+
+                if (NtimeSlots > 0) {
+                    var spt = SetOfParticlesInTime.Event[CurrentTimeSlot - 1];
+                    for (var i = 0; i < spt.pset.length; i++) {
+                        var kind = spt.pset[i].kind;
+                        if (spt.pset[i].type == "a") {
+                            ParticlesInScene.children[i].visible = false;
+                        } else {
+                            ParticlesInScene.children[i].material = ReactedParticleMaterial[rmat];
+                            ParticlesInScene.children[i].scale.set(MenuItems.ReactedParticlesSizeScaleFactor, MenuItems.ReactedParticlesSizeScaleFactor, 1.);
+                            ParticlesInScene.children[i].visible = ParticleKindVisible[kind]
+                            if (MenuItems.traceParticles) TraceParticles(i, ParticleKindVisible[kind], spt.pset[i].nsteps);
+                        }
+                    }
+                }
+                //ParticleClock.stop();
+                if (MenuItems.restartParticles) RestartParticles();
+            }
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+
+        function loadJSON(file, callback) {
+
+            var xobj = new XMLHttpRequest();
+            xobj.overrideMimeType("application/json");
+            xobj.open('GET', file, true); // Replace 'my_data' with the path to your file
+            xobj.onreadystatechange = function() {
+                if (xobj.readyState == 4 && xobj.status == "200") {
+                    // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+                    callback(xobj.responseText);
+                }
+            };
+            xobj.send(null);
+        }
+
+
+        function load() {
+            spinner = showSpinner();
+            fileInput.click();
+        }
+    }
+
+    window.onload = init;
+    </script>
+</body>
+
+</html>
