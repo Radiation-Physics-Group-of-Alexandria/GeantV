@@ -327,10 +327,10 @@ void ScalarNavInterfaceVGM::NavIsSameLocation(GeantTrack &track, bool &same, Vol
 double ScalarNavInterfaceVGM::DisplaceTrack(GeantTrack &track, const double dir[3], double step)
 {
   // Displace track with step along given direction. This will update the
-  // following track paramerters: position, direction, total step length, reduced
-  // safety. The method does not update the track time and number of interaction lengths.
+  // following track paramerters: position, direction, reduced safety.
   typedef Vector3D<Precision> Vector3D_t;
   SimpleNavigator nav;
+  double realstep = step;
   track.fXdir = dir[0];
   track.fYdir = dir[1];
   track.fZdir = dir[2];
@@ -341,17 +341,18 @@ double ScalarNavInterfaceVGM::DisplaceTrack(GeantTrack &track, const double dir[
   // Check if the location is in the same volume
   bool samepath = nav.HasSamePath(Vector3D_t(newpos[0], newpos[1], newpos[2]),
                                   *track.fPath, *track.fNextpath);
-  if (samepath) {
-    track.MakeStep(step);
-    return step;
+  if (!samepath) {
+    // The track has crossed a boundary. Find the distance to the boundary along
+    // the given direction and propagate.
+    ScalarNavInterfaceVGM::NavFindNextBoundaryAndStep(track);
+    assert(track.fBoundary && "track was supposed to be pushed on a boundary");
+    realstep = track.fSnext;
   }
-  // The track has crossed a boundary. Find the distance to the boundary along
-  // the given direction and propagate.
-  ScalarNavInterfaceVGM::NavFindNextBoundaryAndStep(track);
-  assert(track.fBoundary && "track was supposed to be pushed on a boundary");
-  double realstep = track.fSnext;
-  track.MakeStep(track.fSnext);
-  // The snext value is reset after making the step
+    
+  track.fXpos += step * track.fXdir;
+  track.fYpos += step * track.fYdir;
+  track.fZpos += step * track.fZdir;
+  track.fSafety -= step;
   return realstep;
 }
 
