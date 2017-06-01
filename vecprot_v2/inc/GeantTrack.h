@@ -391,6 +391,7 @@ public:
     fXpos += step * fXdir;
     fYpos += step * fYdir;
     fZpos += step * fZdir;
+    /* probably should update the time as well here */
   }
 
 

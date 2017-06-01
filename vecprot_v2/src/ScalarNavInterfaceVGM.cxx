@@ -323,5 +323,37 @@ void ScalarNavInterfaceVGM::NavIsSameLocation(GeantTrack &track, bool &same, Vol
   same = samepath;
 }
 
+//______________________________________________________________________________
+double ScalarNavInterfaceVGM::DisplaceTrack(GeantTrack &track, const double dir[3], double step)
+{
+  // Displace track with step along given direction. This will update the
+  // following track paramerters: position, direction, total step length, reduced
+  // safety. The method does not update the track time and number of interaction lengths.
+  typedef Vector3D<Precision> Vector3D_t;
+  SimpleNavigator nav;
+  track.fXdir = dir[0];
+  track.fYdir = dir[1];
+  track.fZdir = dir[2];
+  double newpos[3];
+  newpos[0] = track.fXpos + dir[0] * step;
+  newpos[1] = track.fYpos + dir[1] * step;
+  newpos[2] = track.fZpos + dir[2] * step;
+  // Check if the location is in the same volume
+  bool samepath = nav.HasSamePath(Vector3D_t(newpos[0], newpos[1], newpos[2]),
+                                  *track.fPath, *track.fNextpath);
+  if (samepath) {
+    track.MakeStep(step);
+    return step;
+  }
+  // The track has crossed a boundary. Find the distance to the boundary along
+  // the given direction and propagate.
+  ScalarNavInterfaceVGM::NavFindNextBoundaryAndStep(track);
+  assert(track.fBoundary && "track was supposed to be pushed on a boundary");
+  double realstep = track.fSnext;
+  track.MakeStep(track.fSnext);
+  // The snext value is reset after making the step
+  return realstep;
+}
+
 } // GEANT_IMPL_NAMESPACE
 } // Geant

@@ -89,11 +89,22 @@ public:
          const double *dirx, const double *diry, const double *dirz, 
          const VolumePath_t **start, VolumePath_t **end, bool *same, VolumePath_t *tmpstate);
   
-  /**
-  * @brief Single track version of the function above */
+  /** @brief Single track version of the function above */
   VECCORE_ATT_HOST_DEVICE
   static
   void NavIsSameLocation(GeantTrack &track, bool &same, VolumePath_t *tmpstate);
+
+  /** @brief Displace track along given normalized direction with given step. If boundary is crossed,
+       displace to boundary and relocate, setting the boundary flag
+   * @param track Track to be displaced
+   * @param dir New direction
+   * @param step Displacement step
+   * @return The actual displacement.
+   */
+  VECCORE_ATT_HOST_DEVICE
+  static
+  double DisplaceTrack(GeantTrack &track, const double dir[3], double step);
+
 };
 } // GEANT_IMPL_NAMESPACE
 

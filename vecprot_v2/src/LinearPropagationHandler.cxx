@@ -2,8 +2,7 @@
 
 #include "GeantTaskData.h"
 #include "Geant/Error.h"
-#include "ScalarNavInterfaceVGM.h"
-#include "ScalarNavInterfaceTGeo.h"
+#include "Geant/NavigationInterface.h"
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
