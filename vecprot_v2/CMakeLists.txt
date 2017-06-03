@@ -128,9 +128,9 @@ set(headers
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantConfig.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/TrackStat.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventDispatcher.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantVZMQMessenger.h
+#   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantVZMQMessenger.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantPerfEvaluator.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantHPCMGraph.h
+#   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantHPCMGraph.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventReceiver.h
 )
 
@@ -199,9 +199,10 @@ else()
   endif()
   add_library(Geant_v SHARED ${sources})
   if (NOT USE_VECGEOM_NAVIGATOR)
-    target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield GeantNuma ${ROOT_LIBRARIES} )
+    target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield GeantNuma ${ROOT_LIBRARIES} ${cppzmq_LIBRARY} ${MPI_LIBRARIES})
   else()
-    target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield GeantNuma ${ROOT_LIBRARIES} ${VECGEOM_LIBRARIES} Material)
+    target_link_libraries(Geant_v -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Vmagfield GeantNuma ${ROOT_LIBRARIES} ${cppzmq_LIBRARY} ${MPI_LIBRARIES} 
+      ${VECGEOM_LIBRARIES} Material)
   endif()
   if( VECGEOM_FOUND )
     target_link_libraries(Geant_v ${VC_LIBRARIES})
