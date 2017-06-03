@@ -23,8 +23,9 @@
 #include "GeantEventServer.h"
 #include "GeantConfig.h"
 #include "GeantRunManager.h"
-#include "GeantVZMQMessenger.h"
+//#include "GeantVZMQMessenger.h"
 #include "GeantEventReceiver.h"
+#include "zmq.hpp"
 
 
 namespace Geant {

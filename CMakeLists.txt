@@ -93,14 +93,6 @@ option(HPC "Activate High Performance Computing layout" OFF)
 if(HPC)
   add_definitions(-DUSE_HPC)
   message(STATUS "HPC mode is ON!")
-  find_package(MPI REQUIRED)
-  find_package(ZeroMQ REQUIRED)
-  find_package(cppzmq REQUIRED)
-  set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
-  set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
-  include_directories(${MPI_CXX_INCLUDE_PATH})
-  include_directories(${cppzmq_INCLUDE_DIR})
-  include_directories(${ZeroMQ_INCLUDE_DIR})
 endif()
 
 option(USE_VECPHYS "Enable activation of vector physics." OFF)
@@ -320,6 +312,20 @@ if (KNL)
  else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=knl")
  endif()
+endif()
+
+#----------------------------------------------------------------------------------------------
+# Find MPI, ZeroMQ, C++ ZeroMQ bindings
+#
+if (HPC)
+  find_package(MPI REQUIRED)
+  find_package(ZeroMQ REQUIRED)
+  find_package(cppzmq REQUIRED)
+  set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
+  set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
+  include_directories(${MPI_CXX_INCLUDE_PATH})
+  include_directories(${cppzmq_INCLUDE_DIR})
+  include_directories(${ZeroMQ_INCLUDE_DIR})
 endif()
 
 #----------------------------------------------------------------------------

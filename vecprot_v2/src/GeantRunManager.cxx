@@ -44,6 +44,7 @@
 #ifdef USE_HPC
 #include "GeantEventDispatcher.h"
 #endif
+#endif
 
 // The classes for integrating in a non-uniform magnetic field
 #include "TUniformMagField.h"
