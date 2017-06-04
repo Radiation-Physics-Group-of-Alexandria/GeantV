@@ -41,9 +41,6 @@
 #include "TGeoNode.h"
 #include "TGeoMaterial.h"
 #endif
-#ifdef USE_HPC
-#include "GeantEventDispatcher.h"
-#endif
 #endif
 
 // The classes for integrating in a non-uniform magnetic field
@@ -71,7 +68,11 @@ GeantRunManager::GeantRunManager(unsigned int npropagators, unsigned int nthread
 
 //______________________________________________________________________________
 bool GeantRunManager::Initialize() {
-  // Initialization of run manager
+#ifdef USE_HPC
+    std::cout << "_HPC mode version_" << std::endl;
+#endif
+
+    // Initialization of run manager
   if (!fNthreads) {
     // Autodiscovery mode using NUMA detection
     fNthreads = 1;   // disabled detection for now
@@ -193,20 +194,13 @@ bool GeantRunManager::Initialize() {
   }
   fApplication->Initialize();
   fPrimaryGenerator->InitPrimaryGenerator();
-#ifdef USE_HPC
-  std::cout << "_HPC mode version_" << std::endl;
-  std::string topiczmq = "HPC";
-  fEventDispatcher = new GeantEventDispatcher(this, topiczmq);
-  // Testing purposes, later it will proper options
-  int argc;
-  char *argv = nullptr;
-  fEventDispatcher->InitializeDiscovery(argc, &argv);
-#else
-  std::cout << "_No HPC - single node version_" << std::endl;
-  fEventServer = new GeantEventServer(fConfig->fNtotal, this);
+
+  fEventServer = new GeantEventServer(fConfig->fNtotal, this); //TODO: add sane capacity
+#ifndef USE_HPC
   for (int i=0; i<fConfig->fNtotal; ++i)
     fEventServer->AddEvent();
-#endif 
+#endif
+
 
   for (auto i=0; i<fNpropagators; ++i)
     fPropagators[i]->Initialize();
@@ -506,9 +500,6 @@ void GeantRunManager::RunSimulation() {
 //______________________________________________________________________________
 bool GeantRunManager::FinishRun() {
   // Run termination actions.
-#ifdef USE_HPC
-  fEventDispatcher->Finalize();
-#endif
   if (fTaskMgr) fTaskMgr->Finalize();
   fApplication->FinishRun();
   if (fStdApplication)
@@ -570,6 +561,19 @@ std::function<void*(TGeoMaterial const *)> GeantRunManager::CreateMaterialConver
    };
 }
 #endif
+
+bool GeantRunManager::TransportCompleted() const
+{
+#ifdef USE_HPC
+  bool localEventsTransported = ((int)fDoneEvents->FirstNullBit() >= fEventServer->GetNload());
+  if (!localEventsTransported) return false;
+
+  bool isNewEventAdded = GetEventServer()->CheckNewEvents();
+  return !isNewEventAdded;
+#else
+  return ((int)fDoneEvents->FirstNullBit() >= fConfig->fNtotal);
+#endif
+}
 
 } // GEANT_IMPL_NAMESPACE
 } // Geant

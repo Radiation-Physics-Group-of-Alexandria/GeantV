@@ -79,6 +79,7 @@ set(sources
    ${CMAKE_CURRENT_SOURCE_DIR}/src/TrackStat.cxx
    ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventDispatcher.cxx
    ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventReceiver.cxx
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantDistributeManager.cxx
 )
 
 set(headers
@@ -128,6 +129,7 @@ set(headers
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantPerfEvaluator.h
 #   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantHPCMGraph.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventReceiver.h
+   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantDistributeManager.h
 )
 
 # Add codes that describes some stages (and handlers) that are different when real-physics is used

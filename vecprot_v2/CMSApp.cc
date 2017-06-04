@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  bool performance = true;   
+  bool performance = true;
 
   TaskBroker *broker = nullptr;
   if (coprocessor) {
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
   }
 
   GeantConfig* config=new GeantConfig();
-  
+
   config->fGeomFileName = cms_geometry_filename;
   config->fNtotal = n_events;
   config->fNbuff = n_buffered;
@@ -255,7 +255,7 @@ int main(int argc, char *argv[]) {
   // Set threshold for tracks to be reused in the same volume
   config->fNminReuse = n_reuse;
 
-  // Activate standard scoring   
+  // Activate standard scoring
   config->fUseStdScoring = true;
   if (performance) config->fUseStdScoring = false;
   config->fLearnSteps = n_learn_steps;
@@ -302,7 +302,13 @@ int main(int argc, char *argv[]) {
     runMgr->SetTaskMgr( new TaskMgrTBB() );
 #endif
 
+#ifdef USE_HPC
+  GeantDistributeManger *distributeManger = new GeantDistributeManger(runMgr, config);
+  distributeManger->InitializeDistributedApplication(argc, argv);
+  distributeManger->RunDistributedSimulation();
+#else
   runMgr->RunSimulation();
-//  propagator->PropagatorGeom(cms_geometry_filename.c_str(), n_threads, monitor);
+#endif
+  //  propagator->PropagatorGeom(cms_geometry_filename.c_str(), n_threads, monitor);
   return 0;
 }

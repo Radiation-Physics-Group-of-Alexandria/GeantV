@@ -27,8 +27,7 @@
 #endif
 
 #ifdef USE_HPC
-#include "zmq.hpp"
-#include "mpi.h"
+#include "GeantEventReceiver.h"
 #endif
 
 namespace Geant {
@@ -76,8 +75,12 @@ GeantEventServer::~GeantEventServer()
 }
 
 //______________________________________________________________________________
-void GeantEventServer::CheckNewEvents(){
-
+bool GeantEventServer::CheckNewEvents(){
+  if(fRunMgr->GetEventReceiver()->AskForNewEvent()){
+    return true;
+  }
+  fDone = true;
+  return false;
 }
 
 //______________________________________________________________________________
@@ -143,7 +146,7 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
   VolumePath_t::ReleaseInstance(startpath);
   // Update number of stored events
   fNstored++;
-  if (fNstored.load() == fNevents) {
+  if (fNstored.load() == 1) {
     int nactivep = 0;
     for (int evt=0; evt<fNactiveMax; ++evt)
       nactivep += fEvents[evt]->GetNprimaries();
@@ -157,9 +160,10 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
     for (int evt=fNactiveMax; evt<fNevents; ++evt)
       nactivep += fEvents[evt]->GetNprimaries();
     fRunMgr->SetNprimaries(nactivep);
-    Print("AddEvent", "Server imported %d events cumulating %d primaries", fNevents, nactivep);
+    Print("AddEvent", "Server imported %d events cumulating %d primaries", 1, nactivep);
     Print("EventServer", "Initial baskets to be split among propagators: %d", fNbasketsInit);
   }
+          Print("AddEvent", "Server added one event more");
   return ntracks;
 }
 
@@ -181,7 +185,7 @@ GeantTrack *GeantEventServer::GetNextTrack()
       if (evt == fLastActive.load()) {
         // No events available, check if this is last event
         fHasTracks = false;
-        if (evt == fNevents-1) fDone = true;
+        //if (evt == fNevents-1) fDone = true;
         return nullptr;
       }
       // Attempt to change the event
@@ -291,7 +295,7 @@ void GeantEventServer::CompletedEvent(int /*evt*/)
 // Signals that event 'evt' was fully transported.
   fNactive--;
   fNcompleted++;
-  ActivateEvents();
+  //ActivateEvents();
 }
 
 } // GEANT_IMPL_NAMESPACE
