@@ -359,7 +359,7 @@ void WorkloadManager::TransportTracksV3(GeantPropagator *prop) {
 
 //  int nworkers = propagator->fNthreads;
 //  WorkloadManager *wm = propagator->fWMgr;
-  GeantEventServer *evserv = runmgr->GetEventServer();
+//  GeantEventServer *evserv = runmgr->GetEventServer();
 //  bool firstTime = true;
 //  bool multiPropagator = runmgr->GetNpropagators() > 1;
   // IO handling
@@ -387,7 +387,7 @@ void WorkloadManager::TransportTracksV3(GeantPropagator *prop) {
   #endif
 
   // Activate events in the server
-  evserv->ActivateEvents();
+  //evserv->ActivateEvents();
 
   bool flush = false;
 #ifndef USE_VECGEOM_NAVIGATOR
@@ -570,18 +570,10 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
   GeantBasketMgr *prioritizer = new GeantBasketMgr(prop,sch, 0, 0, true);
   td->fBmgr = prioritizer;
   prioritizer->SetThreshold(propagator->fConfig->fNperBasket);
-  prioritizer->SetFeederQueue(feederQ); 
-  GeantEventServer *evserv;
-#ifndef USE_HPC
+  prioritizer->SetFeederQueue(feederQ);
+
   GeantEventServer *evserv = runmgr->GetEventServer();
-#else
-  if(runmgr->GetEventDispatcher()->GetRank() == 0){
-    GeantEventServer *evserv = runmgr->GetEventDispatcher()->GetMasterEventServer();
-  }
-  else{
-    GeantEventServer *evserv = runmgr->GetEventDispatcher()->GetEventReceiver()->GetSlaveEventServer();
-  }
-#endif
+
   int bindex = evserv->GetBindex();
   GeantBasket *bserv = sch->GetBasketManagers()[bindex]->GetNextBasket(td);
   bserv->SetThreshold(propagator->fConfig->fNperBasket);

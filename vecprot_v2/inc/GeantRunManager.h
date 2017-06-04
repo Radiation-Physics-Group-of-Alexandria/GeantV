@@ -1,6 +1,7 @@
 #ifndef GEANT_RUN_MANAGER_H
 #define GEANT_RUN_MANAGER_H
 
+#include <iostream>
 #include <thread>
 #include <atomic>
 #include "base/Vector.h"
@@ -10,6 +11,7 @@
 #include "GeantTaskData.h"
 #include "GeantEventServer.h"
 #include "GeantEventDispatcher.h"
+#include "GeantDistributeManager.h"
 #include "GeantConfig.h"
 #ifdef USE_ROOT
 class TGeoMaterial;
@@ -37,7 +39,7 @@ class PrimaryGenerator;
 class MCTruthMgr;
 
 #ifdef USE_HPC
-class GeantEventDispatcher;
+class GeantEventReceiver;
 #endif
 
 class GeantRunManager
@@ -67,7 +69,7 @@ private:
   TDManager *fTDManager = nullptr;              /** The task data manager */
 
 #ifdef USE_HPC
-  GeantEventDispatcher *fEventDispatcher = nullptr;    /** The event dispatcher */
+  GeantEventReceiver *fEventReceiver = nullptr;
 #endif
 
   vector_t<GeantPropagator *> fPropagators;
@@ -150,7 +152,7 @@ public:
   GeantEventServer *GetEventServer() const { return fEventServer; }
 #ifdef USE_HPC
   GEANT_FORCE_INLINE
-  GeantEventDispatcher *GetEventDispatcher() const { return fEventDispatcher; }
+  GeantEventReceiver *GetEventReceiver() const { return fEventReceiver; }
 #endif
 
 //  GEANT_FORCE_INLINE
@@ -200,6 +202,11 @@ public:
   GEANT_FORCE_INLINE
   void SetMCTruthMgr(MCTruthMgr *mcmgr) { fTruthMgr = mcmgr; }
 
+#ifdef USE_HPC
+  GEANT_FORCE_INLINE
+  void SetEventReceiver(GeantEventReceiver *receiver) { fEventReceiver = receiver; }
+#endif
+
   GEANT_FORCE_INLINE
   MCTruthMgr *GetMCTruthMgr() const { return fTruthMgr; }
 
@@ -207,7 +214,7 @@ public:
   TDManager *GetTDManager() const { return fTDManager; }
 
   /** @brief Function checking if transport is completed */
-  bool TransportCompleted() const { return ((int)fDoneEvents->FirstNullBit() >= fConfig->fNtotal); }
+  bool TransportCompleted() const;
 
   /** @brief Check if event is finished */
   bool IsDoneEvent(int ievt) { return fDoneEvents->TestBitNumber(ievt); }

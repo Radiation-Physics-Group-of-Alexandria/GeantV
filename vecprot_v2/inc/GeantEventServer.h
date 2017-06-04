@@ -116,7 +116,7 @@ public:
   
   int AddEvent(GeantTaskData *td = nullptr);
 
-  void CheckNewEvents();
+  bool CheckNewEvents(); //True is event is received
   
   int ActivateEvents();
   
