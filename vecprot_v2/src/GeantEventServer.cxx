@@ -79,11 +79,9 @@ GeantEventServer::~GeantEventServer()
 
 //______________________________________________________________________________
 bool GeantEventServer::CheckNewEvents(){
-  if(fRunMgr->GetEventReceiver()->AskForNewEvent()){
-    return true;
-  }
-  fDone = true;
-  return false;
+  int receivedEvents = fRunMgr->GetEventReceiver()->AskForNewEvent(fNactiveMax);
+  if(fRunMgr->GetEventReceiver()->GetIsTransportCompleted()) fDone = true;
+  return (receivedEvents > 0);
 }
 
 //______________________________________________________________________________
@@ -280,7 +278,7 @@ int GeantEventServer::ActivateEvents()
   int nactivated = 0;
   int nactive = fNactive.load();
   std::cout << "Number of activated events - EventServer " << nactive << std::endl;
-  while (nactive < fNactiveMax && !fEventsServed) {
+  while (nactive < fNactiveMax && nactive < fNload.load() - fNcompleted.load() && !fEventsServed) { //TODO: rewrite in thread safe manner
     // Try to activate next event by getting a slot
     size_t slot = 0;
     if (fFreeSlots.dequeue(slot)) {
