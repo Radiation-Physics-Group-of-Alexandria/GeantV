@@ -32,7 +32,9 @@ public:
 
   void Initialize();
   void Run();
-  bool AskForNewEvent();
+  int AskForNewEvent(int num);
+
+  bool GetIsTransportCompleted(){ return isTransportCompleted;}
 
 private:
   zmq::context_t zmqContext;
@@ -44,8 +46,8 @@ private:
   GeantConfig *config;
   GeantRunManager *runManager;
 
-  bool isEventReceived;
   bool isTransportCompleted;
+  int fReceivedEvents = 0;
 };
 }
 }
