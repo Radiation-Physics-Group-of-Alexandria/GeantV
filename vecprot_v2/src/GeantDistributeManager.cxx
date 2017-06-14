@@ -45,7 +45,7 @@ void GeantDistributeManger::RunDistributedSimulation()
   std::thread eventDispThread;
   if (fMaster != nullptr) {
     eventDispThread = std::thread([&] {
-      fMaster->Initialize(); // TODO: add worker and master on zeroth node
+      fMaster->Initialize();
       fMaster->RunReqReplyLoop();
     });
   }

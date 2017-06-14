@@ -82,6 +82,8 @@ public:
   bool fUseAppMonitoring = false; /** Monitoring the application */
   int  fTreeSizeWriteThreshold = 100000; /** Maximum size of the tree (before automatic writing) **/
   bool fConcurrentWrite = true;  /** Switch between single and mutlithreaded writing */
+
+  std::string fEventListFilename;
 #ifndef VECCORE_CUDA
   std::string fGeomFileName; /** Geometry file name */
 #endif
