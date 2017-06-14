@@ -12,14 +12,14 @@ namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
 class HepMCGenerator : public PrimaryGenerator {
-private:
+protected:
   HepMC::Reader *input_file;
   HepMC::FindParticles *search;
-
+  void LoadFile(const std::string &filename);
 public:
   HepMCGenerator();
   HepMCGenerator(std::string &filename);
-  ~HepMCGenerator();
+  virtual ~HepMCGenerator();
 
   // set one GeantTrack primary track properties
   virtual void InitPrimaryGenerator();

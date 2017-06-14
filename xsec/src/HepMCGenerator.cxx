@@ -25,24 +25,15 @@ inline namespace GEANT_IMPL_NAMESPACE {
 
 //______________________________________________________________________________
 HepMCGenerator::HepMCGenerator()
-  : input_file(0), search(0) {}
-
-//______________________________________________________________________________
-HepMCGenerator::HepMCGenerator(std::string &filename) : input_file(0), search(0) {
-  if (filename.substr(filename.find_last_of(".") + 1) == "hepmc3") {
-    input_file = new HepMC::ReaderAscii(filename);
-  }
-#ifdef USE_ROOT 
-  else if (filename.substr(filename.find_last_of(".") + 1) == "root") {
-    input_file = new HepMC::ReaderRoot(filename);
-  } 
-#endif
-  else {
-    std::cout << "Unrecognized filename extension (must be .hepmc3 or .root)" << std::endl;
-  }
+  : input_file(0), search(0) {
 #ifdef USE_VECGEOM_NAVIGATOR
   Particle_t::CreateParticles();
 #endif
+}
+
+//______________________________________________________________________________
+HepMCGenerator::HepMCGenerator(std::string &filename) : HepMCGenerator() {
+  LoadFile(filename);
 }
 
 //______________________________________________________________________________
@@ -273,6 +264,20 @@ void HepMCGenerator::GetTrack(int n, double &tpx, double &tpy, double &tpz, doub
       te  = genpart->momentum().e() *1000.0;
     }
   */
+}
+
+void HepMCGenerator::LoadFile(const std::string &filename) {
+  if (filename.substr(filename.find_last_of(".") + 1) == "hepmc3") {
+    input_file = new HepMC::ReaderAscii(filename);
+  }
+#ifdef USE_ROOT
+  else if (filename.substr(filename.find_last_of(".") + 1) == "root") {
+    input_file = new HepMC::ReaderRoot(filename);
+  }
+#endif
+  else {
+    std::cout << "Unrecognized filename extension (must be .hepmc3 or .root)" << std::endl;
+  }
 }
 
 } // GEANT_IMPL_NAMESPACE

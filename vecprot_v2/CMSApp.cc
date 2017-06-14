@@ -12,6 +12,7 @@
 #include "GeantRunManager.h"
 #include "GunGenerator.h"
 #include "HepMCGenerator.h"
+#include "HepMCGeneratorMultFiles.h"
 #include "TaskBroker.h"
 #include "WorkloadManager.h"
 #include "GeantPropagator.h"
@@ -267,6 +268,8 @@ int main(int argc, char *argv[]) {
   // Activate old version of single thread serialization/reading
   //   config->fConcurrentWrite = false;
 
+  config->fEventListFilename = hepmc_event_filename;
+
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);
   if (broker) runMgr->SetCoprocessorBroker(broker);
@@ -287,7 +290,8 @@ int main(int argc, char *argv[]) {
     // propagator->fPrimaryGenerator->SetEtaRange(-2.,2.);
     // propagator->fPrimaryGenerator->SetMomRange(0.,0.5);
     // propagator->fPrimaryGenerator = new HepMCGenerator("pp14TeVminbias.hepmc3");
-    runMgr->SetPrimaryGenerator( new HepMCGenerator(hepmc_event_filename) );
+    //runMgr->SetPrimaryGenerator( new HepMCGenerator(hepmc_event_filename) );
+    runMgr->SetPrimaryGenerator( new HepMCGeneratorMultFiles() );
   }
 
   CMSApplication *CMSApp = new CMSApplication(runMgr);

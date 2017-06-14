@@ -50,6 +50,8 @@ private:
   std::atomic_int fNload;              /** Last load event in the server */
   std::atomic_int fNstored;            /** Number of stored events in the server */
   std::atomic_int fNcompleted;         /** Number of completed events */
+  std::atomic_int fAskForEventLock;
+  int fReceivedEvents;
   GeantRunManager *fRunMgr = nullptr;  /** Run manager */
   bool fEventsServed = false;          /** All events served */
   bool fDone = false;                  /** All events transported */

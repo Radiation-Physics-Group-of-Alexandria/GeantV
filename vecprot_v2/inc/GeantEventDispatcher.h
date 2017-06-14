@@ -32,6 +32,13 @@
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
+struct MCEventSource{
+  std::string fFileName;
+  int fOffset;
+  int fEventAmount;
+  int fDispatched;
+};
+
 class GeantEventDispatcher {
 
 public:
@@ -47,6 +54,10 @@ private:
   int dispatchedEvents;
 
   GeantConfig *fConfig;
+
+  bool allEventsDispatched;
+  int currentSource;
+  std::vector<MCEventSource> fEventSources;
 };
 }
 }

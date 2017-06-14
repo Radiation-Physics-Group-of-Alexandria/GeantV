@@ -39,7 +39,7 @@ using namespace vecgeom;
 //______________________________________________________________________________
 GeantEventServer::GeantEventServer(int event_capacity, GeantRunManager *runmgr)
   :fNevents(event_capacity), fNactive(0), fNserved(0), fLastActive(-1), fCurrentEvent(0),
-   fNload(0), fNstored(0), fNcompleted(0), fRunMgr(runmgr), fFreeSlots(AdjustSize(runmgr->GetConfig()->fNbuff))
+   fNload(0), fNstored(0), fNcompleted(0), fAskForEventLock(0), fReceivedEvents(0), fRunMgr(runmgr), fFreeSlots(AdjustSize(runmgr->GetConfig()->fNbuff))
 {
 // Constructor
   assert(event_capacity > 0);
@@ -79,9 +79,18 @@ GeantEventServer::~GeantEventServer()
 
 //______________________________________________________________________________
 bool GeantEventServer::CheckNewEvents(){
-  int receivedEvents = fRunMgr->GetEventReceiver()->AskForNewEvent(fNactiveMax);
+  if (fAskForEventLock.fetch_add(1) == 0) {
+    fReceivedEvents = 0;
+    while(fReceivedEvents < fNactiveMax && !fRunMgr->GetEventReceiver()->GetIsTransportCompleted()) {
+      fReceivedEvents += fRunMgr->GetEventReceiver()->AskForNewEvent(fNactiveMax-fReceivedEvents);
+    }
+    fAskForEventLock.store(0);
+  } else {
+    while (fAskForEventLock.load() != 0) { // other threads wait
+    }
+  }
   if(fRunMgr->GetEventReceiver()->GetIsTransportCompleted()) fDone = true;
-  return (receivedEvents > 0);
+  return (fReceivedEvents > 0);
 }
 
 //______________________________________________________________________________
@@ -159,13 +168,14 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
       Error("EventServer", "Too many worker threads for this configuration.");
     }
     fRunMgr->SetInitialShare(fNbasketsInit/fRunMgr->GetNpropagators());
-    for (int evt=fNactiveMax; evt<fNevents; ++evt)
-      nactivep += fEvents[evt]->GetNprimaries();
-    fRunMgr->SetNprimaries(nactivep);
-    Print("AddEvent", "Server imported %d events cumulating %d primaries", 1, nactivep);
+//    for (int evt=fNactiveMax; evt<fNevents; ++evt)
+//      nactivep += fEvents[evt]->GetNprimaries();
+//    fRunMgr->SetNprimaries(nactivep);
+//    Print("AddEvent", "Server imported %d events cumulating %d primaries", 1, nactivep);
     Print("EventServer", "Initial baskets to be split among propagators: %d", fNbasketsInit);
   }
-          Print("AddEvent", "Server added one event more");
+  fRunMgr->SetNprimaries(fRunMgr->GetNprimaries() + fEvents[evt]->GetNprimaries()); //TODO: thread unsafe
+  Print("AddEvent", "Server added one more event");
   return ntracks;
 }
 

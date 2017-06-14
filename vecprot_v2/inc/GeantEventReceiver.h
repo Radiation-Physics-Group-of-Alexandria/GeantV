@@ -40,8 +40,6 @@ private:
   zmq::context_t zmqContext;
   zmq::socket_t zmqSocket;
 
-  std::atomic_int askForEventLock;
-
   std::string fServHname;
   GeantConfig *config;
   GeantRunManager *runManager;
