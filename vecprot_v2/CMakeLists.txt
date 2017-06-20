@@ -81,10 +81,13 @@ set(sources
    ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantRunManager.cxx
    ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventServer.cxx
    ${CMAKE_CURRENT_SOURCE_DIR}/src/TrackStat.cxx
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventDispatcher.cxx
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventReceiver.cxx
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantDistributeManager.cxx
 )
+if(USE_HPC)
+   set(sources ${sources}
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventDispatcher.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventReceiver.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantDistributeManager.cxx)
+endif()
 
 set(headers
    ${CMAKE_SOURCE_DIR}/base/inc/Geant/Config.h
@@ -128,13 +131,13 @@ set(headers
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventServer.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantConfig.h
    ${CMAKE_CURRENT_SOURCE_DIR}/inc/TrackStat.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventDispatcher.h
-#   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantVZMQMessenger.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantPerfEvaluator.h
-#   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantHPCMGraph.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventReceiver.h
-   ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantDistributeManager.h
 )
+if(USE_HPC)
+   set(headers ${headers}
+      ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventDispatcher.h
+      ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventReceiver.h
+      ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantDistributeManager.h)
+endif()
 
 # Add codes that describes some stages (and handlers) that are different when real-physics is used
 if (NOT USE_REAL_PHYSICS)
@@ -288,9 +291,14 @@ function(add_to_ctest EXECUTABLES)
       elseif(TARGET_NAME STREQUAL "runGPUApp")
           add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/ExN03.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT.root)
       elseif(TARGET_NAME STREQUAL "CMSGPUApp")
-          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/cms2015.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT_G496p02_1mev.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT_G496p02_1mev.root -E ${CMAKE_SOURCE_DIR}/data/pp14TeVminbias.root)
+          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/cms2015.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT_G496p02_1mev.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT_G496p02_1mev.root -E ${CMAKE_SOURCE_DIR}/data/hepmc_hpc_eventfiles.txt)
       elseif(TARGET_NAME STREQUAL "CMSApp")
-          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/cms2015.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT_G496p02_1mev.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT_G496p02_1mev.root -E ${CMAKE_SOURCE_DIR}/data/pp14TeVminbias.root)
+          if(USE_HPC)
+            FILE(WRITE "${CMAKE_SOURCE_DIR}/data/hepmc_hpc_eventfiles.txt" "${CMAKE_SOURCE_DIR}/data/pp14TeVminbias.root:0:2\n${CMAKE_SOURCE_DIR}/data/pp14TeVminbias.root:2:3")
+            add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/cms2015.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT_G496p02_1mev.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT_G496p02_1mev.root -E ${CMAKE_SOURCE_DIR}/data/hepmc_hpc_eventfiles.txt -v 1 -b 1)
+          else()
+            add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/cms2015.root -x ${CMAKE_SOURCE_DIR}/data/xsec_FTFP_BERT_G496p02_1mev.root -f ${CMAKE_SOURCE_DIR}/data/fstate_FTFP_BERT_G496p02_1mev.root -E ${CMAKE_SOURCE_DIR}/data/pp14TeVminbias.root)
+          endif()
       elseif(TARGET_NAME STREQUAL "testBasketizer")
         add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> 8)
       elseif(TARGET_NAME STREQUAL "testLocality")

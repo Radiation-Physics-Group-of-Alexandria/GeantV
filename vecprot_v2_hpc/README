@@ -1,0 +1,17 @@
+Building
+
+To build geant HPC use similar cmake options as in build_geantV.sh file.
+
+BUILD_ZMQ=ON Is responsible for downloading, building and installing ZeroMQ and cppzmq(c++ bindings) to CMAKE_INSTALL_PREFIX
+
+Running
+
+Run CMSApp with options similar to those in cmsappcommand.sh
+Required option: -v 1 (use v3 scheduler)
+Important option: -b #n (worker asks for #n events at a time)
+Number of events and event file is no longer needed as option.
+Now instead it is configured by -e eventFiles.txt
+
+Format of eventFiles.txt
+FILE_NAME:EVENT_OFFSET:NUMBER_OF_EVENTS_TO_READ
+(offset is number of first event to read in the file)

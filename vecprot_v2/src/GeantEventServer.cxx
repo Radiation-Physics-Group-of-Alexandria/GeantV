@@ -77,9 +77,10 @@ GeantEventServer::~GeantEventServer()
   delete [] fEvents;
 }
 
+#ifdef USE_HPC
 //______________________________________________________________________________
 bool GeantEventServer::CheckNewEvents(){
-  if (fAskForEventLock.fetch_add(1) == 0) {
+  if (fAskForEventLock.fetch_add(1) == 0) { //one thread is working
     fReceivedEvents = 0;
     while(fReceivedEvents < fNactiveMax && !fRunMgr->GetEventReceiver()->GetIsTransportCompleted()) {
       fReceivedEvents += fRunMgr->GetEventReceiver()->AskForNewEvent(fNactiveMax-fReceivedEvents);
@@ -92,6 +93,7 @@ bool GeantEventServer::CheckNewEvents(){
   if(fRunMgr->GetEventReceiver()->GetIsTransportCompleted()) fDone = true;
   return (fReceivedEvents > 0);
 }
+#endif
 
 //______________________________________________________________________________
 int GeantEventServer::AddEvent(GeantTaskData *td)
@@ -157,7 +159,11 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
   VolumePath_t::ReleaseInstance(startpath);
   // Update number of stored events
   fNstored++;
+#ifdef USE_HPC
   if (fNstored.load() == 1) {
+#else
+  if (fNstored.load() == fNevents) {
+#endif
     int nactivep = 0;
     for (int evt=0; evt<fNactiveMax; ++evt)
       nactivep += fEvents[evt]->GetNprimaries();
@@ -168,14 +174,18 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
       Error("EventServer", "Too many worker threads for this configuration.");
     }
     fRunMgr->SetInitialShare(fNbasketsInit/fRunMgr->GetNpropagators());
-//    for (int evt=fNactiveMax; evt<fNevents; ++evt)
-//      nactivep += fEvents[evt]->GetNprimaries();
-//    fRunMgr->SetNprimaries(nactivep);
-//    Print("AddEvent", "Server imported %d events cumulating %d primaries", 1, nactivep);
+#ifndef USE_HPC
+    for (int evt=fNactiveMax; evt<fNevents; ++evt)
+      nactivep += fEvents[evt]->GetNprimaries();
+    fRunMgr->SetNprimaries(nactivep);
+    Print("AddEvent", "Server imported %d events cumulating %d primaries", 1, nactivep);
+#endif
     Print("EventServer", "Initial baskets to be split among propagators: %d", fNbasketsInit);
   }
+#ifdef USE_HPC
   fRunMgr->SetNprimaries(fRunMgr->GetNprimaries() + fEvents[evt]->GetNprimaries()); //TODO: thread unsafe
   Print("AddEvent", "Server added one more event");
+#endif
   return ntracks;
 }
 
@@ -197,7 +207,7 @@ GeantTrack *GeantEventServer::GetNextTrack()
       if (evt == fLastActive.load()) {
         // No events available, check if this is last event
         fHasTracks = false;
-        //if (evt == fNevents-1) fDone = true;
+        if (evt == fNevents-1) fDone = true;
         return nullptr;
       }
       // Attempt to change the event
@@ -287,8 +297,11 @@ int GeantEventServer::ActivateEvents()
   if (fEventsServed) return 0;
   int nactivated = 0;
   int nactive = fNactive.load();
-  std::cout << "Number of activated events - EventServer " << nactive << std::endl;
-  while (nactive < fNactiveMax && nactive < fNload.load() - fNcompleted.load() && !fEventsServed) { //TODO: rewrite in thread safe manner
+#ifdef USE_HPC
+  while (nactive < fNactiveMax && nactive < fNload.load() - fNcompleted.load() && !fEventsServed) {
+#else
+  while (nactive < fNactiveMax && !fEventsServed) {
+#endif
     // Try to activate next event by getting a slot
     size_t slot = 0;
     if (fFreeSlots.dequeue(slot)) {
@@ -298,7 +311,6 @@ int GeantEventServer::ActivateEvents()
       int lastactive = fLastActive.fetch_add(1) + 1;
       fEvents[lastactive]->SetSlot(slot);
       nactivated++;
-      std::cout << "Number of activated events - counter " << nactivated << std::endl;
       if (lastactive == fNevents - 1) fEventsServed = true;
       fHasTracks = true;
     }
@@ -314,7 +326,9 @@ void GeantEventServer::CompletedEvent(int evt)
   fNactive--;
   fNcompleted++;
   if (!fFreeSlots.enqueue(fEvents[evt]->GetSlot())) Fatal("CompletedEvent", "Cannot enqueue slot");
-  //ActivateEvents();
+#ifndef USE_HPC
+  ActivateEvents();
+#endif
 }
 
 } // GEANT_IMPL_NAMESPACE
