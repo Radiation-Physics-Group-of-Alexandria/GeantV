@@ -89,11 +89,14 @@ if(CTEST)
   set (DATA_DOWNLOAD ON)
 endif()
 
-option(HPC "Activate High Performance Computing layout" OFF)
-if(HPC)
+option(USE_HPC "Activate High Performance Computing layout" OFF)
+option(BUILD_ZMQ "Download, build and install to cmake_install_prefix ZeroMQ and cppzmq" OFF)
+if(USE_HPC)
   add_definitions(-DUSE_HPC)
   message(STATUS "HPC mode is ON!")
 endif()
+
+
 
 option(USE_VECPHYS "Enable activation of vector physics." OFF)
 if(USE_VECPHYS)
@@ -331,17 +334,18 @@ if (KNL)
 endif()
 
 #----------------------------------------------------------------------------------------------
-# Find MPI, ZeroMQ, C++ ZeroMQ bindings
+# Find MPI, C++ ZeroMQ bindings
 #
-if (HPC)
+if (USE_HPC)
   find_package(MPI REQUIRED)
-  find_package(ZeroMQ REQUIRED)
+  if(BUILD_ZMQ)
+    include(BuildZeroMQ)
+  endif()
   find_package(cppzmq REQUIRED)
   set(CMAKE_CXX_COMPILE_FLAGS ${CMAKE_CXX_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS})
   set(CMAKE_CXX_LINK_FLAGS ${CMAKE_CXX_LINK_FLAGS} ${MPI_LINK_FLAGS})
   include_directories(${MPI_CXX_INCLUDE_PATH})
   include_directories(${cppzmq_INCLUDE_DIR})
-  include_directories(${ZeroMQ_INCLUDE_DIR})
 endif()
 
 #----------------------------------------------------------------------------

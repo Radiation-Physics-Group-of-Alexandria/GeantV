@@ -29,7 +29,7 @@ if (USE_VECGEOM_NAVIGATOR)
 endif()
 
 if(USE_HPC)
-   include_directories(${ZeroMQ_INCLUDE_DIR})
+   include_directories(${cppzmq_INCLUDE_DIR})
 endif()
 
 if (USE_TBB)
@@ -253,10 +253,6 @@ else()
     runApp.cc
     testBasketizer.cc
 )
-endif()
-
-if(USE_HPC)
-  add_subdirectory(hpctests)
 endif()
 
 if(USE_ROOT)
