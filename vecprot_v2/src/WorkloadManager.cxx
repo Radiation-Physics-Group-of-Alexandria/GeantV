@@ -360,7 +360,9 @@ void WorkloadManager::TransportTracksV3(GeantPropagator *prop) {
 
 //  int nworkers = propagator->fNthreads;
 //  WorkloadManager *wm = propagator->fWMgr;
-//  GeantEventServer *evserv = runmgr->GetEventServer();
+#ifndef USE_HPC
+  GeantEventServer *evserv = runmgr->GetEventServer();
+#endif
 //  bool firstTime = true;
 //  bool multiPropagator = runmgr->GetNpropagators() > 1;
   // IO handling
@@ -388,8 +390,9 @@ void WorkloadManager::TransportTracksV3(GeantPropagator *prop) {
   #endif
 
   // Activate events in the server
-  //evserv->ActivateEvents();
-
+#ifndef USE_HPC
+  evserv->ActivateEvents();
+#endif
   bool flush = false;
 #ifndef USE_VECGEOM_NAVIGATOR
   // If we use ROOT make sure we have a navigator here

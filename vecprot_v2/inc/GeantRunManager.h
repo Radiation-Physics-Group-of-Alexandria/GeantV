@@ -1,7 +1,6 @@
 #ifndef GEANT_RUN_MANAGER_H
 #define GEANT_RUN_MANAGER_H
 
-#include <iostream>
 #include <thread>
 #include <atomic>
 #include "base/Vector.h"
@@ -10,7 +9,9 @@
 #include "Geant/Typedefs.h"
 #include "GeantTaskData.h"
 #include "GeantEventServer.h"
+#ifdef USE_HPC
 #include "GeantEventDispatcher.h"
+#endif
 #include "GeantDistributeManager.h"
 #include "GeantConfig.h"
 #ifdef USE_ROOT

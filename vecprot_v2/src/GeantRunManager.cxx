@@ -194,8 +194,7 @@ bool GeantRunManager::Initialize() {
   }
   fApplication->Initialize();
   fPrimaryGenerator->InitPrimaryGenerator();
-
-  fEventServer = new GeantEventServer(fConfig->fNtotal, this); //TODO: add sane capacity
+  fEventServer = new GeantEventServer(fConfig->fNtotal, this);
 #ifndef USE_HPC
   for (int i=0; i<fConfig->fNtotal; ++i)
     fEventServer->AddEvent();

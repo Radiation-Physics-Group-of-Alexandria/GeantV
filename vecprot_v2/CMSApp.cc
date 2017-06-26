@@ -267,9 +267,9 @@ int main(int argc, char *argv[]) {
   config->fTreeSizeWriteThreshold = 100000;
   // Activate old version of single thread serialization/reading
   //   config->fConcurrentWrite = false;
-
+#ifdef USE_HPC
   config->fEventListFilename = hepmc_event_filename;
-
+#endif
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);
   if (broker) runMgr->SetCoprocessorBroker(broker);
@@ -290,8 +290,11 @@ int main(int argc, char *argv[]) {
     // propagator->fPrimaryGenerator->SetEtaRange(-2.,2.);
     // propagator->fPrimaryGenerator->SetMomRange(0.,0.5);
     // propagator->fPrimaryGenerator = new HepMCGenerator("pp14TeVminbias.hepmc3");
-    //runMgr->SetPrimaryGenerator( new HepMCGenerator(hepmc_event_filename) );
+#ifdef USE_HPC
     runMgr->SetPrimaryGenerator( new HepMCGeneratorMultFiles() );
+#else
+    runMgr->SetPrimaryGenerator( new HepMCGenerator(hepmc_event_filename) );
+#endif
   }
 
   CMSApplication *CMSApp = new CMSApplication(runMgr);
