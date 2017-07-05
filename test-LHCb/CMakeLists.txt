@@ -50,7 +50,7 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${GEANTV_CXX_NOW_FLAGS_RELWITHDEBINFO}")
 #
 add_executable(testlhcb testLHCb.cc ${sources} ${headers})
 set_target_properties(testlhcb PROPERTIES LINK_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-target_link_libraries(testlhcb -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${MPI_LIBRARIES} ${cppzmq_LIBRARY} Geant_v Xsec)
+target_link_libraries(testlhcb -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${cppzmq_LIBRARY} Geant_v Xsec)
 set(CMAKE_EXE_LINKER_FLAGS         "${GEANTV_EXE_NOW_LINKER_FLAGS}")
 add_dependencies(testlhcb Geant_v Xsec)
 

@@ -1,5 +1,4 @@
 #include "GeantDistributeManager.h"
-#include <mpi.h>
 #include "Geant/Error.h"
 #include <iostream>
 
@@ -12,32 +11,19 @@ GeantDistributeManger::GeantDistributeManger(GeantRunManager *runManager, GeantC
 
 void GeantDistributeManger::InitializeDistributedApplication(int argc, char *argv[])
 {
-  if (MPI_Init(&argc, &argv) != MPI_SUCCESS) {
-    assert("MPI_Init failed");
-    std::abort();
-  }
-
-  int world_rank;
-  int world_size;
-
-  MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-  MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-  fConfig->fNClients = world_size;
-
-  hostnames = new char[world_size][256];
   char hostname[256];
   gethostname(hostname, sizeof(hostname));
-  MPI_Allgather(hostname, 256, MPI_CHAR, hostnames, 256, MPI_CHAR, MPI_COMM_WORLD);
 
-  if (world_rank == 0) {
+  if (fConfig->fMasterNode) {
     fMaster = new GeantEventDispatcher(fConfig);
+    fWorker = new GeantEventReceiver("localhost", fConfig, fRunMgr);
+    std::cout << "On server node" << std::endl;
+
+  } else {
+    fWorker = new GeantEventReceiver(fConfig->fMasterHostname, fConfig, fRunMgr);
+    std::cout << "On client node" << std::endl;
   }
-
-  fWorker = new GeantEventReceiver(std::string(hostnames[0]), fConfig, fRunMgr);
   fRunMgr->SetEventReceiver(fWorker);
-
-  MPI_Finalize();
 }
 
 void GeantDistributeManger::RunDistributedSimulation()
@@ -60,7 +46,6 @@ void GeantDistributeManger::RunDistributedSimulation()
 
 GeantDistributeManger::~GeantDistributeManger()
 {
-  delete[] hostnames;
 }
 }
 }

@@ -34,6 +34,8 @@ static int n_propagators = 1;
 static int max_memory = 4000; /* MB */
 static bool monitor = false, score = false, debug = false, coprocessor = false;
 static bool tbbmode = false, usev3 = false, usenuma = false;
+static bool server_node = true;
+static int n_clients = 1;
 
 static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"hepmc-event-file", required_argument, 0, 'E'},
@@ -54,6 +56,9 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"propagators", required_argument, 0, 'p'},
                                   {"v3", required_argument, 0, 'v'},
                                   {"numa", required_argument, 0, 'n'},
+                                  {"server",required_argument, 0, 'S'},
+                                  {"master-hostname", required_argument, 0, 'H'},
+                                  {"clients", required_argument, 0, 'c'},
                                   {0, 0, 0, 0}};
 
 void help() {
@@ -71,6 +76,7 @@ int main(int argc, char *argv[]) {
   std::string xsec_filename("xsec_FTFP_BERT_G496p02_1mev.root");
   std::string fstate_filename("fstate_FTFP_BERT_G496p02_1mev.root");
   std::string hepmc_event_filename("pp14TeVminbias.root");
+  std::string master_hostname("localhost");
 
   if (argc == 1) {
     help();
@@ -80,7 +86,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "E:e:f:g:l:B:mM:b:t:x:r:i:u:p:v:n:", options, &optidx);
+    c = getopt_long(argc, argv, "E:e:f:g:l:B:mM:b:t:x:r:i:u:p:v:n:S:H:c:", options, &optidx);
 
     if (c == -1)
       break;
@@ -180,6 +186,18 @@ int main(int argc, char *argv[]) {
       usenuma = bool(strtol(optarg, NULL, 10));
       break;
 
+    case 'S':
+      server_node = bool(strtol(optarg, NULL, 10));
+      break;
+
+    case 'H':
+      master_hostname = optarg;
+      break;
+
+    case 'c':
+      n_clients = (int)strtol(optarg, NULL, 10);
+      break;
+
     default:
       errx(1, "unknown option %c", c);
     }
@@ -269,6 +287,9 @@ int main(int argc, char *argv[]) {
   //   config->fConcurrentWrite = false;
 #ifdef USE_HPC
   config->fEventListFilename = hepmc_event_filename;
+  config->fMasterHostname = master_hostname;
+  config->fMasterNode = server_node;
+  config->fNClients = n_clients;
 #endif
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);

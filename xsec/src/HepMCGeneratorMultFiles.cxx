@@ -15,8 +15,8 @@ void HepMCGeneratorMultFiles::SetEventSource(const std::string &file, int offset
     HepMCGenerator::LoadFile(filename);
 
     currentOffset = 0;
-    desiredOffset = offset;
   }
+  desiredOffset = offset;
 }
 GeantEventInfo HepMCGeneratorMultFiles::NextEvent() {
   if(currentOffset > desiredOffset)

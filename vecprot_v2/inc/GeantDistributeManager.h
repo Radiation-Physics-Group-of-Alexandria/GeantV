@@ -36,7 +36,7 @@ private:
   GeantEventReceiver *fWorker   = nullptr;
   GeantEventDispatcher *fMaster = nullptr;
 
-  char (*hostnames)[256];
+  char hostname[256];
   GeantConfig *fConfig;
 };
 }

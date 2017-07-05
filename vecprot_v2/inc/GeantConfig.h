@@ -89,7 +89,9 @@ public:
 #endif
 
 #ifdef USE_HPC
-  int fNClients = 2; /** Define at least two clients for HPC (master EventServer and slave EventServer) */
+  std::string fMasterHostname;
+  bool fMasterNode;
+  int fNClients;
 #endif
 
 public:

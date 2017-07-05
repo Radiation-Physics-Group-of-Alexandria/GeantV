@@ -28,7 +28,6 @@
 
 #ifdef USE_HPC
 #include "zmq.hpp"
-#include "mpi.h"
 #endif
 
 #include <thread>

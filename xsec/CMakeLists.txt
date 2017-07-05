@@ -54,7 +54,7 @@ add_custom_target(xseclib DEPENDS Xsec)
 # Add the test executable
 #
 add_executable(testserialRead testserialRead.cc)
-target_link_libraries(testserialRead -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} GeantNuma Geant_v Xsec Vmagfield NewPhysics ${cppzmq_LIBRARY} ${MPI_LIBRARIES})
+target_link_libraries(testserialRead -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} GeantNuma Geant_v Xsec Vmagfield NewPhysics ${cppzmq_LIBRARY})
 add_dependencies(testserialRead Geant_v Xsec)
 
 #----------------------------------------------------------------------------------------------
