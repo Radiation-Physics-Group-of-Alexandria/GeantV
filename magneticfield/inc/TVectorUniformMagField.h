@@ -50,7 +50,6 @@ class TVectorUniformMagField : public GUVVectorMagneticField
            return *this;
         }
 
-        // virtual
         void GetFieldValue( vecgeom::Vector3D<double> const &, // Position,
                             vecgeom::Vector3D<float> &FieldValue )  override final
         {
