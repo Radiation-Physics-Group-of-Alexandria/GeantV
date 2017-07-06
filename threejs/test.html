@@ -60,7 +60,7 @@ function init()
 	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
 	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
 	scene.add(camera);
-	camera.position.set(0,150,400);
+	camera.position.set(0,1,4);
 	camera.lookAt(scene.position);	
 	// RENDERER
 	if ( Detector.webgl )
@@ -119,7 +119,7 @@ function init()
 	
 	for (var i = 0; i < topo.edge.length; i++)
 	{
-		var spritey = makeTextSprite( " " + i + " ", { fontsize: 32, backgroundColor: {r:100, g:255, b:100, a:1} } );
+		var spritey = makeTextSprite( " μαμμα \nμια" + i + " ", { fontsize: 32, backgroundColor: {r:100, g:255, b:100, a:1} } );
 		spritey.position = topo.edge[i].center.clone().multiplyScalar(1.1);
 		scene.add( spritey );
 	}

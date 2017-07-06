@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" media="all" href="css/reset.css" /> <!-- reset css -->
+<script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+
+<style>
+    body{ background-color: ivory; padding:50px; }
+</style>
+
+<script>
+$(function(){
+
+    var canvas=document.createElement("canvas");
+    canvas.width=1000;
+    canvas.height=50;
+    var ctx=canvas.getContext("2d");
+
+    function measureTextHeight(left, top, width, height,text) {
+
+        // Draw the text in the specified area
+        ctx.save();
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillText(text, 0, 35); // This seems like tall text...  Doesn't it?
+        ctx.restore();
+
+        // Get the pixel data from the canvas
+        var data = ctx.getImageData(left, top, width, height).data,
+            first = false, 
+            last = false,
+            r = height,
+            c = 0;
+
+        // Find the last line with a non-white pixel
+        while(!last && r) {
+            r--;
+            for(c = 0; c < width; c++) {
+                if(data[r * width * 4 + c * 4 + 3]) {
+                    last = r;
+                    break;
+                }
+            }
+        }
+
+        // Find the first line with a non-white pixel
+        while(r) {
+            r--;
+            for(c = 0; c < width; c++) {
+                if(data[r * width * 4 + c * 4 + 3]) {
+                    first = r;
+                    break;
+                }
+            }
+
+            // If we've got it then return the height
+            if(first != r) return last - first;
+        }
+
+        // We screwed something up...  What do you expect from free code?
+        return 0;
+    }
+
+    ctx.font='32px Arial';
+    var start = new Date().getTime();
+    var text="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for(var x=0;x<1000;x++){
+      var height = measureTextHeight(0, 0, canvas.width, canvas.height,text);
+    }
+    console.log(measureTextHeight(0, 0, canvas.width, canvas.height,text));
+    console.log((new Date().getTime()-start));
+
+
+
+}); // end $(function(){});
+</script>
+
+</head>
+
+<body>
+    <div>Stress testing Prestaul's measureTextHeight function...</div>
+</body>
+</html>
