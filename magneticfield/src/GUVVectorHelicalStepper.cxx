@@ -75,8 +75,6 @@ GUVVectorHelicalStepper::AdvanceHelix( const Vc::Vector<double>  yIn[],
   
   Double_v R_1 = GetInverseCurve(velocityVal,Bmag);
 
-
-
   //from if statement
   LinearStep( yIn, h, yHelix );
   
@@ -110,7 +108,7 @@ GUVVectorHelicalStepper::AdvanceHelix( const Vc::Vector<double>  yIn[],
 
   // Store the resulting position and tangent
 
-  // yHelix[0] = yIn[0] + positionMove.x(); 
+  // yHelix[0] = yIn[0] + positionMove.x();
   // yHelix[1] = yIn[1] + positionMove.y(); 
   // yHelix[2] = yIn[2] + positionMove.z();
   // yHelix[3] = velocityVal * endTangent.x();
