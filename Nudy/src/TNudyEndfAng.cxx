@@ -324,7 +324,7 @@ double TNudyEndfAng::GetCos4(int ielemId, int mt, double energyK)
   if (energyK <= energy4OfMts[ielemId][i][min])
     min = 0;
   else if (energyK >= energy4OfMts[ielemId][i][max])
-    min = max - 1;
+    min = max ;
   else {
     while (max - min > 1) {
       mid = (min + max) / 2;

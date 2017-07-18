@@ -260,7 +260,7 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
               sumein += fsum;
               cosin.push_back(x);
               cosinpdf.push_back(fsum);
-              // std::cout<<"fsum "<< fsum <<" x "<< x << std::endl;
+               std::cout<<"fsum "<< fsum <<" sumprob "<< sumprob << std::endl;
               TNudyCore::Instance()->Sort(energyFile5, energyPdfFile5);
               TNudyCore::Instance()->ThinningDuplicate(energyFile5, energyPdfFile5);
               TNudyCore::Instance()->cdfGenerateT(energyFile5, energyPdfFile5, energyCdfFile5);
@@ -268,8 +268,7 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
                 eoute.push_back(energyFile5[i]);
                 pdfe.push_back(energyPdfFile5[i]);
                 cdfe.push_back(energyCdfFile5[i]);
-                 //std::cout <<"energy pdf "<< energyFile5[i] << "  "<< energyPdfFile5[i] <<"  "<< energyCdfFile5[i] <<
-                // std::endl;
+                std::cout <<"energy pdf "<< energyFile5[i] << "  "<< energyPdfFile5[i] <<"  "<< energyCdfFile5[i] << std::endl;
               }
               eout2de.push_back(eoute);
               pdf2de.push_back(pdfe);
@@ -284,10 +283,10 @@ TNudyEndfEnergyAng::TNudyEndfEnergyAng(TNudyEndfFile *file, double iQValue[])
               k1++;
             } while (k1 < 101);
             TNudyCore::Instance()->cdfGenerateT(cosin, cosinpdf, cosincdf);
-            // std::cout<<"cos size "<<  cosin.size() <<std::endl;
-             //for(unsigned long i = 0; i < cosin.size(); i++){
-             //std::cout << " cospdf "<< cosin[i] <<"  "<< cosinpdf[i] <<"  "<< cosincdf[i] << std::endl;
-            //}
+             std::cout<<"cos size "<<  cosin.size() <<std::endl;
+             for(unsigned long i = 0; i < cosin.size(); i++){
+             std::cout << " cospdf "<< cosin[i] <<"  "<< cosinpdf[i] <<"  "<< cosincdf[i] << std::endl;
+            }
             // if(sumein > 1E-50){
             cos2d.push_back(cosin);
             cosinpdf2d.push_back(cosinpdf);
