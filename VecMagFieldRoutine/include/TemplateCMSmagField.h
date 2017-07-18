@@ -506,7 +506,8 @@ void TemplateCMSmagField<Backend>
     CartesianToCylindrical(pos, cyl); 
     vecgeom::Vector3D<Float_v> rzField;
     GetFieldValueRZ(cyl[0], cyl[1], rzField); //cyl[2] =[r,z]
-    
+
+#ifdef OLD_CODE    
     float zero = 0.0f;
     float one  = 1.0f;
     Float_v sinTheta(zero), cosTheta(one); //initialize as theta=0
@@ -519,7 +520,13 @@ void TemplateCMSmagField<Backend>
     vecgeom::MaskedAssign(nonZero, 1.0f/cyl[0]    , &rInv    );
     sinTheta = pos.y()*rInv;
     vecgeom::MaskedAssign(nonZero, pos.x()*rInv, &cosTheta);
-
+#else
+    vecCore::Mask_v<float> nonZero = (cyl[0] != Float_v(0.0f) );     
+    Float_v rInv     = vecCore::Blend(nonZero, 1.0f / cyl[0],  Float_v(0.0f) );
+    Float_v sinTheta = pos.y() * rInv;
+    Float_v cosTheta = vecCore::Blend(nonZero, pos.x() * rInv, Float_v(1.0f) );
+#endif
+    
     CylindricalToCartesian(rzField, sinTheta, cosTheta, xyzField);
 
     xyzField *= fieldUnits::tesla;
