@@ -2722,6 +2722,12 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
 // 	    GetSigma(3, eLinCapture[i], siga, sigb, sigc);
 // 	    std::cout <<std::setprecision(12)<< eLinCapture[i] <<"   "<< xLinCapture[i] <<"   "<< sigb <<"  "<< xLinCapture[i] - sigb <<  std::endl;
 // 	}
+//              std::cout << eLinFission.size() << std::endl;
+//           for (unsigned long j = 0 ; j < eLinFission.size() ; j++)
+//             std::cout << std::setprecision(12) << eLinFission [ j ] << "  " << xLinFission [ j ] << std::endl;
+//             std::cout << eLinCapture.size() << std::endl;
+//            for (unsigned long j = 0 ; j < eLinCapture.size() ; j++)
+//              std::cout << std::setprecision(12) << eLinCapture [ j ] << "  " << xLinCapture [ j ] << std::endl;
         	std::cout<<"file 2 OK "<< std::endl;
         break;
       case 3: {
@@ -2744,7 +2750,7 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
 //           for (unsigned long j = 0 ; j < eLinFission.size() ; j++)
 //             std::cout << std::setprecision(12) << eLinFission [ j ] << "  " << xLinFission [ j ] << std::endl;
 	if(prepro==0)Thinning(eLinElastic, xBroadElastic);
-        // std::cout << eLinElastic.size() << std::endl;
+         std::cout << eLinElastic.size() << std::endl;
 //          std::cout << "before capture Doppler begins " << eLinCapture.size() <<"  "<< xLinCapture.size() << std::endl;
 //            for (unsigned long j = 0 ; j < eLinCapture.size() ; j++)
 //              std::cout << std::setprecision(12) << eLinCapture [ j ] << "  " << xLinCapture [ j ] << std::endl;
@@ -2752,14 +2758,14 @@ void TNudyEndfSigma::GetData(const char *rENDF, double isigDiff)
 	TNudyCore::Instance()->Sort(eLinCapture, xBroadCapture);
 //           std::cout << "after capture Doppler begins " << eLinCapture.size() <<"  "<< xBroadCapture.size() << std::endl;
 	if(prepro==0)Thinning(eLinCapture, xBroadCapture);
-        // std::cout << eLinCapture.size() << std::endl;
+         std::cout << eLinCapture.size() << std::endl;
 //          std::cout << "before fission Doppler begins "<< eLinFission.size() <<"  "<< xLinFission.size() << std::endl;
         broadSigma(eLinFission, xLinFission, xBroadFission);
 	TNudyCore::Instance()->Sort(eLinFission, xBroadFission);
 	if(prepro==0)Thinning(eLinFission, xBroadFission);
 //            std::cout << "after Fission Doppler begins " << eLinFission.size() <<"  "<< xBroadFission.size() << std::endl;
-       // std::cout << eLinFission.size() << std::endl;
-//        	std::cout<<"Doppler done "<<outstring << std::endl;
+        std::cout << eLinFission.size() << std::endl;
+        std::cout<<"Doppler done "<<outstring << std::endl;
         dopplerBroad = 0;
 
         out << eLinElastic.size() << std::endl;

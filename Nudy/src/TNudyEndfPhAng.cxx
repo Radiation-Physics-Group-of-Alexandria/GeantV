@@ -44,7 +44,7 @@ TNudyEndfPhAng::TNudyEndfPhAng(TNudyEndfFile *file)
       for (int i = 0; i < tab2->GetN2(); i++) {
         TNudyEndfList *tab = (TNudyEndfList *)recIter.Next();
         ein.push_back(tab->GetC2());
-        std::cout<<"energy "<< tab->GetC2() << std::endl;
+        //std::cout<<"energy "<< tab->GetC2() << std::endl;
         for (int j = 0; j < tab->GetNPL(); j++) {
           lCoef1.push_back(tab->GetLIST(j));
         }
@@ -367,6 +367,7 @@ double TNudyEndfPhAng::GetCos4(int ielemId, int mt, double energyK)
   double plk2 = cosPdf4OfMts[ielemId][i][min][k] * cosPdf4OfMts[ielemId][i][min][k];
   double plsq = plk2 + 2 * plk * (rnd1 - cosCdf4OfMts[ielemId][i][min][k]);
   double Ang  = 0;
+  if (plk == 0) Ang = cos4OfMts[ielemId][i][min][k];
   if (plk != 0 && plsq > 0) {
     Ang = cos4OfMts[ielemId][i][min][k] + (sqrt(std::fabs(plsq)) - cosPdf4OfMts[ielemId][i][min][k]) / plk;
   } else {

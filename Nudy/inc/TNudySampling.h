@@ -38,11 +38,11 @@ private:
   int LCT, MF, MT, MF4, MF5, MF6;
   int events;
   TH2D *h;
-  TH2D *hist[10];
+  TH2D *hist[21];
   TH1D *h1;
   TH1D *h2;
-  TH1D *fissZ1[10];
-  TH1D *fissA1[10];
+  TH1D *fissZ1[21];
+  TH1D *fissA1[21];
   TH1D *fissA;
   TGraph *gr1;
   TGraph *gr[5];
