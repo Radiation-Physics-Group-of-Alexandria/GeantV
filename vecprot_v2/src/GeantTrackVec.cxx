@@ -556,7 +556,6 @@ int GeantTrack_v::AddTrack(GeantTrack &track, bool /*import*/) {
   fChargeV[itrack] = track.fCharge;
   fProcessV[itrack] = track.fProcess;
   fNstepsV[itrack] = track.fNsteps;
-  fParentIdV[itrack] = track.fParentId;
   fSpeciesV[itrack] = track.fSpecies;
   fStatusV[itrack] = track.fStatus;
   fMassV[itrack] = track.fMass;
