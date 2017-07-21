@@ -11,21 +11,36 @@
 
 #ifdef USE_HPC
 #include "zmq.hpp"
+#include <json.hpp>
+using nlohmann::json;
 #endif
 
 #include <iostream>
 #include <cstdint>
 #include <cstring>
 #include <HepMCGeneratorMultFiles.h>
+#include <GeantJobPool.h>
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
+int MaxReconnectTry = 3;
 //______________________________________________________________________________
 GeantEventReceiver::GeantEventReceiver(std::string serverHostName, GeantConfig *conf, GeantRunManager *runmgr)
     : zmqContext(1), zmqSocket(zmqContext, ZMQ_REQ), fServHname(serverHostName), config(conf),
-      runManager(runmgr), isTransportCompleted(false)
+      runManager(runmgr), isTransportCompleted(false), connected(false), currentJob(-1), zmqSocketIn(zmqContext,ZMQ_REP),
+      connectTries(0)
 {
+  lastHb = std::chrono::system_clock::now();
+  //TODO:
+  fWorkerHname = "*:6666";
+}
+
+void GeantEventReceiver::BindSocket() {
+  zmqSocket.setsockopt(ZMQ_RCVTIMEO,5*1000); //5 sec
+  zmqSocket.connect(std::string("tcp://") + fServHname + std::string(":5678"));
+  std::cout << "HPC: Event receiver connected to: " << (std::string("tcp://") + fServHname + std::string(":5678"))
+            << std::endl;
 }
 
 //______________________________________________________________________________
@@ -41,11 +56,12 @@ void GeantEventReceiver::Initialize()
   }
   config->fNtotal = nEvents;
 
+  BindSocket();
+  zmqSocketIn.bind("tcp://"+fWorkerHname);
 
-  zmqSocket.connect(std::string("tcp://") + fServHname + std::string(":5678"));
-  std::cout << "HPC: Event receiver connected to: " << (std::string("tcp://") + fServHname + std::string(":5678"))
-            << std::endl;
   fReceivedEvents = 0;
+
+
 }
 
 void GeantEventReceiver::Run()
@@ -53,41 +69,150 @@ void GeantEventReceiver::Run()
   runManager->RunSimulation();
 }
 
+bool GeantEventReceiver::SendMsg(const std::string& req, std::string& rep) {
+  zmq::message_t request(1024);
+  memcpy(request.data(),req.c_str(),req.size()+1);
+  std::cout << "wrk: msg req " << req << std::endl;
+
+  zmqSocket.send(request);
+  zmq::message_t reply;
+  bool ok = zmqSocket.recv(&reply);
+  if (!ok) return false;
+
+  char rep_msg[1024];
+  memcpy(rep_msg, reply.data(), 1024);
+  rep = rep_msg;
+  std::cout << "wrk: msg rep" << rep << std::endl;
+  return true;
+
+}
+
+bool GeantEventReceiver::ConnectToMaster(){
+  if (connectTries >= MaxReconnectTry){
+    return false;
+  }
+  std::cout << "wrk: connect to master" << std::endl;
+  connectTries++;
+  json req;
+  req["type"] = "new_wrk_req";
+  req["adr"] = "tcp://"+fReceiveAddr;
+  std::string msg = req.dump();
+  std::string rep_msg;
+  bool ok = SendMsg(msg,rep_msg);
+  if (!ok) return false;
+  auto rep = json::parse(rep_msg);
+  if (rep["type"].get<std::string>() == "new_wrk_rep"){
+    wrk_id = rep["wrk_id"].get<int>();
+    connected = true;
+    connectTries = 0;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool GeantEventReceiver::RequestJob(int num){
+  std::cout << "wrk: req job" << std::endl;
+
+  json req;
+  req["type"] = "job_req";
+  req["wrk_id"] = wrk_id;
+  req["events"] = num;
+  std::string msg = req.dump();
+  std::string rep_msg;
+  bool ok = SendMsg(msg,rep_msg);
+  if (!ok) return false;
+
+  auto rep = json::parse(rep_msg);
+  if (rep["type"].get<std::string>() == "job_rep"){
+    //wrk_id = rep["wrk_id"].get<int>();
+    //connected = true;
+    currentJob = rep["job_id"].get<int>();
+    std::vector<GeantHepMCJob> jobs = rep["files"].get<std::vector<GeantHepMCJob>>();
+    fReceivedEvents = 0;
+    for(auto & job : jobs){
+      auto multFileGenerator = (HepMCGeneratorMultFiles*)runManager->GetPrimaryGenerator();
+      multFileGenerator->SetEventSource(job.filename, job.offset);
+      for (int j = 0; j < job.amount; ++j) {
+        runManager->GetEventServer()->AddEvent();
+        ++fReceivedEvents;
+      }
+      runManager->GetEventServer()->ActivateEvents();
+    }
+    std::cout << "wrk recv events: " << fReceivedEvents << std::endl;
+    return true;
+  }else{
+    return false;
+  }
+}
+
+bool GeantEventReceiver::ConfirmJob(){
+  if(currentJob < 0) return true;
+  std::cout << "wrk: confirm job" << std::endl;
+  json req;
+  req["type"] = "job_done_req";
+  req["wrk_id"] = wrk_id;
+  req["job_id"] = currentJob;
+  std::string msg = req.dump();
+  std::string rep_msg;
+  bool ok = SendMsg(msg,rep_msg);
+  if (!ok) return false;
+  currentJob = -1;
+  return true;
+}
+
+void GeantEventReceiver::Reconnect() {
+  connected = false;
+  currentJob = -1;
+  wrk_id = -1;
+  zmqSocket.close();
+  zmqSocket = zmq::socket_t(zmqContext,ZMQ_REQ);
+  BindSocket();
+}
+
+void GeantEventReceiver::SendHB(){
+  auto now = std::chrono::system_clock::now();
+  if (std::chrono::duration_cast<std::chrono::seconds>(now - lastHb) > std::chrono::seconds(10)){
+    if(connected){
+      json hb;
+      hb["type"] = "hb";
+      hb["wrk_id"] = wrk_id;
+      std::string req = hb.dump();
+      std::string rep;
+      SendMsg(req,rep);
+      lastHb = now;
+    }
+  }
+}
+
 int GeantEventReceiver::AskForNewEvent(int num)
 {
-  if (isTransportCompleted) return 0;
-      fReceivedEvents = 0;
+  std::cout << "wrk ask new event"<<std::endl;
+  reconn:
+  bool ok = true;
+  if(!connected){
+    ok = ConnectToMaster();
+  }
+  if (!ok){
+    std::cout << "wrk connect error" << std::endl;
+    if(connectTries >= MaxReconnectTry)
+      return 0;
+    Reconnect();
+    goto reconn;
+  }
 
-      zmq::message_t request(10);
-      std::string strReq = std::to_string(num);
-      memcpy(request.data(),strReq.c_str(),strReq.size());
-      std::cout << "HPC: worker sent event request" << std::endl;
-      zmqSocket.send(request);
-
-      zmq::message_t reply;
-      zmqSocket.recv(&reply);
-      char msg[4096+1+10+1+10+1];
-      memcpy(msg, reply.data(), 4096+1+10+1+10);
-      std::string strMsg = msg;
-
-      std::cout << "HPC: worker received response from server: " << msg << std::endl;
-      if (strcmp(msg,"NO") == 0) {
-        isTransportCompleted = true;
-      } else {
-        auto multFileGenerator = (HepMCGeneratorMultFiles*)runManager->GetPrimaryGenerator();
-        auto col1 = strMsg.find(':',0);
-        auto col2 = strMsg.find(':',col1+1);
-
-        std::string eventFileName = strMsg.substr(0, col1);
-        int offset = std::stoi(strMsg.substr(col1+1, col2-col1-1));
-        int amount = std::stoi(strMsg.substr(col2+1));
-        multFileGenerator->SetEventSource(eventFileName, offset);
-        for (int j = 0; j < amount; ++j) {
-          runManager->GetEventServer()->AddEvent();
-          ++fReceivedEvents;
-        }
-        runManager->GetEventServer()->ActivateEvents();
-      }
+  ok = ConfirmJob();
+  if (!ok){
+    std::cout << "wrk confirm job error" << std::endl;
+    Reconnect();
+    goto reconn;
+  }
+  ok = RequestJob(num);
+  if (!ok){
+    std::cout << "wrk request job error" << std::endl;
+    Reconnect();
+    goto reconn;
+  }
   return fReceivedEvents;
 }
 }

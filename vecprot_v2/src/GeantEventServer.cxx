@@ -82,9 +82,7 @@ GeantEventServer::~GeantEventServer()
 bool GeantEventServer::CheckNewEvents(){
   if (fAskForEventLock.fetch_add(1) == 0) { //one thread is working
     fReceivedEvents = 0;
-    while(fReceivedEvents < fNactiveMax && !fRunMgr->GetEventReceiver()->GetIsTransportCompleted()) {
-      fReceivedEvents += fRunMgr->GetEventReceiver()->AskForNewEvent(fNactiveMax-fReceivedEvents);
-    }
+    fReceivedEvents += fRunMgr->GetEventReceiver()->AskForNewEvent(fNactiveMax);
     fAskForEventLock.store(0);
   } else {
     while (fAskForEventLock.load() != 0) { // other threads wait
@@ -92,6 +90,16 @@ bool GeantEventServer::CheckNewEvents(){
   }
   if(fRunMgr->GetEventReceiver()->GetIsTransportCompleted()) fDone = true;
   return (fReceivedEvents > 0);
+}
+
+void GeantEventServer::SendHB(){
+  if (fAskForHbLock.fetch_add(1) == 0) { //one thread is working
+    fRunMgr->GetEventReceiver()->SendHB();
+    fAskForHbLock.store(0);
+  } else {
+    while (fAskForHbLock.load() != 0) { // other threads wait
+    }
+  }
 }
 #endif
 

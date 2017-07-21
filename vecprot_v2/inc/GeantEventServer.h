@@ -51,6 +51,7 @@ private:
   std::atomic_int fNstored;            /** Number of stored events in the server */
   std::atomic_int fNcompleted;         /** Number of completed events */
   std::atomic_int fAskForEventLock;
+  std::atomic_int fAskForHbLock;
   int fReceivedEvents;
   GeantRunManager *fRunMgr = nullptr;  /** Run manager */
   bool fEventsServed = false;          /** All events served */
@@ -119,6 +120,7 @@ public:
   int AddEvent(GeantTaskData *td = nullptr);
 
   bool CheckNewEvents(); //True is event is received
+  void SendHB();
   
   int ActivateEvents();
   

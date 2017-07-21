@@ -29,6 +29,7 @@ GeantEventInfo HepMCGeneratorMultFiles::NextEvent() {
     ++currentOffset;
   }
 
+  ++currentOffset;
   return HepMCGenerator::NextEvent();
 }
 

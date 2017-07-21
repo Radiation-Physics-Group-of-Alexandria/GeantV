@@ -27,6 +27,10 @@
 
 #ifdef USE_HPC
 #include "zmq.hpp"
+#include <json.hpp>
+using nlohmann::json;
+
+#include "GeantJobPool.h"
 #endif
 
 namespace Geant {
@@ -37,6 +41,15 @@ struct MCEventSource{
   int fOffset;
   int fEventAmount;
   int fDispatched;
+};
+
+class GeantHPCJobPool;
+
+struct GeantHPCWorker{
+  int id;
+  int assignedJobId;
+  std::string reqSocket;
+  std::chrono::time_point<std::chrono::system_clock> lastContact;
 };
 
 class GeantEventDispatcher {
@@ -58,6 +71,17 @@ private:
   bool allEventsDispatched;
   int currentSource;
   std::vector<MCEventSource> fEventSources;
+
+  GeantHPCJobPool* jobPool;
+  int workerCounter;
+  std::vector<GeantHPCJob> pendingJobs;
+  std::vector<GeantHPCWorker> workers;
+
+  json NewWorker(json& req);
+  json JobReq(json& req);
+  json JobConfirm(json& req);
+  json HeartBeat(json& req);
+  void CleanDeadWorkers();
 };
 }
 }

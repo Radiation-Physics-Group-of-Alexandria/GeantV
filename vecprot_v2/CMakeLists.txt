@@ -86,7 +86,9 @@ if(USE_HPC)
    set(sources ${sources}
       ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventDispatcher.cxx
       ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantEventReceiver.cxx
-      ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantDistributeManager.cxx)
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantDistributeManager.cxx
+      ${CMAKE_CURRENT_SOURCE_DIR}/src/GeantJobPool.cxx
+      )
 endif()
 
 set(headers
@@ -136,7 +138,8 @@ if(USE_HPC)
    set(headers ${headers}
       ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventDispatcher.h
       ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantEventReceiver.h
-      ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantDistributeManager.h)
+      ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantDistributeManager.h
+      ${CMAKE_CURRENT_SOURCE_DIR}/inc/GeantJobPool.h)
 endif()
 
 # Add codes that describes some stages (and handlers) that are different when real-physics is used

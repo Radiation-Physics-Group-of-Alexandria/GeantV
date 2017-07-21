@@ -16,7 +16,7 @@ void GeantDistributeManger::InitializeDistributedApplication(int argc, char *arg
 
   if (fConfig->fMasterNode) {
     fMaster = new GeantEventDispatcher(fConfig);
-    fWorker = new GeantEventReceiver("localhost", fConfig, fRunMgr);
+    //fWorker = new GeantEventReceiver("localhost", fConfig, fRunMgr);
     std::cout << "On server node" << std::endl;
 
   } else {

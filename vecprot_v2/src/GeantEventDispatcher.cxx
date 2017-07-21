@@ -28,6 +28,10 @@
 
 #ifdef USE_HPC
 #include "zmq.hpp"
+#include <json.hpp>
+using nlohmann::json;
+
+#include "GeantJobPool.h"
 #endif
 
 #include <thread>
@@ -40,9 +44,74 @@ namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
 GeantEventDispatcher::GeantEventDispatcher(GeantConfig *config)
-    : zmqContext(1), zmqSocket(zmqContext, ZMQ_REP), dispatchedEvents(0), fConfig(config)
+    : zmqContext(1), zmqSocket(zmqContext, ZMQ_REP), dispatchedEvents(0), fConfig(config) {
 
-{
+  auto hepMcPool = new GeantHepMCJobPool(); //TODO
+  hepMcPool->LoadFromFile(fConfig->fEventListFilename);
+  jobPool = hepMcPool;
+}
+
+json GeantEventDispatcher::NewWorker(json& req){
+  workerCounter++;
+  GeantHPCWorker worker;
+  worker.assignedJobId = -1;
+  worker.id = workerCounter;
+  worker.reqSocket = req["adr"].get<std::string>();
+  worker.lastContact = std::chrono::system_clock::now();
+  workers.push_back(worker);
+  json reply;
+  reply["type"] = "new_wrk_rep";
+  reply["wrk_id"] = worker.id;
+  return reply;
+}
+
+json GeantEventDispatcher::JobReq(json& req){
+  int n = req["events"].get<int>();
+  int wrk_id = req["wrk_id"].get<int>();
+  auto worker = std::find_if(workers.begin(),workers.end(),[&](const GeantHPCWorker& w){return w.id == wrk_id;});
+  if(worker == workers.end()){
+    return "{\"type\": \"error\"}"_json;
+  }
+  GeantHPCJob job = jobPool->GetJob(n);
+  pendingJobs.push_back(job);
+  worker->assignedJobId = job.uid;
+  worker->lastContact = std::chrono::system_clock::now();
+  json reply;
+  reply["type"] = "job_rep";
+  reply["wrk_id"] = wrk_id;
+  reply["job_id"] = job.uid;
+  reply["job_type"] = "hepmc";
+  reply["files"] = job.hepMCJobs;
+  return reply;
+}
+
+json GeantEventDispatcher::JobConfirm(json& req){
+  int job_id = req["job_id"].get<int>();
+  int worker_id = req["wrk_id"].get<int>();
+  auto worker = std::find_if(workers.begin(),workers.end(),[&](const GeantHPCWorker& w){return w.id == worker_id;});
+  if(worker == workers.end())
+    return "{\"type\": \"error\"}"_json;
+
+  worker->assignedJobId = -1;
+  worker->lastContact = std::chrono::system_clock::now();
+
+  auto job = std::find_if(pendingJobs.begin(),pendingJobs.end(),[&](const GeantHPCJob& job){ return job.uid == job_id; });
+  if(job == pendingJobs.end())
+    return "{\"type\": \"error\"}"_json;
+  pendingJobs.erase(job);
+
+  json rep;
+  rep["type"] = "job_done_rep";
+  return rep;
+}
+
+json GeantEventDispatcher::HeartBeat(json &req) {
+  int wrk_id = req["wrk_id"].get<int>();
+  auto worker = std::find_if(workers.begin(),workers.end(),[&](const GeantHPCWorker& w){return w.id == wrk_id;});
+  if(worker == workers.end())
+    return "{\"type\": \"error\"}"_json;
+  worker->lastContact = std::chrono::system_clock::now();
+  return "{\"type\": \"hb_rep\"}"_json;
 }
 
 void GeantEventDispatcher::Initialize()
@@ -50,61 +119,115 @@ void GeantEventDispatcher::Initialize()
   zmqSocket.bind("tcp://*:5678");
   std::cout << "HPC: Event dispatcher bounded to \"tcp://*:5678\"" << std::endl;
 
-  std::ifstream inputFile(fConfig->fEventListFilename) ;
-  std::string line;
-  MCEventSource source;
-  while(inputFile >> line){ //line format: pathToFile:eventOffset:eventAmount
-    auto col1 = line.find(':',0);
-    auto col2 = line.find(':',col1+1);
-
-    source.fFileName = line.substr(0, col1);
-    source.fOffset = std::stoi(line.substr(col1+1, col2-col1-1));
-    source.fEventAmount = std::stoi(line.substr(col2+1));
-    source.fDispatched = 0;
-
-    fEventSources.push_back(source);
-  }
-
-  currentSource = 0;
 
 }
 
 void GeantEventDispatcher::RunReqReplyLoop()
 {
-  while(currentSource < fEventSources.size()){
-    auto& currSource = fEventSources[currentSource];
+  zmq_pollitem_t items [] = { { zmqSocket, 0, ZMQ_POLLIN, 0 } };
+  while(!jobPool->IsEmpty() || !pendingJobs.empty()){
 
-    zmq::message_t request(2);
-    zmqSocket.recv(&request); // Event requested
-    char requestMsg[10] = "0";
-    memcpy(requestMsg,request.data(),10);
-    int requestedAmount = 0;
-    sscanf(requestMsg,"%d",&requestedAmount);
+    zmq::poll(items,1,std::chrono::milliseconds(30));
+    if (items[0].revents & ZMQ_POLLIN) {
+      zmq::message_t request(1024);
+      zmqSocket.recv(&request);
+      char requestMsg[1024];
+      memcpy(requestMsg, request.data(), 1024);
+      std::cout << "master req: " << requestMsg << std::endl;
+      json rep;
+      json req = json::parse(requestMsg);
+      auto req_type = req["type"].get<std::string>();
+      if (req_type == "new_wrk_req") {
+        rep = NewWorker(req);
+      } else if (req_type == "job_req") {
+        rep = JobReq(req);
+      } else if (req_type == "job_done_req") {
+        rep = JobConfirm(req);
+      } else if (req_type == "hb") {
+        rep = HeartBeat(req);
+      }
 
-    int eventGivenOut = std::min(currSource.fEventAmount - currSource.fDispatched, requestedAmount);
+      std::string responce = rep.dump();
+      std::cout << "master rep: " << responce << std::endl;
 
-
-    zmq::message_t reply(4096+1+10+1+10); //Max path name + : + offset + : + amount
-    std::string replyString = currSource.fFileName + ":" + std::to_string(currSource.fOffset + currSource.fDispatched) +
-        ":" + std::to_string(eventGivenOut);
-    memcpy(reply.data(), replyString.c_str(), replyString.size()+1); //copy null byte
-    zmqSocket.send(reply);
-    ++dispatchedEvents;
-
-    currSource.fDispatched += eventGivenOut;
-    if(currSource.fDispatched == currSource.fEventAmount) currentSource++;
+      zmq::message_t reply(1024);
+      memcpy(reply.data(), responce.c_str(), responce.size() + 1);
+      zmqSocket.send(reply);
+    }
+    CleanDeadWorkers();
   }
 
-  for (int i = 0; i < fConfig->fNClients; ++i) {
-    zmq::message_t request;
-    zmqSocket.recv(&request); // Event requested, but no left
 
-    zmq::message_t reply(4096+1+10+1+10);
-    memcpy(reply.data(), "NO", 3);
-    zmqSocket.send(reply);
-    std::cout << "HPC: Event dispatcher no event msg sent to worker" << std::endl;
+//TODO: Here we send "kill yourself" to all workers
+}
+
+void GeantEventDispatcher::CleanDeadWorkers(){
+  auto now = std::chrono::system_clock::now();
+  for(auto w = workers.begin(); w!=workers.end();){
+    auto since = std::chrono::duration_cast<std::chrono::seconds>(now - w->lastContact);
+    if(since > std::chrono::seconds(30)){
+      auto job = std::find_if(pendingJobs.begin(),pendingJobs.end(),[&](const GeantHPCJob& job){ return job.uid == w->assignedJobId; });
+      if(job!=pendingJobs.end()) {
+        jobPool->ReturnToPool(*job);
+        pendingJobs.erase(job);
+      }
+      std::cout << "mast: worker is dead id: " << w->id << std::endl;
+
+      w = workers.erase(w);
+    }else{
+      ++w;
+    }
   }
 }
+
+void to_json(json& j, const GeantHepMCJob& p){
+  j = json{{"fname",p.filename},{"offset",p.offset},{"n",p.amount}};
+}
+
+void from_json(const json& j, GeantHepMCJob& p){
+  p.filename = j.at("fname").get<std::string>();
+  p.amount = j.at("n").get<int>();
+  p.offset = j.at("offset").get<int>();
+}
+
+GeantHPCJob GeantHepMCJobPool::GetJob(int n) {
+  JobCounter++;
+  GeantHPCJob res;
+  res.uid = JobCounter;
+  for (int i = 0; i < n && pool.size() != 0; ++i) {
+    res.hepMCJobs.push_back(*(pool.end() - 1));
+    pool.pop_back();
+  }
+  return res;
+}
+
+bool GeantHepMCJobPool::IsEmpty() {
+  return pool.empty();
+}
+
+void GeantHepMCJobPool::ReturnToPool(GeantHPCJob job) {
+  pool.insert(pool.end(),job.hepMCJobs.begin(),job.hepMCJobs.end());
+}
+
+void GeantHepMCJobPool::LoadFromFile(std::string fname) {
+  std::ifstream inputFile(fname);
+  std::string line;
+  while(inputFile >> line){ //line format: pathToFile:eventOffset:eventAmount
+    auto col1 = line.find(':',0);
+    auto col2 = line.find(':',col1+1);
+
+    auto fFileName = line.substr(0, col1);
+    auto fOffset = std::stoi(line.substr(col1+1, col2-col1-1));
+    auto fEventAmount = std::stoi(line.substr(col2+1));
+
+    GeantHepMCJob job;
+    job.amount = fEventAmount;
+    job.offset = fOffset;
+    job.filename = fFileName;
+    pool.push_back(job);
+  }
+}
+
 
 } // GEANT_IMPL_NAMESPACE
 } // Geant
