@@ -44,6 +44,7 @@
 #include "TGeoMaterial.h"
 #endif
 #endif
+#include <unistd.h>
 
 // The classes for integrating in a non-uniform magnetic field
 #include "TUniformMagField.h"
@@ -74,6 +75,21 @@ bool GeantRunManager::Initialize() {
     std::cout << "_HPC mode version_" << std::endl;
 #endif
 
+#ifdef GEANT_USE_NUMA
+  int numaNodes = LocalityManager::Instance()->GetPolicy().GetTopology()->fNodes;
+  int cores = LocalityManager::Instance()->GetPolicy().GetTopology()->fNcpus;
+  if(numaNodes * cores != 0) {
+    fNthreads = cores / numaNodes;
+    fNpropagators = numaNodes;
+  } else {
+    fNthreads = sysconf(_SC_NPROCESSORS_ONLN);
+    fNpropagators = 1;
+  }
+#else
+  fNthreads = sysconf(_SC_NPROCESSORS_ONLN);
+  fNpropagators = 1;
+#endif
+  Print("Initialize", "Number of threads and propogators: %d %d",fNthreads,fNpropagators);
     // Initialization of run manager
   if (!fNthreads) {
     // Autodiscovery mode using NUMA detection
