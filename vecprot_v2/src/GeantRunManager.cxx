@@ -507,5 +507,19 @@ void GeantRunManager::StopTransport() {
   }
 }
 
+bool GeantRunManager::TransportCompleted() const
+{
+#ifdef USE_HPC
+  bool localEventsTransported = ((int)fDoneEvents->FirstNullBit() >= fEventServer->GetNload());
+  if (!localEventsTransported) return false;
+
+  bool isNewEventAdded = GetEventServer()->CheckNewEvents();
+  return !isNewEventAdded;
+#else
+  return ((int)fDoneEvents->FirstNullBit() >= fConfig->fNtotal);
+#endif
+}
+
+
 } // GEANT_IMPL_NAMESPACE
 } // Geant

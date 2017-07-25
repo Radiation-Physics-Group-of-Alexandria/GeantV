@@ -45,15 +45,6 @@ void GeantEventReceiver::BindSocket() {
 //______________________________________________________________________________
 void GeantEventReceiver::Initialize()
 {
-  std::ifstream inputFile(config->fEventListFilename) ;
-  std::string line;
-  int nEvents = 0;
-  while(inputFile >> line){ //line format: pathToFile:eventOffset:eventAmount
-    auto col1 = line.find(':',0);
-    auto col2 = line.find(':',col1+1);
-    nEvents += std::stoi(line.substr(col2+1));
-  }
-  config->fNtotal = nEvents;
 
   BindSocket();
   //zmqSocketIn.bind("tcp://"+fWorkerHname);
@@ -134,17 +125,27 @@ int GeantEventReceiver::RequestJob(int num){
     //wrk_id = rep["wrk_id"].get<int>();
     //connected = true;
     currentJob = rep["job_id"].get<int>();
-    std::vector<GeantHepMCJob> jobs = rep["files"].get<std::vector<GeantHepMCJob>>();
-    fReceivedEvents = 0;
-    for(auto & job : jobs){
-      auto multFileGenerator = (HepMCGeneratorMultFiles*)runManager->GetPrimaryGenerator();
-      multFileGenerator->SetEventSource(job.filename, job.offset);
-      for (int j = 0; j < job.amount; ++j) {
+    if(rep["job_type"].get<std::string>() == "hepmc") {
+      std::vector<GeantHepMCJob> jobs = rep["files"].get<std::vector<GeantHepMCJob>>();
+      fReceivedEvents = 0;
+      for (auto &job : jobs) {
+        auto multFileGenerator = (HepMCGeneratorMultFiles *) runManager->GetPrimaryGenerator();
+        multFileGenerator->SetEventSource(job.filename, job.offset);
+        for (int j = 0; j < job.amount; ++j) {
+          runManager->GetEventServer()->AddEvent();
+          ++fReceivedEvents;
+        }
+      }
+    }
+    if(rep["job_type"].get<std::string>() == "generate") {
+      int events = rep["event"].get<int>();
+      fReceivedEvents = 0;
+      for (int i = 0; i < events; ++i) {
         runManager->GetEventServer()->AddEvent();
         ++fReceivedEvents;
       }
-      runManager->GetEventServer()->ActivateEvents();
     }
+    runManager->GetEventServer()->ActivateEvents();
     std::cout << "wrk recv events: " << fReceivedEvents << std::endl;
     return 1;
   } else if(rep["type"].get<std::string>() == "wait"){

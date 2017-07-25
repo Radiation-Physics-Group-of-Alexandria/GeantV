@@ -34,6 +34,7 @@ static int n_reuse = 100000;
 static int n_propagators = 1;
 static bool monitor = false, score = false, debug = false, coprocessor = false;
 static bool tbbmode = false, usev3 = false, usenuma = false;
+static bool server_node = true;
 
 static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"fstate", required_argument, 0, 'f'},
@@ -52,6 +53,8 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"propagators", required_argument, 0, 'p'},
                                   {"v3", required_argument, 0, 'v'},
                                   {"numa", required_argument, 0, 'n'},
+                                  {"server",required_argument, 0, 'S'},
+                                  {"master-hostname", required_argument, 0, 'H'},
                                   {0, 0, 0, 0}};
 
 void help() {
@@ -68,6 +71,7 @@ int main(int argc, char *argv[]) {
   std::string exn03_geometry_filename("ExN03.root");
   std::string xsec_filename("xsec_FTFP_BERT.root");
   std::string fstate_filename("fstate_FTFP_BERT.root");
+  std::string master_hostname("localhost");
 
   if (argc == 1) {
     help();
@@ -77,7 +81,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "e:f:g:l:B:m:b:t:x:r:i:u:p:v:n:", options, &optidx);
+    c = getopt_long(argc, argv, "e:f:g:l:B:m:b:t:x:r:i:u:p:v:n:S:H:", options, &optidx);
 
     if (c == -1)
       break;
@@ -167,6 +171,14 @@ int main(int argc, char *argv[]) {
       usenuma = bool(strtol(optarg, NULL, 10));
       break;
 
+    case 'S':
+      server_node = bool(strtol(optarg, NULL, 10));
+      break;
+
+    case 'H':
+      master_hostname = optarg;
+      break;
+
     default:
       errx(1, "unknown option %c", c);
     }
@@ -241,6 +253,13 @@ int main(int argc, char *argv[]) {
   // Set threshold for tracks to be reused in the same volume
   config->fNminReuse = n_reuse;
 
+#ifdef USE_HPC
+  config->fMasterHostname = master_hostname;
+  config->fMasterNode = server_node;
+  auto generPool = new GeantGeneratorJobPool(); //TODO
+  generPool->SetEventAmount(n_events);
+  config->jobPool = generPool;
+#endif
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);
   if (broker) runMgr->SetCoprocessorBroker(broker);
@@ -261,8 +280,14 @@ int main(int argc, char *argv[]) {
   if (tbbmode)
     runMgr->SetTaskMgr( new TaskMgrTBB() );
 #endif
-  
+
+#ifdef USE_HPC
+  GeantDistributeManger *distributeManger = new GeantDistributeManger(runMgr, config);
+  distributeManger->InitializeDistributedApplication(argc, argv);
+  distributeManger->RunDistributedSimulation();
+#else
   runMgr->RunSimulation();
+#endif
 //  propagator->PropagatorGeom(exn03_geometry_filename.c_str(), n_threads, monitor);
   return 0;
 }

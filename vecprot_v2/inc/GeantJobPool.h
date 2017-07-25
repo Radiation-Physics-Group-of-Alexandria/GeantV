@@ -20,9 +20,14 @@ void to_json(json& j, const GeantHepMCJob& p);
 void from_json(const json& j, GeantHepMCJob& p);
 
 
+enum class JobType{
+  HepMC, Generator
+};
 struct GeantHPCJob {
   int uid;
+  JobType type;
   std::vector<GeantHepMCJob> hepMCJobs;
+  int events;
 };
 
 struct GeantHPCWorker{
@@ -56,6 +61,22 @@ private:
   std::vector<std::string> filesForWorkers;
   std::map<std::string,std::vector<GeantHepMCJob>> mapPool;
   std::map<int,std::string> workerFiles;
+};
+
+class GeantGeneratorJobPool : public GeantHPCJobPool {
+public:
+  GeantHPCJob GetJob(int n, const GeantHPCWorker& worker) override;
+
+  void ReturnToPool(GeantHPCJob job) override;
+
+  bool IsEmpty() override;
+
+  void SetEventAmount(int ev);
+
+  ~GeantGeneratorJobPool(){};
+private:
+  int JobCounter;
+  int eventsToDispatch;
 };
 }}
 

@@ -35,7 +35,6 @@ static int max_memory = 4000; /* MB */
 static bool monitor = false, score = false, debug = false, coprocessor = false;
 static bool tbbmode = false, usev3 = false, usenuma = false;
 static bool server_node = true;
-static int n_clients = 1;
 
 static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"hepmc-event-file", required_argument, 0, 'E'},
@@ -58,7 +57,6 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"numa", required_argument, 0, 'n'},
                                   {"server",required_argument, 0, 'S'},
                                   {"master-hostname", required_argument, 0, 'H'},
-                                  {"clients", required_argument, 0, 'c'},
                                   {0, 0, 0, 0}};
 
 void help() {
@@ -194,10 +192,6 @@ int main(int argc, char *argv[]) {
       master_hostname = optarg;
       break;
 
-    case 'c':
-      n_clients = (int)strtol(optarg, NULL, 10);
-      break;
-
     default:
       errx(1, "unknown option %c", c);
     }
@@ -289,7 +283,6 @@ int main(int argc, char *argv[]) {
   config->fEventListFilename = hepmc_event_filename;
   config->fMasterHostname = master_hostname;
   config->fMasterNode = server_node;
-  config->fNClients = n_clients;
   auto hepMcPool = new GeantHepMCJobPool(); //TODO
   hepMcPool->LoadFromFile(hepmc_event_filename);
   config->jobPool = hepMcPool;

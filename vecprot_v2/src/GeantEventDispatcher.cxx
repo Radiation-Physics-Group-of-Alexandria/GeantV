@@ -71,19 +71,35 @@ json GeantEventDispatcher::JobReq(json& req){
     return "{\"type\": \"error\"}"_json;
   }
   GeantHPCJob job = jobPool->GetJob(n,*worker);
-  if(job.hepMCJobs.size()==0){
-    return "{\"type\": \"wait\"}"_json;
+  if (job.type == JobType::HepMC) {
+    if (job.hepMCJobs.size() == 0) {
+      return "{\"type\": \"wait\"}"_json;
+    }
+    pendingJobs.push_back(job);
+    worker->assignedJobId = job.uid;
+    worker->lastContact = std::chrono::system_clock::now();
+    json reply;
+    reply["type"] = "job_rep";
+    reply["wrk_id"] = wrk_id;
+    reply["job_id"] = job.uid;
+    reply["job_type"] = "hepmc";
+    reply["files"] = job.hepMCJobs;
+    return reply;
+  } else if (job.type == JobType::Generator){
+    if (job.events == 0) {
+      return "{\"type\": \"wait\"}"_json;
+    }
+    pendingJobs.push_back(job);
+    worker->assignedJobId = job.uid;
+    worker->lastContact = std::chrono::system_clock::now();
+    json reply;
+    reply["type"] = "job_rep";
+    reply["wrk_id"] = wrk_id;
+    reply["job_id"] = job.uid;
+    reply["job_type"] = "generate";
+    reply["event"] = job.events;
+    return reply;
   }
-  pendingJobs.push_back(job);
-  worker->assignedJobId = job.uid;
-  worker->lastContact = std::chrono::system_clock::now();
-  json reply;
-  reply["type"] = "job_rep";
-  reply["wrk_id"] = wrk_id;
-  reply["job_id"] = job.uid;
-  reply["job_type"] = "hepmc";
-  reply["files"] = job.hepMCJobs;
-  return reply;
 }
 
 json GeantEventDispatcher::JobConfirm(json& req){
@@ -194,6 +210,7 @@ void from_json(const json& j, GeantHepMCJob& p){
 GeantHPCJob GeantHepMCJobPool::GetJob(int n, const GeantHPCWorker& worker) {
   JobCounter++;
   GeantHPCJob res;
+  res.type = JobType::HepMC;
   res.uid = JobCounter;
   int addedEvents = 0;
   while(addedEvents != n && !mapPool.empty()){
@@ -259,6 +276,26 @@ void GeantHepMCJobPool::LoadFromFile(std::string fname) {
     std::reverse(mapPool[fFileName].begin(),mapPool[fFileName].end());
     filesForWorkers.push_back(fFileName);
   }
+}
+
+GeantHPCJob GeantGeneratorJobPool::GetJob(int n, const GeantHPCWorker &worker) {
+  GeantHPCJob job;
+  job.type = JobType::Generator;
+  job.events = std::min(n,eventsToDispatch);
+  eventsToDispatch -= job.events;
+  return job;
+}
+
+bool GeantGeneratorJobPool::IsEmpty() {
+  return eventsToDispatch == 0;
+}
+
+void GeantGeneratorJobPool::ReturnToPool(GeantHPCJob job) {
+  eventsToDispatch += job.events;
+}
+
+void GeantGeneratorJobPool::SetEventAmount(int ev) {
+  eventsToDispatch = ev;
 }
 
 
