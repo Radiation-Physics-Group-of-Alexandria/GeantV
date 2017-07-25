@@ -45,12 +45,6 @@ struct MCEventSource{
 
 class GeantHPCJobPool;
 
-struct GeantHPCWorker{
-  int id;
-  int assignedJobId;
-  std::string reqSocket;
-  std::chrono::time_point<std::chrono::system_clock> lastContact;
-};
 
 class GeantEventDispatcher {
 
@@ -68,9 +62,6 @@ private:
 
   GeantConfig *fConfig;
 
-  bool allEventsDispatched;
-  int currentSource;
-  std::vector<MCEventSource> fEventSources;
 
   GeantHPCJobPool* jobPool;
   int workerCounter;

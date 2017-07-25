@@ -44,11 +44,9 @@ namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
 GeantEventDispatcher::GeantEventDispatcher(GeantConfig *config)
-    : zmqContext(1), zmqSocket(zmqContext, ZMQ_REP), dispatchedEvents(0), fConfig(config) {
+    : zmqContext(1), zmqSocket(zmqContext, ZMQ_REP), fConfig(config) {
 
-  auto hepMcPool = new GeantHepMCJobPool(); //TODO
-  hepMcPool->LoadFromFile(fConfig->fEventListFilename);
-  jobPool = hepMcPool;
+  jobPool = config->jobPool;
 }
 
 json GeantEventDispatcher::NewWorker(json& req){
@@ -72,7 +70,10 @@ json GeantEventDispatcher::JobReq(json& req){
   if(worker == workers.end()){
     return "{\"type\": \"error\"}"_json;
   }
-  GeantHPCJob job = jobPool->GetJob(n);
+  GeantHPCJob job = jobPool->GetJob(n,*worker);
+  if(job.hepMCJobs.size()==0){
+    return "{\"type\": \"wait\"}"_json;
+  }
   pendingJobs.push_back(job);
   worker->assignedJobId = job.uid;
   worker->lastContact = std::chrono::system_clock::now();
@@ -190,23 +191,50 @@ void from_json(const json& j, GeantHepMCJob& p){
   p.offset = j.at("offset").get<int>();
 }
 
-GeantHPCJob GeantHepMCJobPool::GetJob(int n) {
+GeantHPCJob GeantHepMCJobPool::GetJob(int n, const GeantHPCWorker& worker) {
   JobCounter++;
   GeantHPCJob res;
   res.uid = JobCounter;
-  for (int i = 0; i < n && pool.size() != 0; ++i) {
-    res.hepMCJobs.push_back(*(pool.end() - 1));
-    pool.pop_back();
+  int addedEvents = 0;
+  while(addedEvents != n && !mapPool.empty()){
+    if(workerFiles.count(worker.id)>0){
+      std::string lastFile = workerFiles[worker.id];
+      auto& filePool = mapPool[lastFile];
+      while(addedEvents != n && filePool.size() != 0) {
+        res.hepMCJobs.push_back(*(filePool.end() - 1));
+        filePool.pop_back();
+        ++addedEvents;
+      }
+      if(addedEvents!=n){
+        workerFiles.erase(worker.id);
+      }
+    } else {
+      workerFiles[worker.id] = filesForWorkers.front();
+      std::cout << "worker id: " << worker.id << " file: " << workerFiles[worker.id] << '\n';
+      std::string f = filesForWorkers[0];
+      filesForWorkers.erase(filesForWorkers.begin());
+      filesForWorkers.push_back(f);
+    }
+    for(auto it = mapPool.begin(); it != mapPool.end();){
+      if(it->second.size()==0){
+        it = mapPool.erase(it);
+      } else {
+        ++it;
+      }
+    }
   }
   return res;
 }
 
 bool GeantHepMCJobPool::IsEmpty() {
-  return pool.empty();
+  return mapPool.empty();
 }
 
 void GeantHepMCJobPool::ReturnToPool(GeantHPCJob job) {
-  pool.insert(pool.end(),job.hepMCJobs.begin(),job.hepMCJobs.end());
+  for( auto& j : job.hepMCJobs){
+    auto filePool = mapPool[j.filename];
+    filePool.insert(filePool.end(),j);
+  }
 }
 
 void GeantHepMCJobPool::LoadFromFile(std::string fname) {
@@ -220,11 +248,16 @@ void GeantHepMCJobPool::LoadFromFile(std::string fname) {
     auto fOffset = std::stoi(line.substr(col1+1, col2-col1-1));
     auto fEventAmount = std::stoi(line.substr(col2+1));
 
-    GeantHepMCJob job;
-    job.amount = fEventAmount;
-    job.offset = fOffset;
-    job.filename = fFileName;
-    pool.push_back(job);
+    for (int i = 0; i < fEventAmount; ++i) {
+      GeantHepMCJob job;
+      job.amount = 1;
+      job.offset = fOffset;
+      job.filename = fFileName;
+      mapPool[fFileName].push_back(job);
+      ++fOffset;
+    }
+    std::reverse(mapPool[fFileName].begin(),mapPool[fFileName].end());
+    filesForWorkers.push_back(fFileName);
   }
 }
 

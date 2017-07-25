@@ -38,6 +38,7 @@ public:
   bool GetIsTransportCompleted(){ return isTransportCompleted;}
 
 private:
+  std::mutex zmqMutex;
   zmq::context_t zmqContext;
   zmq::socket_t zmqSocket;
   zmq::socket_t zmqSocketIn;
@@ -57,12 +58,11 @@ private:
   bool ConnectToMaster();
   bool ConfirmJob();
 
-  bool RequestJob(int num);
+  int RequestJob(int num);
   void Reconnect();
   void BindSocket();
   bool SendMsg(const std::string& req, std::string& rep);
   int wrk_id;
-  std::chrono::time_point<std::chrono::system_clock> lastHb;
 };
 }
 }

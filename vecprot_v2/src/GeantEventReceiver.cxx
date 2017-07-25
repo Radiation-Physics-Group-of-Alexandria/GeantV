@@ -31,7 +31,6 @@ GeantEventReceiver::GeantEventReceiver(std::string serverHostName, GeantConfig *
       runManager(runmgr), isTransportCompleted(false), connected(false), currentJob(-1), zmqSocketIn(zmqContext,ZMQ_REP),
       connectTries(0)
 {
-  lastHb = std::chrono::system_clock::now();
   //TODO:
   fWorkerHname = "*:6666";
 }
@@ -57,7 +56,7 @@ void GeantEventReceiver::Initialize()
   config->fNtotal = nEvents;
 
   BindSocket();
-  zmqSocketIn.bind("tcp://"+fWorkerHname);
+  //zmqSocketIn.bind("tcp://"+fWorkerHname);
 
   fReceivedEvents = 0;
 
@@ -66,7 +65,14 @@ void GeantEventReceiver::Initialize()
 
 void GeantEventReceiver::Run()
 {
+  std::thread hbThread([this]{
+    while(!isTransportCompleted) {
+      sleep(10);
+      SendHB();
+    }
+  });
   runManager->RunSimulation();
+  hbThread.join();
 }
 
 bool GeantEventReceiver::SendMsg(const std::string& req, std::string& rep) {
@@ -80,7 +86,7 @@ bool GeantEventReceiver::SendMsg(const std::string& req, std::string& rep) {
   if (!ok) return false;
 
   char rep_msg[1024];
-  memcpy(rep_msg, reply.data(), 1024);
+  memcpy(rep_msg, reply.data(), std::min((size_t)1024,reply.size()));
   rep = rep_msg;
   std::cout << "wrk: msg rep" << rep << std::endl;
   return true;
@@ -111,7 +117,7 @@ bool GeantEventReceiver::ConnectToMaster(){
   }
 }
 
-bool GeantEventReceiver::RequestJob(int num){
+int GeantEventReceiver::RequestJob(int num){
   std::cout << "wrk: req job" << std::endl;
 
   json req;
@@ -121,7 +127,7 @@ bool GeantEventReceiver::RequestJob(int num){
   std::string msg = req.dump();
   std::string rep_msg;
   bool ok = SendMsg(msg,rep_msg);
-  if (!ok) return false;
+  if (!ok) return 0;
 
   auto rep = json::parse(rep_msg);
   if (rep["type"].get<std::string>() == "job_rep"){
@@ -140,9 +146,12 @@ bool GeantEventReceiver::RequestJob(int num){
       runManager->GetEventServer()->ActivateEvents();
     }
     std::cout << "wrk recv events: " << fReceivedEvents << std::endl;
-    return true;
-  }else{
-    return false;
+    return 1;
+  } else if(rep["type"].get<std::string>() == "wait"){
+    sleep(10);
+    return -1;
+  } else{
+    return 0;
   }
 }
 
@@ -171,22 +180,21 @@ void GeantEventReceiver::Reconnect() {
 }
 
 void GeantEventReceiver::SendHB(){
-  auto now = std::chrono::system_clock::now();
-  if (std::chrono::duration_cast<std::chrono::seconds>(now - lastHb) > std::chrono::seconds(10)){
+  std::lock_guard<std::mutex> lockGuard(zmqMutex);
     if(connected){
       json hb;
       hb["type"] = "hb";
       hb["wrk_id"] = wrk_id;
       std::string req = hb.dump();
       std::string rep;
-      SendMsg(req,rep);
-      lastHb = now;
+      bool ok = SendMsg(req,rep);
+      if (!ok) Reconnect();
     }
-  }
 }
 
 int GeantEventReceiver::AskForNewEvent(int num)
 {
+  std::lock_guard<std::mutex> lockGuard(zmqMutex);
   std::cout << "wrk ask new event"<<std::endl;
   reconn:
   bool ok = true;
@@ -195,8 +203,10 @@ int GeantEventReceiver::AskForNewEvent(int num)
   }
   if (!ok){
     std::cout << "wrk connect error" << std::endl;
-    if(connectTries >= MaxReconnectTry)
+    if(connectTries >= MaxReconnectTry){
+      isTransportCompleted = true;
       return 0;
+    }
     Reconnect();
     goto reconn;
   }
@@ -207,8 +217,15 @@ int GeantEventReceiver::AskForNewEvent(int num)
     Reconnect();
     goto reconn;
   }
-  ok = RequestJob(num);
-  if (!ok){
+
+  bool reaskJob = false;
+  int code;
+  do {
+    code = RequestJob(num);
+    if (code == -1) reaskJob = true;
+    else reaskJob = false;
+  }while(reaskJob);
+  if (code == 0){
     std::cout << "wrk request job error" << std::endl;
     Reconnect();
     goto reconn;

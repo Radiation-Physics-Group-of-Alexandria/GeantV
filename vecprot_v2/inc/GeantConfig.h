@@ -11,6 +11,7 @@ class GeantVTaskMgr;
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
+class GeantHPCJobPool;
 class GeantConfig
 {
 public:
@@ -90,6 +91,7 @@ public:
 
 #ifdef USE_HPC
   std::string fMasterHostname;
+  GeantHPCJobPool* jobPool;
   bool fMasterNode;
   int fNClients;
 #endif

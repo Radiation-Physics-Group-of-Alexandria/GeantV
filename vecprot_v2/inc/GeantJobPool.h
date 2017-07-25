@@ -3,6 +3,9 @@
 
 
 #include <json.hpp>
+#include <chrono>
+#include <queue>
+
 using nlohmann::json;
 
 namespace Geant {
@@ -22,16 +25,24 @@ struct GeantHPCJob {
   std::vector<GeantHepMCJob> hepMCJobs;
 };
 
+struct GeantHPCWorker{
+  int id;
+  int assignedJobId;
+  GeantHPCJob assignedJob;
+  std::string reqSocket;
+  std::chrono::time_point<std::chrono::system_clock> lastContact;
+};
+
 class GeantHPCJobPool {
 public:
-  virtual GeantHPCJob GetJob(int n) = 0;
+  virtual GeantHPCJob GetJob(int n, const GeantHPCWorker& worker) = 0;
   virtual void ReturnToPool(GeantHPCJob job) = 0;
   virtual bool IsEmpty() = 0;
 };
 
 class GeantHepMCJobPool : public GeantHPCJobPool {
 public:
-  GeantHPCJob GetJob(int n) override;
+  GeantHPCJob GetJob(int n, const GeantHPCWorker& worker) override;
 
   void ReturnToPool(GeantHPCJob job) override;
 
@@ -42,7 +53,9 @@ public:
   ~GeantHepMCJobPool(){};
 private:
   int JobCounter;
-  std::vector<GeantHepMCJob> pool;
+  std::vector<std::string> filesForWorkers;
+  std::map<std::string,std::vector<GeantHepMCJob>> mapPool;
+  std::map<int,std::string> workerFiles;
 };
 }}
 

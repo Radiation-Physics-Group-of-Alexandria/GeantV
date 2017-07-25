@@ -290,6 +290,9 @@ int main(int argc, char *argv[]) {
   config->fMasterHostname = master_hostname;
   config->fMasterNode = server_node;
   config->fNClients = n_clients;
+  auto hepMcPool = new GeantHepMCJobPool(); //TODO
+  hepMcPool->LoadFromFile(hepmc_event_filename);
+  config->jobPool = hepMcPool;
 #endif
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);
