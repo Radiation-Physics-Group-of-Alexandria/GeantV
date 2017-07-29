@@ -26,11 +26,11 @@ using namespace Geant;
 
 static int n_events = 10;
 static int n_buffered = 5;
-static int n_threads = 4;
+static int n_threads = 0;
 static int n_track_max = 64;
 static int n_learn_steps = 100000;
 static int n_reuse = 100000;
-static int n_propagators = 1;
+static int n_propagators = 0;
 static int max_memory = 4000; /* MB */
 static bool monitor = false, score = false, debug = false, coprocessor = false;
 static bool tbbmode = false, usev3 = false, usenuma = false;
@@ -147,8 +147,8 @@ int main(int argc, char *argv[]) {
     case 't':
       n_threads = (int)strtol(optarg, NULL, 10);
 
-      if (n_threads < 1)
-        errx(1, "number of threads must be positive");
+//      if (n_threads < 1)
+//        errx(1, "number of threads must be positive");
 
       break;
 

@@ -75,31 +75,33 @@ bool GeantRunManager::Initialize() {
     std::cout << "_HPC mode version_" << std::endl;
 #endif
 
+  int detectedThreads = 1;
+  int detectedProps = 1;
 #ifdef GEANT_USE_NUMA
   int numaNodes = LocalityManager::Instance()->GetPolicy().GetTopology()->fNodes;
   int cores = LocalityManager::Instance()->GetPolicy().GetTopology()->fNcpus;
   if(numaNodes * cores != 0) {
-    fNthreads = cores / numaNodes;
-    fNpropagators = numaNodes;
+    detectedThreads = cores / numaNodes;
+    detectedProps = numaNodes;
   } else {
-    fNthreads = sysconf(_SC_NPROCESSORS_ONLN);
-    fNpropagators = 1;
+    detectedThreads = sysconf(_SC_NPROCESSORS_ONLN);
+    detectedProps = 1;
   }
 #else
-  fNthreads = sysconf(_SC_NPROCESSORS_ONLN);
-  fNpropagators = 1;
+  detectedThreads = sysconf(_SC_NPROCESSORS_ONLN);
+  detectedProps = 1;
 #endif
-  Print("Initialize", "Number of threads and propogators: %d %d",fNthreads,fNpropagators);
     // Initialization of run manager
   if (!fNthreads) {
     // Autodiscovery mode using NUMA detection
-    fNthreads = 1;   // disabled detection for now
+    fNthreads = detectedThreads;   // disabled detection for now
   }
 
   if (!fNpropagators) {
     Print("Initialize", "Number of propagators set to 1");
-    fNpropagators = 1;
+    fNpropagators = detectedProps;
   }
+  Print("Initialize", "Number of threads and propogators: %d %d",fNthreads,fNpropagators);
 
   // Not more propagators than events
   if (fNpropagators > fConfig->fNtotal && !fConfig->fUseV3) {
