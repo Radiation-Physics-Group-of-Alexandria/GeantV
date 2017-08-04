@@ -370,9 +370,15 @@ void GeantRunManager::EventTransported(int evt)
   LocalityManager *lmgr = LocalityManager::Instance();
   Printf("   NQUEUED = %d  NBLOCKS = %d NRELEASED = %d",
          lmgr->GetNqueued(), lmgr->GetNallocated(), lmgr->GetNreleased());
+
   fApplication->FinishEvent(event->GetEvent(), event->GetSlot());
+
   fApplication->Digitize(event);
   fDoneEvents->SetBitNumber(evt);
+
+  // notify user application that event simulation is complete
+  Info("EventTransported", " = fApplication::FinishEvent(%d,%d)...", evt, evt);
+  //GL:  fApplication->FinishEvent(evt, evt);
 }
 
 //______________________________________________________________________________
