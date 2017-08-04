@@ -12,7 +12,7 @@
 #include "GeantVTaskMgr.h"
 #include "GeantVDetectorConstruction.h"
 #include "MCTruthMgr.h"
-#include "PrimaryGenerator.h"
+//#include "PrimaryGenerator.h"
 #include "GeantEvent.h"
 #include "GeantEventServer.h"
 #include "LocalityManager.h"
@@ -101,10 +101,10 @@ bool GeantRunManager::Initialize() {
   fConfig->fMaxPerEvent = 5 * fConfig->fNaverage;
   fConfig->fMaxTracks = fConfig->fMaxPerEvent * fConfig->fNbuff;
 
-  if (!fPrimaryGenerator) {
-    Fatal("GeantRunManager::Initialize", "The primary generator has to be defined");
-    return false;
-  }
+  //if (!fPrimaryGenerator) {
+  //  Fatal("GeantRunManager::Initialize", "The primary generator has to be defined");
+  //  return false;
+  // }
 
   if (!fApplication) {
     Fatal("GeantRunManager::Initialize", "The user application has to be defined");
@@ -129,7 +129,7 @@ bool GeantRunManager::Initialize() {
     prop->fProcess = fProcess;
     prop->fPhysicsInterface = fPhysicsInterface;
     prop->fVectorPhysicsProcess = fVectorPhysicsProcess;
-    prop->fPrimaryGenerator = fPrimaryGenerator;
+    //prop->fPrimaryGenerator = fPrimaryGenerator;
     prop->fTruthMgr = fTruthMgr;
   }
 
@@ -198,7 +198,7 @@ bool GeantRunManager::Initialize() {
     PrepareRkIntegration();
   }
 
-  fPrimaryGenerator->InitPrimaryGenerator();
+  //fPrimaryGenerator->InitPrimaryGenerator();
   fEventServer = new GeantEventServer(fConfig->fNtotal, this);
   for (int i=0; i<fConfig->fNtotal; ++i)
     fEventServer->AddEvent();
@@ -212,8 +212,14 @@ bool GeantRunManager::Initialize() {
       fStdApplication->AttachUserData(fTDManager->GetTaskData(i));
   }
   fApplication->Initialize();
+
   for (int i = 0; i < nthreads; i++)
     fApplication->AttachUserData(fTDManager->GetTaskData(i));
+
+  //fPrimaryGenerator->InitPrimaryGenerator();
+  fEventServer = new GeantEventServer(fConfig->fNtotal, this);
+  //for (int i=0; i<fConfig->fNtotal; ++i)
+  //  fEventServer->AddEvent();
 
   for (auto i=0; i<fNpropagators; ++i)
     fPropagators[i]->Initialize();

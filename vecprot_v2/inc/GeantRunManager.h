@@ -1,3 +1,4 @@
+///===-----------------------------------------------------*- C++ -*-===//
 #ifndef GEANT_RUN_MANAGER_H
 #define GEANT_RUN_MANAGER_H
 
@@ -32,7 +33,7 @@ class GeantVDetectorConstruction;
 class GeantVTaskMgr;
 class GeantEventServer;
 class GeantEvent;
-class PrimaryGenerator;
+//class PrimaryGenerator;
 class MCTruthMgr;
 
 class GeantRunManager
@@ -56,7 +57,7 @@ private:
   PhysicsProcessOld *fProcess = nullptr;           /** For now the only generic process pointing to the tabulated physics */
   PhysicsProcessOld *fVectorPhysicsProcess = nullptr; /** Interface to vector physics final state sampling */
   PhysicsInterface *fPhysicsInterface; /** The new, real physics interface */
-  PrimaryGenerator *fPrimaryGenerator = nullptr;   /** Primary generator */
+  //PrimaryGenerator *fPrimaryGenerator = nullptr;   /** Primary generator */
   MCTruthMgr *fTruthMgr = nullptr;              /** MCTruth manager */
   GeantEventServer *fEventServer = nullptr;     /** The event server */
   TDManager *fTDManager = nullptr;              /** The task data manager */
@@ -175,11 +176,11 @@ public:
   GEANT_FORCE_INLINE
   void SetVectorPhysicsProcess(PhysicsProcessOld *proc) { fVectorPhysicsProcess = proc; }
 
-  GEANT_FORCE_INLINE
-  PrimaryGenerator *GetPrimaryGenerator() const { return fPrimaryGenerator; }
+  // GEANT_FORCE_INLINE
+  // PrimaryGenerator *GetPrimaryGenerator() const { return fPrimaryGenerator; }
 
-  GEANT_FORCE_INLINE
-  void SetPrimaryGenerator(PrimaryGenerator *gen) { fPrimaryGenerator = gen; }
+  // GEANT_FORCE_INLINE
+  // void SetPrimaryGenerator(PrimaryGenerator *gen) { fPrimaryGenerator = gen; }
 
   GEANT_FORCE_INLINE
   void SetMCTruthMgr(MCTruthMgr *mcmgr) { fTruthMgr = mcmgr; }

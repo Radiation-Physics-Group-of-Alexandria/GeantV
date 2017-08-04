@@ -8,7 +8,7 @@
 #include "GeantEvent.h"
 #include "GeantRunManager.h"
 #include "LocalityManager.h"
-#include "PrimaryGenerator.h"
+//#include "PrimaryGenerator.h"
 #include "GeantTaskData.h"
 #include "GeantBasket.h"
 #include "Basket.h"
@@ -85,8 +85,8 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
     Error("AddEvent", "Event pool is full");
     return 0;
   }
-  GeantEventInfo eventinfo = fRunMgr->GetPrimaryGenerator()->NextEvent();
-  int ntracks = eventinfo.ntracks;
+  // GeantEventInfo eventinfo = fRunMgr->GetPrimaryGenerator()->NextEvent();
+  // int ntracks = eventinfo.ntracks;
   if (!ntracks) {
     Error("AddEvent", "Event is empty");
     return 0;
