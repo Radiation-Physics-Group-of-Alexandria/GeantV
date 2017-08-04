@@ -76,6 +76,7 @@ GeantEventServer::~GeantEventServer()
 //______________________________________________________________________________
 int GeantEventServer::AddEvent(GeantTaskData *td)
 {
+  printf("GeantEventServer::AddEvent() called: td=<%p>\n", td);
 // Import next event from the generator. Thread safety has to be handled
 // by the generator.
   int node = (td == nullptr) ? 0 : td->fNode;
@@ -87,6 +88,7 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
   }
   // GeantEventInfo eventinfo = fRunMgr->GetPrimaryGenerator()->NextEvent();
   // int ntracks = eventinfo.ntracks;
+  printf("GeantEventServer::AddEvent() called: td=<%p>, node=%i, ntrks=%i\n", td, node, ntracks);
   if (!ntracks) {
     Error("AddEvent", "Event is empty");
     return 0;
@@ -137,6 +139,7 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
   VolumePath_t::ReleaseInstance(startpath);
   // Update number of stored events
   fNstored++;
+  Print("AddEvent", "EventServer imported %d events so far.", fNstored.load());
   if (fNstored.load() == fNevents) {
     int nactivep = 0;
     for (int evt=0; evt<fNactiveMax; ++evt)
