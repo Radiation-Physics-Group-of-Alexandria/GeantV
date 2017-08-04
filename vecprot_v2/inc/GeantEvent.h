@@ -15,7 +15,7 @@
 
 #include <atomic>
 #include <vector>
-#include "Geant/Config.h"
+//#include "Geant/Config.h"
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {

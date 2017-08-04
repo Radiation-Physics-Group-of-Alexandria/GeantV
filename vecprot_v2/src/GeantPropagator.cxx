@@ -56,7 +56,7 @@
 #include "GeantFactoryStore.h"
 #include "GeantEvent.h"
 #include "GeantScheduler.h"
-#include "PrimaryGenerator.h"
+//#include "PrimaryGenerator.h"
 #include "MCTruthMgr.h"
 
 #include "PreStepStage.h"
@@ -101,7 +101,7 @@ GeantPropagator::GeantPropagator(const GeantPropagator &orig) : GeantPropagator(
   fProcess = orig.fProcess;
   fPhysicsInterface = orig.fPhysicsInterface;
   fVectorPhysicsProcess = orig.fVectorPhysicsProcess;
-  fPrimaryGenerator = orig.fPrimaryGenerator;
+  //fPrimaryGenerator = orig.fPrimaryGenerator;
   fTruthMgr = orig.fTruthMgr;
 
 }

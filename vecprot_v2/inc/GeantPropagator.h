@@ -48,7 +48,7 @@ class GeantBasket;
 class GeantBasketMgr;
 class WorkloadManager;
 class GeantVTaskMgr;
-class PrimaryGenerator;
+//class PrimaryGenerator;
 class MCTruthMgr;
 class TaskBroker;
 class SimulationStage;
@@ -103,7 +103,7 @@ public:
   PhysicsProcessOld *fVectorPhysicsProcess = nullptr; /** interface to vector physics final state sampling */
   PhysicsInterface *fPhysicsInterface = nullptr;     /** The new, real physics interface */
   GeantTrack_v *fStoredTracks = nullptr;         /** Stored array of tracks (history?) */
-  PrimaryGenerator *fPrimaryGenerator = nullptr; /** Primary generator */
+  //PrimaryGenerator *fPrimaryGenerator = nullptr; /** Primary generator */
   MCTruthMgr *fTruthMgr = nullptr;               /** MCTruth manager */
   TrackManager *fTrackMgr = nullptr;             /** Track manager */
   vector_t<SimulationStage *> fStages;           /** Simulation stages */
