@@ -13,5 +13,6 @@ DigitizerTask::~DigitizerTask () { }
 
 tbb::task* DigitizerTask::execute ()
 {
+  if (fTd) {};  // avoid warnings: unused variable
   return NULL;
 }

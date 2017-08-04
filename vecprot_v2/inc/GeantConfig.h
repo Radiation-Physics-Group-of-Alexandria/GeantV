@@ -1,6 +1,7 @@
 #ifndef GEANT_RUN_CONFIG_H
 #define GEANT_RUN_CONFIG_H
 
+#include "VecCore/VecCore"
 #ifndef VECCORE_CUDA
 #include <string>
 #endif
