@@ -77,32 +77,6 @@ GeantEventServer::~GeantEventServer()
   delete [] fEvents;
 }
 
-#ifdef USE_HPC
-//______________________________________________________________________________
-bool GeantEventServer::CheckNewEvents(){
-  if (fAskForEventLock.fetch_add(1) == 0) { //one thread is working
-    fReceivedEvents = 0;
-    fReceivedEvents += fRunMgr->GetEventReceiver()->AskForNewEvent(fNactiveMax);
-    fAskForEventLock.store(0);
-  } else {
-    while (fAskForEventLock.load() != 0) { // other threads wait
-    }
-  }
-  if(fRunMgr->GetEventReceiver()->GetIsTransportCompleted()) fDone = true;
-  return (fReceivedEvents > 0);
-}
-
-void GeantEventServer::SendHB(){
-  if (fAskForHbLock.fetch_add(1) == 0) { //one thread is working
-    fRunMgr->GetEventReceiver()->SendHB();
-    fAskForHbLock.store(0);
-  } else {
-    while (fAskForHbLock.load() != 0) { // other threads wait
-    }
-  }
-}
-#endif
-
 //______________________________________________________________________________
 int GeantEventServer::AddEvent(GeantTaskData *td)
 {
@@ -193,6 +167,9 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
 #ifdef USE_HPC
   fRunMgr->SetNprimaries(fRunMgr->GetNprimaries() + fEvents[evt]->GetNprimaries()); //TODO: thread unsafe
   Print("AddEvent", "Server added one more event");
+#endif
+#ifdef USE_HPC
+  fRunMgr->GetEventReceiver()->EventAdded();
 #endif
   return ntracks;
 }
@@ -334,8 +311,9 @@ void GeantEventServer::CompletedEvent(int evt)
   fNactive--;
   fNcompleted++;
   if (!fFreeSlots.enqueue(fEvents[evt]->GetSlot())) Fatal("CompletedEvent", "Cannot enqueue slot");
-#ifndef USE_HPC
   ActivateEvents();
+#ifdef USE_HPC
+  fRunMgr->GetEventReceiver()->EventTransported(evt);
 #endif
 }
 

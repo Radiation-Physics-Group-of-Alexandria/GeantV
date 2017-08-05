@@ -5,11 +5,13 @@
 #include <json.hpp>
 #include <chrono>
 #include <queue>
+#include <Geant/Config.h>
 
 using nlohmann::json;
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
+
 struct GeantHepMCJob {
   std::string filename;
   int offset;
@@ -25,6 +27,7 @@ enum class JobType{
 };
 struct GeantHPCJob {
   int uid;
+  int workerId;
   JobType type;
   std::vector<GeantHepMCJob> hepMCJobs;
   int events;
@@ -32,8 +35,6 @@ struct GeantHPCJob {
 
 struct GeantHPCWorker{
   int id;
-  int assignedJobId;
-  GeantHPCJob assignedJob;
   std::string reqSocket;
   std::chrono::time_point<std::chrono::system_clock> lastContact;
 };
@@ -55,7 +56,7 @@ public:
 
   void LoadFromFile(std::string fname);
 
-  ~GeantHepMCJobPool(){};
+  ~GeantHepMCJobPool() = default;
 private:
   int JobCounter;
   std::vector<std::string> filesForWorkers;
@@ -73,7 +74,7 @@ public:
 
   void SetEventAmount(int ev);
 
-  ~GeantGeneratorJobPool(){};
+  ~GeantGeneratorJobPool() = default;
 private:
   int JobCounter;
   int eventsToDispatch;

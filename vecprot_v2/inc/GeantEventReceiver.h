@@ -26,6 +26,12 @@ inline namespace GEANT_IMPL_NAMESPACE {
 
 class GeantEventDispatcher;
 
+struct HPCJob{
+  int id;
+  int left;
+  int startID,endID;
+};
+
 class GeantEventReceiver {
 public:
   GeantEventReceiver(std::string serverHostName, GeantConfig *conf, GeantRunManager *runmgr);
@@ -34,10 +40,16 @@ public:
   void Run();
   int AskForNewEvent(int num);
   void SendHB();
+  void RunCommunicationThread();
+  void EventAdded();
+  void EventTransported(int evt);
 
   bool GetIsTransportCompleted(){ return isTransportCompleted;}
 
 private:
+  std::atomic_int eventDiff;
+  int fFetchAhead;
+
   std::mutex zmqMutex;
   zmq::context_t zmqContext;
   zmq::socket_t zmqSocket;
@@ -52,11 +64,15 @@ private:
   bool isTransportCompleted;
   int fReceivedEvents = 0;
 
+  std::vector<HPCJob> jobs;
+  std::mutex job_mutex;
+
+  std::chrono::time_point<std::chrono::system_clock> lastContact;
+
   bool connected;
-  int currentJob;
   int connectTries;
   bool ConnectToMaster();
-  bool ConfirmJob();
+  bool ConfirmJob(int id);
 
   int RequestJob(int num);
   void Reconnect();

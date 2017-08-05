@@ -515,8 +515,13 @@ bool GeantRunManager::TransportCompleted() const
   bool localEventsTransported = ((int)fDoneEvents->FirstNullBit() >= fEventServer->GetNload());
   if (!localEventsTransported) return false;
 
-  bool isNewEventAdded = GetEventServer()->CheckNewEvents();
-  return !isNewEventAdded;
+  while(!fEventReceiver->GetIsTransportCompleted()){
+    bool localEventsTransported = ((int)fDoneEvents->FirstNullBit() >= fEventServer->GetNload());
+    if(!localEventsTransported){
+      return false;
+    }
+  }
+  return true;
 #else
   return ((int)fDoneEvents->FirstNullBit() >= fConfig->fNtotal);
 #endif

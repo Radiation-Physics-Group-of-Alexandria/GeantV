@@ -22,6 +22,11 @@
 #include "TaskMgrTBB.h"
 #endif
 
+#ifdef USE_HPC
+#include <GeantJobPool.h>
+#include <GeantDistributeManager.h>
+#endif
+
 using namespace Geant;
 
 static int n_events = 10;
