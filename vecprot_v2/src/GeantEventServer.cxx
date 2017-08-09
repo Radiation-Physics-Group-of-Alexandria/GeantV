@@ -8,7 +8,6 @@
 #include "GeantEvent.h"
 #include "GeantRunManager.h"
 #include "LocalityManager.h"
-//#include "PrimaryGenerator.h"
 #include "GeantTaskData.h"
 #include "GeantBasket.h"
 #include "Basket.h"
@@ -74,11 +73,10 @@ GeantEventServer::~GeantEventServer()
 }
 
 //______________________________________________________________________________
-int GeantEventServer::AddEvent(GeantTaskData *td)
+int GeantEventServer::AddEvent(GeantEventInfo const &eventinfo, GeantTrack** const &tracks, GeantTaskData *td)
 {
   printf("GeantEventServer::AddEvent() called: td=<%p>\n", td);
-// Import next event from the generator. Thread safety has to be handled
-// by the generator.
+  // Import next event from the generator. Thread safety has to be handled by the generator
   int node = (td == nullptr) ? 0 : td->fNode;
   int evt = fNload.fetch_add(1);
   if (evt >= fNevents) {
@@ -87,7 +85,7 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
     return 0;
   }
   // GeantEventInfo eventinfo = fRunMgr->GetPrimaryGenerator()->NextEvent();
-  // int ntracks = eventinfo.ntracks;
+  int ntracks = eventinfo.ntracks;
   printf("GeantEventServer::AddEvent() called: td=<%p>, node=%i, ntrks=%i\n", td, node, ntracks);
   if (!ntracks) {
     Error("AddEvent", "Event is empty");
@@ -127,7 +125,21 @@ int GeantEventServer::AddEvent(GeantTaskData *td)
     track.SetPath(startpath);
     track.SetNextPath(startpath);
     track.SetEvent(evt);
-    fRunMgr->GetPrimaryGenerator()->GetTrack(itr, track);
+
+    GeantTrack const& itrk = *tracks[itr];
+    track.SetPDG( itrk.fPDG );
+    track.SetGVcode( itrk.fGVcode );
+    track.SetCharge( itrk.fCharge );
+    track.SetMass( itrk.fMass );
+    track.fXpos = itrk.fXpos;
+    track.fYpos = itrk.fYpos;
+    track.fZpos = itrk.fZpos;
+    track.fXdir = itrk.fXdir;
+    track.fYdir = itrk.fYdir;
+    track.fZdir = itrk.fZdir;
+    track.fP    = itrk.fP;
+    track.fE    = itrk.fE;
+
     if (!track.IsNormalized())
       track.Print("Not normalized");
     track.fBoundary = false;

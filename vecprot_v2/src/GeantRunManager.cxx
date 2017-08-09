@@ -200,8 +200,7 @@ bool GeantRunManager::Initialize() {
 
   //fPrimaryGenerator->InitPrimaryGenerator();
   fEventServer = new GeantEventServer(fConfig->fNtotal, this);
-  for (int i=0; i<fConfig->fNtotal; ++i)
-    fEventServer->AddEvent();
+  //for (int i=0; i<fConfig->fNtotal; ++i) fEventServer->AddEvent(); // moved to User's responsibility
 
   int nthreads = GetNthreadsTotal();
   fTDManager = new TDManager(nthreads, fConfig->fMaxPerBasket);
@@ -215,11 +214,6 @@ bool GeantRunManager::Initialize() {
 
   for (int i = 0; i < nthreads; i++)
     fApplication->AttachUserData(fTDManager->GetTaskData(i));
-
-  //fPrimaryGenerator->InitPrimaryGenerator();
-  fEventServer = new GeantEventServer(fConfig->fNtotal, this);
-  //for (int i=0; i<fConfig->fNtotal; ++i)
-  //  fEventServer->AddEvent();
 
   for (auto i=0; i<fNpropagators; ++i)
     fPropagators[i]->Initialize();

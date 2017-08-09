@@ -8,13 +8,12 @@
 #include "Geant/Typedefs.h"
 #include "GeantTaskData.h"
 #include "GeantConfig.h"
+#include "PrimaryGenerator.h"
 #include "mpmc_bounded_queue.h"
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
-class PrimaryGenerator;
-class GeantTaskData;
 class GeantEvent;
 class Basket;
 class StackLikeBuffer;
@@ -107,7 +106,7 @@ public:
 
   int FillStackBuffer(StackLikeBuffer *buffer, int ntracks);
   
-  int AddEvent(GeantTaskData *td = nullptr);
+  int AddEvent(GeantEventInfo const &evtInfo, GeantTrack** const &tracks, GeantTaskData *td = nullptr);
   
   int ActivateEvents();
   

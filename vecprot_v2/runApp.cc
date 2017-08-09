@@ -246,7 +246,7 @@ int main(int argc, char *argv[]) {
   if (broker) runMgr->SetCoprocessorBroker(broker);
   // Create the tab. phys process.
   runMgr->SetPhysicsProcess( new TTabPhysProcess("tab_phys", xsec_filename.c_str(), fstate_filename.c_str()));
-  
+
 // Create the tab. phys process.
 #ifdef USE_VECGEOM_NAVIGATOR
 //  runMgr->LoadVecGeomGeometry();
@@ -254,16 +254,40 @@ int main(int argc, char *argv[]) {
 
   // for vector physics -OFF now
   // runMgr->SetVectorPhysicsProcess(new GVectorPhysicsProcess(config->fEmin, nthreads));
-  runMgr->SetPrimaryGenerator( new GunGenerator(config->fNaverage, 11, config->fEmax, -8, 0, 0, 1, 0, 0) );
+  //runMgr->SetPrimaryGenerator( new GunGenerator(config->fNaverage, 11, config->fEmax, -8, 0, 0, 1, 0, 0) );
   runMgr->SetUserApplication ( new ExN03Application(runMgr) );
   runMgr->SetDetectorConstruction( new ExN03DetectorConstruction(exn03_geometry_filename.c_str(), runMgr) );
 #ifdef GEANT_TBB
   if (tbbmode)
     runMgr->SetTaskMgr( new TaskMgrTBB() );
 #endif
+
+  runMgr->Initialize();
+
+  // pre-load events for processing
+  std::vector<Geant::cxx::GeantTrack*> tracks;
+  PrimaryGenerator* generator = new GunGenerator(config->fNaverage, 11, config->fEmax, -8, 0, 0, 1, 0, 0);
+  generator->InitPrimaryGenerator();
+  for (int i=0; i<config->fNtotal; ++i) {
+    GeantEventInfo evtInfo = generator->NextEvent();
+    std::cout<<" runApp.cc: ntracks="<< evtInfo.ntracks <<"\n";
+    if(evtInfo.ntracks > (int)tracks.capacity()) tracks.resize(evtInfo.ntracks);
+    for (int itr = 0; itr < evtInfo.ntracks; ++itr) {
+      if (!tracks[itr]) tracks[itr] = Geant::cxx::GeantTrack::MakeInstance();
+      generator->GetTrack(itr, *tracks[itr]);
+    }
+    // load this event
+    runMgr->GetEventServer()->AddEvent(evtInfo, &tracks[0]);
+  }
+  // release local tracks from heap
+  for(unsigned int i=0; i<tracks.size(); ++i) {
+    if (tracks[i]) GeantTrack::ReleaseInstance(tracks[i]);
+  }
   
+  // run simulation
   runMgr->RunSimulation();
 //  propagator->PropagatorGeom(exn03_geometry_filename.c_str(), n_threads, monitor);
+
   return 0;
 }
 #endif

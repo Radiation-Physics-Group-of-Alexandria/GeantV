@@ -13,5 +13,6 @@ IOTask::~IOTask () { }
 
 tbb::task* IOTask::execute ()
 {
+  (void)fTd;
   return NULL;
 }

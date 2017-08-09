@@ -13,5 +13,6 @@ ScoringTask::~ScoringTask () { }
 
 tbb::task* ScoringTask::execute ()
 {
+  (void)fTd;
   return NULL;
 }

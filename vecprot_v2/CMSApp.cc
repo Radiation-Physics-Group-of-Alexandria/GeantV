@@ -281,15 +281,6 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
 
-  if (hepmc_event_filename.empty()) {
-    runMgr->SetPrimaryGenerator( new GunGenerator(config->fNaverage, 11, config->fEmax, -8, 0, 0, 1, 0, 0) );
-  } else {
-    // propagator->fPrimaryGenerator->SetEtaRange(-2.,2.);
-    // propagator->fPrimaryGenerator->SetMomRange(0.,0.5);
-    // propagator->fPrimaryGenerator = new HepMCGenerator("pp14TeVminbias.hepmc3");
-    runMgr->SetPrimaryGenerator( new HepMCGenerator(hepmc_event_filename) );
-  }
-
   CMSApplication *CMSApp = new CMSApplication(runMgr);
   runMgr->SetUserApplication( CMSApp );
   if (score) {
@@ -301,6 +292,35 @@ int main(int argc, char *argv[]) {
   if (tbbmode)
     runMgr->SetTaskMgr( new TaskMgrTBB() );
 #endif
+
+  //.. preload events for processing
+  runMgr->Initialize();
+  std::vector<Geant::cxx::GeantTrack*> tracks;
+  PrimaryGenerator* generator = nullptr;
+  if (hepmc_event_filename.empty()) {
+    generator = new GunGenerator(config->fNaverage, 11, config->fEmax, -8, 0, 0, 1, 0, 0);
+  } else {
+    // propagator->fPrimaryGenerator->SetEtaRange(-2.,2.);
+    // propagator->fPrimaryGenerator->SetMomRange(0.,0.5);
+    // propagator->fPrimaryGenerator = new HepMCGenerator("pp14TeVminbias.hepmc3");
+    generator = new HepMCGenerator(hepmc_event_filename);
+  }
+  generator->InitPrimaryGenerator();
+  for (int i=0; i<config->fNtotal; ++i) {
+    GeantEventInfo evtInfo = generator->NextEvent();
+    std::cout<<" runApp.cc: ntracks="<< evtInfo.ntracks <<"\n";
+    if(evtInfo.ntracks > (int)tracks.capacity()) tracks.resize(evtInfo.ntracks);
+    for (int itr = 0; itr < evtInfo.ntracks; ++itr) {
+      if (!tracks[itr]) tracks[itr] = Geant::cxx::GeantTrack::MakeInstance();
+      generator->GetTrack(itr, *tracks[itr]);
+    }
+    // load this event
+    runMgr->GetEventServer()->AddEvent(evtInfo, &tracks[0]);
+  }
+  // release local tracks from heap
+  for(unsigned int i=0; i<tracks.size(); ++i) {
+    if (tracks[i]) GeantTrack::ReleaseInstance(tracks[i]);
+  }
 
   runMgr->RunSimulation();
 //  propagator->PropagatorGeom(cms_geometry_filename.c_str(), n_threads, monitor);
