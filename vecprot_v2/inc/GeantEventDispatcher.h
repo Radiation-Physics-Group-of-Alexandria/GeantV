@@ -43,6 +43,9 @@ struct MCEventSource{
   int fDispatched;
 };
 
+struct Host{
+  std::string hostname;
+};
 class GeantHPCJobPool;
 
 
@@ -67,6 +70,7 @@ private:
   int workerCounter;
   std::vector<GeantHPCJob> pendingJobs;
   std::vector<GeantHPCWorker> workers;
+  std::vector<Host> fHosts;
 
   json NewWorker(json& req);
   json JobReq(json& req);

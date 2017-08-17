@@ -62,6 +62,8 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"numa", required_argument, 0, 'n'},
                                   {"server",required_argument, 0, 'S'},
                                   {"master-hostname", required_argument, 0, 'H'},
+                                  {"hostnames", required_argument, 0, 'N'},
+                                  {"remote_start",required_argument,0,'R'},
                                   {0, 0, 0, 0}};
 
 void help() {
@@ -80,6 +82,10 @@ int main(int argc, char *argv[]) {
   std::string fstate_filename("fstate_FTFP_BERT_G496p02_1mev.root");
   std::string hepmc_event_filename("pp14TeVminbias.root");
   std::string master_hostname("localhost");
+  std::string hostnames_file("hosts");
+  std::string remote_start("start.sh");
+  int master_port = 5555;
+  int worker_port = 5556;
 
   if (argc == 1) {
     help();
@@ -89,7 +95,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "E:e:f:g:l:B:mM:b:t:x:r:i:u:p:v:n:S:H:c:", options, &optidx);
+    c = getopt_long(argc, argv, "E:e:f:g:l:B:mM:b:t:x:r:i:u:p:v:n:S:H:c:N:R:", options, &optidx);
 
     if (c == -1)
       break;
@@ -197,6 +203,14 @@ int main(int argc, char *argv[]) {
       master_hostname = optarg;
       break;
 
+    case 'N':
+      hostnames_file = optarg;
+      break;
+
+    case 'R':
+      remote_start = optarg;
+      break;
+
     default:
       errx(1, "unknown option %c", c);
     }
@@ -291,6 +305,10 @@ int main(int argc, char *argv[]) {
   auto hepMcPool = new GeantHepMCJobPool(); //TODO
   hepMcPool->LoadFromFile(hepmc_event_filename);
   config->jobPool = hepMcPool;
+  config->fHostnameFile = hostnames_file;
+  config->fMasterPort = master_port;
+  config->fWorkerPort = worker_port;
+  config->fRemoteStartScript = remote_start;
 #endif
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);

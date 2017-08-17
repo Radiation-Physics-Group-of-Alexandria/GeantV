@@ -30,13 +30,16 @@ struct GeantHPCJob {
   int workerId;
   JobType type;
   std::vector<GeantHepMCJob> hepMCJobs;
-  int events;
+  int events = 0;
+  std::chrono::time_point<std::chrono::system_clock> dispatchTime;
 };
 
 struct GeantHPCWorker{
   int id;
   std::string reqSocket;
   std::chrono::time_point<std::chrono::system_clock> lastContact;
+  std::chrono::seconds expectedTimeForEvent = std::chrono::seconds(0);
+  int transportedEvents = 0;
 };
 
 class GeantHPCJobPool {

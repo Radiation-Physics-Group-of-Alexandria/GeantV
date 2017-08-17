@@ -91,6 +91,10 @@ public:
 
 #ifdef USE_HPC
   std::string fMasterHostname;
+  std::string fHostnameFile;
+  std::string fRemoteStartScript;
+  int fMasterPort;
+  int fWorkerPort;
   GeantHPCJobPool* jobPool;
   bool fMasterNode;
   int fNClients;

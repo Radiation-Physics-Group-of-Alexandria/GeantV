@@ -71,6 +71,7 @@ json GeantEventDispatcher::JobReq(json& req){
   }
   worker->lastContact = std::chrono::system_clock::now();
   GeantHPCJob job = jobPool->GetJob(n,*worker);
+  job.dispatchTime = std::chrono::system_clock::now();
   if (job.type == JobType::HepMC) {
     if (job.hepMCJobs.size() == 0) {
       return "{\"type\": \"wait\"}"_json;
@@ -107,13 +108,23 @@ json GeantEventDispatcher::JobConfirm(json& req){
   if(worker == workers.end())
     return "{\"type\": \"error\"}"_json;
 
-  worker->lastContact = std::chrono::system_clock::now();
+  auto timeNow = std::chrono::system_clock::now();
+  worker->lastContact = timeNow;
 
   auto job = std::find_if(pendingJobs.begin(),pendingJobs.end(),[&](const GeantHPCJob& job){ return job.uid == job_id; });
   if(job == pendingJobs.end())
     return "{\"type\": \"error\"}"_json;
-  pendingJobs.erase(job);
 
+  worker->expectedTimeForEvent = (worker->transportedEvents)*(worker->expectedTimeForEvent) +
+                                 std::chrono::duration_cast<std::chrono::seconds>(timeNow - job->dispatchTime);
+  std::cout << "Wrk " << worker->id << " exp time for event: " << worker->expectedTimeForEvent.count() << std::endl;
+  worker->transportedEvents += (job->events + job->hepMCJobs.size());
+  std::cout << "Wrk " << worker->id << " trnsp evens: " << worker->transportedEvents << std::endl;
+  worker->expectedTimeForEvent /= worker->transportedEvents;
+  std::cout << "Wrk " << worker->id << " exp time for event: " << worker->expectedTimeForEvent.count() << std::endl;
+
+
+  pendingJobs.erase(job);
   json rep;
   rep["type"] = "job_done_rep";
   return rep;
@@ -133,6 +144,18 @@ void GeantEventDispatcher::Initialize()
   zmqSocket.bind("tcp://*:5678");
   std::cout << "HPC: Event dispatcher bounded to \"tcp://*:5678\"" << std::endl;
 
+  std::ifstream inputFile(fConfig->fHostnameFile);
+  std::string line;
+  while(inputFile >> line) {
+    Host host;
+    host.hostname = line;
+    fHosts.push_back(host);
+  }
+
+  for(auto& h : fHosts){
+    std::cout << "Starting worker on remote host: " + h.hostname << std::endl;
+    system((fConfig->fRemoteStartScript + " " + h.hostname + " " + fHosts[0].hostname + " &").c_str());
+  }
 
 }
 
