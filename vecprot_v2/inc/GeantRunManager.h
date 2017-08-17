@@ -176,11 +176,14 @@ public:
   GEANT_FORCE_INLINE
   void SetVectorPhysicsProcess(PhysicsProcessOld *proc) { fVectorPhysicsProcess = proc; }
 
-  // GEANT_FORCE_INLINE
-  // PrimaryGenerator *GetPrimaryGenerator() const { return fPrimaryGenerator; }
+  GEANT_FORCE_INLINE
+  PrimaryGenerator *GetPrimaryGenerator() const { return fEventServer ? fEventServer->GetPrimaryGenerator() : NULL; }
 
-  // GEANT_FORCE_INLINE
-  // void SetPrimaryGenerator(PrimaryGenerator *gen) { fPrimaryGenerator = gen; }
+  GEANT_FORCE_INLINE
+  void SetPrimaryGenerator(PrimaryGenerator *gen) {
+    fEventServer->SetPrimaryGenerator(gen);
+    gen->InitPrimaryGenerator();
+  }
 
   GEANT_FORCE_INLINE
   void SetMCTruthMgr(MCTruthMgr *mcmgr) { fTruthMgr = mcmgr; }

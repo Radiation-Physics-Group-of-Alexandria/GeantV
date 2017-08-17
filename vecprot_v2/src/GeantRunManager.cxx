@@ -129,8 +129,8 @@ bool GeantRunManager::Initialize() {
     prop->fProcess = fProcess;
     prop->fPhysicsInterface = fPhysicsInterface;
     prop->fVectorPhysicsProcess = fVectorPhysicsProcess;
-    //prop->fPrimaryGenerator = fPrimaryGenerator;
     prop->fTruthMgr = fTruthMgr;
+    //prop->fPrimaryGenerator = fPrimaryGenerator;
   }
 
   // Temporary workaround to allow migration to detector construction

@@ -57,6 +57,7 @@ private:
   GeantEvent** fEvents = nullptr;      /** Events to be dispatched */
   int  fBindex = 0;                    /** Basket manager index */
   queue_t fFreeSlots;                  /** Queue of free event slots */
+  PrimaryGenerator *fPrimaryGenerator = nullptr;   /** Primary generator */
 
 protected:
   GeantTrack *GetNextTrack();
@@ -98,6 +99,12 @@ public:
   bool HasTracks() const { return fHasTracks; }
 
   GEANT_FORCE_INLINE
+  PrimaryGenerator *GetPrimaryGenerator() { return fPrimaryGenerator; }
+
+  GEANT_FORCE_INLINE
+  void SetPrimaryGenerator(PrimaryGenerator *gen) { fPrimaryGenerator = gen; }
+
+  GEANT_FORCE_INLINE
   bool IsInitialPhase() const { return fInitialPhase; }
 
   int FillBasket(GeantTrack_v &tracks, int ntracks);
@@ -106,6 +113,8 @@ public:
 
   int FillStackBuffer(StackLikeBuffer *buffer, int ntracks);
   
+  int AddEvent(GeantTaskData *td = nullptr);
+
   int AddEvent(GeantEventInfo const &evtInfo, GeantTrack** const &tracks, GeantTaskData *td = nullptr);
   
   int ActivateEvents();

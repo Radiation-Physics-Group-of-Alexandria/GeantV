@@ -8,6 +8,7 @@
 #include "GeantEvent.h"
 #include "GeantRunManager.h"
 #include "LocalityManager.h"
+#include "PrimaryGenerator.h"
 #include "GeantTaskData.h"
 #include "GeantBasket.h"
 #include "Basket.h"
@@ -73,6 +74,30 @@ GeantEventServer::~GeantEventServer()
 }
 
 //______________________________________________________________________________
+int GeantEventServer::AddEvent(GeantTaskData *td)
+{
+  assert(fPrimaryGenerator && "*** ERROR: GeantEventServer::LoadEvent: PrimaryGenerator has not been properly set!");
+
+  GeantEventInfo evtInfo = fPrimaryGenerator->NextEvent();
+  std::cout<<" runApp.cc: ntracks="<< evtInfo.ntracks <<"\n";
+
+  std::vector<Geant::cxx::GeantTrack*> tracks;
+  if(evtInfo.ntracks > (int)tracks.capacity()) tracks.resize(evtInfo.ntracks);
+  for (int itr = 0; itr < evtInfo.ntracks; ++itr) {
+    if (!tracks[itr]) tracks[itr] = Geant::cxx::GeantTrack::MakeInstance();
+    fPrimaryGenerator->GetTrack(itr, *tracks[itr]);
+  }
+
+  // load this event
+  AddEvent(evtInfo, &tracks[0], td);
+
+  // release local tracks from heap
+  for(unsigned int i=0; i<tracks.size(); ++i) {
+    if (tracks[i]) GeantTrack::ReleaseInstance(tracks[i]);
+  }
+  return evtInfo.ntracks;
+}
+
 int GeantEventServer::AddEvent(GeantEventInfo const &eventinfo, GeantTrack** const &tracks, GeantTaskData *td)
 {
   printf("GeantEventServer::AddEvent() called: td=<%p>\n", td);
@@ -84,7 +109,7 @@ int GeantEventServer::AddEvent(GeantEventInfo const &eventinfo, GeantTrack** con
     Error("AddEvent", "Event pool is full");
     return 0;
   }
-  // GeantEventInfo eventinfo = fRunMgr->GetPrimaryGenerator()->NextEvent();
+  // GeantEventInfo eventinfo = fPrimaryGenerator()->NextEvent();
   int ntracks = eventinfo.ntracks;
   printf("GeantEventServer::AddEvent() called: td=<%p>, node=%i, ntrks=%i\n", td, node, ntracks);
   if (!ntracks) {
