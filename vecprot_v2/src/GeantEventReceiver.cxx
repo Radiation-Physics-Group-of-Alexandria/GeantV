@@ -26,22 +26,21 @@ inline namespace GEANT_IMPL_NAMESPACE {
 
 int MaxReconnectTry = 3;
 //______________________________________________________________________________
-GeantEventReceiver::GeantEventReceiver(std::string serverHostName, GeantConfig *conf, GeantRunManager *runmgr)
+GeantEventReceiver::GeantEventReceiver(const std::string &serverHostName, const std::string &workerHostName, GeantRunManager *runmgr,
+                                       GeantConfig *conf)
     : zmqContext(1), zmqSocket(zmqContext, ZMQ_REQ), fServHname(serverHostName), config(conf),
       runManager(runmgr), isTransportCompleted(false), connected(false),  zmqSocketIn(zmqContext,ZMQ_REP),
-      connectTries(0)
+      connectTries(0), fWorkerPort(conf->fWorkerPort), fWorkerHname(workerHostName),fMasterPort(conf->fMasterPort),
+      eventDiff(0)
 {
-  //TODO:
-  fWorkerHname = "*:6666";
-  eventDiff = 0;
   fFetchAhead = conf->fNbuff + 2;
 }
 
 void GeantEventReceiver::BindSocket() {
   zmqSocket.setsockopt(ZMQ_RCVTIMEO,5*1000); //5 sec
-  zmqSocket.connect(std::string("tcp://") + fServHname + std::string(":5678"));
-  std::cout << "HPC: Event receiver connected to: " << (std::string("tcp://") + fServHname + std::string(":5678"))
-            << std::endl;
+  auto masterZMQAddress = std::string("tcp://") + fServHname + ":" + std::to_string(fMasterPort);
+  zmqSocket.connect(masterZMQAddress);
+  std::cout << "HPC: Event receiver connected to: " << masterZMQAddress << std::endl;
 }
 
 //______________________________________________________________________________
@@ -49,11 +48,10 @@ void GeantEventReceiver::Initialize()
 {
 
   BindSocket();
-  //zmqSocketIn.bind("tcp://"+fWorkerHname);
+  zmqSocketIn.bind("tcp://*:"+std::to_string(fWorkerPort));
+  std::cout << "Worker bounded to " << "tcp://*:"+std::to_string(fWorkerPort) << '\n';
 
   fReceivedEvents = 0;
-
-
 }
 
 void GeantEventReceiver::Run()
@@ -70,8 +68,8 @@ void GeantEventReceiver::Run()
 }
 
 bool GeantEventReceiver::SendMsg(const std::string& req, std::string& rep) {
-  zmq::message_t request(1024);
-  memcpy(request.data(),req.c_str(),req.size()+1);
+  zmq::message_t request(req.size());
+  memcpy(request.data(),req.c_str(),req.size());
   std::cout << "wrk: msg req " << req << std::endl;
 
   zmqSocket.send(request);
@@ -79,8 +77,7 @@ bool GeantEventReceiver::SendMsg(const std::string& req, std::string& rep) {
   bool ok = zmqSocket.recv(&reply);
   if (!ok) return false;
 
-  char rep_msg[1024];
-  memcpy(rep_msg, reply.data(), std::min((size_t)1024,reply.size()));
+  std::string rep_msg((char* )reply.data(),(char* )reply.data() + reply.size());
   rep = rep_msg;
   std::cout << "wrk: msg rep" << rep << std::endl;
 
@@ -96,7 +93,8 @@ bool GeantEventReceiver::ConnectToMaster(){
   connectTries++;
   json req;
   req["type"] = "new_wrk_req";
-  req["adr"] = "tcp://"+fReceiveAddr;
+  auto workerZMQAddress = std::string("tcp://") + fWorkerHname + ":" + std::to_string(fWorkerPort);
+  req["adr"] = workerZMQAddress;
   std::string msg = req.dump();
   std::string rep_msg;
   bool ok = SendMsg(msg,rep_msg);
@@ -138,7 +136,7 @@ int GeantEventReceiver::RequestJob(int num){
       new_job.endID = new_job.startID + recv_jobs.size();
       {
         std::lock_guard<std::mutex> lock_guard(job_mutex);
-        jobs.push_back(new_job);
+        jobs[new_job.id] = new_job;
       }
       for (auto &job : recv_jobs) {
         auto multFileGenerator = (HepMCGeneratorMultFiles *) runManager->GetPrimaryGenerator();
@@ -157,7 +155,7 @@ int GeantEventReceiver::RequestJob(int num){
       new_job.endID = new_job.startID + events;
       {
         std::lock_guard<std::mutex> lock_guard(job_mutex);
-        jobs.push_back(new_job);
+        jobs[new_job.id] = new_job;
       }
       for (int i = 0; i < events; ++i) {
         runManager->GetEventServer()->AddEvent();
@@ -245,8 +243,9 @@ void GeantEventReceiver::RunCommunicationThread() {
     {
       std::lock_guard<std::mutex> lock_guard(job_mutex);
       for(auto it = jobs.begin(); it != jobs.end();){
-        if (it->left == 0){
-          ConfirmJob(it->id);
+        auto& job = it->second;
+        if (job.left == 0){
+          ConfirmJob(job.id);
           it = jobs.erase(it);
         }else{
           ++it;
@@ -260,6 +259,8 @@ void GeantEventReceiver::RunCommunicationThread() {
       SendHB();
     }
 
+    ReceiveFromMaster();
+
   }
 }
 
@@ -269,16 +270,68 @@ void GeantEventReceiver::EventAdded() {
 
 void GeantEventReceiver::EventTransported(int evt) {
   eventDiff.fetch_add(-1);
-  std::cout << "event trnsp: " << evt << std::endl;
   std::lock_guard<std::mutex> lock_guard(job_mutex);
-  for(auto& job: jobs){
-    std::cout << "job iter: " << job.id << " " << job.startID << " " << job.endID << std::endl;
+  for(auto& job_it: jobs){
+    auto& job = job_it.second;
     if(job.startID <= evt && evt < job.endID){
       --job.left;
-      std::cout << "job decr: " << job.id << " " << job.left;
       break;
     }
   }
 }
+
+void GeantEventReceiver::ReceiveFromMaster() {
+ zmq_pollitem_t items [] = { { zmqSocketIn, 0, ZMQ_POLLIN, 0 } };
+ zmq::poll(items,1,std::chrono::milliseconds(30));
+    if (items[0].revents & ZMQ_POLLIN) {
+
+      zmq::message_t request;
+      zmqSocketIn.recv(&request);
+      std::string requestMsg((char* )request.data(),(char* )request.data()+request.size());
+      std::cout << "worker from mast req: " << requestMsg << std::endl;
+      json req = json::parse(requestMsg);
+      auto req_type = req["type"].get<std::string>();
+
+      json rep;
+      if (req_type=="finish"){
+        rep = ReceiveFinish(req);
+      } else if(req_type =="cancel"){
+        rep = ReceiveCancel(req);
+      }
+
+      std::string responce = rep.dump();
+      std::cout << "worker to master rep: " << responce << std::endl;
+
+      zmq::message_t reply(responce.size());
+      memcpy(reply.data(), responce.c_str(), responce.size());
+      zmqSocketIn.send(reply);
+  }
+}
+
+json GeantEventReceiver::ReceiveFinish(json& msg) {
+  isTransportCompleted = true;
+
+  json j;
+  j["type"] = "finish_rep";
+  return j;
+}
+
+json GeantEventReceiver::ReceiveCancel(json& msg) {
+  std::lock_guard<std::mutex> lock_guard(job_mutex);
+
+  json j;
+  j["type"] = "cancel_rep";
+
+  int job_id = msg["job_id"].get<int>();
+  int msg_wrk_id = msg["wrk_id"].get<int>();
+
+  if(msg_wrk_id != wrk_id) return j;
+  if(jobs.count(job_id) == 0) return j;
+
+  jobs.erase(job_id);
+
+  return j;
+}
+
 }
 }

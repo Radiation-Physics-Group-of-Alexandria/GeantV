@@ -14,6 +14,8 @@
 #define GEANT_RECEIVER
 #ifdef USE_HPC
 #include <zmq.hpp>
+#include <json.hpp>
+using nlohmann::json;
 #endif
 
 #include <string>
@@ -34,7 +36,8 @@ struct HPCJob{
 
 class GeantEventReceiver {
 public:
-  GeantEventReceiver(std::string serverHostName, GeantConfig *conf, GeantRunManager *runmgr);
+  GeantEventReceiver(const std::string &serverHostName, const std::string &workerHostName, GeantRunManager *runmgr,
+                       GeantConfig *conf);
 
   void Initialize();
   void Run();
@@ -43,6 +46,7 @@ public:
   void RunCommunicationThread();
   void EventAdded();
   void EventTransported(int evt);
+  void ReceiveFromMaster();
 
   bool GetIsTransportCompleted(){ return isTransportCompleted;}
 
@@ -56,7 +60,9 @@ private:
   zmq::socket_t zmqSocketIn;
 
   std::string fServHname;
+  int fMasterPort;
   std::string fWorkerHname;
+  int fWorkerPort;
   std::string fReceiveAddr;
   GeantConfig *config;
   GeantRunManager *runManager;
@@ -64,9 +70,8 @@ private:
   bool isTransportCompleted;
   int fReceivedEvents = 0;
 
-  std::vector<HPCJob> jobs;
+  std::map<int, HPCJob> jobs;
   std::mutex job_mutex;
-
   std::chrono::time_point<std::chrono::system_clock> lastContact;
 
   bool connected;
@@ -78,6 +83,9 @@ private:
   void Reconnect();
   void BindSocket();
   bool SendMsg(const std::string& req, std::string& rep);
+
+  json ReceiveFinish(json& msg);
+  json ReceiveCancel(json& msg);
   int wrk_id;
 };
 }

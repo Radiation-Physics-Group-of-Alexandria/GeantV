@@ -32,6 +32,7 @@ struct GeantHPCJob {
   std::vector<GeantHepMCJob> hepMCJobs;
   int events = 0;
   std::chrono::time_point<std::chrono::system_clock> dispatchTime;
+  std::vector<int> dublicateUIDs;
 };
 
 struct GeantHPCWorker{

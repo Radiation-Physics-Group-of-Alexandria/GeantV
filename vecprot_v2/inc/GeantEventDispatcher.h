@@ -61,6 +61,8 @@ private:
   zmq::context_t zmqContext;
   zmq::socket_t zmqSocket;
 
+  zmq::socket_t zmqSocketOut;
+
   int dispatchedEvents;
 
   GeantConfig *fConfig;
@@ -68,15 +70,22 @@ private:
 
   GeantHPCJobPool* jobPool;
   int workerCounter;
-  std::vector<GeantHPCJob> pendingJobs;
-  std::vector<GeantHPCWorker> workers;
+  std::map<int,GeantHPCJob> pendingJobs;
+  std::map<int,GeantHPCWorker> workers;
   std::vector<Host> fHosts;
 
   json NewWorker(json& req);
   json JobReq(json& req);
   json JobConfirm(json& req);
   json HeartBeat(json& req);
+  json FinishMsg(const GeantHPCWorker& worker);
+  json CancelJobMsg(const GeantHPCWorker &worker, const GeantHPCJob &job);
+  void CancelJob(const GeantHPCJob &job);
+  void RemoveJob(int uid);
   void CleanDeadWorkers();
+  void FinishWorkers();
+  bool SendMsgWorker(const std::string& adr, const std::string& msg, std::string& rep);
+  void ReplaceOutSocket();
 };
 }
 }
