@@ -52,11 +52,12 @@ struct GeantHPCJob {
 struct GeantHPCWorker{
   int fID;
   std::string fZMQID;
-  std::vector<size_t> fPendingRequests;
+  std::set<size_t> fPendingRequests;
   int fDiscardedMsg;
   ZmqTimer fLastContact;
   std::chrono::milliseconds fExpectedTimeForEvent = std::chrono::milliseconds(0);
   int fTransportedEvents = 0;
+  ZmqTimer fLastStatReq;
 };
 
 class GeantHPCJobPool {

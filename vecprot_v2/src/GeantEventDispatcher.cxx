@@ -180,6 +180,7 @@ void GeantEventDispatcher::RunReqReplyLoop()
     ResendMsg();
     CleanDeadWorkers();
     CleanDeadJobs();
+    UpdateWorkerStats();
   }
 
   FinishWorkers();
@@ -263,17 +264,18 @@ std::string GeantEventDispatcher::RecvReq(const std::string &msg) {
 }
 
 void GeantEventDispatcher::SendReq(const std::string &msg, GeantHPCWorker &worker) {
-  if(worker.fPendingRequests.size() >= 3)
-    return;
   auto time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   size_t msgUid = std::hash<std::string>{}(msg+std::to_string(time));
   fPendingRequests[msgUid] = MasterPendingMessage(msg,worker.fID);
-  worker.fPendingRequests.push_back(msgUid);
+  worker.fPendingRequests.insert(msgUid);
   SendMessage(msg,"REQ",msgUid,worker.fZMQID);
 }
 
-void GeantEventDispatcher::RecvRep(const std::string &msg) {
-  return;
+void GeantEventDispatcher::RecvRep(const std::string &msg, GeantHPCWorker &worker) {
+  json rep = json::parse(msg);
+  if(rep["type"] == "stat_load_rep"){
+    RecvGetLoadMsg(rep, worker);
+  }
 }
 
 void GeantEventDispatcher::PollForMsg() {
@@ -302,10 +304,10 @@ void GeantEventDispatcher::PollForMsg() {
       if(fPendingRequests.count(messageUid) > 0){
         fPendingRequests.erase(messageUid);
         if(fHPCWorkerZMQIDtoUID.count(messageAddr) > 0 && fHPCWorkers.count(fHPCWorkerZMQIDtoUID[messageAddr]) > 0){
-          auto& workerPending = fHPCWorkers[fHPCWorkerZMQIDtoUID[messageAddr]].fPendingRequests;
-          workerPending.erase(std::find(workerPending.begin(),workerPending.end(),messageUid));
+          auto& worker = fHPCWorkers[fHPCWorkerZMQIDtoUID[messageAddr]];
+          worker.fPendingRequests.erase(messageUid);
+          RecvRep(messageContent, worker);
         }
-        RecvRep(messageContent);
       }
     }
   }
@@ -388,6 +390,26 @@ void GeantEventDispatcher::CleanDeadJobs() {
       fPendingJobs[delJobID].fDublicateUIDs->erase(delJobID);
       bool returnToPool = fPendingJobs[delJobID].fDublicateUIDs->size() == 0 ? true : false;
       SendJobCancelMsg(fPendingJobs[delJobID], returnToPool);
+    }
+  }
+}
+
+void GeantEventDispatcher::SendGetLoadMsg(GeantHPCWorker &worker) {
+  json req;
+  req["type"] = "stat_load_req";
+  worker.fLastStatReq.Update();
+  SendReq(req.dump(),worker);
+}
+
+void GeantEventDispatcher::RecvGetLoadMsg(const json &msg, GeantHPCWorker &worker) {
+  std::cout << "Worker :" << worker.fID << " load: " << msg["load"].get<double>() << '\n';
+}
+
+void GeantEventDispatcher::UpdateWorkerStats() {
+  for(auto& workerIt : fHPCWorkers){
+    auto& worker = workerIt.second;
+    if(worker.fLastStatReq.Since() > std::chrono::seconds(20)){
+      SendGetLoadMsg(worker);
     }
   }
 }

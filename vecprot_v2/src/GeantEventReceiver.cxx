@@ -202,10 +202,13 @@ bool GeantEventReceiver::ResendMsg() {
 
 string GeantEventReceiver::RecvReq(std::string &msg) {
   json req = json::parse(msg);
-  if (req["type"].get<std::string>() == "finish_req") {
+  auto msgType = req["type"].get<std::string>();
+  if (msgType == "finish_req") {
     return HandleFinishMsg(req).dump();
-  } else if (req["type"].get<std::string>() == "job_cancel_req"){
+  } else if (msgType == "job_cancel_req"){
     return HandleJobCancelMsg(req).dump();
+  } else if (msgType == "stat_load_req"){
+    return HandleGetLoadMsg(req).dump();
   }
   return "{}";
 }
@@ -327,6 +330,15 @@ json GeantEventReceiver::HandleJobCancelMsg(json &msg) {
   json rep;
   rep["type"] = "job_cancel_rep";
   rep["job_id"] = jobId;
+  return rep;
+}
+
+json GeantEventReceiver::HandleGetLoadMsg(json &msg) {
+  json rep;
+  rep["type"] = "stat_load_rep";
+  double loadAvg1min = 0.0;
+  getloadavg(&loadAvg1min,1);
+  rep["load"] = loadAvg1min;
   return rep;
 }
 

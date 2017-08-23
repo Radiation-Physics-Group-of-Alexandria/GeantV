@@ -75,7 +75,10 @@ private:
 
   void SendFinishMsg(GeantHPCWorker& worker);
   void SendJobCancelMsg(GeantHPCJob& job, bool retToPool = true);
+  void SendGetLoadMsg(GeantHPCWorker& worker);
+  void RecvGetLoadMsg(const json &msg, GeantHPCWorker &worker);
 
+  void UpdateWorkerStats();
   void CleanDeadWorkers();
   void CleanDeadJobs();
   void FinishWorkers();
@@ -85,7 +88,7 @@ private:
   void SendReq(const std::string &msg, GeantHPCWorker &worker);
   void SendRep(const std::string& msg, size_t uid,const std::string& address);
   std::string RecvReq(const std::string &msg);
-  void RecvRep(const std::string &msg);
+  void RecvRep(const std::string &msg, GeantHPCWorker &worker);
   void PollForMsg();
   bool ResendMsg();
 

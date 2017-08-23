@@ -84,6 +84,7 @@ private:
 
   json HandleFinishMsg(json &msg);
   json HandleJobCancelMsg(json &msg);
+  json HandleGetLoadMsg(json &msg);
 
   void BindSocket();
   void DisconnectFromMaster();
