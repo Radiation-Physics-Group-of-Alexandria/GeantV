@@ -59,9 +59,8 @@ public:
 
 private:
   zmq::context_t zmqContext;
-  zmq::socket_t zmqSocket;
+  zmq::socket_t fSocket;
 
-  zmq::socket_t zmqSocketOut;
 
   int dispatchedEvents;
 
@@ -72,20 +71,31 @@ private:
   int workerCounter;
   std::map<int,GeantHPCJob> pendingJobs;
   std::map<int,GeantHPCWorker> workers;
+  std::map<std::string,int> workerId;
   std::vector<Host> fHosts;
 
-  json NewWorker(json& req);
-  json JobReq(json& req);
-  json JobConfirm(json& req);
-  json HeartBeat(json& req);
-  json FinishMsg(const GeantHPCWorker& worker);
-  json CancelJobMsg(const GeantHPCWorker &worker, const GeantHPCJob &job);
-  void CancelJob(const GeantHPCJob &job);
-  void RemoveJob(int uid);
+  json HandleNewWorkerMsg(json &req);
+  json HandleNewJobReq(json &req);
+  json HandleJobConfirm(json &req);
+  json HandleHeartbeat(json &req);
+
+  void SendFinishMsg(GeantHPCWorker& worker);
+  void SendJobCancelMsg(GeantHPCJob& job);
+
   void CleanDeadWorkers();
   void FinishWorkers();
-  bool SendMsgWorker(const std::string& adr, const std::string& msg, std::string& rep);
-  void ReplaceOutSocket();
+
+  zmq_pollitem_t zmqPollItem;
+  std::map<size_t, MasterPendingMessage> pendingRequests;
+  void BindSocket();
+  void SendMessage(const std::string& msg, const std::string& type, size_t uid,const std::string& address);
+  void SendReq(const std::string &msg, GeantHPCWorker &worker);
+  void SendRep(const std::string& msg, size_t uid,const std::string& address);
+  string RecvReq(const std::string &msg);
+  void RecvRep(const string &msg);
+  void PollForMsg();
+  bool ResendMsg();
+
 };
 }
 }

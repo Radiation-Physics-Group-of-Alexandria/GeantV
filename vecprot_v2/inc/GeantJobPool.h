@@ -6,7 +6,9 @@
 #include <chrono>
 #include <queue>
 #include <Geant/Config.h>
-
+#include "zmq_util.h"
+#include <memory>
+#include <set>
 using nlohmann::json;
 
 namespace Geant {
@@ -31,15 +33,19 @@ struct GeantHPCJob {
   JobType type;
   std::vector<GeantHepMCJob> hepMCJobs;
   int events = 0;
-  std::chrono::time_point<std::chrono::system_clock> dispatchTime;
-  std::vector<int> dublicateUIDs;
+  ZmqTimer dispatchTime;
+  std::shared_ptr<std::set<int>> dublicateUIDs;
+
+  GeantHPCJob() : dublicateUIDs{std::make_shared<std::set<int>>()} {}
 };
 
 struct GeantHPCWorker{
   int id;
-  std::string reqSocket;
-  std::chrono::time_point<std::chrono::system_clock> lastContact;
-  std::chrono::seconds expectedTimeForEvent = std::chrono::seconds(0);
+  std::string zmqID;
+  std::vector<size_t> pendingMsg;
+  int discardedMsg;
+  ZmqTimer lastContact;
+  std::chrono::milliseconds expectedTimeForEvent = std::chrono::milliseconds(0);
   int transportedEvents = 0;
 };
 
@@ -48,6 +54,11 @@ public:
   virtual GeantHPCJob GetJob(int n, const GeantHPCWorker& worker) = 0;
   virtual void ReturnToPool(GeantHPCJob job) = 0;
   virtual bool IsEmpty() = 0;
+
+  GeantHPCJob GetDublicateJob(GeantHPCJob& job);
+protected:
+  int GetNextId(){ JobCounter++; return JobCounter;};
+  int JobCounter;
 };
 
 class GeantHepMCJobPool : public GeantHPCJobPool {
@@ -62,7 +73,6 @@ public:
 
   ~GeantHepMCJobPool() = default;
 private:
-  int JobCounter;
   std::vector<std::string> filesForWorkers;
   std::map<std::string,std::vector<GeantHepMCJob>> mapPool;
   std::map<int,std::string> workerFiles;
@@ -80,7 +90,6 @@ public:
 
   ~GeantGeneratorJobPool() = default;
 private:
-  int JobCounter;
   int eventsToDispatch;
 };
 }}

@@ -7,10 +7,9 @@ namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
 GeantHPCJob GeantHepMCJobPool::GetJob(int n, const GeantHPCWorker& worker) {
-  JobCounter++;
   GeantHPCJob res;
   res.type = JobType::HepMC;
-  res.uid = JobCounter;
+  res.uid = GetNextId();
   int addedEvents = 0;
   while(addedEvents != n && !mapPool.empty()){
     if(workerFiles.count(worker.id)>0){
@@ -85,6 +84,7 @@ GeantHPCJob GeantGeneratorJobPool::GetJob(int n, const GeantHPCWorker &worker) {
   GeantHPCJob job;
   job.type = JobType::Generator;
   job.events = std::min(n,eventsToDispatch);
+  job.uid = GetNextId();
   eventsToDispatch -= job.events;
   return job;
 }
@@ -111,5 +111,11 @@ void from_json(const json& j, GeantHepMCJob& p){
   p.offset = j.at("offset").get<int>();
 }
 
+GeantHPCJob GeantHPCJobPool::GetDublicateJob(GeantHPCJob &job) {
+  GeantHPCJob newJob = job;
+  newJob.uid = GetNextId();
+  newJob.dublicateUIDs->insert(newJob.uid);
+  return newJob;
+}
 }
 }
