@@ -74,7 +74,22 @@ json GeantEventDispatcher::HandleNewJobReq(json &req){
   GeantHPCJob job = jobPool->GetJob(n,worker);
   if (job.type == JobType::HepMC) {
     if (job.hepMCJobs.size() == 0) {
-      return "{\"type\": \"wait\"}"_json;
+      bool foundDupeJob = false;
+      for(auto pendIt = pendingJobs.rbegin(); pendIt != pendingJobs.rend(); pendIt++){
+        auto& pendJob = pendIt->second;
+        if(IsWorkerDoingJob(worker,pendJob)) continue;
+        if(n < pendJob.hepMCJobs.size()) continue;
+        job = jobPool->GetDublicateJob(pendJob);
+        foundDupeJob = true;
+        std::cout << "Duplicating job: " << pendJob.uid << '\n';
+        std::cout << "Dupe id: ";
+        for(auto dum : *job.dublicateUIDs){
+          std::cout << dum << ' ';
+        }
+        std::cout << '\n';
+        break;
+      }
+      if(!foundDupeJob) return "{\"type\": \"wait\"}"_json;
     }
     job.workerId = worker.id;
     job.dispatchTime.Update();
@@ -88,7 +103,22 @@ json GeantEventDispatcher::HandleNewJobReq(json &req){
     return reply;
   } else if (job.type == JobType::Generator){
     if (job.events == 0) {
-      return "{\"type\": \"wait\"}"_json;
+      bool foundDupeJob = false;
+      for(auto pendIt = pendingJobs.rbegin(); pendIt != pendingJobs.rend(); pendIt++){
+        auto& pendJob = pendIt->second;
+        if(IsWorkerDoingJob(worker,pendJob)) continue;
+        if(n < pendJob.events) continue;
+        job = jobPool->GetDublicateJob(pendJob);
+        foundDupeJob = true;
+        std::cout << "Duplicating job: " << pendJob.uid << '\n';
+        std::cout << "Dupe id: ";
+        for(auto dum : *job.dublicateUIDs){
+          std::cout << dum << ' ';
+        }
+        std::cout << '\n';
+        break;
+      }
+      if(!foundDupeJob) return "{\"type\": \"wait\"}"_json;
     }
     job.workerId = worker.id;
     job.dispatchTime.Update();
@@ -101,6 +131,17 @@ json GeantEventDispatcher::HandleNewJobReq(json &req){
     reply["event"] = job.events;
     return reply;
   }
+}
+
+bool GeantEventDispatcher::IsWorkerDoingJob(GeantHPCWorker& worker, GeantHPCJob& job){
+  if(job.workerId == worker.id) return true;
+  for(int jobUid : *job.dublicateUIDs){
+    if(pendingJobs.count(jobUid)>0) {
+      if (pendingJobs[jobUid].workerId == worker.id)
+        return true;
+    }
+  }
+  return false;
 }
 
 json GeantEventDispatcher::HandleJobConfirm(json &req){
@@ -125,7 +166,7 @@ json GeantEventDispatcher::HandleJobConfirm(json &req){
 
   job.dublicateUIDs->erase(job_id);
   for(auto dupeId : *job.dublicateUIDs){
-    SendJobCancelMsg(pendingJobs[dupeId]);
+    SendJobCancelMsg(pendingJobs[dupeId], false);
   }
   pendingJobs.erase(job_id);
   json rep;
@@ -179,8 +220,11 @@ void GeantEventDispatcher::CleanDeadWorkers(){
     auto since = w->lastContact.Since();
     if(since > std::chrono::seconds(45)){
       for(auto job_it = pendingJobs.begin(); job_it != pendingJobs.end();){
-        if (job_it->second.workerId == w->id){
-          jobPool->ReturnToPool(job_it->second);
+        if (job_it->second.workerId == w->id) {
+          job_it->second.dublicateUIDs->erase(job_it->second.uid);
+          if (job_it->second.dublicateUIDs->size() == 0){
+            jobPool->ReturnToPool(job_it->second);
+          }
           job_it = pendingJobs.erase(job_it);
         } else{
           ++job_it;
@@ -343,13 +387,15 @@ void GeantEventDispatcher::SendFinishMsg(GeantHPCWorker &worker) {
   SendReq("{\"type\":\"finish_req\"}",worker);
 }
 
-void GeantEventDispatcher::SendJobCancelMsg(GeantHPCJob &job) {
+void GeantEventDispatcher::SendJobCancelMsg(GeantHPCJob &job, bool retToPool) {
   json req;
   req["type"] = "job_cancel_req";
   req["wrk_id"] = job.workerId;
   req["job_id"] = job.uid;
   if(pendingJobs.count(job.uid)) {
-    jobPool->ReturnToPool(pendingJobs[job.uid]);
+    if(retToPool) {
+      jobPool->ReturnToPool(pendingJobs[job.uid]);
+    }
     pendingJobs.erase(job.uid);
   }
   SendReq(req.dump(),workers[job.workerId]);

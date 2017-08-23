@@ -80,7 +80,7 @@ private:
   json HandleHeartbeat(json &req);
 
   void SendFinishMsg(GeantHPCWorker& worker);
-  void SendJobCancelMsg(GeantHPCJob& job);
+  void SendJobCancelMsg(GeantHPCJob& job, bool retToPool = true);
 
   void CleanDeadWorkers();
   void FinishWorkers();
@@ -96,6 +96,7 @@ private:
   void PollForMsg();
   bool ResendMsg();
 
+  bool IsWorkerDoingJob(GeantHPCWorker& worker, GeantHPCJob& job);
 };
 }
 }

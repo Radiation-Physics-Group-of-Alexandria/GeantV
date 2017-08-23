@@ -38,6 +38,7 @@ GeantHPCJob GeantHepMCJobPool::GetJob(int n, const GeantHPCWorker& worker) {
       }
     }
   }
+  res.dublicateUIDs->insert(res.uid);
   return res;
 }
 
