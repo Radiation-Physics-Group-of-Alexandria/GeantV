@@ -15,26 +15,20 @@
 
 #include <map>
 #include <deque>
-
-#include "HepMC/Reader.h"
-#include "HepMC/GenEvent.h"
-#include "HepMC/Search/FindParticles.h"
+#include <zmq.hpp>
+#include <json.hpp>
 
 #include "GeantEventServer.h"
 #include "GeantConfig.h"
 #include "GeantRunManager.h"
 #include "GeantEventReceiver.h"
 
-#ifdef USE_HPC
-#include "zmq.hpp"
-#include <json.hpp>
-using nlohmann::json;
-
 #include "GeantJobPool.h"
-#endif
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
+
+using nlohmann::json;
 
 struct MCEventSource{
   std::string fFileName;
@@ -58,21 +52,21 @@ public:
   void RunReqReplyLoop();
 
 private:
-  zmq::context_t zmqContext;
+  zmq::context_t fZMQContext;
   zmq::socket_t fSocket;
+  zmq_pollitem_t fZMQSocketPollItem;
 
-
-  int dispatchedEvents;
 
   GeantConfig *fConfig;
+  GeantHPCJobPool* fJobPool;
 
-
-  GeantHPCJobPool* jobPool;
-  int workerCounter;
-  std::map<int,GeantHPCJob> pendingJobs;
-  std::map<int,GeantHPCWorker> workers;
-  std::map<std::string,int> workerId;
+  std::map<int,GeantHPCJob> fPendingJobs;
+  int fWorkerCounter;
+  std::map<int,GeantHPCWorker> fHPCWorkers;
+  std::map<std::string,int> fHPCWorkerZMQIDtoUID;
   std::vector<Host> fHosts;
+
+  std::map<size_t, MasterPendingMessage> fPendingRequests;
 
   json HandleNewWorkerMsg(json &req);
   json HandleNewJobReq(json &req);
@@ -85,14 +79,12 @@ private:
   void CleanDeadWorkers();
   void FinishWorkers();
 
-  zmq_pollitem_t zmqPollItem;
-  std::map<size_t, MasterPendingMessage> pendingRequests;
   void BindSocket();
   void SendMessage(const std::string& msg, const std::string& type, size_t uid,const std::string& address);
   void SendReq(const std::string &msg, GeantHPCWorker &worker);
   void SendRep(const std::string& msg, size_t uid,const std::string& address);
-  string RecvReq(const std::string &msg);
-  void RecvRep(const string &msg);
+  std::string RecvReq(const std::string &msg);
+  void RecvRep(const std::string &msg);
   void PollForMsg();
   bool ResendMsg();
 

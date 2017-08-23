@@ -8,24 +8,24 @@ inline namespace GEANT_IMPL_NAMESPACE {
 
 GeantHPCJob GeantHepMCJobPool::GetJob(int n, const GeantHPCWorker& worker) {
   GeantHPCJob res;
-  res.type = JobType::HepMC;
-  res.uid = GetNextId();
+  res.fType = JobType::HepMC;
+  res.fUID = GetNextId();
   int addedEvents = 0;
   while(addedEvents != n && !mapPool.empty()){
-    if(workerFiles.count(worker.id)>0){
-      std::string lastFile = workerFiles[worker.id];
+    if(workerFiles.count(worker.fID)>0){
+      std::string lastFile = workerFiles[worker.fID];
       auto& filePool = mapPool[lastFile];
       while(addedEvents != n && filePool.size() != 0) {
-        res.hepMCJobs.push_back(*(filePool.end() - 1));
+        res.fHepMCJobs.push_back(*(filePool.end() - 1));
         filePool.pop_back();
         ++addedEvents;
       }
       if(addedEvents!=n){
-        workerFiles.erase(worker.id);
+        workerFiles.erase(worker.fID);
       }
     } else {
-      workerFiles[worker.id] = filesForWorkers.front();
-      std::cout << "worker id: " << worker.id << " file: " << workerFiles[worker.id] << '\n';
+      workerFiles[worker.fID] = filesForWorkers.front();
+      std::cout << "worker id: " << worker.fID << " file: " << workerFiles[worker.fID] << '\n';
       std::string f = filesForWorkers[0];
       filesForWorkers.erase(filesForWorkers.begin());
       filesForWorkers.push_back(f);
@@ -38,7 +38,7 @@ GeantHPCJob GeantHepMCJobPool::GetJob(int n, const GeantHPCWorker& worker) {
       }
     }
   }
-  res.dublicateUIDs->insert(res.uid);
+  res.fDublicateUIDs->insert(res.fUID);
   return res;
 }
 
@@ -47,10 +47,10 @@ bool GeantHepMCJobPool::IsEmpty() {
 }
 
 void GeantHepMCJobPool::ReturnToPool(GeantHPCJob job) {
-  for( auto& j : job.hepMCJobs){
-    auto& filePool = mapPool[j.filename];
+  for( auto& j : job.fHepMCJobs){
+    auto& filePool = mapPool[j.fFilename];
     auto comp = [](const GeantHepMCJob& lhs, const GeantHepMCJob& rhs){
-                                       return lhs.offset > rhs.offset;
+                                       return lhs.fOffset > rhs.fOffset;
                                      };
     auto sortedIt = std::upper_bound(filePool.begin(),filePool.end(),j, comp);
     filePool.insert(sortedIt,j);
@@ -70,9 +70,9 @@ void GeantHepMCJobPool::LoadFromFile(std::string fname) {
 
     for (int i = 0; i < fEventAmount; ++i) {
       GeantHepMCJob job;
-      job.amount = 1;
-      job.offset = fOffset;
-      job.filename = fFileName;
+      job.fAmount = 1;
+      job.fOffset = fOffset;
+      job.fFilename = fFileName;
       mapPool[fFileName].push_back(job);
       ++fOffset;
     }
@@ -83,10 +83,10 @@ void GeantHepMCJobPool::LoadFromFile(std::string fname) {
 
 GeantHPCJob GeantGeneratorJobPool::GetJob(int n, const GeantHPCWorker &worker) {
   GeantHPCJob job;
-  job.type = JobType::Generator;
-  job.events = std::min(n,eventsToDispatch);
-  job.uid = GetNextId();
-  eventsToDispatch -= job.events;
+  job.fType = JobType::Generator;
+  job.fEvents = std::min(n,eventsToDispatch);
+  job.fUID = GetNextId();
+  eventsToDispatch -= job.fEvents;
   return job;
 }
 
@@ -95,7 +95,7 @@ bool GeantGeneratorJobPool::IsEmpty() {
 }
 
 void GeantGeneratorJobPool::ReturnToPool(GeantHPCJob job) {
-  eventsToDispatch += job.events;
+  eventsToDispatch += job.fEvents;
 }
 
 void GeantGeneratorJobPool::SetEventAmount(int ev) {
@@ -103,19 +103,19 @@ void GeantGeneratorJobPool::SetEventAmount(int ev) {
 }
 
 void to_json(json& j, const GeantHepMCJob& p){
-  j = json{{"fname",p.filename},{"offset",p.offset},{"n",p.amount}};
+  j = json{{"fname",p.fFilename},{"offset",p.fOffset},{"n",p.fAmount}};
 }
 
 void from_json(const json& j, GeantHepMCJob& p){
-  p.filename = j.at("fname").get<std::string>();
-  p.amount = j.at("n").get<int>();
-  p.offset = j.at("offset").get<int>();
+  p.fFilename = j.at("fname").get<std::string>();
+  p.fAmount = j.at("n").get<int>();
+  p.fOffset = j.at("offset").get<int>();
 }
 
 GeantHPCJob GeantHPCJobPool::GetDublicateJob(GeantHPCJob &job) {
   GeantHPCJob newJob = job;
-  newJob.uid = GetNextId();
-  newJob.dublicateUIDs->insert(newJob.uid);
+  newJob.fUID = GetNextId();
+  newJob.fDublicateUIDs->insert(newJob.fUID);
   return newJob;
 }
 }

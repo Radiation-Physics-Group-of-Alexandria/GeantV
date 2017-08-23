@@ -12,14 +12,9 @@
 
 #ifndef GEANT_RECEIVER
 #define GEANT_RECEIVER
-#ifdef USE_HPC
+#include <string>
 #include <zmq.hpp>
 #include <json.hpp>
-using nlohmann::json;
-#endif
-
-#include <string>
-
 #include "GeantRunManager.h"
 #include "GeantConfig.h"
 #include "zmq_util.h"
@@ -27,6 +22,7 @@ using nlohmann::json;
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
+using nlohmann::json;
 class GeantEventDispatcher;
 
 struct HPCJob{
@@ -47,36 +43,38 @@ public:
   void EventAdded();
   void EventTransported(int evt);
 
-  bool GetIsTransportCompleted(){ return isTransportCompleted;}
+  bool GetIsTransportCompleted(){ return fIsTransportCompleted;}
 
 private:
-  zmq::context_t zmqContext;
+  zmq::context_t fZMQContext;
+  zmq::socket_t fSocket;
+  zmq_pollitem_t fZMQSocketPollItem;
 
   std::string fServHname;
   int fServPort;
-
   std::string fWorkerHname;
   int fWorkerPid;
 
-  GeantConfig *config;
-  GeantRunManager *runManager;
+  GeantConfig *fGeantConfig;
+  GeantRunManager *fRunManager;
 
-  std::atomic_int eventDiff;
+  std::atomic_int fEventDiff;
   int fFetchAhead;
-  bool isTransportCompleted;
-  int fReceivedEvents = 0;
+  bool fIsTransportCompleted;
+  int fReceivedEvents;
 
-  std::map<int, HPCJob> jobs;
-  std::mutex jobsMutex;
-  ZmqTimer lastContact;
-  ZmqTimer lastJobAsk;
-  ZmqTimer lastMasterAsk;
+  std::map<int, HPCJob> fJobs;
+  std::mutex fJobsMutex;
+  ZmqTimer fLastContact;
+  ZmqTimer fLastJobAsk;
+  ZmqTimer fLastMasterAsk;
 
+  bool fConnected;
+  int fWorkerID;
+  int fConnectRetries;
+  std::map<size_t, PendingMessage> fPendingRequests;
+  int fDiscardedMsgs;
 
-  zmq::socket_t fSocket;
-  bool connected;
-  int connectTries;
-  int discardedMsg;
   void SendJobConfirm(int id);
   void SendMasterIntro();
   void RecvMasterIntro(const json& msg);
@@ -84,22 +82,20 @@ private:
   void RecvJobRequest(const json& msg);
   void SendHB();
 
-  zmq_pollitem_t zmqPollItem;
+  json HandleFinishMsg(json &msg);
+  json HandleJobCancelMsg(json &msg);
+
   void BindSocket();
   void DisconnectFromMaster();
   void SendMessage(const std::string& msg, const std::string& type, size_t uid);
   void SendReq(const std::string& msg);
   void SendRep(const std::string& msg, size_t uid);
-  string RecvReq(std::string &msg);
+  std::string RecvReq(std::string &msg);
   void RecvRep(std::string& msg);
   void PollForMsg();
   bool ResendMsg();
 
-  std::map<size_t, PendingMessage> pendingRequests;
 
-  json HandleFinishMsg(json &msg);
-  json HandleJobCancelMsg(json &msg);
-  int wrk_id;
 };
 }
 }

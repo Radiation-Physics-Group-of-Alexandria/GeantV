@@ -1,39 +1,25 @@
 #include "GeantEventReceiver.h"
 
-#include "Geant/Error.h"
-
-#include "GeantEvent.h"
-#include "GeantEventServer.h"
-#include "GeantEventDispatcher.h"
-#include "GeantRunManager.h"
-#include "PrimaryGenerator.h"
-#include "MCTruthMgr.h"
-
-#ifdef USE_HPC
-#include "zmq.hpp"
-#include <json.hpp>
-using nlohmann::json;
-#endif
-
 #include <iostream>
-#include <cstdint>
-#include <cstring>
-#include <HepMCGeneratorMultFiles.h>
-#include <GeantJobPool.h>
+
+#include "Geant/Error.h"
+#include "HepMCGeneratorMultFiles.h"
+#include "GeantJobPool.h"
+
 
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
-int MaxReconnectTry = 3;
 //______________________________________________________________________________
 GeantEventReceiver::GeantEventReceiver(const std::string &serverHostName, const std::string &workerHostName, GeantRunManager *runmgr,
                                        GeantConfig *conf)
-    : zmqContext(1), fSocket(zmqContext, ZMQ_DEALER), fServHname(serverHostName), config(conf),
-      runManager(runmgr), isTransportCompleted(false), connected(false),
-      connectTries(0),fWorkerHname(workerHostName),fServPort(conf->fMasterPort),
-      eventDiff(0), fWorkerPid(getpid())
+    : fZMQContext(1), fSocket(fZMQContext, ZMQ_DEALER), fServHname(serverHostName), fServPort(conf->fMasterPort),
+      fWorkerHname(workerHostName), fWorkerPid(getpid()),
+      fGeantConfig(conf), fRunManager(runmgr),
+      fEventDiff(0), fFetchAhead(conf->fNbuff + 2),fIsTransportCompleted(false),
+      fReceivedEvents(0), fConnected(false), fWorkerID(-1), fConnectRetries(0),
+      fDiscardedMsgs(0)
 {
-  fFetchAhead = conf->fNbuff + 2;
 }
 
 void GeantEventReceiver::BindSocket() {
@@ -41,7 +27,7 @@ void GeantEventReceiver::BindSocket() {
   fSocket.setsockopt(ZMQ_IDENTITY,zmqId.c_str(),zmqId.size());
   auto masterZMQAddress = std::string("tcp://") + fServHname + ":" + std::to_string(fServPort);
   fSocket.connect(masterZMQAddress);
-  zmqPollItem = {fSocket, 0, ZMQ_POLLIN, 0};
+  fZMQSocketPollItem = {fSocket, 0, ZMQ_POLLIN, 0};
   std::cout << "HPC: Event receiver connected to: " << masterZMQAddress << std::endl;
 }
 
@@ -56,50 +42,50 @@ void GeantEventReceiver::Initialize()
 void GeantEventReceiver::Run()
 {
   std::thread commThread([this]{
-    while(runManager->GetEventServer() == nullptr){
+    while(fRunManager->GetEventServer() == nullptr){
       sleep(1);
     }
-    lastContact.Update();
+    fLastContact.Update();
     RunCommunicationThread();
   });
-  runManager->RunSimulation();
+  fRunManager->RunSimulation();
   commThread.join();
 }
 
 void GeantEventReceiver::RunCommunicationThread() {
-  while(!isTransportCompleted){
-    if(connected){
-      int diff = eventDiff.load();
+  while(!fIsTransportCompleted){
+    if(fConnected){
+      int diff = fEventDiff.load();
       if(diff < fFetchAhead){
-        if(lastJobAsk.Since() > std::chrono::milliseconds(5*1000)){
+        if(fLastJobAsk.Since() > std::chrono::milliseconds(5*1000)){
           SendJobRequest(fFetchAhead - diff);
-          lastJobAsk.Update();
+          fLastJobAsk.Update();
         }
       }
 
       {
-        std::lock_guard<std::mutex> lock_guard(jobsMutex);
-        for(auto it = jobs.begin(); it != jobs.end();){
+        std::lock_guard<std::mutex> lock_guard(fJobsMutex);
+        for(auto it = fJobs.begin(); it != fJobs.end();){
           auto& job = it->second;
           if (job.left == 0){
             SendJobConfirm(job.id);
-            it = jobs.erase(it);
+            it = fJobs.erase(it);
           }else{
             ++it;
           }
         }
       }
     }else {
-      if(lastMasterAsk.Since() > std::chrono::seconds(5)){
-        if(connectTries >= 3) {
-          isTransportCompleted = true;
+      if(fLastMasterAsk.Since() > std::chrono::seconds(5)){
+        if(fConnectRetries >= 3) {
+          fIsTransportCompleted = true;
           return;
         }
         SendMasterIntro();
-        lastMasterAsk.Update();
+        fLastMasterAsk.Update();
       }
     }
-    if (lastContact.Since() > std::chrono::seconds(20)){
+    if (fLastContact.Since() > std::chrono::seconds(20)){
       SendHB();
     }
 
@@ -113,13 +99,13 @@ void GeantEventReceiver::RunCommunicationThread() {
 }
 
 void GeantEventReceiver::EventAdded() {
-  eventDiff.fetch_add(1);
+  fEventDiff.fetch_add(1);
 }
 
 void GeantEventReceiver::EventTransported(int evt) {
-  eventDiff.fetch_add(-1);
-  std::lock_guard<std::mutex> lock_guard(jobsMutex);
-  for(auto& job_it: jobs){
+  fEventDiff.fetch_add(-1);
+  std::lock_guard<std::mutex> lock_guard(fJobsMutex);
+  for(auto& job_it: fJobs){
     auto& job = job_it.second;
     if(job.startID <= evt && evt < job.endID){
       --job.left;
@@ -129,8 +115,8 @@ void GeantEventReceiver::EventTransported(int evt) {
 }
 
 void GeantEventReceiver::PollForMsg() {
-  zmq::poll(&zmqPollItem,1,std::chrono::milliseconds(10));
-  if (zmqPollItem.revents & ZMQ_POLLIN) {
+  zmq::poll(&fZMQSocketPollItem,1,std::chrono::milliseconds(10));
+  if (fZMQSocketPollItem.revents & ZMQ_POLLIN) {
     zmq::message_t type;
     zmq::message_t muid;
     zmq::message_t message;
@@ -147,8 +133,8 @@ void GeantEventReceiver::PollForMsg() {
       std::string replyContent = RecvReq(messageContent);
       SendRep(replyContent,messageUid);
     }else { //messageType == REP
-      if(pendingRequests.count(messageUid) > 0){
-        pendingRequests.erase(messageUid);
+      if(fPendingRequests.count(messageUid) > 0){
+        fPendingRequests.erase(messageUid);
         RecvRep(messageContent);
       }
     }
@@ -167,18 +153,18 @@ void GeantEventReceiver::SendMessage(const std::string &msg, const std::string &
   fSocket.send(m_uid,ZMQ_SNDMORE);
   fSocket.send(message);
 
-  lastContact.Update();
+  fLastContact.Update();
 
   std::cout << "send: " << type << '\n';
   std::cout << msg << '\n';
 }
 
 void GeantEventReceiver::SendReq(const std::string &msg) {
-  if(pendingRequests.size() >= 3)
+  if(fPendingRequests.size() >= 3)
     return;
   auto time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   size_t msgUid = std::hash<std::string>{}(msg+std::to_string(time));
-  pendingRequests[msgUid] = msg;
+  fPendingRequests[msgUid] = msg;
   SendMessage(msg,"REQ",msgUid);
 }
 
@@ -188,7 +174,7 @@ void GeantEventReceiver::SendRep(const std::string &msg,size_t uid) {
 
 bool GeantEventReceiver::ResendMsg() {
   bool ok = true;
-  for(auto it = pendingRequests.begin(); it != pendingRequests.end();){
+  for(auto it = fPendingRequests.begin(); it != fPendingRequests.end();){
     auto& pend = it->second;
     bool remove = false;
     if(pend.lastRetry.Since() > std::chrono::seconds(5)){
@@ -203,8 +189,8 @@ bool GeantEventReceiver::ResendMsg() {
     }
     if(remove) {
       std::cout << "Removing msg: " << pend.msg << std::endl;
-      it = pendingRequests.erase(it);
-      discardedMsg++;
+      it = fPendingRequests.erase(it);
+      fDiscardedMsgs++;
       ok = false;
     }
     else {
@@ -239,21 +225,21 @@ void GeantEventReceiver::SendMasterIntro() {
   json req;
   req["type"] = "new_wrk_req";
   req["zmq_id"] =  fWorkerHname + std::to_string(fWorkerPid);
-  connectTries++;
+  fConnectRetries++;
   SendReq(req.dump());
 }
 
 void GeantEventReceiver::RecvMasterIntro(const json &msg) {
-    wrk_id = msg["wrk_id"].get<int>();
-    connected = true;
-    connectTries = 0;
-    discardedMsg = 0;
+    fWorkerID = msg["wrk_id"].get<int>();
+    fConnected = true;
+    fConnectRetries = 0;
+    fDiscardedMsgs = 0;
 }
 
 void GeantEventReceiver::SendJobRequest(int num) {
   json req;
   req["type"] = "job_req";
-  req["wrk_id"] = wrk_id;
+  req["wrk_id"] = fWorkerID;
   req["events"] = num;
   SendReq(req.dump());
 }
@@ -265,17 +251,17 @@ void GeantEventReceiver::RecvJobRequest(const json &msg) {
     std::vector<GeantHepMCJob> recv_jobs = msg["files"].get<std::vector<GeantHepMCJob>>();
     fReceivedEvents = 0;
     new_job.left = recv_jobs.size();
-    new_job.startID = runManager->GetEventServer()->GetNload();
+    new_job.startID = fRunManager->GetEventServer()->GetNload();
     new_job.endID = new_job.startID + recv_jobs.size();
     {
-      std::lock_guard<std::mutex> lock_guard(jobsMutex);
-      jobs[new_job.id] = new_job;
+      std::lock_guard<std::mutex> lock_guard(fJobsMutex);
+      fJobs[new_job.id] = new_job;
     }
     for (auto &job : recv_jobs) {
-      auto multFileGenerator = (HepMCGeneratorMultFiles *) runManager->GetPrimaryGenerator();
-      multFileGenerator->SetEventSource(job.filename, job.offset);
-      for (int j = 0; j < job.amount; ++j) {
-        runManager->GetEventServer()->AddEvent();
+      auto multFileGenerator = (HepMCGeneratorMultFiles *) fRunManager->GetPrimaryGenerator();
+      multFileGenerator->SetEventSource(job.fFilename, job.fOffset);
+      for (int j = 0; j < job.fAmount; ++j) {
+        fRunManager->GetEventServer()->AddEvent();
         ++fReceivedEvents;
       }
     }
@@ -284,26 +270,26 @@ void GeantEventReceiver::RecvJobRequest(const json &msg) {
     int events = msg["event"].get<int>();
     fReceivedEvents = 0;
     new_job.left = events;
-    new_job.startID = runManager->GetEventServer()->GetNload();
+    new_job.startID = fRunManager->GetEventServer()->GetNload();
     new_job.endID = new_job.startID + events;
     {
-      std::lock_guard<std::mutex> lock_guard(jobsMutex);
-      jobs[new_job.id] = new_job;
+      std::lock_guard<std::mutex> lock_guard(fJobsMutex);
+      fJobs[new_job.id] = new_job;
     }
     for (int i = 0; i < events; ++i) {
-      runManager->GetEventServer()->AddEvent();
+      fRunManager->GetEventServer()->AddEvent();
       ++fReceivedEvents;
     }
   }
-  runManager->GetEventServer()->ActivateEvents();
+  fRunManager->GetEventServer()->ActivateEvents();
   std::cout << "wrk recv events: " << fReceivedEvents << std::endl;
 }
 
 void GeantEventReceiver::SendHB(){
-  if(connected){
+  if(fConnected){
     json hb;
     hb["type"] = "hb";
-    hb["wrk_id"] = wrk_id;
+    hb["wrk_id"] = fWorkerID;
     SendReq(hb.dump());
   }
 }
@@ -311,32 +297,32 @@ void GeantEventReceiver::SendHB(){
 void GeantEventReceiver::SendJobConfirm(int id){
   json req;
   req["type"] = "job_done_req";
-  req["wrk_id"] = wrk_id;
+  req["wrk_id"] = fWorkerID;
   req["job_id"] = id;
   SendReq(req.dump());
 }
 
 void GeantEventReceiver::DisconnectFromMaster() {
   std::cout << "Disconnecting from master" << std::endl;
-  connected = false;
-  pendingRequests.clear();
-  wrk_id = -1;
-  jobs.clear();
+  fConnected = false;
+  fPendingRequests.clear();
+  fWorkerID = -1;
+  fJobs.clear();
 }
 
 json GeantEventReceiver::HandleFinishMsg(json &msg) {
   json rep;
   rep["type"] = "finish_rep";
   DisconnectFromMaster();
-  isTransportCompleted = true;
+  fIsTransportCompleted = true;
   return rep;
 }
 
 json GeantEventReceiver::HandleJobCancelMsg(json &msg) {
-  std::lock_guard<std::mutex> lock_guard(jobsMutex);
+  std::lock_guard<std::mutex> lock_guard(fJobsMutex);
   int jobId = msg["job_id"].get<int>();
-  if(jobs.count(jobId) > 0)
-    jobs.erase(jobId);
+  if(fJobs.count(jobId) > 0)
+    fJobs.erase(jobId);
 
   json rep;
   rep["type"] = "job_cancel_rep";

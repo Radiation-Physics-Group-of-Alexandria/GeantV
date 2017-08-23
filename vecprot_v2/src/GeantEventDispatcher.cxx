@@ -1,89 +1,58 @@
 #include "GeantEventDispatcher.h"
-#include "GeantEventServer.h"
-#include "GeantEventReceiver.h"
+
+#include <iostream>
+#include <fstream>
 
 #include "globals.h"
 #include "Geant/Error.h"
 
-#include "GeantTrack.h"
-#include "GeantEvent.h"
-#include "GeantRunManager.h"
-#include "LocalityManager.h"
-#include "PrimaryGenerator.h"
-#include "GeantTaskData.h"
-#include "GeantBasket.h"
-#include "MCTruthMgr.h"
-
-#ifdef USE_VECGEOM_NAVIGATOR
-#include "navigation/SimpleNavigator.h"
-#include "volumes/PlacedVolume.h"
-#include "management/GeoManager.h"
-#else
-#ifdef USE_ROOT
-#include "TGeoVolume.h"
-#include "TGeoManager.h"
-#include "TGeoNode.h"
-#endif
-#endif
-
-#ifdef USE_HPC
-#include "zmq.hpp"
-#include <json.hpp>
-using nlohmann::json;
-
 #include "GeantJobPool.h"
-#endif
 
-#include <thread>
-#include <functional>
-#include <iostream>
-#include <cstdint>
-#include <cstring>
-#include <fstream>
 namespace Geant {
 inline namespace GEANT_IMPL_NAMESPACE {
 
 GeantEventDispatcher::GeantEventDispatcher(GeantConfig *config)
-    : zmqContext(1), fSocket(zmqContext, ZMQ_ROUTER), fConfig(config){
+    : fZMQContext(1), fSocket(fZMQContext, ZMQ_ROUTER), fConfig(config), fJobPool(config->jobPool),
+      fWorkerCounter(0)
+{
 
-  jobPool = config->jobPool;
 }
 
 json GeantEventDispatcher::HandleNewWorkerMsg(json &req){
-  workerCounter++;
+  fWorkerCounter++;
   GeantHPCWorker worker;
-  worker.id = workerCounter;
-  worker.zmqID = req["zmq_id"].get<std::string>();
-  worker.lastContact.Update();
-  workers[worker.id] = worker;
-  workerId[worker.zmqID] = worker.id;
+  worker.fID = fWorkerCounter;
+  worker.fZMQID = req["zmq_id"].get<std::string>();
+  worker.fLastContact.Update();
+  fHPCWorkers[worker.fID] = worker;
+  fHPCWorkerZMQIDtoUID[worker.fZMQID] = worker.fID;
   json reply;
   reply["type"] = "new_wrk_rep";
-  reply["wrk_id"] = worker.id;
+  reply["wrk_id"] = worker.fID;
   return reply;
 }
 
 json GeantEventDispatcher::HandleNewJobReq(json &req){
   int n = req["events"].get<int>();
   int wrk_id = req["wrk_id"].get<int>();
-  if(workers.count(wrk_id) == 0){
+  if(fHPCWorkers.count(wrk_id) == 0){
     return "{\"type\": \"error\"}"_json;
   }
-  auto& worker = workers[wrk_id];
-  worker.lastContact.Update();
-  GeantHPCJob job = jobPool->GetJob(n,worker);
-  if (job.type == JobType::HepMC) {
-    if (job.hepMCJobs.size() == 0) {
+  auto& worker = fHPCWorkers[wrk_id];
+  worker.fLastContact.Update();
+  GeantHPCJob job = fJobPool->GetJob(n,worker);
+  if (job.fType == JobType::HepMC) {
+    if (job.fHepMCJobs.size() == 0) {
       bool foundDupeJob = false;
-      for(auto pendIt = pendingJobs.rbegin(); pendIt != pendingJobs.rend(); pendIt++){
+      for(auto pendIt = fPendingJobs.rbegin(); pendIt != fPendingJobs.rend(); pendIt++){
         auto& pendJob = pendIt->second;
         if(IsWorkerDoingJob(worker,pendJob)) continue;
-        if(n < pendJob.hepMCJobs.size()) continue;
-        job = jobPool->GetDublicateJob(pendJob);
+        if(n < pendJob.fHepMCJobs.size()) continue;
+        job = fJobPool->GetDublicateJob(pendJob);
         foundDupeJob = true;
-        std::cout << "Duplicating job: " << pendJob.uid << '\n';
+        std::cout << "Duplicating job: " << pendJob.fUID << '\n';
         std::cout << "Dupe id: ";
-        for(auto dum : *job.dublicateUIDs){
+        for(auto dum : *job.fDublicateUIDs){
           std::cout << dum << ' ';
         }
         std::cout << '\n';
@@ -91,28 +60,28 @@ json GeantEventDispatcher::HandleNewJobReq(json &req){
       }
       if(!foundDupeJob) return "{\"type\": \"wait\"}"_json;
     }
-    job.workerId = worker.id;
-    job.dispatchTime.Update();
-    pendingJobs[job.uid]=job;
+    job.fWorkerID = worker.fID;
+    job.fDispatchTime.Update();
+    fPendingJobs[job.fUID]=job;
     json reply;
     reply["type"] = "job_rep";
     reply["wrk_id"] = wrk_id;
-    reply["job_id"] = job.uid;
+    reply["job_id"] = job.fUID;
     reply["job_type"] = "hepmc";
-    reply["files"] = job.hepMCJobs;
+    reply["files"] = job.fHepMCJobs;
     return reply;
-  } else if (job.type == JobType::Generator){
-    if (job.events == 0) {
+  } else if (job.fType == JobType::Generator){
+    if (job.fEvents == 0) {
       bool foundDupeJob = false;
-      for(auto pendIt = pendingJobs.rbegin(); pendIt != pendingJobs.rend(); pendIt++){
+      for(auto pendIt = fPendingJobs.rbegin(); pendIt != fPendingJobs.rend(); pendIt++){
         auto& pendJob = pendIt->second;
         if(IsWorkerDoingJob(worker,pendJob)) continue;
-        if(n < pendJob.events) continue;
-        job = jobPool->GetDublicateJob(pendJob);
+        if(n < pendJob.fEvents) continue;
+        job = fJobPool->GetDublicateJob(pendJob);
         foundDupeJob = true;
-        std::cout << "Duplicating job: " << pendJob.uid << '\n';
+        std::cout << "Duplicating job: " << pendJob.fUID << '\n';
         std::cout << "Dupe id: ";
-        for(auto dum : *job.dublicateUIDs){
+        for(auto dum : *job.fDublicateUIDs){
           std::cout << dum << ' ';
         }
         std::cout << '\n';
@@ -120,24 +89,25 @@ json GeantEventDispatcher::HandleNewJobReq(json &req){
       }
       if(!foundDupeJob) return "{\"type\": \"wait\"}"_json;
     }
-    job.workerId = worker.id;
-    job.dispatchTime.Update();
-    pendingJobs[job.uid]=job;
+    job.fWorkerID = worker.fID;
+    job.fDispatchTime.Update();
+    fPendingJobs[job.fUID]=job;
     json reply;
     reply["type"] = "job_rep";
     reply["wrk_id"] = wrk_id;
-    reply["job_id"] = job.uid;
+    reply["job_id"] = job.fUID;
     reply["job_type"] = "generate";
-    reply["event"] = job.events;
+    reply["event"] = job.fEvents;
     return reply;
   }
+  return "{\"type\": \"error\"}"_json;
 }
 
 bool GeantEventDispatcher::IsWorkerDoingJob(GeantHPCWorker& worker, GeantHPCJob& job){
-  if(job.workerId == worker.id) return true;
-  for(int jobUid : *job.dublicateUIDs){
-    if(pendingJobs.count(jobUid)>0) {
-      if (pendingJobs[jobUid].workerId == worker.id)
+  if(job.fWorkerID == worker.fID) return true;
+  for(int jobUid : *job.fDublicateUIDs){
+    if(fPendingJobs.count(jobUid)>0) {
+      if (fPendingJobs[jobUid].fWorkerID == worker.fID)
         return true;
     }
   }
@@ -147,28 +117,28 @@ bool GeantEventDispatcher::IsWorkerDoingJob(GeantHPCWorker& worker, GeantHPCJob&
 json GeantEventDispatcher::HandleJobConfirm(json &req){
   int job_id = req["job_id"].get<int>();
   int wrk_id = req["wrk_id"].get<int>();
-  if(workers.count(wrk_id) == 0){
+  if(fHPCWorkers.count(wrk_id) == 0){
     return "{\"type\": \"error\"}"_json;
   }
-  auto& worker = workers[wrk_id];
+  auto& worker = fHPCWorkers[wrk_id];
 
-  worker.lastContact.Update();
+  worker.fLastContact.Update();
 
-  if(pendingJobs.count(job_id) == 0)
+  if(fPendingJobs.count(job_id) == 0)
     return "{\"type\": \"error\"}"_json;
-  auto& job = pendingJobs[job_id];
+  auto& job = fPendingJobs[job_id];
 
-  worker.expectedTimeForEvent = (worker.transportedEvents)*(worker.expectedTimeForEvent) +
-                                 job.dispatchTime.Since();
-  worker.transportedEvents += (job.events + job.hepMCJobs.size());
-  worker.expectedTimeForEvent /= worker.transportedEvents;
+  worker.fExpectedTimeForEvent = (worker.fTransportedEvents)*(worker.fExpectedTimeForEvent) +
+                                 job.fDispatchTime.Since();
+  worker.fTransportedEvents += (job.fEvents + job.fHepMCJobs.size());
+  worker.fExpectedTimeForEvent /= worker.fTransportedEvents;
 
 
-  job.dublicateUIDs->erase(job_id);
-  for(auto dupeId : *job.dublicateUIDs){
-    SendJobCancelMsg(pendingJobs[dupeId], false);
+  job.fDublicateUIDs->erase(job_id);
+  for(auto dupeId : *job.fDublicateUIDs){
+    SendJobCancelMsg(fPendingJobs[dupeId], false);
   }
-  pendingJobs.erase(job_id);
+  fPendingJobs.erase(job_id);
   json rep;
   rep["type"] = "job_done_rep";
   return rep;
@@ -176,11 +146,11 @@ json GeantEventDispatcher::HandleJobConfirm(json &req){
 
 json GeantEventDispatcher::HandleHeartbeat(json &req) {
   int wrk_id = req["wrk_id"].get<int>();
-  if(workers.count(wrk_id) == 0){
+  if(fHPCWorkers.count(wrk_id) == 0){
     return "{\"type\": \"error\"}"_json;
   }
-  auto& worker = workers[wrk_id];
-  worker.lastContact.Update();
+  auto& worker = fHPCWorkers[wrk_id];
+  worker.fLastContact.Update();
   return "{\"type\": \"hb_rep\"}"_json;
 }
 
@@ -205,7 +175,7 @@ void GeantEventDispatcher::Initialize()
 
 void GeantEventDispatcher::RunReqReplyLoop()
 {
-  while(!jobPool->IsEmpty() || !pendingJobs.empty()){
+  while(!fJobPool->IsEmpty() || !fPendingJobs.empty()){
     PollForMsg();
     ResendMsg();
     CleanDeadWorkers();
@@ -215,25 +185,25 @@ void GeantEventDispatcher::RunReqReplyLoop()
 }
 
 void GeantEventDispatcher::CleanDeadWorkers(){
-  for(auto w_it = workers.begin(); w_it!=workers.end();){
+  for(auto w_it = fHPCWorkers.begin(); w_it!=fHPCWorkers.end();){
     auto w = &w_it->second;
-    auto since = w->lastContact.Since();
+    auto since = w->fLastContact.Since();
     if(since > std::chrono::seconds(45)){
-      for(auto job_it = pendingJobs.begin(); job_it != pendingJobs.end();){
-        if (job_it->second.workerId == w->id) {
-          job_it->second.dublicateUIDs->erase(job_it->second.uid);
-          if (job_it->second.dublicateUIDs->size() == 0){
-            jobPool->ReturnToPool(job_it->second);
+      for(auto job_it = fPendingJobs.begin(); job_it != fPendingJobs.end();){
+        if (job_it->second.fWorkerID == w->fID) {
+          job_it->second.fDublicateUIDs->erase(job_it->second.fUID);
+          if (job_it->second.fDublicateUIDs->size() == 0){
+            fJobPool->ReturnToPool(job_it->second);
           }
-          job_it = pendingJobs.erase(job_it);
+          job_it = fPendingJobs.erase(job_it);
         } else{
           ++job_it;
         }
       }
-      std::cout << "mast: worker is dead id: " << w->id << std::endl;
-      if(workerId[w->zmqID] == w->id)
-        workerId.erase(w->zmqID);
-      w_it = workers.erase(w_it);
+      std::cout << "mast: worker is dead id: " << w->fID << std::endl;
+      if(fHPCWorkerZMQIDtoUID[w->fZMQID] == w->fID)
+        fHPCWorkerZMQIDtoUID.erase(w->fZMQID);
+      w_it = fHPCWorkers.erase(w_it);
     }else{
       ++w_it;
     }
@@ -241,7 +211,7 @@ void GeantEventDispatcher::CleanDeadWorkers(){
 }
 
 void GeantEventDispatcher::BindSocket() {
-  zmqPollItem =  { fSocket, 0, ZMQ_POLLIN, 0 };
+  fZMQSocketPollItem =  { fSocket, 0, ZMQ_POLLIN, 0 };
   fSocket.bind("tcp://*:"+std::to_string(fConfig->fMasterPort));
   std::cout << "HPC: Event dispatcher bounded to tcp://*:"+std::to_string(fConfig->fMasterPort) << std::endl;
 }
@@ -273,7 +243,7 @@ void GeantEventDispatcher::SendRep(const std::string &msg, size_t uid, const std
   SendMessage(msg,"REP",uid,address);
 }
 
-string GeantEventDispatcher::RecvReq(const std::string &msg) {
+std::string GeantEventDispatcher::RecvReq(const std::string &msg) {
   json req = json::parse(msg);
   json rep;
   rep["type"] = "error";
@@ -292,22 +262,22 @@ string GeantEventDispatcher::RecvReq(const std::string &msg) {
 }
 
 void GeantEventDispatcher::SendReq(const std::string &msg, GeantHPCWorker &worker) {
-  if(worker.pendingMsg.size() >= 3)
+  if(worker.fPendingRequests.size() >= 3)
     return;
   auto time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   size_t msgUid = std::hash<std::string>{}(msg+std::to_string(time));
-  pendingRequests[msgUid] = MasterPendingMessage(msg,worker.id);
-  worker.pendingMsg.push_back(msgUid);
-  SendMessage(msg,"REQ",msgUid,worker.zmqID);
+  fPendingRequests[msgUid] = MasterPendingMessage(msg,worker.fID);
+  worker.fPendingRequests.push_back(msgUid);
+  SendMessage(msg,"REQ",msgUid,worker.fZMQID);
 }
 
-void GeantEventDispatcher::RecvRep(const string &msg) {
+void GeantEventDispatcher::RecvRep(const std::string &msg) {
   return;
 }
 
 void GeantEventDispatcher::PollForMsg() {
-  zmq::poll(&zmqPollItem,1,std::chrono::milliseconds(10));
-  if (zmqPollItem.revents & ZMQ_POLLIN) {
+  zmq::poll(&fZMQSocketPollItem,1,std::chrono::milliseconds(10));
+  if (fZMQSocketPollItem.revents & ZMQ_POLLIN) {
     zmq::message_t addr;
     zmq::message_t type;
     zmq::message_t muid;
@@ -328,10 +298,10 @@ void GeantEventDispatcher::PollForMsg() {
       std::string replyContent = RecvReq(messageContent);
       SendRep(replyContent,messageUid,messageAddr);
     }else { //messageType == REP
-      if(pendingRequests.count(messageUid) > 0){
-        pendingRequests.erase(messageUid);
-        if(workerId.count(messageAddr) > 0 && workers.count(workerId[messageAddr]) > 0){
-          auto& workerPending = workers[workerId[messageAddr]].pendingMsg;
+      if(fPendingRequests.count(messageUid) > 0){
+        fPendingRequests.erase(messageUid);
+        if(fHPCWorkerZMQIDtoUID.count(messageAddr) > 0 && fHPCWorkers.count(fHPCWorkerZMQIDtoUID[messageAddr]) > 0){
+          auto& workerPending = fHPCWorkers[fHPCWorkerZMQIDtoUID[messageAddr]].fPendingRequests;
           workerPending.erase(std::find(workerPending.begin(),workerPending.end(),messageUid));
         }
         RecvRep(messageContent);
@@ -342,16 +312,16 @@ void GeantEventDispatcher::PollForMsg() {
 
 bool GeantEventDispatcher::ResendMsg() {
   bool ok = true;
-  for(auto it = pendingRequests.begin(); it != pendingRequests.end();){
+  for(auto it = fPendingRequests.begin(); it != fPendingRequests.end();){
     auto& pend = it->second;
     bool remove = false;
-    if(workers.count(pend.workerId) > 0) {
+    if(fHPCWorkers.count(pend.workerId) > 0) {
       if (pend.lastRetry.Since() > std::chrono::seconds(5)) {
         if (pend.retries >= 1) {
           remove = true;
         } else {
           std::cout << "Resending msg: " << pend.msg << std::endl;
-          SendMessage(pend.msg, "REQ", it->first, workers[pend.workerId].zmqID);
+          SendMessage(pend.msg, "REQ", it->first, fHPCWorkers[pend.workerId].fZMQID);
           pend.retries++;
           pend.lastRetry.Update();
         }
@@ -361,8 +331,8 @@ bool GeantEventDispatcher::ResendMsg() {
     }
     if(remove) {
       std::cout << "Removing msg: " << pend.msg << std::endl;
-      it = pendingRequests.erase(it);
-      workers[pend.workerId].discardedMsg++;
+      it = fPendingRequests.erase(it);
+      fHPCWorkers[pend.workerId].fDiscardedMsg++;
       ok = false;
     }
     else {
@@ -373,11 +343,11 @@ bool GeantEventDispatcher::ResendMsg() {
 }
 
 void GeantEventDispatcher::FinishWorkers() {
-  for(auto& it : workers){
+  for(auto& it : fHPCWorkers){
     auto& w = it.second;
     SendFinishMsg(w);
   }
-  while(pendingRequests.size() > 0){
+  while(fPendingRequests.size() > 0){
     PollForMsg();
     ResendMsg();
   }
@@ -390,15 +360,15 @@ void GeantEventDispatcher::SendFinishMsg(GeantHPCWorker &worker) {
 void GeantEventDispatcher::SendJobCancelMsg(GeantHPCJob &job, bool retToPool) {
   json req;
   req["type"] = "job_cancel_req";
-  req["wrk_id"] = job.workerId;
-  req["job_id"] = job.uid;
-  if(pendingJobs.count(job.uid)) {
+  req["wrk_id"] = job.fWorkerID;
+  req["job_id"] = job.fUID;
+  if(fPendingJobs.count(job.fUID)) {
     if(retToPool) {
-      jobPool->ReturnToPool(pendingJobs[job.uid]);
+      fJobPool->ReturnToPool(fPendingJobs[job.fUID]);
     }
-    pendingJobs.erase(job.uid);
+    fPendingJobs.erase(job.fUID);
   }
-  SendReq(req.dump(),workers[job.workerId]);
+  SendReq(req.dump(),fHPCWorkers[job.fWorkerID]);
 }
 
 } // GEANT_IMPL_NAMESPACE
