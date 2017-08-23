@@ -77,6 +77,7 @@ private:
   void SendJobCancelMsg(GeantHPCJob& job, bool retToPool = true);
 
   void CleanDeadWorkers();
+  void CleanDeadJobs();
   void FinishWorkers();
 
   void BindSocket();

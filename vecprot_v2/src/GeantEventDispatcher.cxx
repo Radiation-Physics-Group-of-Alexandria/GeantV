@@ -179,6 +179,7 @@ void GeantEventDispatcher::RunReqReplyLoop()
     PollForMsg();
     ResendMsg();
     CleanDeadWorkers();
+    CleanDeadJobs();
   }
 
   FinishWorkers();
@@ -369,6 +370,26 @@ void GeantEventDispatcher::SendJobCancelMsg(GeantHPCJob &job, bool retToPool) {
     fPendingJobs.erase(job.fUID);
   }
   SendReq(req.dump(),fHPCWorkers[job.fWorkerID]);
+}
+
+void GeantEventDispatcher::CleanDeadJobs() {
+  std::vector<int> jobsForDeleting;
+  for(auto& jobIt : fPendingJobs){
+    auto& job = jobIt.second;
+    if(job.fDispatchTime.Since() >
+        (std::chrono::seconds(30) + 2*fHPCWorkers[job.fWorkerID].fExpectedTimeForEvent)*
+            (job.fEvents + job.fHepMCJobs.size())){
+      jobsForDeleting.push_back(job.fUID);
+    }
+  }
+  for(int delJobID : jobsForDeleting){
+    std::cout << "Deleting dead job: " << delJobID << '\n';
+    if(fPendingJobs.count(delJobID) > 0){
+      fPendingJobs[delJobID].fDublicateUIDs->erase(delJobID);
+      bool returnToPool = fPendingJobs[delJobID].fDublicateUIDs->size() == 0 ? true : false;
+      SendJobCancelMsg(fPendingJobs[delJobID], returnToPool);
+    }
+  }
 }
 
 } // GEANT_IMPL_NAMESPACE
