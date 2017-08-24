@@ -8,8 +8,12 @@ if (USE_REAL_PHYSICS)
     ${CMAKE_SOURCE_DIR}/magneticfield/inc
     ${CMAKE_SOURCE_DIR}/realphysics/dummies/inc
     ${CMAKE_SOURCE_DIR}/realphysics/physics/management/inc
+    ${CMAKE_SOURCE_DIR}/realphysics/physics/models/EM/inc
+    ${CMAKE_SOURCE_DIR}/realphysics/physics/processes/EM/inc
     ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/ExN03RP/inc
     ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/TestEm3RP/inc
+    ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/TestEm5/inc
+    ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/CaloRP/inc
     )
 else()
   include_directories(
@@ -315,8 +319,10 @@ endif()
 else()
 # -------  START == WITH REAL PHYSICS -------------------------------------------------------
 set(TEST_EXECUTABLES
+  caloAppRP.cc
   runAppRP.cc
   runAppTestEM3RP.cc
+  runTestEm5.cc
   )
 
 macro(build_executables EXECUTABLES)
@@ -338,8 +344,12 @@ function(add_to_ctest EXECUTABLES)
       get_filename_component(TARGET_NAME ${EXECUTABLE} NAME_WE)
       if(TARGET_NAME STREQUAL "runAppRP")
           add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/ExN03.root)
+      elseif(TARGET_NAME STREQUAL "caloAppRP")
+          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}>)
       elseif(TARGET_NAME STREQUAL "runAppTestEM3RP")
           add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/ATLASbar.root)
+      elseif(TARGET_NAME STREQUAL "runTestEm5")
+          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}>)
       else()
         add_test(NAME ${TARGET_NAME} ${TARGET_NAME})
       endif()
@@ -355,8 +365,32 @@ if(CTEST)
   add_to_ctest("${TEST_EXECUTABLES}")
 endif()
 
-install(TARGETS runAppRP runAppTestEM3RP DESTINATION bin)
-add_dependencies(runAppRP Geant_v RealPhysics GeantExamplesRP)
+
+#----------------------------------------------------------------------------
+# Copy all scripts and install the executable(s)
+#
+### TestEm5 ###
+set(TestEm5_OUTPUT bin/examples/TestEm5/GeantV)
+set(TestEm5_SCRIPTS hanson19_GV.mac hanson_19.dat)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${TestEm5_OUTPUT})
+foreach(_script ${TestEm5_SCRIPTS})
+  configure_file(
+    ${_script}
+    ${CMAKE_INSTALL_PREFIX}/${TestEm5_OUTPUT}/${_script}
+    COPYONLY
+    )
+endforeach()
+install(TARGETS runTestEm5 DESTINATION ${TestEm5_OUTPUT})
+### The remaining ### (calo applications; runAppRP and runAppTestEM3RP will be removed soon)
+set(caloApp_OUTPUT bin/examples/Calorimeter/GeantV)
+set(caloApp_SCRIPTS caloApp.mac)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${caloApp_OUTPUT})
+  configure_file(
+    caloApp.mac
+    ${CMAKE_INSTALL_PREFIX}/${caloApp_OUTPUT}/caloApp.mac
+    COPYONLY
+    )
+install(TARGETS caloAppRP runAppRP runAppTestEM3RP DESTINATION ${caloApp_OUTPUT})
 # -------  END == WITH REAL PHYSICS -------------------------------------------------------
 endif()
 

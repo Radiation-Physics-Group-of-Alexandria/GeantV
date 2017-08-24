@@ -232,6 +232,22 @@ if( VECGEOM_FOUND )
      add_definitions( "-DUSE_VECGEOM_NAVIGATOR" )
    endif()
    include_directories(${VECGEOM_INCLUDE_DIR})
+   set ( VECGEOM_ROOT OFF )
+   if ( VECGEOM_DEFINITIONS MATCHES VECGEOM_ROOT )
+     set ( VECGEOM_ROOT ON )
+   endif()
+   #---- For the moment USE_ROOT must match VECGEOM_ROOT ----
+   if (NOT ${USE_ROOT} MATCHES ${VECGEOM_ROOT})
+      message (STATUS "VecGeom was compiled with VECGEOM_ROOT=" ${VECGEOM_ROOT} " while USE_ROOT=" ${USE_ROOT})
+      if ( USE_ROOT )
+         message(WARNING "USE_ROOT was disabled")
+         set (USE_ROOT OFF CACHE BOOL "Use ROOT" FORCE)
+      else()
+         message(WARNING "USE_ROOT was enabled")
+         set (USE_ROOT ON CACHE BOOL "Use ROOT" FORCE)
+      endif()
+   endif()
+
 else()
    message(FATAL_ERROR "Required VecGeom library not found")
 endif()
@@ -341,25 +357,32 @@ endif()
 option(DATA_DOWNLOAD "Set of data files for examples" OFF)
 
 if(DATA_DOWNLOAD)
+  file(MAKE_DIRECTORY data)
   message(STATUS "Downloading data files")
 
-  file(MAKE_DIRECTORY data)
-  DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/ExN03.root"
-    "ExN03.root" "${CMAKE_SOURCE_DIR}/data/" "b6b0cfdd5035117171bfe1b7f1f40c3f")
-  DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/cms2015.root"
-    "cms2015.root" "${CMAKE_SOURCE_DIR}/data/" "fb3ede867532b372c5e6f7138d00c07e")
-  DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/fstate_FTFP_BERT_G496p02_1mev.root"
-    "fstate_FTFP_BERT_G496p02_1mev.root" "${CMAKE_SOURCE_DIR}/data/" "d7d3fc9fe2a835f9021bd3747cabf582")
-  DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/fstate_FTFP_BERT.root"
-    "fstate_FTFP_BERT.root" "${CMAKE_SOURCE_DIR}/data/" "4eea5710c691749980f5f8ad02a42231")
-  DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/xsec_FTFP_BERT_G496p02_1mev.root"
-    "xsec_FTFP_BERT_G496p02_1mev.root" "${CMAKE_SOURCE_DIR}/data/" "648b4f4136d9a4cb6b590d98dc9182d8")
-  DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/xsec_FTFP_BERT.root"
-    "xsec_FTFP_BERT.root" "${CMAKE_SOURCE_DIR}/data/" "90c8ef05770cea48c7807e0241921cab")
-  DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/pp14TeVminbias.root"
-    "pp14TeVminbias.root" "${CMAKE_SOURCE_DIR}/data/" "109b827c595ae4a62b74f08f860abbb7")
-  DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/ATLASbar.root"
-    "ATLASbar.root" "${CMAKE_SOURCE_DIR}/data/" "b0a579a0158b2bf704ace490744d858d")
+  if (USE_REAL_PHYSICS)
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/ExN03.root"
+      "ExN03.root" "${CMAKE_SOURCE_DIR}/data/" "b6b0cfdd5035117171bfe1b7f1f40c3f")
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/ATLASbar.root"
+      "ATLASbar.root" "${CMAKE_SOURCE_DIR}/data/" "b0a579a0158b2bf704ace490744d858d")
+  else()
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/ExN03.root"
+      "ExN03.root" "${CMAKE_SOURCE_DIR}/data/" "b6b0cfdd5035117171bfe1b7f1f40c3f")
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/cms2015.root"
+      "cms2015.root" "${CMAKE_SOURCE_DIR}/data/" "fb3ede867532b372c5e6f7138d00c07e")
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/fstate_FTFP_BERT_G496p02_1mev.root"
+      "fstate_FTFP_BERT_G496p02_1mev.root" "${CMAKE_SOURCE_DIR}/data/" "d7d3fc9fe2a835f9021bd3747cabf582")
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/fstate_FTFP_BERT.root"
+      "fstate_FTFP_BERT.root" "${CMAKE_SOURCE_DIR}/data/" "4eea5710c691749980f5f8ad02a42231")
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/xsec_FTFP_BERT_G496p02_1mev.root"
+      "xsec_FTFP_BERT_G496p02_1mev.root" "${CMAKE_SOURCE_DIR}/data/" "648b4f4136d9a4cb6b590d98dc9182d8")
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/xsec_FTFP_BERT.root"
+      "xsec_FTFP_BERT.root" "${CMAKE_SOURCE_DIR}/data/" "90c8ef05770cea48c7807e0241921cab")
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/pp14TeVminbias.root"
+      "pp14TeVminbias.root" "${CMAKE_SOURCE_DIR}/data/" "109b827c595ae4a62b74f08f860abbb7")
+    DOWNLOAD_IF_NOT_INSTALLED("http://geant-server.web.cern.ch/geant-server/ATLASbar.root"
+      "ATLASbar.root" "${CMAKE_SOURCE_DIR}/data/" "b0a579a0158b2bf704ace490744d858d")
+   endif()
 endif()
 
 #----------------------------------------------------------------------------------------------
@@ -531,6 +554,31 @@ if (CUDA)
 
   include_directories(AFTER SYSTEM ${CUDA_INCLUDE_DIRS})
   message(STATUS "Added to include directories:  ${CUDA_INCLUDE_DIRS}")
+
+  # FindCUDA.mk generate cmake file for each .o file using
+  # the cmake command:
+  #   file(GENERATE
+  #      OUTPUT "${custom_target_script}"
+  #      INPUT "${custom_target_script_pregen}"
+  #      )
+  # However this fails to register the output as a 'BYPRODUCTS'
+  # and thus, since the .o file depends on it, trigger the CMP0058
+  # warning (when using Ninja).
+  # Using a add_custom_target/command does not work there as
+  # neither the OUTPUT not the BYPRODUCTS parameter supports
+  # generator expression (and ${custom_target_script} is a
+  # generator expression depending on the configuration type).
+  # Consequently there is no (known to the author) way of
+  # correctly adding the correct information at the moment.
+  # So let's just use the old policy (even-though it is
+  # deprecated ... )
+  # Note: this is a feature introduced in CMake 3.6 to
+  # support  generator expressions in CUDA_NVCC_FLAGS
+  # and since we imported that version's FindCUDA.cmake
+  # it applies to all cmake that support CMP0058.
+  if (NOT (CMAKE_VERSION LESS 3.3))
+     cmake_policy(SET CMP0058 OLD)
+  endif()
 
 endif()
 
