@@ -94,10 +94,17 @@ public:
   std::string fHostnameFile;
   std::string fRemoteStartScript;
   int fMasterPort;
-  int fWorkerPort;
   GeantHPCJobPool* jobPool;
   bool fMasterNode;
-  int fNClients;
+  int fMessageResendRetries = 1;
+  std::chrono::milliseconds fEventDeadlineMinTime = std::chrono::seconds(30);
+  std::chrono::seconds fMessageResendTime = std::chrono::seconds(5);
+  std::chrono::seconds fDeadWorkerDetectTime = std::chrono::seconds(45);
+  std::chrono::seconds fJobRequestFrequency = std::chrono::seconds(5);
+  std::chrono::seconds fWorkerHBFrequency = std::chrono::seconds(20);
+  int fWorkerConnectRetries = 3;
+  int fWorkerMaxPendingMessages = 3;
+  bool fPrintMessages = true;
 #endif
 
 public:

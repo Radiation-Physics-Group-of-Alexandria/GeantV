@@ -190,7 +190,7 @@ void GeantEventDispatcher::CleanDeadWorkers(){
   for(auto w_it = fHPCWorkers.begin(); w_it!=fHPCWorkers.end();){
     auto w = &w_it->second;
     auto since = w->fLastContact.Since();
-    if(since > std::chrono::seconds(45)){
+    if(since > fConfig->fDeadWorkerDetectTime){
       for(auto job_it = fPendingJobs.begin(); job_it != fPendingJobs.end();){
         if (job_it->second.fWorkerID == w->fID) {
           job_it->second.fDublicateUIDs->erase(job_it->second.fUID);
@@ -235,9 +235,11 @@ void GeantEventDispatcher::SendMessage(const std::string &msg, const std::string
   fSocket.send(m_uid,ZMQ_SNDMORE);
   fSocket.send(message);
 
-  std::cout << "send: " << address;
-  std::cout << " " <<  type << '\n';
-  std::cout << msg << '\n';
+  if (fConfig->fPrintMessages) {
+    std::cout << "send: " << address;
+    std::cout << " " << type << '\n';
+    std::cout << msg << '\n';
+  }
 }
 
 
@@ -264,8 +266,7 @@ std::string GeantEventDispatcher::RecvReq(const std::string &msg) {
 }
 
 void GeantEventDispatcher::SendReq(const std::string &msg, GeantHPCWorker &worker) {
-  auto time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-  size_t msgUid = std::hash<std::string>{}(msg+std::to_string(time));
+  size_t msgUid = CreateMessageUID(msg);
   fPendingRequests[msgUid] = MasterPendingMessage(msg,worker.fID);
   worker.fPendingRequests.insert(msgUid);
   SendMessage(msg,"REQ",msgUid,worker.fZMQID);
@@ -294,9 +295,11 @@ void GeantEventDispatcher::PollForMsg() {
     size_t messageUid;
     memcpy(&messageUid,muid.data(),muid.size());
     std::string messageContent((char*)message.data(),(char*)message.data() + message.size());
-    std::cout << "recv: " << messageAddr;
-    std::cout << " " <<  messageType << '\n';
-    std::cout << messageContent << '\n';
+    if (fConfig->fPrintMessages) {
+      std::cout << "recv: " << messageAddr;
+      std::cout << " " << messageType << '\n';
+      std::cout << messageContent << '\n';
+    }
     if(messageType == "REQ"){
       std::string replyContent = RecvReq(messageContent);
       SendRep(replyContent,messageUid,messageAddr);
@@ -319,11 +322,13 @@ bool GeantEventDispatcher::ResendMsg() {
     auto& pend = it->second;
     bool remove = false;
     if(fHPCWorkers.count(pend.workerId) > 0) {
-      if (pend.lastRetry.Since() > std::chrono::seconds(5)) {
-        if (pend.retries >= 1) {
+      if (pend.lastRetry.Since() > fConfig->fMessageResendTime) {
+        if (pend.retries >= fConfig->fMessageResendRetries) {
           remove = true;
         } else {
-          std::cout << "Resending msg: " << pend.msg << std::endl;
+          if (fConfig->fPrintMessages) {
+            std::cout << "Resending msg: " << pend.msg << std::endl;
+          }
           SendMessage(pend.msg, "REQ", it->first, fHPCWorkers[pend.workerId].fZMQID);
           pend.retries++;
           pend.lastRetry.Update();
@@ -333,7 +338,9 @@ bool GeantEventDispatcher::ResendMsg() {
       remove = true; //Worker died - removing request
     }
     if(remove) {
-      std::cout << "Removing msg: " << pend.msg << std::endl;
+      if (fConfig->fPrintMessages) {
+        std::cout << "Removing msg: " << pend.msg << std::endl;
+      }
       it = fPendingRequests.erase(it);
       fHPCWorkers[pend.workerId].fDiscardedMsg++;
       ok = false;
@@ -379,7 +386,7 @@ void GeantEventDispatcher::CleanDeadJobs() {
   for(auto& jobIt : fPendingJobs){
     auto& job = jobIt.second;
     if(job.fDispatchTime.Since() >
-        (std::chrono::seconds(30) + 2*fHPCWorkers[job.fWorkerID].fExpectedTimeForEvent)*
+        (fConfig->fEventDeadlineMinTime + 2*fHPCWorkers[job.fWorkerID].fExpectedTimeForEvent)*
             (job.fEvents + job.fHepMCJobs.size())){
       jobsForDeleting.push_back(job.fUID);
     }

@@ -42,5 +42,10 @@ struct MasterPendingMessage : public PendingMessage{
   int workerId;
 };
 
+inline size_t CreateMessageUID(const std::string& message){
+  auto time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+  return std::hash<std::string>{}(message+std::to_string(time));
+}
+
 
 #endif //GEANTV_ZMQ_UTIL_H

@@ -259,6 +259,7 @@ int main(int argc, char *argv[]) {
   auto generPool = new GeantGeneratorJobPool(); //TODO
   generPool->SetEventAmount(n_events);
   config->jobPool = generPool;
+  config->fPrintMessages = false;
 #endif
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);

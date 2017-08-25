@@ -307,8 +307,8 @@ int main(int argc, char *argv[]) {
   config->jobPool = hepMcPool;
   config->fHostnameFile = hostnames_file;
   config->fMasterPort = master_port;
-  config->fWorkerPort = worker_port;
   config->fRemoteStartScript = remote_start;
+  config->fPrintMessages = false;
 #endif
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);

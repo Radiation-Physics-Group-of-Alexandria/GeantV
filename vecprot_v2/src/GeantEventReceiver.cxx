@@ -16,7 +16,7 @@ GeantEventReceiver::GeantEventReceiver(const std::string &serverHostName, const 
     : fZMQContext(1), fSocket(fZMQContext, ZMQ_DEALER), fServHname(serverHostName), fServPort(conf->fMasterPort),
       fWorkerHname(workerHostName), fWorkerPid(getpid()),
       fGeantConfig(conf), fRunManager(runmgr),
-      fEventDiff(0), fFetchAhead(conf->fNbuff + 2),fIsTransportCompleted(false),
+      fEventDiff(0), fFetchAhead(conf->fNbuff),fIsTransportCompleted(false),
       fReceivedEvents(0), fConnected(false), fWorkerID(-1), fConnectRetries(0),
       fDiscardedMsgs(0)
 {
@@ -57,7 +57,7 @@ void GeantEventReceiver::RunCommunicationThread() {
     if(fConnected){
       int diff = fEventDiff.load();
       if(diff < fFetchAhead){
-        if(fLastJobAsk.Since() > std::chrono::milliseconds(5*1000)){
+        if(fLastJobAsk.Since() > fGeantConfig->fJobRequestFrequency){
           SendJobRequest(fFetchAhead - diff);
           fLastJobAsk.Update();
         }
@@ -76,8 +76,8 @@ void GeantEventReceiver::RunCommunicationThread() {
         }
       }
     }else {
-      if(fLastMasterAsk.Since() > std::chrono::seconds(5)){
-        if(fConnectRetries >= 3) {
+      if(fLastMasterAsk.Since() > fGeantConfig->fMessageResendTime){
+        if(fConnectRetries >= fGeantConfig->fWorkerConnectRetries) {
           fIsTransportCompleted = true;
           return;
         }
@@ -85,7 +85,7 @@ void GeantEventReceiver::RunCommunicationThread() {
         fLastMasterAsk.Update();
       }
     }
-    if (fLastContact.Since() > std::chrono::seconds(20)){
+    if (fLastContact.Since() > fGeantConfig->fWorkerHBFrequency){
       SendHB();
     }
 
@@ -127,8 +127,10 @@ void GeantEventReceiver::PollForMsg() {
     size_t messageUid;
     memcpy(&messageUid,muid.data(),muid.size());
     std::string messageContent((char*)message.data(),(char*)message.data() + message.size());
-    std::cout << "recv: " << messageType << '\n';
-    std::cout << messageContent << '\n';
+    if(fGeantConfig->fPrintMessages){
+      std::cout << "recv: " << messageType << '\n';
+      std::cout << messageContent << '\n';
+    }
     if(messageType == "REQ"){
       std::string replyContent = RecvReq(messageContent);
       SendRep(replyContent,messageUid);
@@ -155,15 +157,17 @@ void GeantEventReceiver::SendMessage(const std::string &msg, const std::string &
 
   fLastContact.Update();
 
-  std::cout << "send: " << type << '\n';
-  std::cout << msg << '\n';
+  if(fGeantConfig->fPrintMessages) {
+    std::cout << "send: " << type << '\n';
+    std::cout << msg << '\n';
+  }
 }
 
 void GeantEventReceiver::SendReq(const std::string &msg) {
-  if(fPendingRequests.size() >= 3)
+  if(fPendingRequests.size() >= fGeantConfig->fWorkerMaxPendingMessages) {
     return;
-  auto time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-  size_t msgUid = std::hash<std::string>{}(msg+std::to_string(time));
+  }
+  size_t msgUid = CreateMessageUID(msg);
   fPendingRequests[msgUid] = msg;
   SendMessage(msg,"REQ",msgUid);
 }
@@ -177,18 +181,22 @@ bool GeantEventReceiver::ResendMsg() {
   for(auto it = fPendingRequests.begin(); it != fPendingRequests.end();){
     auto& pend = it->second;
     bool remove = false;
-    if(pend.lastRetry.Since() > std::chrono::seconds(5)){
-      if(pend.retries >= 1){
+    if(pend.lastRetry.Since() > fGeantConfig->fMessageResendTime){
+      if(pend.retries >= fGeantConfig->fMessageResendRetries){
         remove = true;
       }else {
-        std::cout << "Resending msg: " << pend.msg << std::endl;
+        if(fGeantConfig->fPrintMessages) {
+          std::cout << "Resending msg: " << pend.msg << std::endl;
+        }
         SendMessage(pend.msg, "REQ", it->first);
         pend.retries++;
         pend.lastRetry.Update();
       }
     }
     if(remove) {
-      std::cout << "Removing msg: " << pend.msg << std::endl;
+      if(fGeantConfig->fPrintMessages) {
+        std::cout << "Removing msg: " << pend.msg << std::endl;
+      }
       it = fPendingRequests.erase(it);
       fDiscardedMsgs++;
       ok = false;
@@ -285,7 +293,7 @@ void GeantEventReceiver::RecvJobRequest(const json &msg) {
     }
   }
   fRunManager->GetEventServer()->ActivateEvents();
-  std::cout << "wrk recv events: " << fReceivedEvents << std::endl;
+  std::cout << "Worker received events: " << fReceivedEvents << std::endl;
 }
 
 void GeantEventReceiver::SendHB(){
