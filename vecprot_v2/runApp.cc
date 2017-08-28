@@ -54,7 +54,7 @@ static struct option options[] = {{"events", required_argument, 0, 'e'},
                                   {"v3", required_argument, 0, 'v'},
                                   {"numa", required_argument, 0, 'n'},
                                   {"server",required_argument, 0, 'S'},
-                                  {"master-hostname", required_argument, 0, 'H'},
+                                  {"worker bootstrap script",required_argument, 0, 'R'},
                                   {0, 0, 0, 0}};
 
 void help() {
@@ -71,7 +71,9 @@ int main(int argc, char *argv[]) {
   std::string exn03_geometry_filename("ExN03.root");
   std::string xsec_filename("xsec_FTFP_BERT.root");
   std::string fstate_filename("fstate_FTFP_BERT.root");
-  std::string master_hostname("localhost");
+
+  std::string workersBootstrap("bootsrap.sh");
+  int masterBindPort = 5555;
 
   if (argc == 1) {
     help();
@@ -81,7 +83,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     int c, optidx = 0;
 
-    c = getopt_long(argc, argv, "e:f:g:l:B:m:b:t:x:r:i:u:p:v:n:S:H:", options, &optidx);
+    c = getopt_long(argc, argv, "e:f:g:l:B:m:b:t:x:r:i:u:p:v:n:S:R:", options, &optidx);
 
     if (c == -1)
       break;
@@ -175,8 +177,8 @@ int main(int argc, char *argv[]) {
       server_node = bool(strtol(optarg, NULL, 10));
       break;
 
-    case 'H':
-      master_hostname = optarg;
+    case 'R':
+      workersBootstrap = optarg;
       break;
 
     default:
@@ -254,12 +256,13 @@ int main(int argc, char *argv[]) {
   config->fNminReuse = n_reuse;
 
 #ifdef USE_HPC
-  config->fMasterHostname = master_hostname;
   config->fMasterNode = server_node;
-  auto generPool = new GeantGeneratorJobPool(); //TODO
+  auto generPool = new GeantGeneratorJobPool();
   generPool->SetEventAmount(n_events);
   config->jobPool = generPool;
+  config->fMasterPort = masterBindPort;
   config->fPrintMessages = false;
+  config->fWorkerBootstrap = workersBootstrap;
 #endif
   // Create run manager
   GeantRunManager *runMgr = new GeantRunManager(n_propagators, n_threads, config);
@@ -284,7 +287,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef USE_HPC
   GeantDistributeManger *distributeManger = new GeantDistributeManger(runMgr, config);
-  distributeManger->InitializeDistributedApplication(argc, argv);
+  distributeManger->InitializeDistributedApplication();
   distributeManger->RunDistributedSimulation();
 #else
   runMgr->RunSimulation();

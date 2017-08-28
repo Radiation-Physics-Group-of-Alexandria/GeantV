@@ -9,17 +9,14 @@ GeantDistributeManger::GeantDistributeManger(GeantRunManager *runManager, GeantC
 {
 }
 
-void GeantDistributeManger::InitializeDistributedApplication(int argc, char *argv[])
+void GeantDistributeManger::InitializeDistributedApplication()
 {
-  char hostname[256];
-  gethostname(hostname, sizeof(hostname));
-
   if (fConfig->fMasterNode) {
     fMaster = new GeantEventDispatcher(fConfig);
     std::cout << "On server node" << std::endl;
 
   } else {
-    fWorker = new GeantEventReceiver(fConfig->fMasterHostname, hostname, fRunMgr, fConfig);
+    fWorker = new GeantEventReceiver(fRunMgr, fConfig);
     std::cout << "On client node" << std::endl;
   }
   fRunMgr->SetEventReceiver(fWorker);
@@ -29,17 +26,15 @@ void GeantDistributeManger::RunDistributedSimulation()
 {
   std::thread eventDispThread;
   if (fMaster != nullptr) {
-    eventDispThread = std::thread([&] {
-      fMaster->Initialize();
-      fMaster->RunReqReplyLoop();
-    });
+    if (fConfig->fWorkerBootstrap != "") {
+      system(fConfig->fWorkerBootstrap.c_str());
+    }
+    fMaster->Initialize();
+    fMaster->RunReqReplyLoop();
   }
   if (fWorker != nullptr) {
     fWorker->Initialize();
     fWorker->Run();
-  }
-  if (fMaster != nullptr) {
-    eventDispThread.join();
   }
 }
 

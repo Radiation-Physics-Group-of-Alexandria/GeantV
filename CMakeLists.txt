@@ -672,6 +672,9 @@ if (USE_VECGEOM_NAVIGATOR)
   add_subdirectory(material)
 endif()
 
+if(USE_HPC)
+    add_subdirectory(vecprot_v2_hpc)
+endif()
 
 
 

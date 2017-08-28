@@ -11,9 +11,10 @@ private:
   std::string filename;
   int currentOffset;
   int desiredOffset;
+
 public:
   HepMCGeneratorMultFiles();
-  void SetEventSource(const std::string& file, int offset);
+  void SetEventSource(const std::string &file, int offset);
 
   virtual GeantEventInfo NextEvent();
 };
@@ -21,4 +22,4 @@ public:
 } // GEANT_IMPL_NAMESPACE
 } // Geant
 
-#endif //GEANTV_HEPMCGENERATORMULTFILES_H
+#endif // GEANTV_HEPMCGENERATORMULTFILES_H

@@ -12,7 +12,6 @@
 #ifndef GEANTV_GEANTJOBPOOL_H
 #define GEANTV_GEANTJOBPOOL_H
 
-
 #include <json.hpp>
 #include <chrono>
 #include <memory>
@@ -30,51 +29,54 @@ struct GeantHepMCJob {
   int fAmount;
 };
 
-void to_json(json& j, const GeantHepMCJob& p);
-void from_json(const json& j, GeantHepMCJob& p);
+void to_json(json &j, const GeantHepMCJob &p);
+void from_json(const json &j, GeantHepMCJob &p);
 
-
-enum class JobType{
-  HepMC, Generator
-};
+enum class JobType { HepMC, Generator };
 struct GeantHPCJob {
   int fUID;
   int fWorkerID;
   JobType fType;
-  std::vector<GeantHepMCJob> fHepMCJobs; //Used by HEPMC job
-  int fEvents = 0; //Used by Generator job
+  std::vector<GeantHepMCJob> fHepMCJobs; // Used by HEPMC job
+  int fEvents = 0;                       // Used by Generator job
   ZmqTimer fDispatchTime;
   std::shared_ptr<std::set<int>> fDublicateUIDs;
+  std::shared_ptr<int> fDuplicateTries;
 
-  GeantHPCJob() : fDublicateUIDs{std::make_shared<std::set<int>>()} {}
+  GeantHPCJob() : fDublicateUIDs{std::make_shared<std::set<int>>()}, fDuplicateTries{std::make_shared<int>(0)} {}
 };
 
-struct GeantHPCWorker{
+struct GeantHPCWorker {
   int fID;
   std::string fZMQID;
   std::set<size_t> fPendingRequests;
   int fDiscardedMsg;
   ZmqTimer fLastContact;
   std::chrono::milliseconds fExpectedTimeForEvent = std::chrono::milliseconds(0);
-  int fTransportedEvents = 0;
+  int fTransportedEvents                          = 0;
   ZmqTimer fLastStatReq;
 };
 
 class GeantHPCJobPool {
 public:
-  virtual GeantHPCJob GetJob(int n, const GeantHPCWorker& worker) = 0;
+  virtual GeantHPCJob GetJob(int n, const GeantHPCWorker &worker) = 0;
   virtual void ReturnToPool(GeantHPCJob job) = 0;
-  virtual bool IsEmpty() = 0;
+  virtual bool IsEmpty()                     = 0;
 
-  GeantHPCJob GetDublicateJob(GeantHPCJob& job);
+  GeantHPCJob GetDublicateJob(GeantHPCJob &job);
+
 protected:
-  int GetNextId(){ fJobCounter++; return fJobCounter;};
+  int GetNextId()
+  {
+    fJobCounter++;
+    return fJobCounter;
+  };
   int fJobCounter;
 };
 
 class GeantHepMCJobPool : public GeantHPCJobPool {
 public:
-  GeantHPCJob GetJob(int n, const GeantHPCWorker& worker) override;
+  GeantHPCJob GetJob(int n, const GeantHPCWorker &worker) override;
 
   void ReturnToPool(GeantHPCJob job) override;
 
@@ -83,15 +85,16 @@ public:
   void LoadFromFile(std::string fname);
 
   ~GeantHepMCJobPool() = default;
+
 private:
   std::vector<std::string> filesForWorkers;
-  std::map<std::string,std::vector<GeantHepMCJob>> mapPool;
-  std::map<int,std::string> workerFiles;
+  std::map<std::string, std::vector<GeantHepMCJob>> mapPool;
+  std::map<int, std::string> workerFiles;
 };
 
 class GeantGeneratorJobPool : public GeantHPCJobPool {
 public:
-  GeantHPCJob GetJob(int n, const GeantHPCWorker& worker) override;
+  GeantHPCJob GetJob(int n, const GeantHPCWorker &worker) override;
 
   void ReturnToPool(GeantHPCJob job) override;
 
@@ -100,9 +103,11 @@ public:
   void SetEventAmount(int ev);
 
   ~GeantGeneratorJobPool() = default;
+
 private:
   int eventsToDispatch;
 };
-}}
+}
+}
 
-#endif //GEANTV_GEANTJOBPOOL_H
+#endif // GEANTV_GEANTJOBPOOL_H

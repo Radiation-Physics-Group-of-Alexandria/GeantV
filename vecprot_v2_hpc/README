@@ -1,17 +1,58 @@
 Building
 
-To build geant HPC use similar cmake options as in build_geantV.sh file.
+Depends:
+https://github.com/nlohmann/json
+https://github.com/zeromq/libzmq
 
-BUILD_ZMQ=ON Is responsible for downloading, building and installing ZeroMQ and cppzmq(c++ bindings) to CMAKE_INSTALL_PREFIX
+Build option:
+USE_HPC=ON - Enable HPC
+BUILD_ZMQ=ON - Download, build and install ZeroMQ and cppzmq(c++ bindings) to CMAKE_INSTALL_PREFIX
 
-Running
+Running:
+  Server
+   $ CMSApp -E eventFiles.txt -S 1
+   $ runApp -e 30 -S 1
 
-Run CMSApp with options similar to those in cmsappcommand.sh
-Required option: -v 1 (use v3 scheduler)
-Important option: -b #n (worker asks for #n events at a time)
-Number of events and event file is no longer needed as option.
-Now instead it is configured by -e eventFiles.txt
+   Where eventFiles.txt is file in the folowing format:
+     hepmcfilepath#1:(offset to first event):(number of events)
+     (there is an example in geant/data/)
 
-Format of eventFiles.txt
-FILE_NAME:EVENT_OFFSET:NUMBER_OF_EVENTS_TO_READ
-(offset is number of first event to read in the file)
+   (optional) Server will run bootstrap script(bootsrap.sh) to spawn workers on remote hosts.
+     -R bootsrap.sh - specify path to script.
+
+   Server will bound ZMQ socket to port 5555 by default.
+
+  Client:
+  Should be started with process manager on each host.
+   $ proc_mgr -e "$EXE" -p "$PAR" -l "$LOG" -H "$MAST" -P "$PORT"
+   EXE - path to CMSApp or runApp for ex.
+   PAR - parameters of application
+   LOG - path to logfile to redirect output
+   MAST - hostname of server
+   PORT - port of server
+
+ZMQ details:
+  Sockets:
+    Master use ROUTER socket and binds it to its host.
+    Worker use DEALER socket. It sets up its socket identity and connects to master host.
+      Worker is really made of 2 parts one is process manager other is actual worker. We use proxy on process manager
+      so that we can send messages to real worker(such as job replies) or directly to process manager(such as restart requests)
+      Proxy frontend is already mentioned DEALER socket and backend id ROUTER that routes to worker or proc. manager.
+      Worker and proc.manager use DEALER sockets but they connects to backend of proxy(physically proxy code is in proc.manager)
+  Messages:
+    We use ZMQ multipart messages for communication.
+    Master sending message format:
+      frame1: zmq identity of workers DEALER socket
+      frame2: WRK or MGR // to send msg to worker or proc. manager
+      frame3: REQ or REP // message type: request or reply
+      frame4: message_id // unique message id we use hash on message + timestamp
+      frame5: message content
+    Worker sending message format:
+      frame1: REQ or REP // message type: request or reply
+      frame2: message_id // unique message id we use hash on message + timestamp
+      frame3: message content
+    
+    Handling:
+      If we receive REQ message we prepare reply and send it back(with the same message id!)
+      When we send REQ message we store it until we got a reply. If there are no reply we retry(finite number of attempts).
+      When we receive REP to our REQ message we remove our REQ from pending message que and react to it.

@@ -90,9 +90,6 @@ public:
 #endif
 
 #ifdef USE_HPC
-  std::string fMasterHostname;
-  std::string fHostnameFile;
-  std::string fRemoteStartScript;
   int fMasterPort;
   GeantHPCJobPool* jobPool;
   bool fMasterNode;
@@ -104,7 +101,9 @@ public:
   std::chrono::seconds fWorkerHBFrequency = std::chrono::seconds(20);
   int fWorkerConnectRetries = 3;
   int fWorkerMaxPendingMessages = 3;
+  int fJobMaxDuplicateTries = 1;
   bool fPrintMessages = true;
+  std::string fWorkerBootstrap = "";
 #endif
 
 public:

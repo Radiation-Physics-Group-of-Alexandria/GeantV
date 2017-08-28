@@ -30,21 +30,20 @@ inline namespace GEANT_IMPL_NAMESPACE {
 
 using nlohmann::json;
 
-struct MCEventSource{
-  std::string fFileName;
-  int fOffset;
-  int fEventAmount;
-  int fDispatched;
-};
-
-struct Host{
-  std::string hostname;
-};
 class GeantHPCJobPool;
 
+struct Host {
+  Host(const std::string &zmqAddress) : fZMQAddress(zmqAddress){};
+  Host() : fZMQAddress(""){};
+  std::string fZMQAddress;
+  int fReconnects                                = 0;
+  int fEventsGiven                               = 0;
+  int fEventsConfirmed                           = 0;
+  std::chrono::milliseconds fAverageTimeForEvent = std::chrono::milliseconds(0);
+  double fLastMinLoadAverage                     = 0.0;
+};
 
 class GeantEventDispatcher {
-
 public:
   GeantEventDispatcher(GeantConfig *config);
 
@@ -56,27 +55,31 @@ private:
   zmq::socket_t fSocket;
   zmq_pollitem_t fZMQSocketPollItem;
 
-
   GeantConfig *fConfig;
-  GeantHPCJobPool* fJobPool;
+  GeantHPCJobPool *fJobPool;
 
-  std::map<int,GeantHPCJob> fPendingJobs;
+  std::map<int, GeantHPCJob> fPendingJobs;
   int fWorkerCounter;
-  std::map<int,GeantHPCWorker> fHPCWorkers;
-  std::map<std::string,int> fHPCWorkerZMQIDtoUID;
-  std::vector<Host> fHosts;
+  std::map<int, GeantHPCWorker> fHPCWorkers;
+  std::map<std::string, int> fHPCWorkerZMQIDtoUID;
+  std::map<std::string, Host> fHPCHosts;
 
   std::map<size_t, MasterPendingMessage> fPendingRequests;
 
-  json HandleNewWorkerMsg(json &req);
+  json HandleNewWorkerMsg(const std::string &address);
   json HandleNewJobReq(json &req);
+  bool FindDuplicateJob(GeantHPCWorker &worker, GeantHPCJob &job, int n);
   json HandleJobConfirm(json &req);
   json HandleHeartbeat(json &req);
 
-  void SendFinishMsg(GeantHPCWorker& worker);
-  void SendJobCancelMsg(GeantHPCJob& job, bool retToPool = true);
-  void SendGetLoadMsg(GeantHPCWorker& worker);
+  void SendFinishMsg(GeantHPCWorker &worker);
+  void SendJobCancelMsg(GeantHPCJob &job, bool retToPool = true);
+  void SendGetLoadMsg(GeantHPCWorker &worker);
   void RecvGetLoadMsg(const json &msg, GeantHPCWorker &worker);
+  void SendGetStatusMsg(const std::string &address);
+  void RecvGetStatusMsg(const json &msg, const std::string &address);
+  void SendRestartMsg(const std::string &address);
+  void SendAbortMsg(const std::string &address);
 
   void UpdateWorkerStats();
   void CleanDeadWorkers();
@@ -84,15 +87,19 @@ private:
   void FinishWorkers();
 
   void BindSocket();
-  void SendMessage(const std::string& msg, const std::string& type, size_t uid,const std::string& address);
-  void SendReq(const std::string &msg, GeantHPCWorker &worker);
-  void SendRep(const std::string& msg, size_t uid,const std::string& address);
-  std::string RecvReq(const std::string &msg);
-  void RecvRep(const std::string &msg, GeantHPCWorker &worker);
+  void SendMessage(const std::string &msg, const std::string &type, size_t uid, const std::string &address,
+                   const std::string &localAddress);
+  void SendReqWorker(const std::string &msg, GeantHPCWorker &worker);
+  void SendReqProcMgr(const std::string &msg, const std::string &address);
+  void SendRep(const std::string &msg, size_t uid, const std::string &address, const std::string &localAddress);
+  std::string RecvReqWorker(const std::string &msg, const std::string &address);
+  void RecvRepWorker(const std::string &msg, GeantHPCWorker &worker);
+  void RecvRepProcMgr(const std::string &msg, const std::string &address);
   void PollForMsg();
   bool ResendMsg();
+  void CleanWorkerState(GeantHPCWorker &worker);
 
-  bool IsWorkerDoingJob(GeantHPCWorker& worker, GeantHPCJob& job);
+  bool IsWorkerDoingJob(GeantHPCWorker &worker, GeantHPCJob &job);
 };
 }
 }

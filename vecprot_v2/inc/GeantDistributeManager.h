@@ -27,7 +27,7 @@ class GeantEventDispatcher;
 class GeantDistributeManger {
 public:
   GeantDistributeManger(GeantRunManager *runManager, GeantConfig *config);
-  void InitializeDistributedApplication(int argc, char *argv[]);
+  void InitializeDistributedApplication();
   void RunDistributedSimulation();
   ~GeantDistributeManger();
 

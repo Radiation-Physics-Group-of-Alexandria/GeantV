@@ -37,9 +37,11 @@ struct PendingMessage{
 };
 
 struct MasterPendingMessage : public PendingMessage{
-  MasterPendingMessage(const std::string& message, int id) : PendingMessage(message), workerId{id} {}
-  MasterPendingMessage() : PendingMessage(), workerId{0} {}
-  int workerId;
+  MasterPendingMessage(const std::string& message, const std::string& address, bool toWorker) : PendingMessage(message),
+                                                                            address{address}, toWorker{toWorker} {}
+  MasterPendingMessage() : PendingMessage(), address{""}, toWorker{true} {}
+  std::string address;
+  bool toWorker;
 };
 
 inline size_t CreateMessageUID(const std::string& message){
