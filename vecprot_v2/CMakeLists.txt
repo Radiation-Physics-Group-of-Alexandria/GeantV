@@ -13,7 +13,9 @@ if (USE_REAL_PHYSICS)
     ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/ExN03RP/inc
     ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/TestEm3RP/inc
     ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/TestEm5/inc
+    ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/TestFastSim/inc
     ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/CaloRP/inc
+    ${CMAKE_SOURCE_DIR}/examplesRP/GeantV/ClicRP/inc
     )
 else()
   include_directories(
@@ -319,10 +321,12 @@ endif()
 else()
 # -------  START == WITH REAL PHYSICS -------------------------------------------------------
 set(TEST_EXECUTABLES
+  clicAppRP.cc
   caloAppRP.cc
   runAppRP.cc
   runAppTestEM3RP.cc
   runTestEm5.cc
+  runTestFastSim.cc
   )
 
 macro(build_executables EXECUTABLES)
@@ -346,9 +350,13 @@ function(add_to_ctest EXECUTABLES)
           add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/ExN03.root)
       elseif(TARGET_NAME STREQUAL "caloAppRP")
           add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}>)
+      elseif(TARGET_NAME STREQUAL "clicAppRP")
+          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}>)
       elseif(TARGET_NAME STREQUAL "runAppTestEM3RP")
           add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}> -g ${CMAKE_SOURCE_DIR}/data/ATLASbar.root)
       elseif(TARGET_NAME STREQUAL "runTestEm5")
+          add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}>)
+      elseif(TARGET_NAME STREQUAL "runTestFastSim")
           add_test(NAME ${TARGET_NAME} WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY} COMMAND  $<TARGET_FILE:${TARGET_NAME}>)
       else()
         add_test(NAME ${TARGET_NAME} ${TARGET_NAME})
@@ -381,6 +389,18 @@ foreach(_script ${TestEm5_SCRIPTS})
     )
 endforeach()
 install(TARGETS runTestEm5 DESTINATION ${TestEm5_OUTPUT})
+### TestFastSim ###
+set(TestFastSim_OUTPUT bin/examples/TestFastSim/GeantV)
+set(TestFastSim_SCRIPTS testFS_GV.mac testFS_19.dat)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${TestFastSim_OUTPUT})
+foreach(_script ${TestFastSim_SCRIPTS})
+  configure_file(
+    ${_script}
+    ${CMAKE_INSTALL_PREFIX}/${TestFastSim_OUTPUT}/${_script}
+    COPYONLY
+    )
+endforeach()
+install(TARGETS runTestFastSim DESTINATION ${TestFastSim_OUTPUT})
 ### The remaining ### (calo applications; runAppRP and runAppTestEM3RP will be removed soon)
 set(caloApp_OUTPUT bin/examples/Calorimeter/GeantV)
 set(caloApp_SCRIPTS caloApp.mac)
@@ -391,6 +411,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${caloApp_OUTPUT})
     COPYONLY
     )
 install(TARGETS caloAppRP runAppRP runAppTestEM3RP DESTINATION ${caloApp_OUTPUT})
+### CLIC calo prototype
+set(clicApp_OUTPUT bin/examples/Calorimeter/GeantV)
+set(clicApp_SCRIPTS clicApp.mac)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${clicApp_OUTPUT})
+  configure_file(
+    clicApp.mac
+    ${CMAKE_INSTALL_PREFIX}/${clicApp_OUTPUT}/clicApp.mac
+    COPYONLY
+    )
+install(TARGETS clicAppRP DESTINATION ${clicApp_OUTPUT})
 # -------  END == WITH REAL PHYSICS -------------------------------------------------------
 endif()
 
