@@ -8,7 +8,8 @@ class Hist;
 #endif
 
 #include <vector>
-const int maxAbsorbers=10;
+const int maxAbsorbers=25;
+const int numLayers=25;
 
 namespace userapplication {
 
@@ -90,6 +91,15 @@ public:
   void   AddELeakSecondary(double val)       { fELeakSecondary += val; }
   double GetELeakSecondary()           const { return fELeakSecondary; }
 
+  void   AddChargedTrackLayerL(double val, int layer) { fChargedTrackLayerL[layer] += val; }
+  double GetChargedTrackLayerL(int layer) const     { return fChargedTrackLayerL[layer]; }
+
+  void   AddNeutralTrackLayerL(double val, int layer) { fNeutralTrackLayerL[layer] += val; }
+  double GetNeutralTrackLayerL(int layer) const     { return fNeutralTrackLayerL[layer]; }
+
+  void   AddEdepInLayer(double val, int layer)       { fEdepInLayer[layer] += val; }
+  double GetEdepInLayer(int layer)           const { return fEdepInLayer[layer]; }
+
   void   Clear();
   ClicAppDataPerPrimary& operator+=(const ClicAppDataPerPrimary& other);
 
@@ -105,6 +115,9 @@ private:
   double  fELeakPrimary;        // mean primary particle energy leakage per primary particles
   double  fELeakSecondary;      // mean secondary particle energy leakage per primary particles
 
+  double  fChargedTrackLayerL[numLayers];       // mean number of charged track length per primary in Si-layer
+  double  fNeutralTrackLayerL[numLayers];       // mean number of neutral track length per primary in Si-layer
+  double  fEdepInLayer[numLayers];        // mean energy deposit per primary in Si-layers
 };
 
 // Global data structure to accumulate per-primary data during the simulation. The only one object from this class
@@ -151,6 +164,15 @@ public:
  double GetELeakSecondary()           const { return fELeakSecondary;  }
  double GetELeakSecondary2()          const { return fELeakSecondary2; }
 
+  void   AddChargedTrackLayerL(double val, int layer) { fChargedTrackLayerL[layer] += val; }
+  double GetChargedTrackLayerL(int layer) const     { return fChargedTrackLayerL[layer]; }
+
+  void   AddNeutralTrackLayerL(double val, int layer) { fNeutralTrackLayerL[layer] += val; }
+  double GetNeutralTrackLayerL(int layer) const     { return fNeutralTrackLayerL[layer]; }
+
+  void   AddEdepInLayer(double val, int layer)       { fEdepInLayer[layer] += val; }
+  double GetEdepInLayer(int layer)           const { return fEdepInLayer[layer]; }
+
  void   Clear();
  // add data after one primary particle finished tracking
  void   AddDataPerPrimary(ClicAppDataPerPrimary& data);
@@ -176,6 +198,10 @@ private:
   double  fELeakPrimary2;      // mean primary particle energy leakage per primary particles square
   double  fELeakSecondary;     // mean secondary particle energy leakage per primary particles
   double  fELeakSecondary2;    // mean secondary particle energy leakage per primary particles square
+
+  double  fChargedTrackLayerL[numLayers];       // mean number of charged track length per primary in Si-layer
+  double  fNeutralTrackLayerL[numLayers];       // mean number of neutral track length per primary in Si-layer
+  double  fEdepInLayer[numLayers];        // mean energy deposit per primary in Si-layers
 };
 
 

@@ -195,6 +195,7 @@ double ClicDetectorConstruction::GetWorldXY() {return fWorldSizeXY;}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int ClicDetectorConstruction::GetAbsorberLogicalVolumeID(int absorber){ return fAbsLogicVolumeID[absorber]; }
+int ClicDetectorConstruction::GetLayerLogicalVolumeID(int layer){ return layer; }
 int ClicDetectorConstruction::GetDetectorRegionIndex() {return fDetectorRegionIndex; }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +207,6 @@ void ClicDetectorConstruction::CreateGeometry() {
 
   //create default detector parameters if the user hasn't defined them
   numCells = 25;
-  numCellsAbs  = 25; 
   numRows = 25;
   numAbsorbers=numLayers = 25;
   numAbsorbers1 = 17;
@@ -321,6 +321,7 @@ void ClicDetectorConstruction::CreateGeometry() {
 
 
 //place world volume, close geometry
+  world->PrintContent();
   vecgeom::VPlacedVolume *w = world->Place();
   vecgeom::GeoManager::Instance().SetWorld(w);
   vecgeom::GeoManager::Instance().CloseGeometry();

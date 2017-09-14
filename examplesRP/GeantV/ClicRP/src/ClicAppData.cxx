@@ -17,9 +17,14 @@ ClicAppDataPerPrimary::ClicAppDataPerPrimary() { Clear(); }
 
 void ClicAppDataPerPrimary::Clear() {
 
-  for (int k=1;k<maxAbsorbers; k++){
+  for (int k=0;k<maxAbsorbers; k++){
   	fChargedTrackL[k]  = fNeutralTrackL[k] = fEdepInAbsorber[k] = 0.;
   }
+
+  for (int k=0;k<numLayers; k++){
+  	fChargedTrackLayerL[k]  = fNeutralTrackLayerL[k] = fEdepInLayer[k] = 0.;
+  }
+
 
   fNumChargedSteps = fNumNeutralSteps = 0.;
   fNumGammas       = fNumElectrons    = fNumPositrons   = 0.;
@@ -27,10 +32,15 @@ void ClicAppDataPerPrimary::Clear() {
 }
 
 ClicAppDataPerPrimary& ClicAppDataPerPrimary::operator+=(const ClicAppDataPerPrimary& other) {
-  for(int k=1;k<maxAbsorbers;k++) {
+  for(int k=0;k<maxAbsorbers;k++) {
   	fChargedTrackL[k]   += other.fChargedTrackL[k];
   	fNeutralTrackL[k]   += other.fNeutralTrackL[k];
   	fEdepInAbsorber[k]    += other.fEdepInAbsorber[k];
+  }
+  for(int k=0;k<numLayers;k++) {
+  	fChargedTrackLayerL[k]   += other.fChargedTrackLayerL[k];
+  	fNeutralTrackLayerL[k]   += other.fNeutralTrackLayerL[k];
+  	fEdepInLayer[k]    += other.fEdepInLayer[k];
   }
   fNumChargedSteps += other.fNumChargedSteps;
   fNumNeutralSteps += other.fNumNeutralSteps;
@@ -64,10 +74,16 @@ void ClicAppData::AddDataPerPrimary(ClicAppDataPerPrimary& data) {
   AddChargedSteps(data.GetChargedSteps());
   AddNeutralSteps(data.GetNeutralSteps());
 
-  for (int k=1; k<maxAbsorbers; k++){
+  for (int k=0; k<maxAbsorbers; k++){
   	AddChargedTrackL(data.GetChargedTrackL(k),k);
   	AddNeutralTrackL(data.GetNeutralTrackL(k),k);
   	AddEdepInAbsorber(data.GetEdepInAbsorber(k),k);
+  }
+
+  for (int k=0; k<numLayers; k++){
+  	AddChargedTrackLayerL(data.GetChargedTrackLayerL(k),k);
+  	AddNeutralTrackLayerL(data.GetNeutralTrackLayerL(k),k);
+  	AddEdepInLayer(data.GetEdepInLayer(k),k);
   }
   AddGammas   (data.GetGammas()   );
   AddElectrons(data.GetElectrons());

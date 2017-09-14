@@ -100,6 +100,7 @@ private:
   // ID of the target logical volume (used to check if the current step was done in the target)
   // this data will be obtained from the ClicDetectorConstruction at initialization
   int         fAbsorberLogicalVolumeID[maxAbsorber];
+  int         fLayerLogicalVolumeID[maxAbsorber];
   int	      fNumLayers;
   int	      fNumAbsorbers;
   // some data regarding the number of primaries per event and number of buffered events (i.e. number of event-slots)

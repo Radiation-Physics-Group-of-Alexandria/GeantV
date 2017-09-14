@@ -54,6 +54,7 @@ static const int maxAbsorbers = 25;
         int numCells;
 
 	int fAbsLogicVolumeID[maxAbsorbers];	
+	int fLayerLogicVolumeID;	
 	int fDetectorRegionIndex;
 	double fGammaCut=0.1;
 	double fElectronCut=0.1;
@@ -95,6 +96,7 @@ static const int maxAbsorbers = 25;
         double GetAbsorberThickness(int);
 
 	int GetAbsorberLogicalVolumeID(int);
+	int GetLayerLogicalVolumeID(int);
 	int GetDetectorRegionIndex();
 
         void SetDetectorXY(double);

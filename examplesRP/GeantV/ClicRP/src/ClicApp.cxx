@@ -93,8 +93,12 @@ bool ClicApp::Initialize() {
 
   //get detector parameters/logical volume IDs
   fNumAbsorbers = fDetector->GetNumAbsorbers();
-  for (int k=1; k<=fNumAbsorbers; k++){
+  fNumLayers = fDetector->GetNumLayers();
+  for (int k=0; k<fNumAbsorbers; k++){
   	fAbsorberLogicalVolumeID[k] = fDetector->GetAbsorberLogicalVolumeID(k);
+  }
+  for (int k=0; k<fNumLayers; k++){
+  	fLayerLogicalVolumeID[k] = fDetector->GetLayerLogicalVolumeID(k);
   }
 
   // get all information that the primary generator (simple gun) should provide
@@ -158,29 +162,39 @@ void ClicApp::SteppingActions(Geant::GeantTrack &track, Geant::GeantTaskData *td
   // do the scoring if the current step was done in the target logical volume
 
   int currentAbsorber=0;
-  bool validVolume=false;
-
-  for (int k=1; k<=fNumAbsorbers; k++){
+  bool validAbsorber=false;
+  int currentLayer =0;
+  for (int k=0; k<fNumAbsorbers; k++){
 	if (idvol==fAbsorberLogicalVolumeID[k]){
 		currentAbsorber=k;
-		validVolume=true;
+		validAbsorber=true;
 		break;
 	}
   }
 
 
-  if (validVolume) {
+ // if (validAbsorber) {
+  if (1) {
     // collet charged/neutral steps that were done in the target (do not count the creation step i.e. secondary tracks
     // that has just been added in this step)
     if (track.fStatus!=Geant::kNew) {
       if (charge==0.0) {
         dataPerPrimary.AddNeutralStep();
-        dataPerPrimary.AddNeutralTrackL(track.fStep,currentAbsorber);
+        if (validAbsorber)
+           dataPerPrimary.AddNeutralTrackL(track.fStep,currentAbsorber);
+        else
+           dataPerPrimary.AddNeutralTrackLayerL(track.fStep,currentLayer);
       } else {
         dataPerPrimary.AddChargedStep();
-        dataPerPrimary.AddChargedTrackL(track.fStep,currentAbsorber);
+        if (validAbsorber)
+           dataPerPrimary.AddChargedTrackL(track.fStep,currentAbsorber);
+        else
+           dataPerPrimary.AddChargedTrackLayerL(track.fStep,currentLayer);
       }
-      dataPerPrimary.AddEdepInAbsorber(track.fEdep,currentAbsorber);
+      if (validAbsorber)
+         dataPerPrimary.AddEdepInAbsorber(track.fEdep,currentAbsorber);
+      else
+         dataPerPrimary.AddEdepInLayer(track.fEdep,currentLayer);
     }
     // collect secondary particle type statistics
     if (track.fStatus==Geant::kNew) {
@@ -256,13 +270,22 @@ void ClicApp::FinishRun() {
   double meanEdep[fNumAbsorbers+1];
   double meanEdep2[fNumAbsorbers+1];
 
-  for (int k=1;k<=fNumAbsorbers;k++){
+  double meanChTrackLayerL[fNumLayers];
+  double meanNeTrackLayerL[fNumLayers];
+  double meanEdepInLayer[fNumLayers];
+
+  for (int k=0;k<fNumAbsorbers;k++){
 	  meanChTrackL[k]  = fData->GetChargedTrackL(k)*norm;
 	  meanChTrackL2[k] = fData->GetChargedTrackL2(k)*norm;
 	  meanNeTrackL[k]  = fData->GetNeutralTrackL(k)*norm;
 	  meanNeTrackL2[k] = fData->GetNeutralTrackL2(k)*norm;
 	  meanEdep[k]      = fData->GetEdepInAbsorber(k)*norm;
 	  meanEdep2[k]     = fData->GetEdepInAbsorber2(k)*norm;
+  }
+  for (int k=0;k<fNumLayers;k++){
+	  meanChTrackLayerL[k]  = fData->GetChargedTrackLayerL(k)*norm;
+	  meanNeTrackLayerL[k]  = fData->GetNeutralTrackLayerL(k)*norm;
+	  meanEdepInLayer[k]      = fData->GetEdepInLayer(k)*norm;
   }
 
   double meanNGamma    = fData->GetGammas()*norm;
@@ -330,7 +353,7 @@ void ClicApp::FinishRun() {
   //
   // some additional quantities:
   // 
-for(int k=1; k<=fNumAbsorbers; k++){
+for(int k=0; k<fNumAbsorbers; k++){
 ///////////////////////for loop start, looping over absorbers///////////////////////////////////////////
   std::cout << "---------------Started data analysis for " << fDetector->GetAbsorberMaterialName(k) << " absorber---------------------" << std::endl;
   const  geantphysics::Material* absorberMaterial = fDetector->GetAbsorberMaterial(k);
