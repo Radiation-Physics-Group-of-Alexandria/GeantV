@@ -701,14 +701,12 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
     // Start transporting the basket
     MaybeCleanupBaskets(td,basket);
     ++counter;
-    // ntotransport = basket->GetNinput(); // all tracks to be transported
-    // ninput = ntotransport;
-    int ninput = basket->GetNinput(); // all tracks to be transported
-    ntotransport= ninput;
+    ntotransport = basket->GetNinput(); // all tracks to be transported    
+    // int ninput = ntotransport;
     
     GeantTrack_v &input = basket->GetInputTracks();
 
-#define ENERGY_BALANCE 1
+// #define ENERGY_BALANCE 1
 
 #ifdef ENERGY_BALANCE    
     double sumEin= 0.0;
@@ -742,7 +740,6 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
     }
 #endif
     GeantTrack_v &output = *td->fTransported;
-
     if (!ntotransport)
       goto finish; // input list empty
     //      Geant::Print("","======= BASKET %p with %d tracks counter=%d =======", basket, ntotransport,
@@ -750,7 +747,6 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
     //      basket->Print();
     //      Geant::Print("","==========================================");
     //      propagator->fTracksPerBasket[tid] = ntotransport;
-    
     td->fVolume = 0;
     mat = 0;
     if (!basket->IsMixed()) {
@@ -855,11 +851,13 @@ void *WorkloadManager::TransportTracks(GeantPropagator *prop) {
         // first: sample target and type of interaction for each primary tracks
         propagator->Process()->PostStepTypeOfIntrActSampling(mat, nphys, output, td);
 
+#if 0        
         for (auto itr = 0; itr < nout; ++itr) {
            // input.CheckTrack(itr, "Input to PostStepFinalStateSampling.");
            input.Normalize(itr);
            // input.CheckTrack(itr, "Input to PostStepFinalStateSampling - 2nd check.");           
         }
+#endif        
 //
 // TODO: vectorized final state sampling can be inserted here through
 //       a proper interface code that will:
