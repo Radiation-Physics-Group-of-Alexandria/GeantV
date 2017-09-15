@@ -957,7 +957,6 @@ int TTabPhysMgr::SampleFinalStates(int imat, int ntracks, GeantTrack_v &tracks, 
 #endif
           track.fProcess = tracks.fProcessV[t]; // Record id of creating process -- Was 0
           track.fNsteps = 0;
-          track.fParentId= tracks.fParticleV[t]; // Identity of parent particle
           //          track.fSpecies  = 0;
           track.fStatus = kNew;           // status of this particle
           track.fMass = secMass;          // mass of this particle
