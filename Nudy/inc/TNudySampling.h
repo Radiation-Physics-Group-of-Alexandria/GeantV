@@ -22,6 +22,9 @@ public:
 private:
   void GetSecParameter(Particle *, TNudyEndfRecoPoint *recoPoint);
   void FillHisto(double icosLab, double isecEnergyLab);
+  double kinematicNonRel(Particle *particle, TNudyEndfRecoPoint *recoPoint);
+  double kinematicRel(Particle *particle, TNudyEndfRecoPoint *recoPoint);
+  double kinematicGama(Particle *particle, TNudyEndfRecoPoint *recoPoint);
   std::vector<double> crs;
   double kineticE;
   double cosCM = 0, cosLab = 0, secEnergyCM = 0, secEnergyLab = 0;
@@ -35,11 +38,11 @@ private:
   int LCT, MF, MT, MF4, MF5, MF6;
   int events;
   TH2D *h;
-  TH2D *hist[10];
+  TH2D *hist[21];
   TH1D *h1;
   TH1D *h2;
-  TH1D *fissZ1[10];
-  TH1D *fissA1[10];
+  TH1D *fissZ1[21];
+  TH1D *fissA1[21];
   TH1D *fissA;
   TGraph *gr1;
   TGraph *gr[5];

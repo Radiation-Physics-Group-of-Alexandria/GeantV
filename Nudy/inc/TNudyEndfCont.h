@@ -31,6 +31,7 @@ public:
   TNudyEndfCont(double c1, double c2, int l1, int l2, int n1, int n2);
 
   virtual void SetCont(double c1, double c2, int l1, int l2, int n1, int n2);
+  virtual void SetContMF(int mat, int mt, int mf);
 
   virtual double GetC1() const { return fC1; }
   virtual double GetC2() const { return fC2; }
@@ -49,6 +50,9 @@ protected:
   int fL2;    // L2 of the CONT record
   int fN1;    // N1 of the CONT record
   int fN2;    // N2 of the CONT record
+  int fMAT;   // MAT of the CONT record
+  int fMT;    // MT of the CONT record
+  int fMF;    // MF of the CONT record
 
   ClassDef(TNudyEndfCont, 1)
 };
