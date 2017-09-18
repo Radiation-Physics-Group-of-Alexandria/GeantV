@@ -47,14 +47,17 @@ main( int, char** )
   ThreeVector_f  FieldValue(0.0, 0.0, 1.0);
    
   GUVEquationOfMotion* eq = CreateUniformFieldAndEquation( FieldValue );
-  TestEquation(eq);
-
+  bool okUniform = TestEquation(eq);
+  bool good = okUniform;
+  
 #ifdef CMS_FIELD
   GUVEquationOfMotion* eq2 = CreateFieldAndEquation( defaultFieldFileName ); // ("cmsMagneticField2015.txt");
-  TestEquation(eq2);
+  bool okCMSfield = TestEquation(eq2);
+
+  good = good && okCMSfield;
 #endif
   
-  return 1;
+  return good;
 }
 
 GUVEquationOfMotion* CreateUniformFieldAndEquation(ThreeVector_f FieldValue)
@@ -85,7 +88,7 @@ GUVEquationOfMotion* CreateFieldAndEquation(const char* filename)
 }
 #endif
 
-int gVerbose = 1;
+int gVerbose = 0;
 
 bool TestEquation(GUVEquationOfMotion *equation)
 {
@@ -126,8 +129,11 @@ bool TestEquation(GUVEquationOfMotion *equation)
   double ForceMag =   ForceVec.Mag();
   const double c = Constants::c_light;
 
-  std::cout << "Test output:  "  << std::endl;     
-  if( ForceMag != c * std::fabs(charge) * fieldMag * sineAngle ) {
+  // Tolerance of difference in values (used below)
+  double tolerance = perMillion;
+  
+  if ( gVerbose ) { std::cout << "Test output:  "  << std::endl; }
+  if( std::fabs(ForceMag - c * std::fabs(charge) * fieldMag * sineAngle) >  tolerance * ForceMag ) {
      cerr << "ERROR: Force magnitude is not equal to   c * |charge| * |field| * sin( p, B )."  << endl;     
      cerr << "       Force magnitude = " << ForceMag << endl;
      cerr << "         other side =    " <<  c * std::fabs(charge) * fieldMag * sineAngle ; 
@@ -137,8 +143,8 @@ bool TestEquation(GUVEquationOfMotion *equation)
   }
      
   assert( ForceMag != momentumMag * fieldMag );  // Must add coefficient !!
-  
-  if( std::fabs(MdotF) > perMillion * MomentumVec.Mag() * ForceVec.Mag() )
+
+  if( std::fabs(MdotF) > tolerance * MomentumVec.Mag() * ForceVec.Mag() )
   { 
      cerr << "ERROR: Force due to magnetic field is not perpendicular to momentum!!"  << endl;
      hasError= true;
@@ -147,7 +153,7 @@ bool TestEquation(GUVEquationOfMotion *equation)
   {
      cout << " Success:  Good (near zero) dot product momentum . force " << endl;
   }
-  if( std::fabs(BdotF) > perMillion * FieldVec.Mag() * ForceVec.Mag() )
+  if( std::fabs(BdotF) > tolerance * FieldVec.Mag() * ForceVec.Mag() )
   { 
     cerr << "ERROR: Force due to magnetic field is not perpendicular to B field!"
               << std::endl; 
