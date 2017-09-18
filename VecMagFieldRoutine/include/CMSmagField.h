@@ -441,15 +441,16 @@ void CMSmagField::GetFieldValue(const vecgeom::Vector3D<typename Backend::precis
 {
 
     typedef typename Backend::precision_v Float_v;
-    typedef typename Backend::bool_v      Bool_v;
 
     Float_v cyl[2];
     CartesianToCylindrical<Backend>(pos, cyl); 
     vecgeom::Vector3D<Float_v> rzField;
     GetFieldValueRZ<Backend>(cyl[0], cyl[1], rzField); //cyl[2] =[r,z]
 
-
-#ifdef OLD_CODE    
+#ifdef OLD_CODE
+    // typedef typename Backend::bool_v      Bool_v;
+    using Bool_v = Backend::bool_v;
+    
     float zero = 0.0f;
     float one  = 1.0f;
     Float_v sinTheta(zero), cosTheta(one); //initialize as theta=0
