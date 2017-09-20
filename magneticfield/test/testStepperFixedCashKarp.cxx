@@ -1,17 +1,19 @@
 //
 //  Compare the output of different steppers
-//     TClassicalRK4
-//     GUTCashKarpRKF45
+//     e.g. TClassicalRK4 and GUTCashKarpRKF45
 //  against each other.
 //  NOTE: *Scalar* implementations only
 //
+//  Author:  John Apostolakis  ( adapted for GeantV steppers )
+//               2015-2017
 //  Based on testStepperFixed.cc
-//    was the work of Somnath Banerjee in GSoC 2015
+//    that was the work of Somnath Banerjee in GSoC 2015
 //
+#include <cfloat>
 #include <iomanip>
 
-
 #include "Units.h"
+#include <cfloat>
 
 // using fieldUnits::meter;
 using fieldUnits::millimeter;   
@@ -44,22 +46,30 @@ int main(int argc, char *args[])
     using  GvEquationType=  TMagFieldEquation<TUniformMagField, Nposmom>;
    
     /* -----------------------------SETTINGS-------------------------------- */
-    
     /* Parameters of test
      - Modify values  */
-    
+
     int no_of_steps = 250;         // No. of Steps for the stepper
     int stepper_no =  5;         // Choose stepper no., for refernce see above
     double step_len_mm = 200.;    // meant as millimeter;  //Step length 
     double z_field_in = DBL_MAX;
     
     //Checking for command line values :
-    if(argc>1)
-        stepper_no = atoi(args[1]);
+    if(argc>1) {
+        int readStepperNum = atoi(args[1]);
+        if( readStepperNum > 0 && readStepperNum <= 5 ) {
+           stepper_no = readStepperNum;
+        }
+    }
     if(argc > 2)
        step_len_mm = (float)(stof(args[2]));   // *mm);
-    if(argc > 3)
-        no_of_steps = atoi(args[3]);
+
+    if(argc > 3) {
+       int readNoSteps = atoi(args[3]);
+       if( readNoSteps > 0 ) {
+          no_of_steps = readNoSteps;
+       }
+    }
     if(argc > 4)
        z_field_in = (float) (stof(args[4]));     // tesla
     double step_len = step_len_mm * fieldUnits::millimeter;
@@ -173,10 +183,10 @@ int main(int argc, char *args[])
     auto exactStepperGV =
         new TClassicalRK4<GvEquationType,Nposmom>(gvEquation2);
     cout << "#  Reference stepper is: TClassicalRK4<GvEquationType,Nposmom>(gvEquation2);" << endl;
-
        // new TSimpleRunge<GvEquationType,Nposmom>(gvEquation2);    
-       // new GUExactHelixStepper(gvEquation2);
-
+    // new GUExactHelixStepper(gvEquation2);
+    // cout << "#  Reference stepper is: GUExactHelixStepper<GvEquationType>(gvEquation2);" << endl;
+    
     // Configure Stepper for current particle
     exactStepperGV->InitializeCharge( particleCharge ); // Passes to Equation, is cached by stepper
     // gvEquation2->InitializeCharge( particleCharge ); //  Different way - in case this works
@@ -263,7 +273,6 @@ int main(int argc, char *args[])
     cout.precision(3);
     
     /*----------------NOW STEPPING-----------------*/
-    no_of_steps = 5;
     for(int j=0; j<no_of_steps; j++)
     {
         cout<<setw(6)<<j ;           //Printing Step number
@@ -399,20 +408,17 @@ int main(int argc, char *args[])
 
     /*------ Clean up ------*/
     myStepper->InformDone(); 
-    
-    #ifdef BASELINESTEPPER
-    exactStepper->InformDone();
-    #endif 
-
     delete myStepper;
 
-    #ifdef BASELINESTEPPER
+#ifdef BASELINESTEPPER
+    exactStepper->InformDone();
     delete exactStepper;
-    #endif 
+#endif 
     // delete gvEquation;  // The stepper now takes ownership of the equation
     // delete gvEquation2;    
     delete gvField;
     
     cout<<"\n\n#-------------End of output-----------------\n";
-    
+
+    return 0;
 }
