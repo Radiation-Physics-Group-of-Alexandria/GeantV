@@ -3,19 +3,26 @@
 
 #include <vector>
 #include <fstream>
-class TNudyEndfDoppler;
-class TNudyEndfFile;
-class TNudyEndfList;
-class TNudyEndfAng;
-class TNudyEndfEnergy;
-class TNudyEndfEnergyAng;
-class TNudyEndfNuPh;
-class TNudyEndfFissionYield;
-class TNudyEndfPhYield;
-class TNudyEndfPhProd;
-class TNudyEndfPhAng;
-class TNudyEndfPhEnergy;
-class TNudyENDF;
+
+namespace NudyPhysics {
+	class TNudyEndfDoppler;
+	class TNudyEndfAng;
+	class TNudyEndfEnergy;
+	class TNudyEndfEnergyAng;
+	class TNudyEndfNuPh;
+	class TNudyEndfFissionYield;
+	class TNudyEndfPhYield;
+	class TNudyEndfPhProd;
+	class TNudyEndfPhAng;
+	class TNudyEndfPhEnergy;
+}
+
+namespace Nudy {
+	class TNudyENDF;
+	class TNudyEndfFile;
+	class TNudyEndfList;
+}
+
 class TList;
 
 #ifdef USE_ROOT
@@ -44,6 +51,8 @@ typedef std::vector<std::vector<rowd>> matrixd3;
 typedef std::vector<std::vector<std::vector<rowd>>> matrixd4;
 typedef std::vector<std::vector<std::vector<std::vector<rowd>>>> matrixd5;
 
+namespace NudyPhysics {
+
 class TNudyEndfSigma {
 
 public:
@@ -60,17 +69,17 @@ public:
 
 protected:
 private:
-  void ReadFile1(TNudyEndfFile *file);
-  void ReWriteFile1(TNudyEndfFile *file);
+  void ReadFile1(Nudy::TNudyEndfFile *file);
+  void ReWriteFile1(Nudy::TNudyEndfFile *file);
 // //   void SetMtMfMap(int mt, int mf, int i);
 // //   int GetMtMfMap(int mt, int i);
-  void ReadFile2(TNudyEndfFile *file);
-  void ReadFile3(TNudyEndfFile *file);
-  void ReWriteFile3(TNudyEndfFile *file);
-  void ReadFile4(TNudyEndfFile *file);
-  void ReWriteFile4(TNudyEndfFile *file);
+  void ReadFile2(Nudy::TNudyEndfFile *file);
+  void ReadFile3(Nudy::TNudyEndfFile *file);
+  void ReWriteFile3(Nudy::TNudyEndfFile *file);
+  void ReadFile4(Nudy::TNudyEndfFile *file);
+  void ReWriteFile4(Nudy::TNudyEndfFile *file);
   double recursionLinearFile3(double x1, double x2, double sig1, double sig2, rowd x3, rowd x4);
-  void ReadResDat4l(int l1, int mm, TNudyEndfList *theList, TList *rec);
+  void ReadResDat4l(int l1, int mm, Nudy::TNudyEndfList *theList, TList *rec);
   void recoPlusBroad(int flagNer);
   void GetSigma(int lrfp, double x, double &siga, double &sigb, double &sigc);
   void Linearize(int flagNer);
@@ -98,9 +107,9 @@ private:
   double insertFile3(rowd &x1, rowd &x2);
   double insertFile3High(rowd &x1, rowd &x2);
   int BinarySearch(double x1, rowd &x2);
-  void AddSecFile3(TNudyEndfFile *file, double a, double b, int MF2Add, rowd &x1, rowd &x2);
+  void AddSecFile3(Nudy::TNudyEndfFile *file, double a, double b, int MF2Add, rowd &x1, rowd &x2);
   void broadSigma(rowd &x1, rowd &x2, rowd &x3);
-  void fixupTotal(TNudyEndfFile *file, rowd &x1, rowd &x2);
+  void fixupTotal(Nudy::TNudyEndfFile *file, rowd &x1, rowd &x2);
   void dopplerAll();
   double recursionLinearNuPh(double x1, double x2, double sig1, double sig2, std::vector<double> x,
                              std::vector<double> sig);
@@ -108,7 +117,7 @@ private:
   double recursionLinearProb(double x1, double x2, double pdf1, double pdf2);
   void fillPdf1d();
   void fillPdf2d();
-  void AddSecFile12(TNudyEndfFile *file);
+  void AddSecFile12(Nudy::TNudyEndfFile *file);
   const char *rENDF;             // Name of the endf cross-section data file
   double doppTemp1, doppTemp2 ;                // temperature t1 t2
   double sigDiff;                // precision for cross-section reconstruction
@@ -239,17 +248,17 @@ private:
   int prepro = 0 ;
   rowint nSecNeutron, nSecPhoton;   // counter for neutron, photon producing reactions
   rowint nReacNeutron, nDelayFamily; // number of neutron reactions, delayed neutron families
-  TNudyEndfDoppler *doppler;
-  TNudyEndfAng *recoAng;
-  TNudyEndfEnergy *recoEnergy;
-  TNudyEndfEnergyAng *recoEnergyAng;
-  TNudyEndfNuPh *recoNuPh;
-  TNudyEndfFissionYield *recoFissY;
-  TNudyEndfPhYield *recoPhYield;
-  TNudyEndfPhProd *recoPhProd;
-  TNudyEndfPhAng *recoPhAng;
-  TNudyEndfPhEnergy *recoPhEnergy;
-  TNudyENDF *pendf;
+  NudyPhysics::TNudyEndfDoppler *doppler;
+  NudyPhysics::TNudyEndfAng *recoAng;
+  NudyPhysics::TNudyEndfEnergy *recoEnergy;
+  NudyPhysics::TNudyEndfEnergyAng *recoEnergyAng;
+  NudyPhysics::TNudyEndfNuPh *recoNuPh;
+  NudyPhysics::TNudyEndfFissionYield *recoFissY;
+  NudyPhysics::TNudyEndfPhYield *recoPhYield;
+  NudyPhysics::TNudyEndfPhProd *recoPhProd;
+  NudyPhysics::TNudyEndfPhAng *recoPhAng;
+  NudyPhysics::TNudyEndfPhEnergy *recoPhEnergy;
+  Nudy::TNudyENDF *pendf;
 #ifdef USE_ROOT
   TRandom3 *fRnd;
 #endif
@@ -258,4 +267,6 @@ private:
   ClassDef(TNudyEndfSigma, 1) // class for an ENDF reconstruction
 #endif
 };
+
+} //namespace
 #endif

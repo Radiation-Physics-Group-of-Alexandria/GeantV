@@ -8,6 +8,10 @@
 #include "TNudyEndfDoppler.h"
 #include <iomanip>
 #include <algorithm>
+
+using namespace Nudy;
+using namespace NudyPhysics;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfDoppler)
 #endif

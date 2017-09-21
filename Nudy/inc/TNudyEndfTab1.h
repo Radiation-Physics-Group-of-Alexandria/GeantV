@@ -25,7 +25,13 @@
 
 #include "TNudyEndfCont.h"
 
-class TNudyEndfTab1 : public TNudyEndfCont {
+namespace Nudy {
+	class TNudyEndfCont;
+}
+
+namespace Nudy {
+
+class TNudyEndfTab1 : public Nudy::TNudyEndfCont {
 public:
   TNudyEndfTab1();
   TNudyEndfTab1(TNudyEndfTab1 *tab, int n1, int n2);
@@ -68,4 +74,6 @@ private:
 #endif
 };
 
+
+} //namespace
 #endif

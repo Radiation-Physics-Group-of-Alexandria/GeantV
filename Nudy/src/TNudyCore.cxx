@@ -5,6 +5,8 @@
 #include "TNudyCore.h"
 #include "TParticle.h"
 
+using namespace Nudy;
+
 using std::max;
 using std::min;
 

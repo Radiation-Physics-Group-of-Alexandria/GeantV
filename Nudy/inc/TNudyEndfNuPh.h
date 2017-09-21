@@ -10,11 +10,16 @@ typedef std::vector<int> rowint;
 #include "Rtypes.h"
 #endif
 
+namespace Nudy {
+	class TNudyEndfFile;
+}
+
+namespace NudyPhysics {
 class TNudyEndfNuPh : public TNudyEndfRecoPoint {
 
 public:
   TNudyEndfNuPh();
-  TNudyEndfNuPh(TNudyEndfFile *file);
+  TNudyEndfNuPh(Nudy::TNudyEndfFile *file);
   virtual double GetNuTotal(int elemid, double energyK);
   virtual double GetNuPrompt(int elemid, double energyK);
   virtual double GetNuDelayed(int elemid, double energyK);
@@ -35,4 +40,6 @@ private:
   double sigDiff;
   ClassDef(TNudyEndfNuPh, 1) // class for an ENDF reconstruction
 };
+
+} // namespace
 #endif

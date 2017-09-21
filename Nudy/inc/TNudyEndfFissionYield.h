@@ -2,6 +2,11 @@
 #define TNudyEndfFissionYield_H
 
 #include "TNudyEndfRecoPoint.h"
+
+namespace Nudy {
+	class TNudyEndfFile;
+}
+
 typedef std::vector<double> rowd;
 typedef std::vector<rowd> matrixd2;
 #ifdef USE_ROOT
@@ -9,11 +14,12 @@ typedef std::vector<rowd> matrixd2;
 class TRandom3;
 #endif
 
-class TNudyEndfFissionYield : public TNudyEndfRecoPoint {
+namespace NudyPhysics {
+class TNudyEndfFissionYield : public NudyPhysics::TNudyEndfRecoPoint {
 
 public:
   TNudyEndfFissionYield();
-  TNudyEndfFissionYield(TNudyEndfFile *file);
+  TNudyEndfFissionYield(Nudy::TNudyEndfFile *file);
   virtual double GetFisYield(int elemid, double energyK);
   virtual ~TNudyEndfFissionYield();
 
@@ -27,4 +33,6 @@ private:
 #endif
   ClassDef(TNudyEndfFissionYield, 1) // class for an ENDF fission yield reconstruction
 };
+
+} //namespace
 #endif

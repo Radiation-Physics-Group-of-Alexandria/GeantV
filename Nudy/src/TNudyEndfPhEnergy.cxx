@@ -12,6 +12,8 @@
 #include "TNudyEndfPhEnergy.h"
 #include "Math/SpecFuncMathMore.h"
 #include "TMath.h"
+using namespace Nudy;
+using namespace NudyPhysics;
 
 #ifdef USE_ROOT
 ClassImp(TNudyEndfPhEnergy)

@@ -3,18 +3,24 @@
 
 #include <vector>
 #include <fstream>
-class TNudyEndfNuPh;
-class TNudyEndfFissionYield;
-class TNudyEndfEnergy;
-class TNudyEndfEnergyAng;
-class TNudyEndfAng;
-class TNudyEndfFile;
-class TNudyEndfList;
-class TNudyEndfPhYield;
-class TNudyEndfPhProd;
-class TNudyEndfPhAng;
-class TNudyEndfPhEnergy;
+namespace Nudy {
+	class TNudyEndfFile;
+	class TNudyEndfList;
+}
+
 class TList;
+
+namespace NudyPhysics {
+	class TNudyEndfNuPh;
+	class TNudyEndfFissionYield;
+	class TNudyEndfEnergy;
+	class TNudyEndfEnergyAng;
+	class TNudyEndfAng;
+	class TNudyEndfPhYield;
+	class TNudyEndfPhProd;
+	class TNudyEndfPhAng;
+	class TNudyEndfPhEnergy;
+}
 
 #ifdef USE_ROOT
 #include "Rtypes.h"
@@ -29,6 +35,9 @@ typedef std::vector<rowd> matrixd2;
 typedef std::vector<std::vector<rowd>> matrixd3;
 typedef std::vector<std::vector<std::vector<rowd>>> matrixd4;
 typedef std::vector<std::vector<std::vector<std::vector<rowd>>>> matrixd5;
+
+
+namespace NudyPhysics {
 
 class TNudyEndfRecoPoint {
 
@@ -97,8 +106,8 @@ protected:
   double AWRI;
 
 private:
-  void ReadFile2(TNudyEndfFile *file);
-  void ReadFile3(TNudyEndfFile *file);
+  void ReadFile2(Nudy::TNudyEndfFile *file);
+  void ReadFile3(Nudy::TNudyEndfFile *file);
   void fixupTotal(rowd &x1);
 
   int flagRead = -1;
@@ -115,15 +124,15 @@ private:
   rowd eLinearFile3;
   rowd xLinearFile3;
   rowd eneTemp, sigTemp;       // temporary vectors to store energy and sigma
-  TNudyEndfAng *recoAng;
-  TNudyEndfEnergy *recoEnergy;
-  TNudyEndfEnergyAng *recoEnergyAng;
-  TNudyEndfNuPh *recoNuPh;
-  TNudyEndfFissionYield *recoFissY;
-  TNudyEndfPhYield *recoPhYield;
-  TNudyEndfPhProd *recoPhProd;
-  TNudyEndfPhAng *recoPhAng;
-  TNudyEndfPhEnergy *recoPhEnergy;
+  NudyPhysics::TNudyEndfAng *recoAng;
+  NudyPhysics::TNudyEndfEnergy *recoEnergy;
+  NudyPhysics::TNudyEndfEnergyAng *recoEnergyAng;
+  NudyPhysics::TNudyEndfNuPh *recoNuPh;
+  NudyPhysics::TNudyEndfFissionYield *recoFissY;
+  NudyPhysics::TNudyEndfPhYield *recoPhYield;
+  NudyPhysics::TNudyEndfPhProd *recoPhProd;
+  NudyPhysics::TNudyEndfPhAng *recoPhAng;
+  NudyPhysics::TNudyEndfPhEnergy *recoPhEnergy;
 #ifdef USE_ROOT
   TRandom3 *fRnd;
 #endif
@@ -132,4 +141,6 @@ private:
   ClassDef(TNudyEndfRecoPoint, 1) // class for an ENDF reconstruction
 #endif
 };
+
+}
 #endif

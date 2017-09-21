@@ -9,22 +9,27 @@
 #ifdef USE_ROOT
 #include "Rtypes.h"
 class TRandom3;
-class TNudyEndfRecoPoint;
+
+namespace NudyPhysics {
+	class TNudyEndfRecoPoint;
+}
 #endif
 
+
+namespace NudyPhysics {
 class TNudySampling {
 
 public:
   TNudySampling();
-  TNudySampling(Particle *, TNudyEndfRecoPoint *recoPoint);
+  TNudySampling(Particle *, NudyPhysics::TNudyEndfRecoPoint *recoPoint);
   virtual ~TNudySampling();
 
 private:
-  void GetSecParameter(Particle *, TNudyEndfRecoPoint *recoPoint);
+  void GetSecParameter(Particle *, NudyPhysics::TNudyEndfRecoPoint *recoPoint);
   void FillHisto(double icosLab, double isecEnergyLab);
-  double kinematicNonRel(Particle *particle, TNudyEndfRecoPoint *recoPoint);
-  double kinematicRel(Particle *particle, TNudyEndfRecoPoint *recoPoint);
-  double kinematicGama(Particle *particle, TNudyEndfRecoPoint *recoPoint);
+  double kinematicNonRel(Particle *particle, NudyPhysics::TNudyEndfRecoPoint *recoPoint);
+  double kinematicRel(Particle *particle, NudyPhysics::TNudyEndfRecoPoint *recoPoint);
+  double kinematicGama(Particle *particle, NudyPhysics::TNudyEndfRecoPoint *recoPoint);
   std::vector<double> crs;
   double kineticE;
   double cosCM = 0, cosLab = 0, secEnergyCM = 0, secEnergyLab = 0;
@@ -54,4 +59,6 @@ private:
   ClassDef(TNudySampling, 1) // class for sampling
 #endif
 };
+
+} //namespace 
 #endif

@@ -16,6 +16,11 @@
 #endif
 #include "TCanvas.h"
 #include "TFile.h"
+
+using namespace Nudy;
+using namespace NudyPhysics;
+
+
 #ifdef USE_ROOT
 ClassImp(TNudySampling)
 #endif

@@ -9,6 +9,9 @@
 #include "TNudyCore.h"
 #include "TNudyEndfFissionYield.h"
 
+using namespace Nudy;
+using namespace NudyPhysics;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfFissionYield)
 #include "TRandom3.h"

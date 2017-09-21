@@ -2,9 +2,9 @@
 #include "TNudyAliasCont.h"
 
 #ifdef USE_ROOT
-ClassImp(TNudyAlias)
+ClassImp(Nudy::TNudyAlias)
 #endif
-
+namespace Nudy {
     //_______________________________________________________________________________
     TNudyAliasCont::TNudyAliasCont()
     : fLen(0), fChooseBin(nullptr), fP(nullptr), fX(nullptr), fInterX(nullptr), fInterP(nullptr), fTx(nullptr),
@@ -95,7 +95,7 @@ void TNudyAliasCont::Initialize(double *p, double *x, const int len, double alph
       I[i - 1]        = i - 1;
     }
   }
-  fChooseBin = new TNudyAlias(integral, I, len - 1, seed);
+  fChooseBin = new Nudy::TNudyAlias(integral, I, len - 1, seed);
   delete[] integral;
   delete[] I;
 }
@@ -274,7 +274,7 @@ void TNudyAliasCont::BuildIntermediate(TNudyAliasCont *dists, const int len)
     }
     // Add Extra points into distribution
     for (j = 0, count = 0; j < dists[i + 1].fLen; j++) {
-      lo = TNudyCore::Instance()->BinarySearch(integral, dists[i].fLen, integralp1[j]);
+      lo = Nudy::TNudyCore::Instance()->BinarySearch(integral, dists[i].fLen, integralp1[j]);
       hi = lo + 1;
       f1 = dists[i].fP[lo];
       f2 = dists[i].fP[hi];
@@ -295,7 +295,7 @@ void TNudyAliasCont::BuildIntermediate(TNudyAliasCont *dists, const int len)
         else
           x = e1 + 1e-5;
       }
-      pp = TNudyCore::Instance()->LinearInterpolation(e1, f1, e2, f2, x);
+      pp = Nudy::TNudyCore::Instance()->LinearInterpolation(e1, f1, e2, f2, x);
       //      if(fabs(integralp1[j] - integral[lo]) > 1e-5){
       //** Work in progress to improve accuracy
       /*                 count++;
@@ -339,7 +339,7 @@ void TNudyAliasCont::BuildIntermediate(TNudyAliasCont *dists, const int len)
       }
     }
     delete dists[i].fChooseBin;
-    dists[i].fChooseBin = new TNudyAlias(It, I, dists[i].fLen - 1, i);
+    dists[i].fChooseBin = new Nudy::TNudyAlias(It, I, dists[i].fLen - 1, i);
     delete[] It;
     delete[] I;
 
@@ -351,7 +351,7 @@ void TNudyAliasCont::BuildIntermediate(TNudyAliasCont *dists, const int len)
     dists[i].fInterP[0] = dists[i + 1].fP[0];
 
     for (j = 1; j < dists[i].fLen; j++) {
-      lo = TNudyCore::Instance()->BinarySearch(integralp1, dists[i + 1].fLen, integral[j]);
+      lo = Nudy::TNudyCore::Instance()->BinarySearch(integralp1, dists[i + 1].fLen, integral[j]);
       hi = lo + 1;
       f1 = dists[i + 1].fP[lo];
       f2 = dists[i + 1].fP[hi];
@@ -374,7 +374,7 @@ void TNudyAliasCont::BuildIntermediate(TNudyAliasCont *dists, const int len)
       }
 
       dists[i].fInterX[j] = x;
-      pp                  = TNudyCore::Instance()->LinearInterpolation(e1, f1, e2, f2, x);
+      pp                  = Nudy::TNudyCore::Instance()->LinearInterpolation(e1, f1, e2, f2, x);
       if (pp < 0) pp      = 0;
       dists[i].fInterP[j] = pp;
 
@@ -408,3 +408,5 @@ double *TNudyAliasCont::Randoms(int n, IntScheme_t iScheme)
 }
 
 #endif
+
+} //namespace 

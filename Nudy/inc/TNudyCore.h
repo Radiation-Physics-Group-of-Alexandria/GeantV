@@ -9,6 +9,8 @@ class TParticle;
 #include "TDatabasePDG.h"
 #include "TNudyTypes.h"
 
+namespace Nudy {
+
 class TNudyCore {
 protected:
   static TNudyCore *fgInstance;
@@ -67,4 +69,5 @@ public:
 #endif
 };
 
+} // namespace 
 #endif

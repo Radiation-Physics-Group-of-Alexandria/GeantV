@@ -4,6 +4,8 @@
 #include "TNudyEndfTab1.h"
 #include "TNudyCore.h"
 
+using namespace Nudy;
+
 //______________________________________________________________________________
 void TVNudyModel::ReadFile3(TNudyEndfFile *file)
 {

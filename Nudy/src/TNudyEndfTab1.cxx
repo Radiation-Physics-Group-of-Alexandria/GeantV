@@ -8,6 +8,8 @@
 
 #include <TNudyEndfTab1.h>
 
+using namespace Nudy;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfTab1)
 #endif

@@ -2,24 +2,30 @@
 #define ROOT_TNudySubLibrary
 
 #include "TNamed.h"
-class TVNudyModel;
-class TNudyEndfMat;
+namespace Nudy {
+	class TVNudyModel;
+	class TNudyEndfMat;
+}
+
 #include "TNudyTypes.h"
 class TBtree;
 class TParticlePDG;
 class TGeoElementRN;
+
+
+namespace Nudy {
 
 class TNudySubLibrary : public TNamed {
 public:
   TNudySubLibrary();
   TNudySubLibrary(TParticlePDG *projectile);
   virtual ~TNudySubLibrary();
-  void AddModel(TVNudyModel *model);
-  void ReadMat(TNudyEndfMat *material);
+  void AddModel(Nudy::TVNudyModel *model);
+  void ReadMat(Nudy::TNudyEndfMat *material);
   void SetProjectile(TParticlePDG *particle) { fProjectile = particle; }
   void ListModels();
   TParticlePDG *GetProjectile() { return fProjectile; }
-  TVNudyModel *GetModel(const TGeoElementRN *mat, const Reaction_t reac, const unsigned long temp);
+  Nudy::TVNudyModel *GetModel(const TGeoElementRN *mat, const Reaction_t reac, const unsigned long temp);
   TBtree *GetAllModels(const TGeoElementRN *mat = NULL, const Reaction_t reac = kNoReaction,
                        const unsigned long temp = 0);
 
@@ -31,4 +37,6 @@ private:
   ClassDef(TNudySubLibrary, 1)
 #endif
 };
+
+} //namespace
 #endif

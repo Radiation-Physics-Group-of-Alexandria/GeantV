@@ -2,6 +2,9 @@
 #define TNudyEndfDoppler_H
 
 #include "TNudyEndfRecoPoint.h"
+
+namespace NudyPhysics {
+
 class TNudyEndfDoppler : public TNudyEndfRecoPoint {
 
 public:
@@ -43,4 +46,6 @@ private:
   ClassDef(TNudyEndfDoppler, 1)
 #endif
 };
+
+} // namespace 
 #endif

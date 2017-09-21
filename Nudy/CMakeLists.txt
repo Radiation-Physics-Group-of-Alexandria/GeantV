@@ -5,13 +5,16 @@ file(GLOB sources src/*.cxx)
 file(GLOB headers inc/T*.h)
 
 include_directories(inc)
+include_directories(src)
+
+list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 ROOT_GENERATE_DICTIONARY(NudyDict ${headers} MODULE Nudy LINKDEF inc/LinkDef.h)
 
 #----------------------------------------------------------------------------------------------
 # Add the executable
 #
-add_library(Nudy SHARED ${sources} NudyDict.cxx)
+add_library(Nudy SHARED NudyDict.cxx ${sources})
 target_link_libraries(Nudy -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${ROOT_LIBRARIES} MathMore ${VC_LIBRARIES})
 
 #----------------------------------------------------------------------------------------------
@@ -36,3 +39,8 @@ if(DOXYGEN_FOUND)
   set(DOXYFILE_SOURCE_DIRS "${DOXYFILE_SOURCE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}" PARENT_SCOPE)
 endif()
 
+
+#-----------------------------------------------------------------
+# This is to test Nudy Crosssections by Nudy Test Code without GV
+#
+add_subdirectory(tests)

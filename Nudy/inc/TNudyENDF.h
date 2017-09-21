@@ -10,15 +10,18 @@
 */
 
 class TFile;
-class TNudyEndfTape;
-class TNudyEndfMat;
-class TNudyEndfFile;
-class TNudyEndfSec;
-class TNudyEndfCont;
-class TNudyEndfList;
-class TNudyEndfTab1;
-class TNudyEndfTab2;
-class TNudyEndfINTG;
+
+namespace Nudy {
+	class TNudyEndfTape;
+	class TNudyEndfMat;
+	class TNudyEndfFile;
+	class TNudyEndfSec;
+	class TNudyEndfCont;
+	class TNudyEndfList;
+	class TNudyEndfTab1;
+	class TNudyEndfTab2;
+	class TNudyEndfINTG;
+}
 
 #ifdef USE_ROOT
 #include "Rtypes.h"
@@ -30,61 +33,63 @@ using std::ifstream;
 
 #define LINLEN 256
 
+namespace Nudy {
+
 class TNudyENDF {
 public:
   TNudyENDF();
   TNudyENDF(const char *nFileENDF, const char *nFileRENDF, const char *opt = "new", unsigned char loglev = 0);
   virtual ~TNudyENDF();
   bool sub = false;
-  void SetEndfSub(std::string ENDFSUB)
+  void SetEndfSub(std::string strENDFSUB)
   {
     this->sub     = true;
-    this->ENDFSUB = ENDFSUB;
+    this->ENDFSUB = strENDFSUB;
   }
   std::string GetEndfSubName() const { return ENDFSUB; }
   void SetLogLev(unsigned char loglev) { fLogLev = loglev; }
   int SetPreProcess(int x1) {return  prepro = x1; }
   unsigned char GetLogLev() const { return fLogLev; }
   void Process();
-  void Process(TNudyEndfMat *mat);
-  void Process(TNudyEndfFile *file);
-  void Process(TNudyEndfSec *sec);
-  void Process(TNudyEndfCont *secCont);
-  void Process(TNudyEndfList *secList);
-  void Process(TNudyEndfTab1 *secTab1);
-  void Process(TNudyEndfTab2 *secTab2);
-  void Process(TNudyEndfINTG *secINTG);
-  void ProcessF1(TNudyEndfSec *sec);
-  void ProcessF2(TNudyEndfSec *sec);
-  void ProcessF3(TNudyEndfSec *sec);
-  void ProcessF4(TNudyEndfSec *sec);
-  void ProcessF5(TNudyEndfSec *sec);
-  void ProcessF6(TNudyEndfSec *sec);
-  void ProcessF7(TNudyEndfSec *sec);
-  void ProcessF8(TNudyEndfSec *sec);
-  void ProcessF9(TNudyEndfSec *sec);
-  void ProcessF10(TNudyEndfSec *sec);
-  void ProcessF12(TNudyEndfSec *sec);
-  void ProcessF13(TNudyEndfSec *sec);
-  void ProcessF14(TNudyEndfSec *sec);
-  void ProcessF15(TNudyEndfSec *sec);
-  void ProcessF23(TNudyEndfSec *sec);
-  void ProcessF26(TNudyEndfSec *sec);
-  void ProcessF27(TNudyEndfSec *sec);
-  void ProcessF28(TNudyEndfSec *sec);
-  void ProcessF30(TNudyEndfSec *sec);
-  void ProcessF31(TNudyEndfSec *sec);
-  void ProcessF32(TNudyEndfSec *sec);
-  void ProcessF33(TNudyEndfSec *sec);
-  void ProcessF34(TNudyEndfSec *sec);
-  void ProcessF35(TNudyEndfSec *sec);
-  void ProcessF40(TNudyEndfSec *sec);
+  void Process(Nudy::TNudyEndfMat *mat);
+  void Process(Nudy::TNudyEndfFile *file);
+  void Process(Nudy::TNudyEndfSec *sec);
+  void Process(Nudy::TNudyEndfCont *secCont);
+  void Process(Nudy::TNudyEndfList *secList);
+  void Process(Nudy::TNudyEndfTab1 *secTab1);
+  void Process(Nudy::TNudyEndfTab2 *secTab2);
+  void Process(Nudy::TNudyEndfINTG *secINTG);
+  void ProcessF1(Nudy::TNudyEndfSec *sec);
+  void ProcessF2(Nudy::TNudyEndfSec *sec);
+  void ProcessF3(Nudy::TNudyEndfSec *sec);
+  void ProcessF4(Nudy::TNudyEndfSec *sec);
+  void ProcessF5(Nudy::TNudyEndfSec *sec);
+  void ProcessF6(Nudy::TNudyEndfSec *sec);
+  void ProcessF7(Nudy::TNudyEndfSec *sec);
+  void ProcessF8(Nudy::TNudyEndfSec *sec);
+  void ProcessF9(Nudy::TNudyEndfSec *sec);
+  void ProcessF10(Nudy::TNudyEndfSec *sec);
+  void ProcessF12(Nudy::TNudyEndfSec *sec);
+  void ProcessF13(Nudy::TNudyEndfSec *sec);
+  void ProcessF14(Nudy::TNudyEndfSec *sec);
+  void ProcessF15(Nudy::TNudyEndfSec *sec);
+  void ProcessF23(Nudy::TNudyEndfSec *sec);
+  void ProcessF26(Nudy::TNudyEndfSec *sec);
+  void ProcessF27(Nudy::TNudyEndfSec *sec);
+  void ProcessF28(Nudy::TNudyEndfSec *sec);
+  void ProcessF30(Nudy::TNudyEndfSec *sec);
+  void ProcessF31(Nudy::TNudyEndfSec *sec);
+  void ProcessF32(Nudy::TNudyEndfSec *sec);
+  void ProcessF33(Nudy::TNudyEndfSec *sec);
+  void ProcessF34(Nudy::TNudyEndfSec *sec);
+  void ProcessF35(Nudy::TNudyEndfSec *sec);
+  void ProcessF40(Nudy::TNudyEndfSec *sec);
   void GetSEND(const int pmtf[3]);
   void GetFEND(const int pmtf[3]);
   void GetMEND(const int pmtf[3]);
   void GetTEND();
   void ToEndSec();
-  TNudyEndfTape *GetTape() { return this->fTape; }
+  Nudy::TNudyEndfTape *GetTape() { return this->fTape; }
 
   void CheckSEND(const int pmtf[3]) const;
   void CheckFEND(const int pmtf[3]) const;
@@ -227,8 +232,8 @@ private:
   ifstream fENDF;        //! Input fENDF tape
   TFile *fRENDF;         //! Output fRENDF file
   char fLine[LINLEN];    //! Buffer to read the line
-  TNudyEndfTape *fTape;  //! Support link for the tape structure
-  TNudyEndfMat *fMat;    //! Support link for the current material
+  Nudy::TNudyEndfTape *fTape;  //! Support link for the tape structure
+  Nudy::TNudyEndfMat *fMat;    //! Support link for the current material
   std::string ENDFSUB;
   int prepro ;
 #ifdef USE_ROOT
@@ -236,4 +241,6 @@ private:
 #endif
 };
 
+
+} //namespace 
 #endif

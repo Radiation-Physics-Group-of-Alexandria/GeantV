@@ -2,6 +2,15 @@
 #define TNudyEndfPhProd_H
 
 #include "TNudyEndfRecoPoint.h"
+
+namespace NudyPhysics {
+	class TNudyEndfRecoPoint;
+}
+
+namespace Nudy {
+	class TNudyEndfFile;
+}
+
 typedef std::vector<double> rowd;
 typedef std::vector<int> rowi;
 typedef std::vector<rowd> matrixd2;
@@ -10,11 +19,13 @@ typedef std::vector<rowd> matrixd2;
 class TRandom3;
 #endif
 
-class TNudyEndfPhProd : public TNudyEndfRecoPoint {
+
+namespace NudyPhysics {
+class TNudyEndfPhProd : public NudyPhysics::TNudyEndfRecoPoint {
 
 public:
   TNudyEndfPhProd();
-  TNudyEndfPhProd(TNudyEndfFile *file);
+  TNudyEndfPhProd(Nudy::TNudyEndfFile *file);
   virtual double GetFisYield(int elemid, double energyK);
   virtual ~TNudyEndfPhProd();
 
@@ -30,4 +41,6 @@ private:
 #endif
   ClassDef(TNudyEndfPhProd, 1) // class for an ENDF fission yield reconstruction
 };
+
+} //namespace 
 #endif

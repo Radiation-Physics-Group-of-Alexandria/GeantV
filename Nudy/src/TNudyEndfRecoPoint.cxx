@@ -26,6 +26,9 @@
 #include "TTree.h"
 #include "TH1D.h"
 
+using namespace Nudy;
+using namespace NudyPhysics;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfRecoPoint)
 #endif

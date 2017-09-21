@@ -3,6 +3,14 @@
 
 #include "TNudyEndfRecoPoint.h"
 
+namespace Nudy {
+	class TNudyEndfFile;
+}
+
+namespace NudyPhysics {
+	class TNudyEndfRecoPoint;
+}
+
 #define PI acos(-1.0)
 typedef std::vector<double> rowd;
 typedef std::vector<int> rowint;
@@ -14,11 +22,13 @@ typedef std::vector<std::vector<rowd>> matrixd3;
 class TRandom3;
 #endif
 
-class TNudyEndfPhEnergy : public TNudyEndfRecoPoint {
+
+namespace NudyPhysics {
+class TNudyEndfPhEnergy : public NudyPhysics::TNudyEndfRecoPoint {
 
 public:
   TNudyEndfPhEnergy();
-  TNudyEndfPhEnergy(TNudyEndfFile *file);
+  TNudyEndfPhEnergy(Nudy::TNudyEndfFile *file);
   virtual double GetEnergy5(int elemid, int mt, double energyK);
   virtual double GetDelayedFraction(int ielemId, int mt, double energyK);
   virtual ~TNudyEndfPhEnergy();
@@ -53,4 +63,6 @@ private:
 #endif
   ClassDef(TNudyEndfPhEnergy, 1) // class for an ENDF energy reconstruction
 };
+
+} // namespace 
 #endif

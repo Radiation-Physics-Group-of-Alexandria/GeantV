@@ -14,6 +14,9 @@
 #include "TNudyEndfEnergyAng.h"
 #include "Math/SpecFuncMathMore.h"
 
+using namespace Nudy;
+using namespace NudyPhysics;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfEnergyAng)
 #include "TRandom3.h"

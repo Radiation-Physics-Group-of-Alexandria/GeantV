@@ -15,6 +15,10 @@
 #include "Math/SpecFuncMathMore.h"
 #include "TNudyEndfPhAng.h"
 
+
+using namespace Nudy;
+using namespace NudyPhysics;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfPhAng)
 #include "TRandom3.h"

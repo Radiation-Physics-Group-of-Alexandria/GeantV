@@ -25,6 +25,10 @@
 #include "TNudyEndfPhAng.h"
 #include "TNudyEndfPhEnergy.h"
 
+
+using namespace Nudy;
+using namespace NudyPhysics;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfSigma)
 #endif

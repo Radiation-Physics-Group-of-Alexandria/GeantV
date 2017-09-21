@@ -2,6 +2,15 @@
 #define TNudyEndfAng_H
 
 #include "TNudyEndfRecoPoint.h"
+
+namespace NudyPhysics {
+	class TNudyEndfRecoPoint;
+}
+
+namespace Nudy {
+	class TNudyEndfFile;
+}
+
 typedef std::vector<double> rowd;
 typedef std::vector<int> rowint;
 typedef std::vector<rowint> matrixint;
@@ -15,11 +24,12 @@ typedef std::vector<std::vector<std::vector<rowd>>> matrixd4;
 class TRandom3;
 #endif
 
-class TNudyEndfAng : public TNudyEndfRecoPoint {
+namespace NudyPhysics {
+class TNudyEndfAng : public NudyPhysics::TNudyEndfRecoPoint {
 
 public:
   TNudyEndfAng();
-  TNudyEndfAng(TNudyEndfFile *file);
+  TNudyEndfAng(Nudy::TNudyEndfFile *file);
   virtual double GetCos4(int elemid, int mt, double energyK);
   virtual int GetCos4Lct(int elemid, int mt);
   virtual ~TNudyEndfAng();
@@ -47,4 +57,6 @@ private:
   ClassDef(TNudyEndfAng, 1) // class for an ENDF reconstruction
 #endif
 };
+
+} // namespace 
 #endif

@@ -10,6 +10,9 @@
 #include "TNudyCore.h"
 #include "TNudyEndfPhYield.h"
 
+using namespace Nudy;
+using namespace NudyPhysics;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfPhYield)
 #include "TRandom3.h"

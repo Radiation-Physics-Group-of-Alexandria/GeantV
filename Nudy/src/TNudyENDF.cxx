@@ -20,6 +20,8 @@
 #include "TFile.h"
 #include "TError.h"
 
+using namespace Nudy;
+
 #ifdef USE_ROOT
 #include "Rtypes.h"
 ClassImp(TNudyENDF)

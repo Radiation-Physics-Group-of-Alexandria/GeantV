@@ -1,0 +1,2 @@
+#!/bin/sh
+g++ -g src/nelastic.cxx -std=c++11 -fPIC -I/opt/G4/include/Geant4   -I${ROOTSYS}/include  -I/home/vega/decrypted/GV_Neutronics_Interface/Nudy/tests/inc -I/home/vega/decrypted/GV_Neutronics_Interface/Nudy/inc   -L/home/vega/decrypted/GV_Neutronics_Interface/buildGV/lib -lNudy -L${ROOTSYS}/lib `root-config --libs` -lMathMore -lRIO -lHist -lGeom -lEG -lGraf -lGpad -lPhysics -o nelastic

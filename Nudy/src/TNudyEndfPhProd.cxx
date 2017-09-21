@@ -9,6 +9,8 @@
 #include "TNudyEndfTab1.h"
 #include "TNudyCore.h"
 #include "TNudyEndfPhProd.h"
+using namespace Nudy;
+using namespace NudyPhysics;
 
 #ifdef USE_ROOT
 ClassImp(TNudyEndfPhProd)

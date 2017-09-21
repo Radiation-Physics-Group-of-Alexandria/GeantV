@@ -10,6 +10,8 @@
 #include <TNudyEndfTape.h>
 #include "TNudyEndfMat.h"
 
+using namespace Nudy;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfTape)
 #endif

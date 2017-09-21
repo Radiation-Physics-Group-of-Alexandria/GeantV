@@ -10,6 +10,9 @@
 #include "TNudyCore.h"
 #include "TNudyEndfNuPh.h"
 
+using namespace Nudy;
+using namespace NudyPhysics;
+
 #ifdef USE_ROOT
 ClassImp(TNudyEndfNuPh)
 #endif
