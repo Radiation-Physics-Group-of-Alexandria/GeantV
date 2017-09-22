@@ -6,12 +6,27 @@
 #include "Parameterizations.h"
 
 #include <cmath>
+#include <iostream>
 
 namespace geantphysics {
 
   GlauberGribovInelasticXsc::GlauberGribovInelasticXsc() 
   {
     this->SetName("GlauberGribovInelasticXsc");
+
+    std::vector< int > projVec;
+    projVec.push_back(1);
+    projVec.push_back(3);
+    projVec.push_back(10);
+    projVec.push_back(11);
+    projVec.push_back(12);
+    projVec.push_back(13);
+    projVec.push_back(14);
+    projVec.push_back(15);
+    projVec.push_back(16);
+    projVec.push_back(17);
+    
+    this->SetProjectileCodeVec(projVec);
   }
 
 
@@ -25,14 +40,13 @@ namespace geantphysics {
   // [1] B.Z. Kopeliovich, nucl-th/0306044 + simplification above
 
   double GlauberGribovInelasticXsc::GetIsotopeCrossSection(const int particleCode, const double energyKin, const double mass,
-							   const int Z, const int N)
+							   const int Z, const int A)
   {
     double NucleusInelasticXsc, sigma, cofInelastic, cofTotal, nucleusSquare, ratio;
 
     int particlePDG = Particle::GetParticleByInternalCode(particleCode)->GetPDGCode(); 
 
-    int A = Z + N;
-
+    int N = A - Z;
     if( A > 1 )
       { 
 	double R = 0; 

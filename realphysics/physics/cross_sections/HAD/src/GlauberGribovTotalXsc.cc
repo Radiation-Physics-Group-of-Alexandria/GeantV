@@ -12,6 +12,20 @@ namespace geantphysics{
   GlauberGribovTotalXsc::GlauberGribovTotalXsc() 
   {
     this->SetName("GlauberGribovTotalXsc");
+    
+    std::vector< int > projVec;
+    projVec.push_back(1);
+    projVec.push_back(3);
+    projVec.push_back(10);
+    projVec.push_back(11);
+    projVec.push_back(12);
+    projVec.push_back(13);
+    projVec.push_back(14);
+    projVec.push_back(15);
+    projVec.push_back(16);
+    projVec.push_back(17);
+    
+    this->SetProjectileCodeVec(projVec);
   }
 
 
@@ -25,10 +39,10 @@ namespace geantphysics{
   // [1] B.Z. Kopeliovich, nucl-th/0306044 + simplification above
 
   double GlauberGribovTotalXsc::GetIsotopeCrossSection(const int particleCode, const double energyKin, const double mass,
-						       const int Z, const int N)
+						       const int Z, const int A)
   {
     double xsection, sigma, cofTotal, nucleusSquare, ratio;
-    int A = Z + N;
+    int N = A - Z;
 
     int particlePDG = Particle::GetParticleByInternalCode(particleCode)->GetPDGCode(); 
 
@@ -42,26 +56,26 @@ namespace geantphysics{
 	    particlePDG == 310   || 
 	    particlePDG == 130    )
 	  {
-	    sigma = Z*GetKaonNucleonTotalXscGG(particlePDG, mass, energyKin, 2212);
-	    sigma += N*GetKaonNucleonTotalXscGG(particlePDG, mass, energyKin, 2112);
+	    sigma = Z * GetKaonNucleonTotalXscGG(particlePDG, mass, energyKin, 2212);
+	    sigma += N * GetKaonNucleonTotalXscGG(particlePDG, mass, energyKin, 2112);
     
-	    cofTotal     = 2.0;
-	    R = 1.3*geant::fermi;
+	    cofTotal = 2.0;
+	    R = 1.3 * geant::fermi;
 	    R *= std::pow(double(A), 0.3333);
 	  }
 	else
 	  {	    
-	    sigma = Z*GetHadronNucleonTotalXscNS(particlePDG, mass, energyKin, 2212);
-	    sigma += N*GetHadronNucleonTotalXscNS(particlePDG, mass, energyKin, 2112);
+	    sigma = Z * GetHadronNucleonTotalXscNS(particlePDG, mass, energyKin, 2212);
+	    sigma += N * GetHadronNucleonTotalXscNS(particlePDG, mass, energyKin, 2112);
 
-	    cofTotal     = 2.0;
+	    cofTotal = 2.0;
 	    R = GetNucleusRadius(A); 
 	  }
 
-	nucleusSquare = cofTotal*geant::kPi*R*R;   // basically 2piRR
-	ratio = sigma/nucleusSquare;
+	nucleusSquare = cofTotal * geant::kPi * R * R;   // basically 2piRR
+	ratio = sigma / nucleusSquare;
 
-	xsection =  nucleusSquare*std::log( 1. + ratio );
+	xsection =  nucleusSquare * std::log(1. + ratio);
 	xsection *= GetParticleBarCorTot(particlePDG, Z);
       }
     else // H
@@ -71,11 +85,11 @@ namespace geantphysics{
 	    particlePDG == 310   || 
 	    particlePDG == 130    )
 	  {
-	    xsection  = GetKaonNucleonTotalXscGG(particlePDG, mass, energyKin, 2212);
+	    xsection = GetKaonNucleonTotalXscGG(particlePDG, mass, energyKin, 2212);
 	  }
 	else
 	  {
-	    xsection = Z*GetHadronNucleonTotalXscNS(particlePDG, mass, energyKin, 2212);
+	    xsection = GetHadronNucleonTotalXscNS(particlePDG, mass, energyKin, 2212);
 	  }
       }
     return xsection; 
