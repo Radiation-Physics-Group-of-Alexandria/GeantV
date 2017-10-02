@@ -27,6 +27,9 @@ namespace NudyPhysics {
 class TRandom3;
 #endif
 
+
+namespace NudyPhysics {
+
 #define PI acos(-1.0)
 typedef std::vector<double> rowd;
 typedef std::vector<int> rowint;
@@ -37,7 +40,6 @@ typedef std::vector<std::vector<std::vector<rowd>>> matrixd4;
 typedef std::vector<std::vector<std::vector<std::vector<rowd>>>> matrixd5;
 
 
-namespace NudyPhysics {
 
 class TNudyEndfRecoPoint {
 
