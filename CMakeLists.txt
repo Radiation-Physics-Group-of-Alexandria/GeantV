@@ -576,6 +576,7 @@ endif()
 #----------------------------------------------------------------------------------------------
 # Include directories
 #
+include_directories("${PROJECT_SOURCE_DIR}/Nudy/inc")
 include_directories("${PROJECT_SOURCE_DIR}/vecprot_v2/inc")
 include_directories("${PROJECT_SOURCE_DIR}/base/inc")
 if(USE_REAL_PHYSICS)

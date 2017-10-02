@@ -1,12 +1,20 @@
 #----------------------------------------------------------------------------------------------
 # Add source files & include directories
 #
-file(GLOB sources src/*.cxx)
-file(GLOB headers inc/T*.h)
+file(GLOB sources ${CMAKE_SOURCE_DIR}/src/*.cxx)
+file(GLOB headers
+ ${CMAKE_SOURCE_DIR}/inc/T*.h
+ ${CMAKE_SOURCE_DIR}/base/inc/PhysicalConstants.h
+ ${CMAKE_SOURCE_DIR}/base/inc/SystemOfUnits.h
+)
 
-include_directories(inc)
+include_directories(
+ ${CMAKE_SOURCE_DIR}/inc
+ ${CMAKE_SOURCE_DIR}/material/inc
+ ${CMAKE_SOURCE_DIR}/base/inc
+)
 
-ROOT_GENERATE_DICTIONARY(NudyDict ${headers} MODULE Nudy LINKDEF inc/LinkDef.h)
+ROOT_GENERATE_DICTIONARY(NudyDict ${headers} MODULE Nudy LINKDEF LinkDef.h)
 
 #----------------------------------------------------------------------------------------------
 # Add the executable
@@ -17,7 +25,7 @@ target_link_libraries(Nudy -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${ROOT_LIBRARIES}
 #----------------------------------------------------------------------------------------------
 # Install the files
 #
-if(APPLE) 
+if(APPLE)
 # for some reason the installation process alters the libraries on Mac, and the program fails
   install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libNudy${CMAKE_SHARED_LIBRARY_SUFFIX} DESTINATION lib)
 else()
@@ -25,7 +33,7 @@ else()
 endif()
 
 if(USE_ROOT)
-  install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libNudy.rootmap 
+  install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libNudy.rootmap
     ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libNudy_rdict.pcm DESTINATION lib)
 endif()
 
@@ -35,4 +43,3 @@ endif()
 if(DOXYGEN_FOUND)
   set(DOXYFILE_SOURCE_DIRS "${DOXYFILE_SOURCE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}" PARENT_SCOPE)
 endif()
-

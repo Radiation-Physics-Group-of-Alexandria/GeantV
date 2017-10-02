@@ -1,7 +1,7 @@
 #ifndef TNudySampling_H
 #define TNudySampling_H
 
-#include "Particle.h"
+#include "TNudyParticleTest.h"
 #include "TH2D.h"
 #include "TH1D.h"
 #include "TGraph.h"

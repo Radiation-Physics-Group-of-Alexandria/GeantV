@@ -44,6 +44,7 @@ include_directories(
    ${CMAKE_SOURCE_DIR}/realphysics/physics/utils/inc
    ${CMAKE_SOURCE_DIR}/realphysics/physics/cross_sections/HAD/inc
    ${CMAKE_SOURCE_DIR}/numa/inc
+   ${CMAKE_SOURCE_DIR}/Nudy/inc
 )
 
 #----------------------------------------------------------------------------------------------
