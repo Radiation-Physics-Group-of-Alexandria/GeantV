@@ -78,7 +78,7 @@ endif()
 # Add target library and links
 #----------------------------------------------------------------------------------------------
 add_library(RealPhysics SHARED ${sources})
-target_link_libraries(RealPhysics -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Material Geant_v ${_extraLibs}
+target_link_libraries(RealPhysics -L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} Material Geant_v Nudy ${_extraLibs}
                       ${VECGEOM_LIBRARIES} ${VC_LIBRARIES} ${Geant4_LIBRARIES})
 
 add_headers("${headers}")

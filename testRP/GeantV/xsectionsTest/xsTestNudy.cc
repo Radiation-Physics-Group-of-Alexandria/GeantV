@@ -21,30 +21,27 @@ using geantphysics::Proton;
 using geantphysics::Neutron;
 using geantphysics::KaonMinus;
 
+using namespace Nudy;
 using NudyPhysics::NudyInterface;
 
-int main(int /*argc*/, char** /*argv*/) {
-  geantphysics::Proton::Definition();
-  geantphysics::Neutron::Definition();
 
-  geantphysics::GlauberGribovTotalXsc totxs;
-  geantphysics::GlauberGribovInelasticXsc inexs;
-  geantphysics::GlauberGribovElasticXsc elaxs;
+int main(int /*argc*/, char** /*argv*/) {
 
   NudyPhysics::NudyInterface nudyxs;
 
- 
+
   std::ofstream writef("sumXsc.dat", std::ios::out ) ;
 
   writef.setf( std::ios::scientific, std::ios::floatfield );
 
   double nXS;
+  std::string eleName = "Fe";
 
-  nXS = nudyxs.GetXS(2112, 1.0, "Fe", 26, 56);
+  nXS = nudyxs.GetXS(2112, 1.0, eleName, 26, 56);
 
 
   std::cout << nXS << std::endl;
-  
+
 
 
 /*
@@ -59,7 +56,7 @@ int main(int /*argc*/, char** /*argv*/) {
 
   while (kinEnergy < maxEnergy)
     {
-    
+
     txs = totxs.GetIsotopeCrossSection(geantphysics::Particle::GetParticleByPDGCode(particlePDG)->GetInternalCode(),
 			       kinEnergy, geantphysics::Particle::GetParticleByPDGCode(particlePDG)->GetPDGMass(), Z, N) / geant::millibarn;
 

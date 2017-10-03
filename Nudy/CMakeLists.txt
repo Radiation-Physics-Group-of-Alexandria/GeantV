@@ -1,20 +1,27 @@
 #----------------------------------------------------------------------------------------------
 # Add source files & include directories
 #
-file(GLOB sources ${CMAKE_SOURCE_DIR}/src/*.cxx)
+file(GLOB sources
+ ${CMAKE_SOURCE_DIR}/Nudy/src/*.cxx
+)
+
 file(GLOB headers
- ${CMAKE_SOURCE_DIR}/inc/T*.h
+ ${CMAKE_SOURCE_DIR}/Nudy/inc/*.h
  ${CMAKE_SOURCE_DIR}/base/inc/PhysicalConstants.h
  ${CMAKE_SOURCE_DIR}/base/inc/SystemOfUnits.h
 )
 
 include_directories(
+ ${CMAKE_SOURCE_DIR}/Nudy/inc
  ${CMAKE_SOURCE_DIR}/inc
  ${CMAKE_SOURCE_DIR}/material/inc
- ${CMAKE_SOURCE_DIR}/base/inc
+ ${CMAKE_SOURCE_DIR}/base/inc 
 )
 
-ROOT_GENERATE_DICTIONARY(NudyDict ${headers} MODULE Nudy LINKDEF LinkDef.h)
+list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
+
+ROOT_GENERATE_DICTIONARY(NudyDict ${headers}  MODULE Nudy LINKDEF ${CMAKE_SOURCE_DIR}/Nudy/NudyLinkDef.h)
+# set( sources ${sources} NudyDict.cxx )
 
 #----------------------------------------------------------------------------------------------
 # Add the executable

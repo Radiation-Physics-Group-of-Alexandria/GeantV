@@ -29,7 +29,7 @@ ClassImp(TNudySampling)
 {
 }
 //------------------------------------------------------------------------------------------------------
-TNudySampling::TNudySampling(Particle *particle, TNudyEndfRecoPoint *recoPoint)
+TNudySampling::TNudySampling(TParticle *particle, TNudyEndfRecoPoint *recoPoint)
 {
   kineticE = particle[elemId].energy;
   std::cout << "sampling start \t" << elemId <<"\t"<< kineticE << std::endl;
@@ -1091,7 +1091,7 @@ TNudySampling::TNudySampling(Particle *particle, TNudyEndfRecoPoint *recoPoint)
   // std::cout<< std::endl;
 }
 //------------------------------------------------------------------------------------------------------
-void TNudySampling::GetSecParameter(Particle *particle, TNudyEndfRecoPoint *recoPoint)
+void TNudySampling::GetSecParameter(TParticle *particle, TNudyEndfRecoPoint *recoPoint)
 {
    std::cout<<"MF "<< MF4 << " MF5 "<< MF5  << " MF6 "<< MF6 << " MT "<< MT << " LCT "<< LCT << std::endl;
   if (MF4 == 4 && MF5 == 5) {
@@ -1216,7 +1216,7 @@ void TNudySampling::GetSecParameter(Particle *particle, TNudyEndfRecoPoint *reco
   }
 }
 //------------------------------------------------------------------------------------------------------
-double TNudySampling::kinematicNonRel(Particle *particle, TNudyEndfRecoPoint *recoPoint){
+double TNudySampling::kinematicNonRel(TParticle *particle, TNudyEndfRecoPoint *recoPoint){
   double a1 	=  particle[elemId].mass ;
   double a2 	=  particle[elemId].mass - residueA ;
   double fqval  = recoPoint->GetQValue(elemId, MT);
@@ -1235,7 +1235,7 @@ double TNudySampling::kinematicNonRel(Particle *particle, TNudyEndfRecoPoint *re
   return 0;
 }
 //------------------------------------------------------------------------------------------------------
-double TNudySampling::kinematicRel(Particle *particle, TNudyEndfRecoPoint *recoPoint){
+double TNudySampling::kinematicRel(TParticle *particle, TNudyEndfRecoPoint *recoPoint){
   double a1 	=  1E6 ;
   double a2 	=  particle[elemId].mass*1E6 ;
   double a3 	=  residueA*1E6 ;
@@ -1265,7 +1265,7 @@ double TNudySampling::kinematicRel(Particle *particle, TNudyEndfRecoPoint *recoP
   return 0;
 }
 //------------------------------------------------------------------------------------------------------
-double TNudySampling::kinematicGama(Particle *particle, TNudyEndfRecoPoint *recoPoint){
+double TNudySampling::kinematicGama(TParticle *particle, TNudyEndfRecoPoint *recoPoint){
   double a1 	=  1E6 ;
   double a2 	=  particle[elemId].mass*1E6 ;
   double a3 	=  residueA*1E6 ;

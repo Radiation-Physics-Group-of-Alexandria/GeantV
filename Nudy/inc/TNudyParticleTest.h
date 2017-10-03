@@ -1,7 +1,7 @@
-#ifndef Particle_H
-#define Particle_H
+#ifndef TNudyParticle_test_H
+#define TNudyParticle_test_H
 
-struct Particle {
+struct TParticle {
   double mass   = 56;
   double charge = 26;
   double energy = 1E6;

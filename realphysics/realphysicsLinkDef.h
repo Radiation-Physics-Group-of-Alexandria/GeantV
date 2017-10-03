@@ -112,3 +112,11 @@
 
 #endif
 
+/********************
+ * We try to resolve linking issue for Nudy
+ ********************/
+ #ifdef __CINT__
+
+ #pragma link C++ class NudyPhysics::NudyInterface;
+
+ #endif

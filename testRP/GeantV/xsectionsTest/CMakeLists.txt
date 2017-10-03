@@ -2,12 +2,10 @@
 # Add source files & include directories
 #
 file(GLOB sources
- # ${CMAKE_SOURCE_DIR}/Nudy/src/*.cxx
  ${CMAKE_SOURCE_DIR}/testRP/GeantV/xsectionsTest/src/*.cc
 )
 
 file(GLOB headers
- ${CMAKE_SOURCE_DIR}/Nudy/inc/T*.h
  ${CMAKE_SOURCE_DIR}/testRP/GeantV/xsectionsTest/inc/*.h
 )
 
