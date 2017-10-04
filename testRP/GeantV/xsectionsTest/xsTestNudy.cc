@@ -34,14 +34,42 @@ int main(int /*argc*/, char** /*argv*/) {
 
   writef.setf( std::ios::scientific, std::ios::floatfield );
 
-  double nXS;
-  std::string eleName = "Fe";
+  double nxST; // total
+  double nxSE; // elastic
+  double nxSI; // inelastic
+  double nxSF; // fission
+  double nxSH; // thermal
+  int projectileCode = 2112; // examples
+  std::string eleName = "Pu";
+  std::string reactType = "Fission"; // "Elastic, Enelastic, total, fission, thermal......"
+  int Zvalue = 94;
+  int Nvalue = 241;
+  double temperature = 293.60608;
+  double EnergyValue = 1.0 * geant::MeV;
 
-  nXS = nudyxs.GetXS(2112, 1.0, eleName, 26, 56);
+// @brief Here we provide code for projectile say 2112 for neutron, energy of projectile say 1.0 MeV
+// @brief Then we provide temperature which is required for fission etc.
+// @brief Then we provide element name like Pu , U etc. for which cross section is required
+// @brief Z for element name
+// @brief N for neutron number for the element.
 
+nxSF = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Fission");
+std::cout << "Fission - " << nxSF << std::endl;
 
-  std::cout << nXS << std::endl;
+// commented for testing one by one
+/*
+  nxST = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Total");
+  std::cout << "Total - " << nxST << std::endl;
 
+  nxSE = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Elastic");
+  std::cout << "Elastic - " << nxSE << std::endl;
+
+  nxSI = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Inelastic");
+  std::cout << "Inelastic - " << nxSI << std::endl;
+
+  nxSH = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Thermal");
+  std::cout << "Thermal - " << nxSH << std::endl;
+*/
 
 
 /*

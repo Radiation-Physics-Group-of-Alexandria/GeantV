@@ -1,10 +1,10 @@
 //-----------------------------------------------------------------
-// @file NudyInterface.h
-// @brief prototype Nudy interface for GV
+// @file NudyXSProcess.h
+// @brief prototype to caller functions for Nudy called by Nudy interface for GV
 // @author Abhijit Bhattacharyya
 //----------------------------------------------------------------
-#ifndef NUDY_INTERFACE_H
-#define NUDY_INTERFACE_H
+#ifndef NUDY_XS_PROCESS_H
+#define NUDY_XS_PROCESS_H
 
 #include <iostream>
 #include <string>
@@ -44,7 +44,6 @@
 #include "TNudyEndfRecoPoint.h"
 #include "TNudyEndfTape.h"
 #include "TNudyEndfAng.h"
-#include "NudyXSProcess.h"
 
 #include "TSystem.h"
 //class TFile;
@@ -81,7 +80,6 @@ using NudyPhysics::TNudyEndfPhProd;
 using NudyPhysics::TNudyEndfPhYield;
 using NudyPhysics::TNudyEndfRecoPoint;
 using NudyPhysics::TNudyEndfSigma;
-using NudyPhysics::NudyXSProcess;
 
 
 namespace geantphysics {
@@ -95,16 +93,14 @@ namespace geantphysics {
   }
 }
 
+
 namespace NudyPhysics{
-  class NudyInterface {
-
+  class NudyXSProcess {
   public:
-    NudyInterface () ;
-    NudyInterface( const int projCode, const double projKE, const double temp, const std::string isoName,
-      const int tZ, const int tN, const std::string reactType );
-    virtual ~NudyInterface ();
-
-    double GetNudyXS( int projCode, double projKE, double temp, std::string isoName, int tZ, int tN, std::string reactType ) ;
+    NudyXSProcess();
+    NudyXSProcess(const int projCode, const double projKE, const double temp, const std::string isoName,
+      const int tZ, const int tN, std::string reactType );
+    virtual ~NudyXSProcess();
 
   public:
     inline std::string GetIsotopeName ();
@@ -112,23 +108,31 @@ namespace NudyPhysics{
     inline int GetZ ();
     inline int GetN ();
     inline double GetProjectileKE ();
-    inline double GetTemp();
+    inline double GetTemp ();
     inline double GetCrossSection ();
     inline std::string GetReactionType();
 
-    inline void SetIsotopeName (const std::string &isoName );
+    inline void SetIsotopeName ( const std::string &isoName );
     inline void SetProjectileCode ( const int projCode );
     inline void SetZ ( const int tZValue );
     inline void SetN ( const int tNValue ) ;
     inline void SetProjectileKE ( const double projKE );
-    inline void SetTemp ( const double temp );
+    inline void SetTemp (const double temp );
     inline void SetCrossSection ( const double XSvalue );
-    inline void SetReactionType ( const std::string react );
+    inline void SetReactionType ( const std::string reactType );
+    inline void SetEndfDataFileName ( const char * fileName );
+    inline void SetEndfSubDataFileName ( const char * fileName );
+    inline void SetRootFileName ( const char * fileName );
 
+    double GetXS( int projCode, double projKE, double temp, std::string isoName, int tZ, int tN, std::string reactType ) ;
+    std::string findENDFFileName( std::string projID, int projCode, std::string ele, int tZ, int tN ) ;
+    std::string GetDataFileName( std::string str1, int projCode, std::string str2 ); // projID, isoName
+    std::string FixRootDataFile( std::string str1 );                   // ENDF filename without path and extension
+    std::string GetCWD();
+    double ProcFission();
 
   private :
     std::string fIsoName;
-    std::string XSType;
     int fProjCode;
     int ftZ;
     int ftN;
@@ -136,31 +140,34 @@ namespace NudyPhysics{
     double fTemperature;
     double fXS;
     const char* fEndfDataFileName;
+    const char* fEndfSubDataFileName;
     const char* fRootFileName;
     std::string fReactType;
   };
 
   //--------- GETTERS -------
-  inline std::string NudyInterface::GetIsotopeName () { return fIsoName; }
-  inline int NudyInterface::GetProjectileCode () { return fProjCode; }
-  inline int NudyInterface::GetZ () { return ftZ; }
-  inline int NudyInterface::GetN () { return ftN; }
-  inline double NudyInterface::GetProjectileKE () { return fProjKE; }
-  inline double NudyInterface::GetTemp () { return fTemperature; };
-  inline double NudyInterface::GetCrossSection () { return fXS; }
-  inline std::string NudyInterface::GetReactionType () { return fReactType; }
+  inline std::string NudyXSProcess::GetIsotopeName () { return fIsoName; }
+  inline int NudyXSProcess::GetProjectileCode () { return fProjCode; }
+  inline int NudyXSProcess::GetZ () { return ftZ; }
+  inline int NudyXSProcess::GetN () { return ftN; }
+  inline double NudyXSProcess::GetProjectileKE () { return fProjKE; }
+  inline double NudyXSProcess::GetTemp () { return fTemperature; }
+  inline double NudyXSProcess::GetCrossSection () { return fXS; }
+  inline std::string NudyXSProcess::GetReactionType () { return fReactType; }
 
   //--------- SETTERS ---------
-  inline void NudyInterface::SetIsotopeName ( const std::string &isoName ) { fIsoName = isoName; }
-  inline void NudyInterface::SetProjectileCode ( const int projCode ) { fProjCode = projCode; }
-  inline void NudyInterface::SetZ ( const int tZValue ) { ftZ = tZValue; }
-  inline void NudyInterface::SetN ( const int tNValue ) { ftN = tNValue; }
-  inline void NudyInterface::SetProjectileKE ( const double projKE ) { fProjKE = projKE; }
-  inline void NudyInterface::SetTemp (const double temp ) { fTemperature = temp; }
-  inline void NudyInterface::SetCrossSection ( const double XSvalue ) { fXS = XSvalue; }
-  inline void NudyInterface::SetReactionType ( const std::string reactType ) { fReactType = reactType; }
+  inline void NudyXSProcess::SetIsotopeName ( const std::string &isoName ) { fIsoName = isoName; }
+  inline void NudyXSProcess::SetProjectileCode ( const int projCode ) { fProjCode = projCode; }
+  inline void NudyXSProcess::SetZ ( const int tZValue ) { ftZ = tZValue; }
+  inline void NudyXSProcess::SetN ( const int tNValue ) { ftN = tNValue; }
+  inline void NudyXSProcess::SetProjectileKE ( const double projKE ) { fProjKE = projKE; }
+  inline void NudyXSProcess::SetTemp ( const double temp ) { fTemperature = temp; }
+  inline void NudyXSProcess::SetCrossSection ( const double XSvalue ) { fXS = XSvalue; }
+  inline void NudyXSProcess::SetReactionType ( const std::string reactType ) { fReactType = reactType; }
+  inline void NudyXSProcess::SetEndfDataFileName ( const char * fileName ) { fEndfDataFileName = fileName; }
+  inline void NudyXSProcess::SetEndfSubDataFileName ( const char * fileName ) { fEndfSubDataFileName = fileName; }
+  inline void NudyXSProcess::SetRootFileName ( const char * fileName ) { fRootFileName = fileName; }
 
-
- } // namespace NudyPhysics
+} // namespace NudyPhysics
 
 #endif
