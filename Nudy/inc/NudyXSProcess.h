@@ -116,6 +116,7 @@ namespace NudyPhysics{
     inline void SetProjectileCode ( const int projCode );
     inline void SetZ ( const int tZValue );
     inline void SetN ( const int tNValue ) ;
+    inline void SetA ( const int tNvalue, const int tZvalue );
     inline void SetProjectileKE ( const double projKE );
     inline void SetTemp (const double temp );
     inline void SetCrossSection ( const double XSvalue );
@@ -136,6 +137,7 @@ namespace NudyPhysics{
     int fProjCode;
     int ftZ;
     int ftN;
+    int ftA;
     double fProjKE;
     double fTemperature;
     double fXS;
@@ -143,6 +145,8 @@ namespace NudyPhysics{
     const char* fEndfSubDataFileName;
     const char* fRootFileName;
     std::string fReactType;
+    std::vector<int> fFissionFragmentsMass;
+    std::vector<int> fFissionFragmentCharge;
   };
 
   //--------- GETTERS -------
@@ -160,6 +164,7 @@ namespace NudyPhysics{
   inline void NudyXSProcess::SetProjectileCode ( const int projCode ) { fProjCode = projCode; }
   inline void NudyXSProcess::SetZ ( const int tZValue ) { ftZ = tZValue; }
   inline void NudyXSProcess::SetN ( const int tNValue ) { ftN = tNValue; }
+  inline void NudyXSProcess::SetA ( const int tNvalue, const int tZvalue ) { ftA = ftZ + ftN; }
   inline void NudyXSProcess::SetProjectileKE ( const double projKE ) { fProjKE = projKE; }
   inline void NudyXSProcess::SetTemp ( const double temp ) { fTemperature = temp; }
   inline void NudyXSProcess::SetCrossSection ( const double XSvalue ) { fXS = XSvalue; }

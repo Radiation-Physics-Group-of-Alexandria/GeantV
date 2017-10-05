@@ -33,11 +33,12 @@ double NudyXSProcess::GetXS( int projCode, double projKE, double temp, std::stri
   double XSvalue = 0.0;
   std::string projID = "";
 
+  NudyXSProcess::SetA (tZ, tN);
+  NudyXSProcess::SetProjectileKE (projKE);
+
   if (projCode == 2112) projID = "neutrons";   // this is for the neutrons at the time being for testing
   if (reactType == "Fission") projID = "nfy";
   if (reactType == "Thermal") projID = "thermal_scatt";
-
-  std::cout << "processing for " << reactType << std::endl;
 
   // This filename deduction is general
   std::string DataFileNameString = NudyXSProcess::findENDFFileName(projID, projCode, isoName, tZ, tN);
@@ -55,13 +56,17 @@ double NudyXSProcess::GetXS( int projCode, double projKE, double temp, std::stri
   }
 
   XSvalue = NudyXSProcess::ProcFission();  // call routines for fission from Nudy
-
   return XSvalue;
 }
 
 double NudyXSProcess::ProcFission() {
+  int iElementID = 0;  //<------------- confusing testing by Abhijit
+
   double xsvalue = 0.0;
   double iSigDiff = 0.001;
+
+  double sigmaTotal = 0.0;
+  double sigmaPartial = 0.0;
 
   Nudy::TNudyENDF *proc = new Nudy::TNudyENDF(fEndfDataFileName, fRootFileName, "recreate");
   proc->Process();
@@ -71,6 +76,23 @@ double NudyXSProcess::ProcFission() {
   NudyPhysics::TNudyEndfSigma xsec;
   xsec.GetData(fRootFileName, iSigDiff);
 
+  NudyPhysics::TNudyEndfRecoPoint *recoPoint = new NudyPhysics::TNudyEndfRecoPoint(iElementID, fRootFileName);
+
+  // This is  under testing to check Harphool code for interfacing to GV :: Abhijit
+  int isel = 0;
+  int MT;
+  double sumRnd = 0.0;
+  std::vector<double> crs;
+  TRandom3 *fRnd = new TRandom3(0);
+  double randomSeries = fRnd->Uniform();
+  std::cout << " The projectile KE:-> " << fProjKE << std::endl;
+  for ( unsigned int crsp = 0; crsp < recoPoint->MtValues[iElementID].size(); crsp++) {
+    MT = recoPoint->MtValues[iElementID][crsp]; //[isel];
+    if (MT == 18) { // Fission
+      xsvalue = recoPoint->GetNuTotal(iElementID, fProjKE);
+      break;
+    }
+  }
   return xsvalue;
 }
 
@@ -99,7 +121,8 @@ std::string NudyXSProcess::GetCWD() {
   return cwdPath;
 }
 
-std::string NudyXSProcess::findENDFFileName(std::string projID, int projCode, std::string elementName, int tZ, int tA) {
+std::string NudyXSProcess::findENDFFileName(std::string projID, int projCode, std::string elementName, int tZ, int tN) {
+  int tA = tZ + tN; // this is mass number to be derived from Z and N number
   std::stringstream ss;
   std::string fName = "";
   if (projID == "thermal_scatt") {

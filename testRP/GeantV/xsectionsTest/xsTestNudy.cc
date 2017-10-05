@@ -43,9 +43,14 @@ int main(int /*argc*/, char** /*argv*/) {
   std::string eleName = "Pu";
   std::string reactType = "Fission"; // "Elastic, Enelastic, total, fission, thermal......"
   int Zvalue = 94;
-  int Nvalue = 241;
+  int Massvalue = 241;
+  int Nvalue = Massvalue - Zvalue;
   double temperature = 293.60608;
-  double EnergyValue = 1.0 * geant::MeV;
+  /*  This is showing energy as 0.004 and not as 4.0E=6 and so
+  for the time being I am testing using raw number.
+  double EnergyValue = 4.0 * geant::MeV;
+  */
+  double EnergyValue = 1.0e+6;
 
 // @brief Here we provide code for projectile say 2112 for neutron, energy of projectile say 1.0 MeV
 // @brief Then we provide temperature which is required for fission etc.
@@ -54,7 +59,7 @@ int main(int /*argc*/, char** /*argv*/) {
 // @brief N for neutron number for the element.
 
 nxSF = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Fission");
-std::cout << "Fission - " << nxSF << std::endl;
+std::cout << "Fission CrossSection (NuT) at En : " << EnergyValue << " eV = " <<  nxSF << std::endl;
 
 // commented for testing one by one
 /*

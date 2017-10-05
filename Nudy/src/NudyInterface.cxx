@@ -35,8 +35,9 @@ NudyInterface::NudyInterface(
 NudyInterface::~NudyInterface() {}
 
 double NudyInterface::GetNudyXS( int projCode, double projKE, double temp, std::string isoName, int tZ, int tN, std::string reactType ) {
+  double xsection;
   NudyPhysics::NudyXSProcess xsProc;
 
-  xsProc.GetXS( projCode, projKE, temp, isoName, tZ, tN, reactType) ;
-  return 0;
+  xsection = xsProc.GetXS( projCode, projKE, temp, isoName, tZ, tN, reactType ) ;
+  return xsection;
 }
