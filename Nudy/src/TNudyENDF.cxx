@@ -68,6 +68,7 @@ TNudyENDF::TNudyENDF(const char *nFileENDF, const char *nFileRENDF, const char *
   fTape = new TNudyEndfTape(fLine, fLogLev);
   fENDF.seekg(0);
   fENDF.getline(fLine, LINLEN);
+
 }
 
 //_______________________________________________________________________________
@@ -113,6 +114,8 @@ void TNudyENDF::Process()
       GetCONT(c, nl, mtf);
       fMat = new TNudyEndfMat(curMAT, round(c[0]), c[1], nl[0], (nl[1] == 1), nl[2], nl[3]);
       Process(fMat);
+
+      SetLFI(fMat->GetLFI());
       // Add material section to the tape list
       fTape->AddMat(fMat);
     } else {

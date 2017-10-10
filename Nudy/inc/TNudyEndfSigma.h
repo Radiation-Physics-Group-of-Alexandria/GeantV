@@ -66,6 +66,7 @@ public:
   int SetPreProcess(int x1) {return  prepro = x1; }
   std::fstream out, outtotal;
   std::string outstring, outstringTotal;
+	bool GetIsFiss() { return IsFission; }
 
 protected:
 private:
@@ -118,6 +119,9 @@ private:
   void fillPdf1d();
   void fillPdf2d();
   void AddSecFile12(Nudy::TNudyEndfFile *file);
+
+	void SetIsFission(bool FissKey) {IsFission = FissKey;}
+
   const char *rENDF;             // Name of the endf cross-section data file
   double doppTemp1, doppTemp2 ;                // temperature t1 t2
   double sigDiff;                // precision for cross-section reconstruction
@@ -151,6 +155,7 @@ private:
   double AWRI;
   int Z, ZA, ZAI, LFW, NER, LRU, LRF, NRO, NAPS, NLS, LSSF, NLS2, NJS, INT, NIS,
       intLinLru1 = 0;  // standard ENDF parameters
+	bool IsFission;  // Abhijit:: to simply know whether fit for fission
   int LRX, cueMat = 0; // flag for inelastic reaction, number of J
   int flagRead = -1;
   double QValue[999];
@@ -234,15 +239,15 @@ private:
   rowd eneUniD, sigUniD;       	// unionization of energy and total cross-section for n,d
   rowd eneUniT, sigUniT;      	// unionization of energy and total cross-section for n,t
   rowd eneUniHe3, sigUniHe3;  	// unionization of energy and total cross-section for n,He3
-  rowd eneUniHe4, sigUniHe4;   	// unionization of energy and total cross-section for n,He4  
-  rowint eneLocP, eneLocD, eneLocT, eneLocHe3, eneLocHe4;   	// location of the first energy grid point   
+  rowd eneUniHe4, sigUniHe4;   	// unionization of energy and total cross-section for n,He4
+  rowint eneLocP, eneLocD, eneLocT, eneLocHe3, eneLocHe4;   	// location of the first energy grid point
   matrixd2 sigUniOfP, sigUniOfD, sigUniOfT, sigUniOfHe3, sigUniOfHe4;
   rowd eneUniPAll, sigUniPAll;       	// unionization of energy and total cross-section for n,p + n,pX
   rowd eneUniDAll, sigUniDAll;       	// unionization of energy and total cross-section for n,d + n,dX
   rowd eneUniTAll, sigUniTAll;      	// unionization of energy and total cross-section for n,t + n,tX
   rowd eneUniHe3All, sigUniHe3All;  	// unionization of energy and total cross-section for n,He3 + n,He3X
-  rowd eneUniHe4All, sigUniHe4All;   	// unionization of energy and total cross-section for n,He4 + n,He4X 
-  rowint eneLocPAll, eneLocDAll, eneLocTAll, eneLocHe3All, eneLocHe4All;   	// location of the first energy grid point   
+  rowd eneUniHe4All, sigUniHe4All;   	// unionization of energy and total cross-section for n,He4 + n,He4X
+  rowint eneLocPAll, eneLocDAll, eneLocTAll, eneLocHe3All, eneLocHe4All;   	// location of the first energy grid point
   matrixd2 sigUniOfPAll, sigUniOfDAll, sigUniOfTAll, sigUniOfHe3All, sigUniOfHe4All;
   int MTChargeFlag[10] ; 	// flag if charge particle production is added in MT = 103-107
   int prepro = 0 ;

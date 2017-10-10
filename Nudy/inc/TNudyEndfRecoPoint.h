@@ -74,6 +74,8 @@ public:
   std::fstream out, outtotal;
   std::string outstring, outstringTotal;
   matrixint MtValues; // MT values for which cross-section/ heating values are given  all elements
+
+
 protected:
   int elemId;
   const char *rENDF;                      // precision for cross-section reconstruction

@@ -44,7 +44,7 @@
 #include "TNudyEndfRecoPoint.h"
 #include "TNudyEndfTape.h"
 #include "TNudyEndfAng.h"
-#include "NudyXSProcess.h"
+//#include "NudyXSProcess.h"
 
 #include "TSystem.h"
 //class TFile;
@@ -81,7 +81,7 @@ using NudyPhysics::TNudyEndfPhProd;
 using NudyPhysics::TNudyEndfPhYield;
 using NudyPhysics::TNudyEndfRecoPoint;
 using NudyPhysics::TNudyEndfSigma;
-using NudyPhysics::NudyXSProcess;
+//using NudyPhysics::NudyXSProcess;
 
 
 namespace geantphysics {
@@ -99,12 +99,23 @@ namespace NudyPhysics{
   class NudyInterface {
 
   public:
-    NudyInterface () ;
+    NudyInterface () ;  
     NudyInterface( const int projCode, const double projKE, const double temp, const std::string isoName,
-      const int tZ, const int tN, const std::string reactType );
+      const int tZ, const int tN );
     virtual ~NudyInterface ();
 
-    double GetNudyXS( int projCode, double projKE, double temp, std::string isoName, int tZ, int tN, std::string reactType ) ;
+    std::vector<double> GetXS( int projCode, double projKE, double temp, std::string isoName, int tZ, int tN ) ;
+    std::string  SetDataFileNameENDF( int projCode, std::string isoName, double projKE, int tZ, int tN );
+    std::string findENDFFileName( std::string ele, int tZ, int tN ) ;
+    std::string GetDataFileName( std::string str1, std::string str2 ); // projID, isoName
+    std::string FixRootDataFile( std::string str1 );                   // ENDF filename without path and extension
+    std::string SetDataFileNameROOT( std::string isoName, int tZ, int tN );
+    std::string SetDataFileNameENDFSUB( std::string isoName, int tZ, int tN );
+    std::string GetCWD();
+    void SetProjIDFn( int projCode, double projKE, unsigned int channel);
+    void ComputeCrossSection(  unsigned int channel );
+    void InitializeXSChannel();
+    bool GetFisCha(int inKey);
 
   public:
     inline std::string GetIsotopeName ();
@@ -114,30 +125,44 @@ namespace NudyPhysics{
     inline double GetProjectileKE ();
     inline double GetTemp();
     inline double GetCrossSection ();
-    inline std::string GetReactionType();
+    inline bool GetIsFissKey();
+    inline std::string GetProjID();
+    inline std::vector<double> GetXSTable();
 
     inline void SetIsotopeName (const std::string &isoName );
     inline void SetProjectileCode ( const int projCode );
     inline void SetZ ( const int tZValue );
     inline void SetN ( const int tNValue ) ;
+    inline void SetA ( const int tNvalue, const int tZvalue );
     inline void SetProjectileKE ( const double projKE );
     inline void SetTemp ( const double temp );
     inline void SetCrossSection ( const double XSvalue );
-    inline void SetReactionType ( const std::string react );
-
+    inline void SetEndfDataFileName ( const char * fileName );
+    inline void SetEndfSubDataFileName ( const char * fileName );
+    inline void SetRootFileName ( const char * fileName );
+    inline void SetIsFissKey( const bool theKey);
+    inline void SetProjID (const std::string &theID);
+    inline void AppendXS ( const double xsvalue );
 
   private :
+    unsigned int fNumberOfReactionChannels = 895;
     std::string fIsoName;
-    std::string XSType;
     int fProjCode;
     int ftZ;
     int ftN;
+    int ftA;
     double fProjKE;
     double fTemperature;
     double fXS;
+    std::string fProjID;
     const char* fEndfDataFileName;
+    const char* fEndfSubDataFileName;
     const char* fRootFileName;
-    std::string fReactType;
+    std::vector<int> fFissionFragmentsMass;
+    std::vector<int> fFissionFragmentCharge;
+    std::vector<double>  fChannelXSArray;
+    bool fIsFiss;
+    std::vector<int> fChannelFiss {18, 19, 20, 21, 38, 151, 452, 454, 455, 456, 457, 458, 459};
   };
 
   //--------- GETTERS -------
@@ -146,20 +171,26 @@ namespace NudyPhysics{
   inline int NudyInterface::GetZ () { return ftZ; }
   inline int NudyInterface::GetN () { return ftN; }
   inline double NudyInterface::GetProjectileKE () { return fProjKE; }
-  inline double NudyInterface::GetTemp () { return fTemperature; };
-  inline double NudyInterface::GetCrossSection () { return fXS; }
-  inline std::string NudyInterface::GetReactionType () { return fReactType; }
+  inline double NudyInterface::GetTemp () { return fTemperature; }
+  inline bool NudyInterface::GetIsFissKey() { return fIsFiss; }
+  inline std::string NudyInterface::GetProjID() { return fProjID; }
+  inline std::vector<double> NudyInterface::GetXSTable() { return fChannelXSArray; }
 
   //--------- SETTERS ---------
   inline void NudyInterface::SetIsotopeName ( const std::string &isoName ) { fIsoName = isoName; }
   inline void NudyInterface::SetProjectileCode ( const int projCode ) { fProjCode = projCode; }
   inline void NudyInterface::SetZ ( const int tZValue ) { ftZ = tZValue; }
   inline void NudyInterface::SetN ( const int tNValue ) { ftN = tNValue; }
+  inline void NudyInterface::SetA ( const int tNvalue, const int tZvalue ) { ftA = tNvalue + tZvalue; }
   inline void NudyInterface::SetProjectileKE ( const double projKE ) { fProjKE = projKE; }
   inline void NudyInterface::SetTemp (const double temp ) { fTemperature = temp; }
   inline void NudyInterface::SetCrossSection ( const double XSvalue ) { fXS = XSvalue; }
-  inline void NudyInterface::SetReactionType ( const std::string reactType ) { fReactType = reactType; }
-
+  inline void NudyInterface::SetEndfDataFileName ( const char * fileName ) { fEndfDataFileName = fileName; }
+  inline void NudyInterface::SetEndfSubDataFileName ( const char * fileName ) { fEndfSubDataFileName = fileName; }
+  inline void NudyInterface::SetRootFileName ( const char * fileName ) { fRootFileName = fileName; }
+  inline void NudyInterface::SetIsFissKey( const bool theKey ) { fIsFiss = theKey; }
+  inline void NudyInterface::SetProjID (const std::string &theID ) { fProjID = theID; }
+  inline void NudyInterface::AppendXS ( const double xsvalue ) { fChannelFiss.push_back(xsvalue); }
 
  } // namespace NudyPhysics
 

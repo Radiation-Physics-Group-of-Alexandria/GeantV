@@ -27,30 +27,31 @@ using NudyPhysics::NudyInterface;
 
 int main(int /*argc*/, char** /*argv*/) {
 
-  NudyPhysics::NudyInterface nudyxs;
-
-
   std::ofstream writef("sumXsc.dat", std::ios::out ) ;
 
   writef.setf( std::ios::scientific, std::ios::floatfield );
 
-  double nxST; // total
-  double nxSE; // elastic
-  double nxSI; // inelastic
-  double nxSF; // fission
-  double nxSH; // thermal
-  int projectileCode = 2112; // examples
-  std::string eleName = "Pu";
-  std::string reactType = "Fission"; // "Elastic, Enelastic, total, fission, thermal......"
-  int Zvalue = 94;
-  int Massvalue = 241;
+//  double nxST; // total
+//  double nxSE; // elastic
+//  double nxSI; // inelastic
+//  double nxSF; // fission
+//  double nxSH; // thermal
+//  double nxValue;
+
+  std::vector<double> xsPerReactionChannel;
+
+  int projectileCode = 2112; // example :: neutron ??
+  std::string eleName =  "Pu"; // "Be"; //
+  //std::string reactType = "Elastic" ; // "Fission"; // "Elastic, Inelastic, Total, Fission, Thermal......"
+  int Zvalue =  94; // 4; //
+  int Massvalue = 241; // 7;   //
   int Nvalue = Massvalue - Zvalue;
   double temperature = 293.60608;
   /*  This is showing energy as 0.004 and not as 4.0E=6 and so
   for the time being I am testing using raw number.
   double EnergyValue = 4.0 * geant::MeV;
   */
-  double EnergyValue = 1.0e+6;
+  double EnergyValue = 4.0e+6;  // in terms of eV    // 1.0 * geant::MeV;
 
 // @brief Here we provide code for projectile say 2112 for neutron, energy of projectile say 1.0 MeV
 // @brief Then we provide temperature which is required for fission etc.
@@ -58,23 +59,11 @@ int main(int /*argc*/, char** /*argv*/) {
 // @brief Z for element name
 // @brief N for neutron number for the element.
 
-nxSF = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Fission");
-std::cout << "Fission CrossSection (NuT) at En : " << EnergyValue << " eV = " <<  nxSF << std::endl;
+NudyPhysics::NudyInterface *nudyxs = new NudyPhysics::NudyInterface(
+  projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue
+);
 
-// commented for testing one by one
-/*
-  nxST = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Total");
-  std::cout << "Total - " << nxST << std::endl;
-
-  nxSE = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Elastic");
-  std::cout << "Elastic - " << nxSE << std::endl;
-
-  nxSI = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Inelastic");
-  std::cout << "Inelastic - " << nxSI << std::endl;
-
-  nxSH = nudyxs.GetNudyXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue, "Thermal");
-  std::cout << "Thermal - " << nxSH << std::endl;
-*/
+xsPerReactionChannel = nudyxs->GetXS(projectileCode, EnergyValue, temperature, eleName, Zvalue, Nvalue);
 
 
 /*

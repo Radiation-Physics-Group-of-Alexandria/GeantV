@@ -50,6 +50,8 @@ public:
   void SetLogLev(unsigned char loglev) { fLogLev = loglev; }
   int SetPreProcess(int x1) {return  prepro = x1; }
   unsigned char GetLogLev() const { return fLogLev; }
+	bool GetLFI() { return fLFI;}
+	void SetLFI(bool keywd) {fLFI = keywd;}
   void Process();
   void Process(Nudy::TNudyEndfMat *mat);
   void Process(Nudy::TNudyEndfFile *file);
@@ -236,11 +238,12 @@ private:
   Nudy::TNudyEndfMat *fMat;    //! Support link for the current material
   std::string ENDFSUB;
   int prepro ;
+	bool fLFI;
 #ifdef USE_ROOT
   ClassDef(TNudyENDF, 1) // class for an ENDF data file
 #endif
 };
 
 
-} //namespace 
+} //namespace
 #endif
