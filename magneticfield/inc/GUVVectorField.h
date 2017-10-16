@@ -44,8 +44,8 @@
 /*
 namespace vecfield {
 
-VECGEOM_DEVICE_FORWARD_DECLARE(class GUVVectorField;);
-VECGEOM_DEVICE_DECLARE_CONV(class, GUVVectorField);
+VECCORE_DEVICE_FORWARD_DECLARE(class GUVVectorField;);
+VECCORE_DEVICE_DECLARE_CONV(class, GUVVectorField);
 
 inline namespace VECFIELD_IMPL_NAMESPACE {
 */
@@ -66,7 +66,7 @@ class GUVVectorField //  : public GUVField
       GUVVectorField( const GUVVectorField &);
       virtual ~GUVVectorField();
 
-      VECGEOM_CUDA_HEADER_BOTH
+      VECCORE_ATT_HOST_DEVICE
       virtual void GetFieldValue( vecgeom::Vector3D<double> const &Position,
                                   vecgeom::Vector3D<float>        &FieldValue ) = 0;
 
@@ -76,16 +76,16 @@ class GUVVectorField //  : public GUVField
 
       // a helper tramponline to dispatch to DistanceToOut if type is not scalar
       template <typename S, typename T>
-      VECGEOM_FORCE_INLINE
-      VECGEOM_CUDA_HEADER_BOTH
+      VECCORE_FORCE_INLINE
+      VECCORE_ATT_HOST_DEVICE
       void GetFieldValue(vecgeom::Vector3D<S> const &position, vecgeom::Vector3D<T> &fieldValue)
       {
          return GetFieldValueSIMD(position, fieldValue);
       }
 
-      VECGEOM_CUDA_HEADER_BOTH
+      VECCORE_ATT_HOST_DEVICE
       bool DoesFieldChangeEnergy() const { return fChangesEnergy; }
-      VECGEOM_CUDA_HEADER_BOTH
+      VECCORE_ATT_HOST_DEVICE
       int  GetNumberOfComponents() const { return fNumberOfComponents; } 
 
       GUVVectorField& operator = (const GUVVectorField &p); // Useful ?
